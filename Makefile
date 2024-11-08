@@ -17,4 +17,7 @@ check:
 	done
 	echo "All containers are running."
 
+clean:
+	docker compose -f srcs/docker-compose.yml down -v
+
 .PHONY: all
