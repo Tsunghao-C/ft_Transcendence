@@ -13,6 +13,7 @@
 
 # Django stuff
 *.log
+django/venv/
 
 # C extensions
 *.so
