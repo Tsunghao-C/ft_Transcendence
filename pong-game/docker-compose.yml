@@ -1,0 +1,289 @@
+networks:
+  frontend_net:
+    driver: bridge
+  backend_net:
+    driver: bridge
+    internal: true
+  monitoring_net:
+    driver: bridge
+
+volumes:
+  vault_data: {}
+  auth_data: {}
+  user_data: {}
+  redis_data: {}
+  game_data: {}
+  match_data: {}
+  prometheus_data: {}
+  grafana_data: {}
+  es_data: {}
+
+services:
+  # Security Layer
+  waf:
+    container_name: waf
+    image: owasp/modsecurity-crs:nginx
+    ports:
+      - "443:443"
+    volumes:
+      - ./security/waf/rules:/etc/modsecurity.d/rules
+    networks:
+      - frontend_net
+    restart: unless-stopped
+
+  vault:
+    container_name: vault
+    image: hashicorp/vault
+    cap_add:
+      - IPC_LOCK
+    ports:
+      - "8200:8200"   # only for development stage, need to close after
+    environment:
+      - VAULT_DEV_ROOT_TOKEN_ID=${VAULT_DEV_ROOT_TOKEN}
+    volumes:
+      - ./security/vault/config:/vault/config
+      - vault_data:/vault/file
+    user: "1000:1000"
+    networks:
+      - backend_net
+    restart: unless-stopped
+
+  two_fa:
+    build: ./security/2fa
+    ports:
+      - "8082:8082"
+    networks:
+      - backend_net
+
+  # Frontend & Gateway
+  nginx:
+    container_name: nginx
+    # image: nginx:1-alpine
+    build:
+      context: ./frontend/nginx
+    depends_on:
+      - waf
+      - spa
+    ports:
+      - "80:80"
+      - "443:443"
+    # volumes:
+    #   - ./frontend/nginx/conf.d:/etc/nginx/conf.d
+    #   - ./frontend/nginx/certs:/etc/nginx/certs
+    #   - ./frontend/build:/usr/share/nginx/html
+    networks:
+      - frontend_net
+      - backend_net
+    restart: unless-stopped
+
+  spa:
+    container_name: spa
+    build:
+      context: ./frontend/spa
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - REACT_APP_API_URL=http://localhost/api
+      - REACT_APP_WS_URL=ws://localhost/ws
+    networks:
+      - frontend_net
+    restart: unless-stopped
+  
+  # Auth Layer
+  auth_service:
+    container_name: auth_service
+    build: ./auth-service
+    user: "1000:1000"
+    ports:
+      - "8001:8001"   # only for development stage, need to close after
+    environment:
+      - DATABASE_URL=postgresql://postgres:${AUTH_DB_PASSWORD}@auth_db:5432/authdb
+      - VAULT_ADDR=http://vault:8200
+    depends_on:
+      - auth_db
+      - vault
+    networks:
+      - backend_net
+    restart: unless-stopped
+  
+  auth_db:
+    container_name: auth_db
+    image: postgres:14-alpine
+    environment:
+      - POSTGRES_DB=authdb
+      - POSTGRES_PASSWORD=${AUTH_DB_PASSWORD}
+    volumes:
+      - auth_data:/var/lib/postgresql/data
+    user: "999:999"
+    networks:
+      - backend_net
+    restart: unless-stopped
+  
+  # User Service
+  user_service:
+    container_name: user_service
+    build: ./user-service
+    user: "1000:1000"
+    ports:
+      - "8002:8002"     # only for development stage, need to close after
+    environment:
+      - DATABASE_URL=postgresql://postgres:${USER_DB_PASSWORD}@user_db:5433/userdb
+      - REDIS_URL=redis://redis:6379/0
+      - VAULT_ADDR=http://vault:8200
+    depends_on:
+      - user_db
+      - vault
+    networks:
+      - backend_net
+    restart: unless-stopped
+
+  user_db:
+    container_name: user_db
+    image: postgres:14-alpine
+    environment:
+      - POSTGRES_DB=userdb
+      - POSTGRES_PASSWORD=${USER_DB_PASSWORD}
+    volumes:
+      - user_data:/var/lib/postgresql/data
+    user: "999:999"
+    networks:
+      - backend_net
+    restart: unless-stopped
+  
+  redis:
+    container_name: redis
+    image: redis:alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"     # only for development stage, need to close after
+    networks:
+      - backend_net
+    restart: unless-stopped
+
+  # Game Services
+  game_service:
+    container_name: game_service
+    build: ./game-service
+    user: "1000:1000"
+    ports:
+      - "8004:8004"     # only for development stage, need to close after
+    environment:
+      - DATABASE_URL=postgresql://postgres:${GAME_DB_PASSWORD}@game_db:5434/gamedb
+      - MATCH_DB_URL=postgresql://postgres:${MATCH_DB_PASSWORD}@match_db:5432/matchdb
+      - VAULT_ADDR=http://vault:8200
+      - VAULT_TOKEN=${VAULT_DEV_ROOT_TOKEN}
+    depends_on:
+      - game_db
+      - match_db
+      - vault
+    networks:
+      - backend_net
+    restart: unless-stopped
+  
+  game_db:
+    container_name: game_db
+    image: postgres:14-alpine
+    environment:
+      - POSTGRES_DB=gamedb
+      - POSTGRES_PASSWORD=${GAME_DB_PASSWORD}
+    volumes:
+      - game_data:/var/lib/postgresql/data
+    user: "999:999"
+    networks:
+      - backend_net
+    restart: unless-stopped
+
+  match_db:
+    container_name: match_db
+    image: postgres:14-alpine
+    environment:
+      - POSTGRES_DB=matchdb
+      - POSTGRES_PASSWORD=${MATCH_DB_PASSWORD}
+    volumes:
+      - match_data:/var/lib/postgresql/data
+    ports:
+      - "5435:5432"     # only for development stage, need to close after
+    user: "999:999"
+    networks:
+      - backend_net
+    restart: unless-stopped
+
+  # Monitoring Stack
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus
+    user: "1000:1000"
+    ports:
+      - "9090:9090"   # only for development stage
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    networks:
+      - monitoring_net
+    restart: unless-stopped
+  
+  grafana:
+    container_name: grafana
+    image: grafana/grafana
+    user: "1000:1000"
+    ports:
+      - "3001:3001"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - grafana_data:/var/lib/grafana
+    networks:
+      - monitoring_net
+    restart: unless-stopped
+  
+  cadvisor:
+    container_name: cadvisor
+    image: gcr.io/cadvisor/cadvisor
+    user: "1000:1000"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - monitoring_net
+    restart: unless-stopped
+  
+  elasticsearch:
+    container_name: elasticsearch
+    image: elasticsearch:8.7.0
+    user: "1000:1000"
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - monitoring
+    restart: unless-stopped
+  
+  logstash:
+    container_name: logstash
+    image: logstash:8.7.0
+    user: "1000:1000"
+    volumes:
+      - ./monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline
+    networks:
+      - monitoring_net
+    restart: unless-stopped
+  
+  kibana:
+    container_name: kibana
+    image: kibana:8.7.0
+    user: "1000:1000"
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    networks:
+      - monitoring_net
+    restart: unless-stopped
