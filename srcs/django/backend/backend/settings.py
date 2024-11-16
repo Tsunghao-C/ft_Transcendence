@@ -23,12 +23,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-4g3isu!-24%q2@aavzz1)%yql!!06c)i=^c+$_4n&(k-0)y113'
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = bool(os.environ.get("DJ_DEBUG", default=0))
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = os.environ.get("DJ_ALLOWED_HOSTS").split(" ")
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -143,8 +143,5 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # will need to change this when we get a url
-CORS_ALLOWED_ORIGINS = [
-	"http://localhost:8000",
-	"http://127.0.0.1:8000",
-]
+CORS_ALLOWED_ORIGINS = os.environ.get("DJ_ALLOWED_HOSTS").split(" ")
 CORS_ALLOWS_CREDENTIALS = True
