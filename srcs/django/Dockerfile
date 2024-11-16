@@ -1,9 +1,15 @@
-FROM python:3.10
+FROM python:3.11.4-slim-buster
 
-WORKDIR /app
+WORKDIR /usr/src/app
 
-COPY requirements.txt /app/
+# set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# install dependencies
+RUN pip install --upgrade pip
+COPY ./requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . /app/
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "project_name.wsgi:application"]
+# copy project
+COPY . .
