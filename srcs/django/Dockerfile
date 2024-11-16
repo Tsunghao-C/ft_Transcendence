@@ -16,5 +16,5 @@ RUN chmod -R 755 /usr/src/django/backend
 
 USER root
 
-# make migrations and start server
-CMD ["sh", "-c", "python /usr/src/django/backend/manage.py makemigrations && python /usr/src/django/backend/manage.py migrate && python /usr/src/django/backend/manage.py runserver 0.0.0.0:8000"]
+# need to change the wait-for-it command to use env vars
+CMD ["sh", "-c", "wait-for-it --service db:5432 -- python /usr/src/django/backend/manage.py makemigrations && python /usr/src/django/backend/manage.py migrate && python /usr/src/django/backend/manage.py runserver 0.0.0.0:8000"]

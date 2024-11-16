@@ -28,6 +28,9 @@ services:
 
   django:
     build: ./django
+    image: django
+    pull_policy: never
+    container_name: django
     volumes:
       - django:/usr/src/django/
     ports:
@@ -39,6 +42,7 @@ services:
 
   db:
     image: postgres:15
+    container_name: postgresql
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
