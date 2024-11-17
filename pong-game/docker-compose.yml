@@ -1,0 +1,39 @@
+networks:
+  backend_net:
+    driver: bridge
+    #internal: true
+
+volumes:
+  user_data: {}
+
+services:
+  game_service:
+    build: 
+      context: ./game-service
+      dockerfile: "Dockerfile"
+      args:
+        - SQL_HOST=${SQL_HOST}
+        - SQL_PORT=${SQL_PORT}
+    image: game_service
+    pull_policy: never
+    container_name: game_service
+    ports:
+      - 8004:8004
+    depends_on:
+      - user_db
+    env_file:
+      - ./.env
+    networks:
+      - backend_net
+
+  user_db:
+    container_name: user_db
+    image: postgres:14-alpine
+    environment:
+      - POSTGRES_USER=${SQL_USER}
+      - POSTGRES_PASSWORD=${SQL_PASSWORD}
+      - POSTGRES_DB=${SQL_DATABASE}
+    volumes:
+      - user_data:/var/lib/postgresql/data
+    networks:
+      - backend_net
