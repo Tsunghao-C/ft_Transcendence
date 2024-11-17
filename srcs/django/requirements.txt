@@ -9,3 +9,4 @@ python-dotenv==1.0.1
 pytz==2024.2
 sqlparse==0.5.2
 wait-for-it==2.3.0
+gunicorn==21.2.0
