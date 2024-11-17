@@ -3,7 +3,7 @@ networks:
     driver: bridge
 
 volumes:
-  prometheus_data: {}
+  #prometheus_data: {}
   postgres_data:
   django:
 
@@ -27,7 +27,12 @@ services:
       - transcendence_network
 
   django:
-    build: ./django
+    build: 
+      context: ./django
+      dockerfile: "Dockerfile"
+      args:
+        - SQL_HOST=${SQL_HOST}
+        - SQL_PORT=${SQL_PORT}
     image: django
     pull_policy: never
     container_name: django
@@ -46,6 +51,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
-      - POSTGRES_USER=hello_django
-      - POSTGRES_PASSWORD=hello_django
-      - POSTGRES_DB=hello_django_dev
+      - POSTGRES_USER=${SQL_USER}
+      - POSTGRES_PASSWORD=${SQL_PASSWORD}
+      - POSTGRES_DB=${SQL_DATABASE}
