@@ -1,10 +1,10 @@
 all: build run check
 
 build:
-	docker compose -f srcs/docker-compose.yml build
+	docker compose -f pong-game/docker-compose.yml build
 
 run:
-	docker compose -f srcs/docker-compose.yml up -d
+	docker compose -f pong-game/docker-compose.yml up -d
 
 check:
 	# wait 5 seconds for sevices to initialize
@@ -18,6 +18,6 @@ check:
 	echo "All containers are running."
 
 clean:
-	docker compose -f srcs/docker-compose.yml down -v
+	docker compose -f pong-game/docker-compose.yml down -v
 
 .PHONY: all
