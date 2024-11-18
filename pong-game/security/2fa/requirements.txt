@@ -1,0 +1,6 @@
+Flask==2.3.3
+pyotp==2.8.0
+python-dotenv==1.0.0
+prometheus-client==0.17.1
+hvac==1.1.0  # For Vault integration
+gunicorn==20.1.0

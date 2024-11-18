@@ -1,28 +1,18 @@
-FROM nginx:stable
+FROM nginx:1.27.2
 
-RUN apt-get update && apt-get install -y \
-    openssl \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+COPY ./nginx.conf /etc/nginx/nginx.conf
 
-RUN mkdir -p /etc/nginx/certs
+# Copy other resources
+# COPY ... ...
 
-RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-    -keyout /etc/nginx/certs/privkey.pem \
-    -out /etc/nginx/certs/fullchain.pem \
-    -subj "/C=US/ST=State/L=City/O-Organization/CN=localhost" && \
-    chmod 644 /etc/nginx/certs/fullchain.pem && \
-    chmod 644 /etc/nginx/certs/privkey.pem
+WORKDIR /usr/share/nginx/html
 
-COPY default.conf /etc/nginx/conf.d/default.conf
-
-RUN useradd -r -u 1000 nginx-user && \
-    chown -R nginx-user:nginx-user /etc/nginx/certs && \
-    chown -R nginx-user:nginx-user /var/cache/nginx && \
-    chown -R nginx-user:nginx-user /var/log/nginx && \
-    touch /var/run/nginx.pid && \
-    chown -R nginx-user:nginx-user /var/run/nginx.pid
-
-USER nginx-user
+RUN mkdir -p /etc/nginx/ssl && \
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+    -keyout /etc/nginx/ssl/selfsigned.key \
+    -out /etc/nginx/ssl/selfsigned.crt \
+    -subj "/C=US/ST=State/L=City/O-Organization/CN=localhost"
 
 EXPOSE 80 443
+
+CMD ["nginx", "-g", "daemon off;"]
