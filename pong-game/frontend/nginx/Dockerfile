@@ -1,6 +1,6 @@
 FROM nginx:alpine
 
-RUN apk add -no-cache openssl
+RUN apk add --no-cache openssl
 
 RUN mkdir -p /etc/nginx/certs
 
