@@ -72,14 +72,19 @@ if (canvas.getContext) {
 	function updateBall() {
 		ball.x += ball.speedX;
 		ball.y += ball.speedY;
-		if (ball.y - ball.radius < 0 || ball.y + ball.radius > canvas.height)
+		if (ball.y - ball.radius < 0 || ball.y + ball.radius * (-1 * (ball.speedY < 0)) > canvas.height)
 			ball.speedY *= -1;
-		if (ball.x - ball.radius < 0 || ball.x + ball.radius > canvas.width)
+		if (ball.x - ball.radius < 0 || ball.x + ball.radius * (-1 * (ball.speedX < 0)) > canvas.width)
 			ball.speedX *= -1;
-		if (checkHorizontalCollision(ball.x - ball.radius, ball.y - ball.radius) == true)
+		if (checkHorizontalCollision(ball.x + ball.radius * (-1 * (ball.speedX < 0)), ball.y + ball.radius * (-1 * ball.speedX < 0)) == true)
+		{
 			ball.speedX *= -1;
-		if (checkVerticalCollision() == true)
-			ball.speedY *= 1;
+			let relativeIntersection = (player.paddle.y + (PADDLE_HEIGHT * 0.5) - ball.y);
+			let normalizedIntersection = relativeIntersection / (PADDLE_HEIGHT * 0.5);
+			ball.speedY = normalizedIntersection * 5;
+		}
+		else if (checkVerticalCollision() == true)
+			ball.speedY *= -1;
 	}
 
 	function gameLoop() {
