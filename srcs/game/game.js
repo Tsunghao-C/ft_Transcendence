@@ -19,8 +19,8 @@ if (canvas.getContext) {
 			else
 			{
 				this.x = canvas.width * 0.90;
-				this.upKey = 'w';
-				this.downKey = 's';
+				this.upKey = 'KeyW';
+				this.downKey = 'KeyS';
 			}
 			this.y = canvas.height * 0.30;
 			this.speed = 0;
@@ -40,17 +40,26 @@ if (canvas.getContext) {
 	const Player2 = new Player(2, 'green');
 
 	document.addEventListener('keydown', function(event) {
-		if (event.code == 'ArrowUp') {
+		if (event.code == Player1.Paddle.upKey) {
 				Player1.Paddle.speed = -5;
 		}
-		else if (event.code == 'ArrowDown') {
+		else if (event.code == Player1.Paddle.downKey) {
 				Player1.Paddle.speed = 5;
+		}
+		else if (event.code == Player2.Paddle.upKey) {
+				Player2.Paddle.speed = -5;
+		}
+		else if (event.code == Player2.Paddle.downKey) {
+				Player2.Paddle.speed = 5;
 		}
 	});
 
 	document.addEventListener('keyup', function(event) {
-		if (event.code == 'ArrowUp' || event.code == 'ArrowDown')
+		console.log("code: " + event.code);
+		if (event.code == Player1.Paddle.upKey || event.code == Player1.Paddle.downKey)
 			Player1.Paddle.speed = 0;
+		else if (event.code == Player2.Paddle.upKey || event.code == Player2.Paddle.downKey)
+			Player2.Paddle.speed = 0;
 	});
 
 	function updatePlayer(Player) {
