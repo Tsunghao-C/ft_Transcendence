@@ -21,27 +21,29 @@ volumes:
 
 services:
   # Security Layer
-  waf:
-    container_name: waf
-    build:
-      context: ./security/waf
-    ports:
-      - "8443:443"
-      - "8080:80"
-    volumes:
-      - ./security/waf/rules:/etc/modsecurity.d/rules
-      - ./security/waf/nginx:/etc/nginx/conf.d
-    depends_on:
-      nginx:
-        condition: service_healthy
-    networks:
-      - frontend_net
-    healthcheck:
-      test: ["CMD", "nginx", "-t"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    restart: unless-stopped
+
+  ## Add WAF later after major modules are tested working
+  # waf:
+  #   container_name: waf
+  #   build:
+  #     context: ./security/waf
+  #   ports:
+  #     - "8443:443"
+  #     - "8080:80"
+  #   volumes:
+  #     - ./security/waf/rules:/etc/modsecurity.d/rules
+  #     - ./security/waf/nginx:/etc/nginx/conf.d
+  #   depends_on:
+  #     nginx:
+  #       condition: service_healthy
+  #   networks:
+  #     - frontend_net
+  #   healthcheck:
+  #     test: ["CMD", "nginx", "-t"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 3
+  #   restart: unless-stopped
 
   vault:
     container_name: vault
@@ -60,44 +62,37 @@ services:
       - backend_net
     restart: unless-stopped
 
-  two_fa:
-    container_name: 2fa
-    build: ./security/2fa
-    ports:
-      - "8082:8082"
-    networks:
-      - backend_net
-    restart: unless-stopped
+  ## Added later
+  # two_fa:
+  #   container_name: 2fa
+  #   build: ./security/2fa
+  #   ports:
+  #     - "8082:8082"
+  #   networks:
+  #     - backend_net
+  #   restart: unless-stopped
 
-  # Frontend & Gateway
+  # Frontend Layer
   nginx:
     container_name: nginx
-    # image: nginx:1-alpine
     build:
       context: ./frontend/nginx
-    expose:
-      - "80"
+      dockerfile: Dockerfile
+    # expose:
+    #   - "80"
     volumes:
-      - ./frontend/nginx/certs:/etc/nginx/certs:ro
       - nginx_temp:/tmp/nginx
     depends_on:
       - spa
-      - auth_service
-      - user_service
-      - game_service
-    # # If we don't use WFA
-    # ports:
-    #   - "80:80"
-    #   - "443:443"
-    # volumes:
-    #   - ./frontend/nginx/conf.d:/etc/nginx/conf.d
-    #   - ./frontend/nginx/certs:/etc/nginx/certs
-    #   - ./frontend/build:/usr/share/nginx/html
+    # If we don't use WFA
+    ports:
+      - "8443:443"
+      - "8080:80"
     networks:
       - frontend_net
       - backend_net
     healthcheck:
-      test: ["CMD", "nginx", "-t"]
+      test: ["CMD", "curl", "-k", "https://localhost/health"]
       interval: 10s
       timeout: 5s
       retries: 3
