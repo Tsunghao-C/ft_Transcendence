@@ -7,12 +7,14 @@
 *.pem
 
 # local env files
+srcs/.env
 .env
 .env.local
 .env.development.local
 
 # Django stuff
 *.log
+django/venv/
 
 # C extensions
 *.so
