@@ -4,71 +4,113 @@ const canvas = document.getElementById('game');
 
 if (canvas.getContext) {
 	const ctx = canvas.getContext('2d');
+	const Paddle_HEIGHT = 100;
+	const Paddle_WIDTH = 20;
 	let	ball = {x:canvas.width/2, y:canvas.height/2, color:'white', speedX:5, speedY:5, radius:10}; // could become class
-	let	paddle = {x:(canvas.width * 0.10), y:(canvas.height * 0.30), speed:0};
-	const PADDLE_HEIGHT = 100;
-	const PADDLE_WIDTH = 20;
-	let player = {paddle:paddle, color:'red'}; //to upgrade to class in the future
+
+	class Paddle {
+		constructor (id, color) {
+			if (id == 1)
+			{
+				this.x = canvas.width * 0.10;
+				this.upKey = 'ArrowUp';
+				this.downKey = 'ArrowDown';
+			}
+			else
+			{
+				this.x = canvas.width * 0.90;
+				this.upKey = 'w';
+				this.downKey = 's';
+			}
+			this.y = canvas.height * 0.30;
+			this.speed = 0;
+			this.color = color;
+		}
+	}
+
+	class Player {
+		constructor (id, color) {
+			this.id = id;
+			this.color = color;
+			this.Paddle = new Paddle(id, color);
+		}
+	}
+
+	const Player1 = new Player(1, 'red');
+	const Player2 = new Player(2, 'green');
 
 	document.addEventListener('keydown', function(event) {
 		if (event.code == 'ArrowUp') {
-				player.paddle.speed = -5;
+				Player1.Paddle.speed = -5;
 		}
 		else if (event.code == 'ArrowDown') {
-				player.paddle.speed = 5;
+				Player1.Paddle.speed = 5;
 		}
 	});
 
 	document.addEventListener('keyup', function(event) {
 		if (event.code == 'ArrowUp' || event.code == 'ArrowDown')
-			player.paddle.speed = 0;
+			Player1.Paddle.speed = 0;
 	});
 
-	function updatePlayer() {
-		if (player.paddle.speed > 0)
+	function updatePlayer(Player) {
+		if (Player.Paddle.speed > 0)
 		{
-			if (player.paddle.y + PADDLE_HEIGHT == canvas.height)	
+			if (Player.Paddle.y + Paddle_HEIGHT == canvas.height)	
 				return ;
-			if ((player.paddle.y + PADDLE_HEIGHT) + player.paddle.speed >= canvas.height)
-				player.paddle.y += canvas.height - (player.paddle.y + PADDLE_HEIGHT);
+			if ((Player.Paddle.y + Paddle_HEIGHT) + Player.Paddle.speed >= canvas.height)
+				Player.Paddle.y += canvas.height - (Player.Paddle.y + Paddle_HEIGHT);
 			else
-				player.paddle.y += player.paddle.speed;
+				Player.Paddle.y += Player.Paddle.speed;
 		}
 		else
 		{
-			if (player.paddle.y == 0)
+			if (Player.Paddle.y == 0)
 				return ;
-			if (player.paddle.y - player.paddle.speed <= 0)
-				player.paddle.y += canvas.height - player.paddle.y;
+			if (Player.Paddle.y - Player.Paddle.speed <= 0)
+				Player.Paddle.y += canvas.height - Player.Paddle.y;
 			else
-				player.paddle.y += player.paddle.speed;
+				Player.Paddle.y += Player.Paddle.speed;
 		}
 	}
 
-	function checkHorizontalCollision(ballX, ballY)
+	function checkHorizontalCollision(ballX, ballY, Player)
 	{
-		return (ballX <= player.paddle.x + PADDLE_WIDTH &&
-				ballX >= player.paddle.x &&
-				ballY >= player.paddle.y &&
-				ballY <= player.paddle.y + PADDLE_HEIGHT);
+		return (ballX <= Player.Paddle.x + Paddle_WIDTH &&
+				ballX >= Player.Paddle.x &&
+				ballY >= Player.Paddle.y &&
+				ballY <= Player.Paddle.y + Paddle_HEIGHT);
 	}
 
-	function checkVerticalCollision() {
+	function checkVerticalCollision(Player) {
 		const horizontalOverlap =
-			ball.x + ball.radius > player.paddle.x &&
-			ball.x - ball.radius < player.paddle.x + PADDLE_WIDTH;
+			ball.x + ball.radius > Player.Paddle.x &&
+			ball.x - ball.radius < Player.Paddle.x + Paddle_WIDTH;
 
 		const topEdgeCollision =
-			ball.y + ball.radius >= paddle.y &&
-			ball.y + ball.radius <= paddle.y + ball.speedY;
+			ball.y + ball.radius >= Paddle.y &&
+			ball.y + ball.radius <= Paddle.y + ball.speedY;
 
 		const bottomEdgeCollision =
-			ball.y - ball.radius <= paddle.y + PADDLE_HEIGHT &&
-			ball.y - ball.radius >= paddle.y + PADDLE_HEIGHT - ball.speedY;
+			ball.y - ball.radius <= Paddle.y + Paddle_HEIGHT &&
+			ball.y - ball.radius >= Paddle.y + Paddle_HEIGHT - ball.speedY;
 
 		return (horizontalOverlap && (topEdgeCollision || bottomEdgeCollision));
 	}
 	
+	function checkPlayerCollision(Player)
+	{
+		if (checkHorizontalCollision(ball.x + ball.radius * (-1 * (ball.speedX < 0)), ball.y + ball.radius * (-1 * ball.speedX < 0), Player) == true)
+		{
+			ball.speedX *= -1;
+			let relativeIntersection = (Player.Paddle.y + (Paddle_HEIGHT * 0.5) - ball.y);
+			let normalizedIntersection = relativeIntersection / (Paddle_HEIGHT * 0.5);
+			ball.speedY = normalizedIntersection * 5;
+		}
+		else if (checkVerticalCollision(Player) == true)
+			ball.speedY *= -1;
+	}
+
 	function updateBall() {
 		ball.x += ball.speedX;
 		ball.y += ball.speedY;
@@ -76,24 +118,20 @@ if (canvas.getContext) {
 			ball.speedY *= -1;
 		if (ball.x - ball.radius < 0 || ball.x + ball.radius * (-1 * (ball.speedX < 0)) > canvas.width)
 			ball.speedX *= -1;
-		if (checkHorizontalCollision(ball.x + ball.radius * (-1 * (ball.speedX < 0)), ball.y + ball.radius * (-1 * ball.speedX < 0)) == true)
-		{
-			ball.speedX *= -1;
-			let relativeIntersection = (player.paddle.y + (PADDLE_HEIGHT * 0.5) - ball.y);
-			let normalizedIntersection = relativeIntersection / (PADDLE_HEIGHT * 0.5);
-			ball.speedY = normalizedIntersection * 5;
-		}
-		else if (checkVerticalCollision() == true)
-			ball.speedY *= -1;
 	}
 
 	function gameLoop() {
 
-		updatePlayer();
+		updatePlayer(Player1);
+		updatePlayer(Player2);
+		checkPlayerCollision(Player1);
+		checkPlayerCollision(Player2);
 		updateBall();
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
-		ctx.fillStyle = player.color;
-		ctx.fillRect(player.paddle.x, player.paddle.y, PADDLE_WIDTH, PADDLE_HEIGHT);
+		ctx.fillStyle = Player1.color;
+		ctx.fillRect(Player1.Paddle.x, Player1.Paddle.y, Paddle_WIDTH, Paddle_HEIGHT);
+		ctx.fillStyle = Player2.color;
+		ctx.fillRect(Player2.Paddle.x, Player2.Paddle.y, Paddle_WIDTH, Paddle_HEIGHT);
 		ctx.beginPath();
 		ctx.arc(ball.x, ball.y, ball.radius, 0, 2 * Math.PI);
 		ctx.fillStyle = ball.color;
