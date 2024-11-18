@@ -6,8 +6,17 @@ COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY src/ ./src/
 
-EXPOSE 8082
+ENV FLASK_APP=src/app.py
+ENV FLASK_ENV=development
+ENV PORT=8082
 
-CMD [ "python", "src/app.py" ]
+# EXPOSE 8082
+
+CMD ["gunicorn", "--bind", "0.0.0.0:8082", "--workers", "4", "src.app:app"]
+
+
+# CMD [ "python", "src/app.py" ]
+
+USER 1000
