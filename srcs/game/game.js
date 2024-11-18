@@ -34,20 +34,16 @@ if (canvas.getContext) {
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		ball.x += ball.speedX;
 		ball.y += ball.speedY;
-		if (player.paddle.speed > 0)
+		if (player.paddle.speed > 0 && (player.paddle.y + PADDLE_HEIGHT) != canvas.height)
 		{
-			if (player.paddle.y + PADDLE_HEIGHT == canvas.height)
-				player.paddle.y += 0;
-			else if (player.paddle.y + PADDLE_HEIGHT + 5 > canvas.height)
+			if (player.paddle.y + PADDLE_HEIGHT + 5 > canvas.height)
 				player.paddle.y += canvas.height - player.paddle.y + PADDLE_HEIGHT;
 			else
 				player.paddle.y += player.paddle.speed;
 		}
-		else
+		else if (player.paddle.y != 0)
 		{
-			if (player.paddle.y == 0)
-				player.paddle.y += 0;
-			else if (player.paddle.y - 5 < 0)
+			if (player.paddle.y - 5 < 0)
 				player.paddle.y += canvas.height - player.paddle.y;
 			else
 				player.paddle.y += player.paddle.speed;
