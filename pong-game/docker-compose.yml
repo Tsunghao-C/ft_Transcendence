@@ -29,10 +29,19 @@ services:
       - 8004
     depends_on:
       - user_db
-    env_file:
-      - ./.env_dummy
     networks:
       - backend_net
+    environment:
+      DEBUG: ${DEBUG}
+      SECRET_KEY: ${SECRET_KEY}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
+      SQL_ENGINE: ${SQL_ENGINE}
+      SQL_DATABASE: ${SQL_DATABASE}
+      SQL_USER: ${SQL_USER}
+      SQL_PASSWORD: ${SQL_PASSWORD}
+      SQL_HOST: ${SQL_HOST}
+      SQL_PORT: ${SQL_PORT}
+
 
   user_db:
     container_name: user_db
@@ -46,8 +55,6 @@ services:
       - static_volume:/app/static
     networks:
       - backend_net
-    env_file:
-      - ./.env_dummy
 
   # Frontend & Gateway
   nginx:
@@ -69,8 +76,16 @@ services:
     networks:
       - frontend_net
       - backend_net
-    env_file:
-      - ./.env_dummy
+    environment:
+      DEBUG: ${DEBUG}
+      SECRET_KEY: ${SECRET_KEY}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
+      SQL_ENGINE: ${SQL_ENGINE}
+      SQL_DATABASE: ${SQL_DATABASE}
+      SQL_USER: ${SQL_USER}
+      SQL_PASSWORD: ${SQL_PASSWORD}
+      SQL_HOST: ${SQL_HOST}
+      SQL_PORT: ${SQL_PORT}
     #restart: unless-stopped
 
   ## Monitoring Stack

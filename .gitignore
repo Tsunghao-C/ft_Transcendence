@@ -7,8 +7,8 @@
 *.pem
 
 # local env files
-srcs/.env
-.env
+# srcs/.env
+# .env
 .env.local
 .env.development.local
 
