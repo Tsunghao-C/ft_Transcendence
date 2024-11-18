@@ -91,30 +91,30 @@ if (canvas.getContext) {
 
 	function checkVerticalCollision(Player) {
 		const horizontalOverlap =
-			ball.x + ball.radius > Player.Paddle.x &&
-			ball.x - ball.radius < Player.Paddle.x + Paddle_WIDTH;
+			ball.x + ball.radius >= Player.Paddle.x &&
+			ball.x - ball.radius <= Player.Paddle.x + Paddle_WIDTH;
 
 		const topEdgeCollision =
-			ball.y + ball.radius >= Paddle.y &&
-			ball.y + ball.radius <= Paddle.y + ball.speedY;
+			ball.y + ball.radius >= Player.Paddle.y &&
+			ball.y + ball.radius <= Player.Paddle.y + ball.speedY;
 
 		const bottomEdgeCollision =
-			ball.y - ball.radius <= Paddle.y + Paddle_HEIGHT &&
-			ball.y - ball.radius >= Paddle.y + Paddle_HEIGHT - ball.speedY;
+			ball.y - ball.radius <= Player.Paddle.y + Paddle_HEIGHT &&
+			ball.y - ball.radius >= Player.Paddle.y + Paddle_HEIGHT - ball.speedY;
 
 		return (horizontalOverlap && (topEdgeCollision || bottomEdgeCollision));
 	}
 	
 	function checkPlayerCollision(Player) {
-		if (checkHorizontalCollision(ball.x + ball.radius * (-1 * (ball.speedX < 0)), ball.y + ball.radius * (-1 * ball.speedX < 0), Player) == true)
+		if (checkVerticalCollision(Player) == true)
+			ball.speedY *= -1;
+		else if (checkHorizontalCollision(ball.x + ball.radius * (-1 * (ball.speedX < 0)), ball.y + ball.radius, Player) == true)
 		{
 			ball.speedX *= -1;
 			let relativeIntersection = (Player.Paddle.y + (Paddle_HEIGHT * 0.5) - ball.y);
 			let normalizedIntersection = relativeIntersection / (Paddle_HEIGHT * 0.5);
 			ball.speedY = normalizedIntersection * 5;
 		}
-		else if (checkVerticalCollision(Player) == true)
-			ball.speedY *= -1;
 	}
 
 	function updateBall() {
