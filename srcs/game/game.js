@@ -1,9 +1,9 @@
 
 // size by default of the canvas is 300x150, it can be sized arbitrarily by CSS. If it appears distorted, best specify it in the <canvas> attribute and not the CSS
-const canvas = document.getElementById("game");
+const canvas = document.getElementById('game');
 
 if (canvas.getContext) {
-	const ctx = canvas.getContext("2d");
+	const ctx = canvas.getContext('2d');
 	let	ball = {x:canvas.width/2, y:canvas.height/2, color:'white', speedX:5, speedY:5, radius:10}; // could become class
 	let	paddle = {x:(canvas.width * 0.10), y:(canvas.height * 0.30), speed:0};
 	const PADDLE_HEIGHT = 100;
@@ -44,6 +44,30 @@ if (canvas.getContext) {
 				player.paddle.y += player.paddle.speed;
 		}
 	}
+
+	function checkHorizontalCollision(ballX, ballY)
+	{
+		return (ballX <= player.paddle.x + PADDLE_WIDTH &&
+				ballX >= player.paddle.x &&
+				ballY >= player.paddle.y &&
+				ballY <= player.paddle.y + PADDLE_HEIGHT);
+	}
+
+	function checkVerticalCollision() {
+		const horizontalOverlap =
+			ball.x + ball.radius > player.paddle.x &&
+			ball.x - ball.radius < player.paddle.x + PADDLE_WIDTH;
+
+		const topEdgeCollision =
+			ball.y + ball.radius >= paddle.y &&
+			ball.y + ball.radius <= paddle.y + ball.speedY;
+
+		const bottomEdgeCollision =
+			ball.y - ball.radius <= paddle.y + PADDLE_HEIGHT &&
+			ball.y - ball.radius >= paddle.y + PADDLE_HEIGHT - ball.speedY;
+
+		return (horizontalOverlap && (topEdgeCollision || bottomEdgeCollision));
+	}
 	
 	function updateBall() {
 		ball.x += ball.speedX;
@@ -52,8 +76,10 @@ if (canvas.getContext) {
 			ball.speedY *= -1;
 		if (ball.x - ball.radius < 0 || ball.x + ball.radius > canvas.width)
 			ball.speedX *= -1;
-		if (ball.x + ball.radius < player.paddle.x + PADDLE_WIDTH && ball.x + ball.radius > player.paddle.x)
+		if (checkHorizontalCollision(ball.x - ball.radius, ball.y - ball.radius) == true)
 			ball.speedX *= -1;
+		if (checkVerticalCollision() == true)
+			ball.speedY *= 1;
 	}
 
 	function gameLoop() {
