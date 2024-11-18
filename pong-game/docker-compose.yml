@@ -1,10 +1,16 @@
 networks:
+  frontend_net:
+    driver: bridge
   backend_net:
     driver: bridge
     #internal: true
+  monitoring_net:
+    driver: bridge
 
 volumes:
   user_data: {}
+  static_volume: {}
+  #prometheus_data: {}
 
 services:
   game_service:
@@ -17,8 +23,10 @@ services:
     image: game_service
     pull_policy: never
     container_name: game_service
-    ports:
-      - 8004:8004
+    volumes:
+      - static_volume:/app/static
+    expose:
+      - 8004
     depends_on:
       - user_db
     env_file:
@@ -35,5 +43,42 @@ services:
       - POSTGRES_DB=${SQL_DATABASE}
     volumes:
       - user_data:/var/lib/postgresql/data
+      - static_volume:/app/static
     networks:
       - backend_net
+
+  # Frontend & Gateway
+  nginx:
+    container_name: nginx
+    # image: nginx:1-alpine
+    build:
+      context: ./frontend/nginx
+    #depends_on:
+    #  - waf
+    #  - spa
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - static_volume:/app/static:ro
+    #   - ./frontend/nginx/conf.d:/etc/nginx/conf.d
+    #   - ./frontend/nginx/certs:/etc/nginx/certs
+    #   - ./frontend/build:/usr/share/nginx/html
+    networks:
+      - frontend_net
+      - backend_net
+    #restart: unless-stopped
+
+  ## Monitoring Stack
+  #prometheus:
+  #  container_name: prometheus
+  #  image: prom/prometheus
+  #  user: "1000:1000"
+  #  ports:
+  #    - "9090:9090"   # only for development stage
+  #  volumes:
+  #    - ./monitoring/prometheus:/etc/prometheus
+  #    - prometheus_data:/prometheus
+  #  networks:
+  #    - monitoring_net
+  #  #restart: unless-stopped
