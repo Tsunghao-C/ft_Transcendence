@@ -10,14 +10,12 @@ if (canvas.getContext) {
 
 	class Paddle {
 		constructor (id, color) {
-			if (id == 1)
-			{
+			if (id == 1) {
 				this.x = canvas.width * 0.10;
 				this.upKey = 'ArrowUp';
 				this.downKey = 'ArrowDown';
 			}
-			else
-			{
+			else {
 				this.x = canvas.width * 0.90;
 				this.upKey = 'KeyW';
 				this.downKey = 'KeyS';
@@ -33,6 +31,7 @@ if (canvas.getContext) {
 			this.id = id;
 			this.color = color;
 			this.Paddle = new Paddle(id, color);
+			this.score = 0;
 		}
 	}
 
@@ -83,8 +82,7 @@ if (canvas.getContext) {
 		}
 	}
 
-	function checkHorizontalCollision(ballX, ballY, Player)
-	{
+	function checkHorizontalCollision(ballX, ballY, Player) {
 		return (ballX <= Player.Paddle.x + Paddle_WIDTH &&
 				ballX >= Player.Paddle.x &&
 				ballY >= Player.Paddle.y &&
@@ -107,8 +105,7 @@ if (canvas.getContext) {
 		return (horizontalOverlap && (topEdgeCollision || bottomEdgeCollision));
 	}
 	
-	function checkPlayerCollision(Player)
-	{
+	function checkPlayerCollision(Player) {
 		if (checkHorizontalCollision(ball.x + ball.radius * (-1 * (ball.speedX < 0)), ball.y + ball.radius * (-1 * ball.speedX < 0), Player) == true)
 		{
 			ball.speedX *= -1;
@@ -123,20 +120,37 @@ if (canvas.getContext) {
 	function updateBall() {
 		ball.x += ball.speedX;
 		ball.y += ball.speedY;
-		if (ball.y - ball.radius < 0 || ball.y + ball.radius * (-1 * (ball.speedY < 0)) > canvas.height)
+		if (ball.y - ball.radius < 0 || ball.y + ball.radius > canvas.height)
 			ball.speedY *= -1;
-		if (ball.x - ball.radius < 0 || ball.x + ball.radius * (-1 * (ball.speedX < 0)) > canvas.width)
-			ball.speedX *= -1;
+		if (ball.x - ball.radius < 0 || ball.x + ball.radius > canvas.width)
+		{
+			if (ball.x - ball.radius < 0)
+			{
+				Player2.score++;
+				ball.x = canvas.width * 0.7;
+				ball.y = canvas.height * 0.5;
+			}
+			else
+			{
+				Player1.score++;
+				ball.x = canvas.width * 0.3;
+				ball.y = canvas.height * 0.5;
+			}
+//			ball.speedX *= -1;
+		}
 	}
-
+	
 	function gameLoop() {
-
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		ctx.font = '48px serif';
+		ctx.textBaseline = 'hanging';
+		ctx.fillStyle = 'white';
+		ctx.fillText(Player1.score + " : " + Player2.score, canvas.width * 0.45, canvas.height * 0.10);
 		updatePlayer(Player1);
 		updatePlayer(Player2);
 		checkPlayerCollision(Player1);
 		checkPlayerCollision(Player2);
 		updateBall();
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		ctx.fillStyle = Player1.color;
 		ctx.fillRect(Player1.Paddle.x, Player1.Paddle.y, Paddle_WIDTH, Paddle_HEIGHT);
 		ctx.fillStyle = Player2.color;
@@ -146,7 +160,6 @@ if (canvas.getContext) {
 		ctx.fillStyle = ball.color;
 		ctx.fill();
 		ctx.closePath();
-
 		requestAnimationFrame(gameLoop);
 	}
 	gameLoop();
