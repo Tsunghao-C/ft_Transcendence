@@ -30,7 +30,7 @@ services:
     depends_on:
       - user_db
     env_file:
-      - ./.env
+      - ./.env_dummy
     networks:
       - backend_net
 
@@ -46,6 +46,8 @@ services:
       - static_volume:/app/static
     networks:
       - backend_net
+    env_file:
+      - ./.env_dummy
 
   # Frontend & Gateway
   nginx:
@@ -67,6 +69,8 @@ services:
     networks:
       - frontend_net
       - backend_net
+    env_file:
+      - ./.env_dummy
     #restart: unless-stopped
 
   ## Monitoring Stack
