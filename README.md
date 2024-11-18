@@ -4,8 +4,11 @@ Developing a web game Pong from scratch
 
 # Pong Game Project
 
-## Quick Start
+![Alt text](image/image2.png)
 
+## Quick Start 
+
+### Manually 
 1. Clone the repository
 ```bash
 git clone <repository-url>
@@ -21,6 +24,21 @@ cp .env.example .env
 3. Start services
 ```bash
 docker-compose up -d
+```
+
+### By Makefile
+1. Clone the repo as above
+```bash
+git clone <repository-url>
+cd ft_Transcendence
+```
+2. Use makefile
+```bash
+make #It will create a copy of .env
+```
+3. To remove stop and remvoe
+```bash
+make clean #It will delete the .env
 ```
 
 ## Development Access Points

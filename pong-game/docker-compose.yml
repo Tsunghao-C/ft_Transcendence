@@ -12,6 +12,7 @@ volumes:
   nginx_temp: {}
   auth_data: {}
   user_data: {}
+  static_volume: {} # Added by Ben
   redis_data: {}
   game_data: {}
   match_data: {}
@@ -81,7 +82,7 @@ services:
     # expose:
     #   - "80"
     volumes:
-      - nginx_temp:/tmp/nginx
+      - static_volume:/app/static:ro
     depends_on:
       - spa
     # If we don't use WFA
@@ -91,6 +92,16 @@ services:
     networks:
       - frontend_net
       - backend_net
+    environment:
+      DEBUG: ${DEBUG}
+      SECRET_KEY: ${SECRET_KEY}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
+      SQL_ENGINE: ${SQL_ENGINE}
+      SQL_DATABASE: ${SQL_DATABASE}
+      SQL_USER: ${SQL_USER}
+      SQL_PASSWORD: ${SQL_PASSWORD}
+      SQL_HOST: ${SQL_HOST}
+      SQL_PORT: ${SQL_PORT}
     healthcheck:
       test: ["CMD", "curl", "-k", "https://localhost/health"]
       interval: 10s
@@ -164,10 +175,12 @@ services:
     container_name: user_db
     image: postgres:14-alpine
     environment:
-      - POSTGRES_DB=userdb
-      - POSTGRES_PASSWORD=${USER_DB_PASSWORD}
+      - POSTGRES_USER=${SQL_USER}
+      - POSTGRES_PASSWORD=${SQL_PASSWORD}
+      - POSTGRES_DB=${SQL_DATABASE}
     volumes:
       - user_data:/var/lib/postgresql/data
+      - static_volume:/app/static
     user: "999:999"
     networks:
       - backend_net
@@ -188,17 +201,38 @@ services:
   # Game Services
   game_service:
     container_name: game_service
-    build: ./game-service
+    build: 
+      context: ./game-service
+      dockerfile: Dockerfile
+      args:
+        - SQL_HOST=${SQL_HOST}
+        - SQL_PORT=${SQL_PORT}
+    image: game_service
+    pull_policy: never
     user: "1000:1000"
-    ports:
-      - "8004:8004"     # only for development stage, need to close after
+    volumes:
+      - static_volume:/app/static
+    expose:
+      - 8004
+    # ports:
+    #   - "8004:8004"     # only for development stage, need to close after
     environment:
-      - DATABASE_URL=postgresql://postgres:${GAME_DB_PASSWORD}@game_db:5434/gamedb
-      - MATCH_DB_URL=postgresql://postgres:${MATCH_DB_PASSWORD}@match_db:5432/matchdb
-      - VAULT_ADDR=http://vault:8200
-      - VAULT_TOKEN=${VAULT_DEV_ROOT_TOKEN}
+      # - DATABASE_URL=postgresql://postgres:${GAME_DB_PASSWORD}@game_db:5434/gamedb
+      # - MATCH_DB_URL=postgresql://postgres:${MATCH_DB_PASSWORD}@match_db:5432/matchdb
+      # - VAULT_ADDR=http://vault:8200
+      # - VAULT_TOKEN=${VAULT_DEV_ROOT_TOKEN}
+      DEBUG: ${DEBUG}
+      SECRET_KEY: ${SECRET_KEY}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
+      SQL_ENGINE: ${SQL_ENGINE}
+      SQL_DATABASE: ${SQL_DATABASE}
+      SQL_USER: ${SQL_USER}
+      SQL_PASSWORD: ${SQL_PASSWORD}
+      SQL_HOST: ${SQL_HOST}
+      SQL_PORT: ${SQL_PORT}
     depends_on:
       - game_db
+      - user_db
       - match_db
       - vault
     networks:
