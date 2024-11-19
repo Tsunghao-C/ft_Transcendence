@@ -104,9 +104,9 @@ services:
       SQL_PORT: ${SQL_PORT}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/health" ]
-      interval: 10s
-      timeout: 5s
-      retries: 3
+      interval: 2s
+      timeout: 2s
+      retries: 1
     restart: unless-stopped
 
   ## [Theo] to finish this part
