@@ -19,6 +19,17 @@ volumes:
   prometheus_data: {}
   grafana_data: {}
   es_data: {}
+  ## ELK 
+  certs:
+    driver: local
+  esdata01:
+    driver: local
+  esdata02:
+    driver: local
+  kibanadata:
+    driver: local
+  logstashdata:
+    driver: local
 
 services:
   # Security Layer
@@ -314,37 +325,37 @@ services:
   #     - monitoring_net
   #   restart: unless-stopped
   
-  # elasticsearch:
-  #   container_name: elasticsearch
-  #   image: elasticsearch:8.7.0
-  #   user: "1000:1000"
-  #   environment:
-  #     - discovery.type=single-node
-  #     - ES_JAVA_OPTS=-Xms512m -Xmx512m
-  #   volumes:
-  #     - es_data:/usr/share/elasticsearch/data
-  #   networks:
-  #     - monitoring_net
-  #   restart: unless-stopped
+  elasticsearch:
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    user: "1000:1000"
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - monitoring_net
+    restart: unless-stopped
   
-  # logstash:
-  #   container_name: logstash
-  #   image: logstash:8.7.0
-  #   user: "1000:1000"
-  #   volumes:
-  #     - ./monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline
-  #   networks:
-  #     - monitoring_net
-  #   restart: unless-stopped
+  logstash:
+    container_name: logstash
+    image: logstash:8.7.0
+    user: "1000:1000"
+    volumes:
+      - ./monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline
+    networks:
+      - monitoring_net
+    restart: unless-stopped
   
-  # kibana:
-  #   container_name: kibana
-  #   image: kibana:8.7.0
-  #   user: "1000:1000"
-  #   ports:
-  #     - "5601:5601"
-  #   environment:
-  #     - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-  #   networks:
-  #     - monitoring_net
-  #   restart: unless-stopped
+  kibana:
+    container_name: kibana
+    image: kibana:8.7.0
+    user: "1000:1000"
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    networks:
+      - monitoring_net
+    restart: unless-stopped
