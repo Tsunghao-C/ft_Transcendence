@@ -1,4 +1,4 @@
-all: build run check
+all: go check
 
 go: build run
 
@@ -8,6 +8,18 @@ build:
 
 run:
 	docker compose -f pong-game/docker-compose.yml up -d
+
+status:
+	docker compose -f pong-game/docker-compose.yml ps
+
+stop:
+	docker compose -f pong-game/docker-compose.yml stop
+
+start:
+	docker compose -f pong-game/docker-compose.yml start
+
+down:
+	docker compose -f pong-game/docker-compose.yml down
 
 check:
 	# wait 5 seconds for sevices to initialize
@@ -34,4 +46,4 @@ clean:
 	docker compose -f pong-game/docker-compose.yml down -v
 	rm pong-game/.env
 
-.PHONY: all
+.PHONY: all build check run clean go start stop down status
