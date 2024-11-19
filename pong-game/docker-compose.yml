@@ -18,17 +18,7 @@ volumes:
   match_data: {}
   prometheus_data: {}
   grafana_data: {}
-  es_data: {}
-  ## ELK 
-  certs:
-    driver: local
-  esdata01:
-    driver: local
-  esdata02:
-    driver: local
-  kibanadata:
-    driver: local
-  logstashdata:
+  es_data:
     driver: local
 
 services:
@@ -103,6 +93,7 @@ services:
     networks:
       - frontend_net
       - backend_net
+      - monitoring_net
     environment:
       DEBUG: ${DEBUG}
       SECRET_KEY: ${SECRET_KEY}
@@ -113,6 +104,11 @@ services:
       SQL_PASSWORD: ${SQL_PASSWORD}
       SQL_HOST: ${SQL_HOST}
       SQL_PORT: ${SQL_PORT}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/health" ]
       interval: 2s
@@ -328,34 +324,46 @@ services:
   elasticsearch:
     container_name: elasticsearch
     image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
-    user: "1000:1000"
     environment:
       - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     volumes:
       - es_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
     networks:
       - monitoring_net
     restart: unless-stopped
   
   logstash:
     container_name: logstash
-    image: logstash:8.7.0
-    user: "1000:1000"
+    image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
     volumes:
       - ./monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline
     networks:
       - monitoring_net
+    ports:
+      - "5000:5000"
+      - "9600:9600"
+    depends_on:
+      - elasticsearch
     restart: unless-stopped
   
   kibana:
     container_name: kibana
-    image: kibana:8.7.0
-    user: "1000:1000"
+    image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
     ports:
       - "5601:5601"
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - SERVER_BASEPATH=/kibana
+      - SERVER_REWRITEBASEPATH=true
+      - SERVER_NAME=kibana
     networks:
       - monitoring_net
+    depends_on:
+      - elasticsearch
     restart: unless-stopped
