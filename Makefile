@@ -14,10 +14,16 @@ check:
 	# Check if the application container is running successfully
 	@all_containers=$$(docker compose -f pong-game/docker-compose.yml ps -a --format '{{.Name}}'); \
 	running_containers=$$(docker compose -f pong-game/docker-compose.yml ps --format '{{.Name}}'); \
-	@all_containers=$$(docker compose -f pong-game/docker-compose.yml ps -a --format '{{.Name}}'); \
-	running_containers=$$(docker compose -f pong-game/docker-compose.yml ps --format '{{.Name}}'); \
 	for container in $$all_containers; do \
-		echo "$$running_containers" | grep -q "$$container" || (echo "Error: $$container is not running!" && exit 1); \
+		if ! echo "$$running_containers" | grep -q "$$container"; then \
+			echo "Error: $$container is not running!" exit 1; \
+		fi; \
+		if [ $$(docker inspect --format='{{.RestartCount}}' "$$container") -gt 0 ]; then \
+			echo "Error: $$container has restarted!" && exit 1; \
+		fi; \
+		if ! docker inspect "$$container" --format='{{.State.Health.Status}}' | grep -q "healthy"; then \
+			echo "Error: $$container is not healthy!" && exit 1; \
+		fi; \
 	done
 	echo "All containers are running."
 
