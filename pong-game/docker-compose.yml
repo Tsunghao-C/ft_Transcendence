@@ -22,8 +22,8 @@ volumes:
 
 services:
   # Security Layer
+  ## [Alex] to finish WAF later after major modules are tested working
 
-  ## Add WAF later after major modules are tested working
   # waf:
   #   container_name: waf
   #   build:
@@ -46,24 +46,23 @@ services:
   #     retries: 3
   #   restart: unless-stopped
 
-  vault:
-    container_name: vault
-    image: hashicorp/vault
-    cap_add:
-      - IPC_LOCK
-    ports:
-      - "8200:8200"   # only for development stage, need to close after
-    environment:
-      - VAULT_DEV_ROOT_TOKEN_ID=${VAULT_DEV_ROOT_TOKEN}
-    volumes:
-      - ./security/vault/config:/vault/config
-      - vault_data:/vault/file
-    user: "1000:1000"
-    networks:
-      - backend_net
-    restart: unless-stopped
+  # vault:
+  #   container_name: vault
+  #   image: hashicorp/vault
+  #   cap_add:
+  #     - IPC_LOCK
+  #   ports:
+  #     - "8200:8200"   # only for development stage, need to close after
+  #   environment:
+  #     - VAULT_DEV_ROOT_TOKEN_ID=${VAULT_DEV_ROOT_TOKEN}
+  #   volumes:
+  #     - ./security/vault/config:/vault/config
+  #     - vault_data:/vault/file
+  #   user: "1000:1000"
+  #   networks:
+  #     - backend_net
+  #   restart: unless-stopped
 
-  ## Added later
   # two_fa:
   #   container_name: 2fa
   #   build: ./security/2fa
@@ -74,6 +73,7 @@ services:
   #   restart: unless-stopped
 
   # Frontend Layer
+  ## [Theo] & [Alex]
   nginx:
     container_name: nginx
     build:
@@ -83,8 +83,8 @@ services:
     #   - "80"
     volumes:
       - static_volume:/app/static:ro
-    depends_on:
-      - spa
+    # depends_on:
+    #   - spa
     # If we don't use WFA
     ports:
       - "8443:443"
@@ -103,243 +103,248 @@ services:
       SQL_HOST: ${SQL_HOST}
       SQL_PORT: ${SQL_PORT}
     healthcheck:
-      test: ["CMD", "curl", "-k", "https://localhost/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
+      test: ["CMD", "curl", "-f", "http://localhost:80/health" ]
+      interval: 2s
+      timeout: 2s
+      retries: 1
     restart: unless-stopped
 
-  spa:
-    container_name: spa
-    build:
-      context: ./frontend/spa
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    environment:
-      - REACT_APP_API_URL=http://localhost/api
-      - REACT_APP_WS_URL=ws://localhost/ws
-    networks:
-      - frontend_net
-    restart: unless-stopped
-  
+  ## [Theo] to finish this part
+  # spa:
+  #   container_name: spa
+  #   build:
+  #     context: ./frontend/spa
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+  #   environment:
+  #     - REACT_APP_API_URL=http://localhost/api
+  #     - REACT_APP_WS_URL=ws://localhost/ws
+  #   networks:
+  #     - frontend_net
+  #   restart: unless-stopped
+
   # Auth Layer
-  auth_service:
-    container_name: auth_service
-    build: ./auth-service
-    user: "1000:1000"
-    ports:
-      - "8001:8001"   # only for development stage, need to close after
-    environment:
-      - DATABASE_URL=postgresql://postgres:${AUTH_DB_PASSWORD}@auth_db:5432/authdb
-      - VAULT_ADDR=http://vault:8200
-    depends_on:
-      - auth_db
-      - vault
-    networks:
-      - backend_net
-    restart: unless-stopped
+  ## [TBD] handle this part after user_service and game_service is done
+  # auth_service:
+  #   container_name: auth_service
+  #   build: ./auth-service
+  #   user: "1000:1000"
+  #   ports:
+  #     - "8001:8001"   # only for development stage, need to close after
+  #   environment:
+  #     - DATABASE_URL=postgresql://postgres:${AUTH_DB_PASSWORD}@auth_db:5432/authdb
+  #     - VAULT_ADDR=http://vault:8200
+  #   depends_on:
+  #     - auth_db
+  #     - vault
+  #   networks:
+  #     - backend_net
+  #   restart: unless-stopped
   
-  auth_db:
-    container_name: auth_db
-    image: postgres:14-alpine
-    environment:
-      - POSTGRES_DB=authdb
-      - POSTGRES_PASSWORD=${AUTH_DB_PASSWORD}
-    volumes:
-      - auth_data:/var/lib/postgresql/data
-    user: "999:999"
-    networks:
-      - backend_net
-    restart: unless-stopped
+  # auth_db:
+  #   container_name: auth_db
+  #   image: postgres:14-alpine
+  #   environment:
+  #     - POSTGRES_DB=authdb
+  #     - POSTGRES_PASSWORD=${AUTH_DB_PASSWORD}
+  #   volumes:
+  #     - auth_data:/var/lib/postgresql/data
+  #   user: "999:999"
+  #   networks:
+  #     - backend_net
+  #   restart: unless-stopped
   
   # User Service
-  user_service:
-    container_name: user_service
-    build: ./user-service
-    user: "1000:1000"
-    ports:
-      - "8002:8002"     # only for development stage, need to close after
-    environment:
-      - DATABASE_URL=postgresql://postgres:${USER_DB_PASSWORD}@user_db:5433/userdb
-      - REDIS_URL=redis://redis:6379/0
-      - VAULT_ADDR=http://vault:8200
-    depends_on:
-      - user_db
-      - vault
-    networks:
-      - backend_net
-    restart: unless-stopped
+  ## [Ben]
+  # user_service:
+  #   container_name: user_service
+  #   build: ./user-service
+  #   user: "1000:1000"
+  #   ports:
+  #     - "8002:8002"     # only for development stage, need to close after
+  #   environment:
+  #     - DATABASE_URL=postgresql://postgres:${USER_DB_PASSWORD}@user_db:5433/userdb
+  #     - REDIS_URL=redis://redis:6379/0
+  #     # - VAULT_ADDR=http://vault:8200
+  #   depends_on:
+  #     - user_db
+  #     # - vault
+  #   networks:
+  #     - backend_net
+  #   restart: unless-stopped
 
-  user_db:
-    container_name: user_db
-    image: postgres:14-alpine
-    environment:
-      - POSTGRES_USER=${SQL_USER}
-      - POSTGRES_PASSWORD=${SQL_PASSWORD}
-      - POSTGRES_DB=${SQL_DATABASE}
-    volumes:
-      - user_data:/var/lib/postgresql/data
-      - static_volume:/app/static
-    user: "999:999"
-    networks:
-      - backend_net
-    restart: unless-stopped
+  # user_db:
+  #   container_name: user_db
+  #   image: postgres:14-alpine
+  #   environment:
+  #     - POSTGRES_USER=${SQL_USER}
+  #     - POSTGRES_PASSWORD=${SQL_PASSWORD}
+  #     - POSTGRES_DB=${SQL_DATABASE}
+  #   volumes:
+  #     - user_data:/var/lib/postgresql/data
+  #     - static_volume:/app/static
+  #   user: "999:999"
+  #   networks:
+  #     - backend_net
+  #   restart: unless-stopped
   
-  redis:
-    container_name: redis
-    image: redis:alpine
-    command: redis-server --appendonly yes
-    volumes:
-      - redis_data:/data
-    ports:
-      - "6379:6379"     # only for development stage, need to close after
-    networks:
-      - backend_net
-    restart: unless-stopped
+  # redis:
+  #   container_name: redis
+  #   image: redis:alpine
+  #   command: redis-server --appendonly yes
+  #   volumes:
+  #     - redis_data:/data
+  #   ports:
+  #     - "6379:6379"     # only for development stage, need to close after
+  #   networks:
+  #     - backend_net
+  #   restart: unless-stopped
 
   # Game Services
-  game_service:
-    container_name: game_service
-    build: 
-      context: ./game-service
-      dockerfile: Dockerfile
-      args:
-        - SQL_HOST=${SQL_HOST}
-        - SQL_PORT=${SQL_PORT}
-    image: game_service
-    pull_policy: never
-    user: "1000:1000"
-    volumes:
-      - static_volume:/app/static
-    expose:
-      - 8004
-    # ports:
-    #   - "8004:8004"     # only for development stage, need to close after
-    environment:
-      # - DATABASE_URL=postgresql://postgres:${GAME_DB_PASSWORD}@game_db:5434/gamedb
-      # - MATCH_DB_URL=postgresql://postgres:${MATCH_DB_PASSWORD}@match_db:5432/matchdb
-      # - VAULT_ADDR=http://vault:8200
-      # - VAULT_TOKEN=${VAULT_DEV_ROOT_TOKEN}
-      DEBUG: ${DEBUG}
-      SECRET_KEY: ${SECRET_KEY}
-      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
-      SQL_ENGINE: ${SQL_ENGINE}
-      SQL_DATABASE: ${SQL_DATABASE}
-      SQL_USER: ${SQL_USER}
-      SQL_PASSWORD: ${SQL_PASSWORD}
-      SQL_HOST: ${SQL_HOST}
-      SQL_PORT: ${SQL_PORT}
-    depends_on:
-      - game_db
-      - user_db
-      - match_db
-      - vault
-    networks:
-      - backend_net
-    restart: unless-stopped
+  ## [Jean] do the gaming & [Ben] do the db
+  # game_service:
+  #   container_name: game_service
+  #   build: 
+  #     context: ./game-service
+  #     dockerfile: Dockerfile
+  #     args:
+  #       - SQL_HOST=${SQL_HOST}
+  #       - SQL_PORT=${SQL_PORT}
+  #   image: game_service
+  #   pull_policy: never
+  #   user: "1000:1000"
+  #   volumes:
+  #     - static_volume:/app/static
+  #   expose:
+  #     - 8004
+  #   # ports:
+  #   #   - "8004:8004"     # only for development stage, need to close after
+  #   environment:
+  #     # - DATABASE_URL=postgresql://postgres:${GAME_DB_PASSWORD}@game_db:5434/gamedb
+  #     # - MATCH_DB_URL=postgresql://postgres:${MATCH_DB_PASSWORD}@match_db:5432/matchdb
+  #     # - VAULT_ADDR=http://vault:8200
+  #     # - VAULT_TOKEN=${VAULT_DEV_ROOT_TOKEN}
+  #     DEBUG: ${DEBUG}
+  #     SECRET_KEY: ${SECRET_KEY}
+  #     DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
+  #     SQL_ENGINE: ${SQL_ENGINE}
+  #     SQL_DATABASE: ${SQL_DATABASE}
+  #     SQL_USER: ${SQL_USER}
+  #     SQL_PASSWORD: ${SQL_PASSWORD}
+  #     SQL_HOST: ${SQL_HOST}
+  #     SQL_PORT: ${SQL_PORT}
+  #   # depends_on:
+  #   #   - game_db
+  #   #   - user_db
+  #   #   - match_db
+  #   #   # - vault
+  #   networks:
+  #     - backend_net
+  #   restart: unless-stopped
   
-  game_db:
-    container_name: game_db
-    image: postgres:14-alpine
-    environment:
-      - POSTGRES_DB=gamedb
-      - POSTGRES_PASSWORD=${GAME_DB_PASSWORD}
-    volumes:
-      - game_data:/var/lib/postgresql/data
-    user: "999:999"
-    networks:
-      - backend_net
-    restart: unless-stopped
+  # game_db:
+  #   container_name: game_db
+  #   image: postgres:14-alpine
+  #   environment:
+  #     - POSTGRES_DB=gamedb
+  #     - POSTGRES_PASSWORD=${GAME_DB_PASSWORD}
+  #   volumes:
+  #     - game_data:/var/lib/postgresql/data
+  #   user: "999:999"
+  #   networks:
+  #     - backend_net
+  #   restart: unless-stopped
 
-  match_db:
-    container_name: match_db
-    image: postgres:14-alpine
-    environment:
-      - POSTGRES_DB=matchdb
-      - POSTGRES_PASSWORD=${MATCH_DB_PASSWORD}
-    volumes:
-      - match_data:/var/lib/postgresql/data
-    ports:
-      - "5435:5432"     # only for development stage, need to close after
-    user: "999:999"
-    networks:
-      - backend_net
-    restart: unless-stopped
+  # match_db:
+  #   container_name: match_db
+  #   image: postgres:14-alpine
+  #   environment:
+  #     - POSTGRES_DB=matchdb
+  #     - POSTGRES_PASSWORD=${MATCH_DB_PASSWORD}
+  #   volumes:
+  #     - match_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5435:5432"     # only for development stage, need to close after
+  #   user: "999:999"
+  #   networks:
+  #     - backend_net
+  #   restart: unless-stopped
 
   # Monitoring Stack
-  prometheus:
-    container_name: prometheus
-    image: prom/prometheus
-    user: "1000:1000"
-    ports:
-      - "9090:9090"   # only for development stage
-    volumes:
-      - ./monitoring/prometheus:/etc/prometheus
-      - prometheus_data:/prometheus
-    networks:
-      - monitoring_net
-    restart: unless-stopped
+  ## [Tsunghao]
+  # prometheus:
+  #   container_name: prometheus
+  #   image: prom/prometheus
+  #   user: "1000:1000"
+  #   ports:
+  #     - "9090:9090"   # only for development stage
+  #   volumes:
+  #     - ./monitoring/prometheus:/etc/prometheus
+  #     - prometheus_data:/prometheus
+  #   networks:
+  #     - monitoring_net
+  #   restart: unless-stopped
   
-  grafana:
-    container_name: grafana
-    image: grafana/grafana
-    user: "1000:1000"
-    ports:
-      - "3001:3001"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
-    volumes:
-      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
-      - grafana_data:/var/lib/grafana
-    networks:
-      - monitoring_net
-    restart: unless-stopped
+  # grafana:
+  #   container_name: grafana
+  #   image: grafana/grafana
+  #   user: "1000:1000"
+  #   ports:
+  #     - "3001:3001"
+  #   environment:
+  #     - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+  #   volumes:
+  #     - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+  #     - grafana_data:/var/lib/grafana
+  #   networks:
+  #     - monitoring_net
+  #   restart: unless-stopped
   
-  cadvisor:
-    container_name: cadvisor
-    image: gcr.io/cadvisor/cadvisor
-    user: "1000:1000"
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:rw
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-    networks:
-      - monitoring_net
-    restart: unless-stopped
+  # cadvisor:
+  #   container_name: cadvisor
+  #   image: gcr.io/cadvisor/cadvisor
+  #   user: "1000:1000"
+  #   volumes:
+  #     - /:/rootfs:ro
+  #     - /var/run:/var/run:rw
+  #     - /sys:/sys:ro
+  #     - /var/lib/docker/:/var/lib/docker:ro
+  #   networks:
+  #     - monitoring_net
+  #   restart: unless-stopped
   
-  elasticsearch:
-    container_name: elasticsearch
-    image: elasticsearch:8.7.0
-    user: "1000:1000"
-    environment:
-      - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
-    volumes:
-      - es_data:/usr/share/elasticsearch/data
-    networks:
-      - monitoring_net
-    restart: unless-stopped
+  # elasticsearch:
+  #   container_name: elasticsearch
+  #   image: elasticsearch:8.7.0
+  #   user: "1000:1000"
+  #   environment:
+  #     - discovery.type=single-node
+  #     - ES_JAVA_OPTS=-Xms512m -Xmx512m
+  #   volumes:
+  #     - es_data:/usr/share/elasticsearch/data
+  #   networks:
+  #     - monitoring_net
+  #   restart: unless-stopped
   
-  logstash:
-    container_name: logstash
-    image: logstash:8.7.0
-    user: "1000:1000"
-    volumes:
-      - ./monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline
-    networks:
-      - monitoring_net
-    restart: unless-stopped
+  # logstash:
+  #   container_name: logstash
+  #   image: logstash:8.7.0
+  #   user: "1000:1000"
+  #   volumes:
+  #     - ./monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline
+  #   networks:
+  #     - monitoring_net
+  #   restart: unless-stopped
   
-  kibana:
-    container_name: kibana
-    image: kibana:8.7.0
-    user: "1000:1000"
-    ports:
-      - "5601:5601"
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-    networks:
-      - monitoring_net
-    restart: unless-stopped
+  # kibana:
+  #   container_name: kibana
+  #   image: kibana:8.7.0
+  #   user: "1000:1000"
+  #   ports:
+  #     - "5601:5601"
+  #   environment:
+  #     - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+  #   networks:
+  #     - monitoring_net
+  #   restart: unless-stopped
