@@ -46,4 +46,6 @@ clean:
 	docker compose -f pong-game/docker-compose.yml down -v
 	rm pong-game/.env
 
-.PHONY: all build check run clean go start stop down status
+re: clean all
+
+.PHONY: all build check run clean go start stop down status re
