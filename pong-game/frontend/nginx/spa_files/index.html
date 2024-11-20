@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Mon SPA avec Bootstrap</title>
+	<title>ft_transcendence</title>
 
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
@@ -13,45 +13,35 @@
 <body>
 
 	<nav class="navbar navbar-expand-lg navbar-light bg-light">
-		<a class="navbar-brand" href="#home">ft_transcendence</a>
-		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-			<span class="navbar-toggler-icon"></span>
-		</button>
-		<div class="collapse navbar-collapse" id="navbarNav">
-			<ul class="navbar-nav mx-auto">
-				<li class="nav-item">
-					<a class="nav-link" href="#game"><i class="bi bi-controller"></i> Game</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" href="#leaderboard"><i class="bi bi-trophy"></i> Leaderboard</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" href="#settings"><i class="bi bi-gear"></i> Settings</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" href="#about"><i class="bi bi-info-circle"></i> About</a>
-				</li>
-			</ul>
-			<ul class="navbar-nav">
-				<li class="nav-item dropdown">
-					<a class="nav-link dropdown-toggle btn btn-primary" href="#" id="userMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-						User
-					</a>
-					<ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
-						<li><a class="dropdown-item" href="#profile">Profile</a></li>
-						<li><a class="dropdown-item" href="#logout">Logout</a></li>
-					</ul>
-				</li>
-			</ul>
-		</div>
+		<a class="navbar-brand" href="#home" data-i18n="home">Home</a>
+		<ul class="navbar-nav mx-auto">
+			<li class="nav-item">
+				<a class="nav-link" href="#game" data-i18n="game"><span data-i18n="game">Game</span></a>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link" href="#leaderboard" data-i18n="leaderboard"><span data-i18n="leaderboard">Leaderboard</span></a>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link" href="#settings" data-i18n="settings"><span data-i18n="settings">Settings</span></a>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link" href="#about" data-i18n="about"><span data-i18n="about">About</span></a>
+			</li>
+		</ul>
+		<ul class="navbar-nav">
+			<li class="nav-item">
+				<a class="nav-link btn btn-primary" href="#profile" data-i18n="user">User</a>
+			</li>
+		</ul>
 	</nav>
 
 	<div id="content" class="container">
 	</div>
 
-	<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
-
-	<script src="app.js"></script>
+	<script type="module" src="javascript/language_pack.js"></script>
+	<script type="module" src="javascript/game.js"></script>
+	<script type="module" src="javascript/settings.js"></script>
+	<script type="module" src="javascript/app.js"></script>
 </body>
 </html>

@@ -1,15 +1,20 @@
 /* styles.css */
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f8f9fa;
+	font-family: Arial, sans-serif;
+	margin: 0;
+	padding: 0;
+	background-color: #f8f9fa;
 	font-size: 1em;
 }
 
-body.dark-mode {
-    background-color: #000;
-    color: #fff;
+body.dark {
+	background-color: #000;
+	color: #fff;
+}
+
+body.colorblind {
+	background-color: #57c40f;
+	color: #e90b0b;
 }
 
 nav {
@@ -25,9 +30,152 @@ nav a {
 }
 
 #content {
-    margin: 20px;
+	margin: 20px;
 }
 
 button:focus, a:focus {
-    outline: 2px solid #007bff;
+	outline: 10px solid #007bff;
 }
+
+select {
+	background-color: #43807a;
+	color: #ffffff;
+	border: 2px solid #9c1743;
+	padding: 10px;
+	font-size: 16px;
+	border-radius: 5px;
+	width: 200px;
+	cursor: pointer;
+	text-align: left;
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+}
+
+
+select::-ms-expand {
+	display: none;
+}
+
+
+
+/* light colors */
+
+select:focus {
+	outline: 10px solid #007bff;
+	border-color: #6e2a56;
+}
+
+select:hover {
+	background-color: #3a6e63;
+}
+
+select:hover {
+	background-color: #3a6e63;
+}
+
+body .navbar {
+	background-color: #43807a !important;
+	color: #9c1743 !important;
+}
+
+body .navbar .navbar-nav .nav-link {
+	color: #000000 !important;
+}
+
+body .navbar .navbar-nav .nav-link:hover {
+	color: #be1717 !important;
+}
+
+/* dark colors */
+body.dark select {
+	background-color: #030303;
+	color: #ffffff;
+	border: 2px solid #b437ae;
+}
+
+body.dark select:focus {
+	outline: 10px solid #007bff;
+	border-color: #6e2a56;
+}
+
+body.dark select:hover {
+	background-color: #3a6e63;
+}
+
+body.dark select:hover {
+	background-color: #3a6e63;
+}
+
+body.dark {
+	background-color: #000;
+	color: #fff;
+}
+
+body.dark .navbar {
+	background-color: #666d3c !important;
+	color: #370cd4 !important;
+}
+
+body.dark .navbar .navbar-nav .nav-link {
+	color: #ffffff !important;
+}
+
+body.dark .navbar .navbar-nav .nav-link:hover {
+	color: #ffcc00 !important;
+}
+
+/* colorblind colors */
+body.colorblind select {
+	background-color: #030303;
+	color: #ffffff;
+	border: 2px solid #b437ae;
+}
+
+body.colorblind select:focus {
+	outline: 10px solid #007bff;
+	border-color: #6e2a56;
+}
+
+body.colorblind select:hover {
+	background-color: #3a6e63;
+}
+
+body.colorblind select:hover {
+	background-color: #3a6e63;
+}
+
+body.colorblind {
+	background-color: #57c40f;
+	color: #e90b0b;
+}
+body.colorblind .navbar {
+	background-color: #9cad3b !important;
+	color: #4e0848 !important;
+}
+
+body.colorblind .navbar .navbar-nav .nav-link {
+	color: #3c0a46 !important;
+}
+
+body.colorblind .navbar .navbar-nav .nav-link:hover {
+	color: #d6b328 !important;
+}
+
+/* Font size */
+body.small-font {
+	font-size: 1em;
+}
+
+body.medium-font {
+	font-size: 2em;
+}
+
+body.large-font {
+	font-size: 3em;
+}
+
+
+
+
+
