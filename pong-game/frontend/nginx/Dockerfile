@@ -1,6 +1,6 @@
 FROM nginx:1.27.2
 
-# Installer necessary dependencies
+# Install necessary dependencies
 RUN apt-get update && apt-get install -y \
     openssl \
     libssl-dev \
