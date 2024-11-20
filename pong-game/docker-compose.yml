@@ -115,6 +115,8 @@ services:
       timeout: 2s
       retries: 1
     restart: unless-stopped
+    env_file:
+      - ./.env
 
   ## [Theo] to finish this part
   # spa:
@@ -164,38 +166,71 @@ services:
   
   # User Service
   ## [Ben]
-  # user_service:
-  #   container_name: user_service
-  #   build: ./user-service
-  #   user: "1000:1000"
-  #   ports:
-  #     - "8002:8002"     # only for development stage, need to close after
-  #   environment:
-  #     - DATABASE_URL=postgresql://postgres:${USER_DB_PASSWORD}@user_db:5433/userdb
-  #     - REDIS_URL=redis://redis:6379/0
-  #     # - VAULT_ADDR=http://vault:8200
-  #   depends_on:
-  #     - user_db
-  #     # - vault
-  #   networks:
-  #     - backend_net
-  #   restart: unless-stopped
+  game_service:
+    build: 
+      context: ./game-service
+      dockerfile: "Dockerfile"
+      args:
+        - DEBUG=${DEBUG}
+        - SECRET_KEY=${SECRET_KEY}
+        - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS}
+        - SQL_ENGINE=${SQL_ENGINE}
+        - SQL_DATABASE=${SQL_DATABASE}
+        - SQL_USER=${SQL_USER}
+        - SQL_PASSWORD=${SQL_PASSWORD}
+        - SQL_HOST=${SQL_HOST}
+        - SQL_PORT=${SQL_PORT}
 
-  # user_db:
-  #   container_name: user_db
-  #   image: postgres:14-alpine
-  #   environment:
-  #     - POSTGRES_USER=${SQL_USER}
-  #     - POSTGRES_PASSWORD=${SQL_PASSWORD}
-  #     - POSTGRES_DB=${SQL_DATABASE}
-  #   volumes:
-  #     - user_data:/var/lib/postgresql/data
-  #     - static_volume:/app/static
-  #   user: "999:999"
-  #   networks:
-  #     - backend_net
-  #   restart: unless-stopped
-  
+        - USER_DB_ENGINE=${USER_DB_ENGINE}
+        - USER_DB_DATABASE=${USER_DB_DATABASE}
+        - USER_DB_USER=${USER_DB_USER}
+        - USER_DB_PASSWORD=${USER_DB_PASSWORD}
+        - SQL_USER_HOST=${SQL_USER_HOST}
+        - SQL_USER_PORT=${SQL_USER_PORT}
+
+    image: game_service
+    pull_policy: never
+    container_name: game_service
+    volumes:
+      - static_volume:/app/static
+    expose:
+      - 8004
+    depends_on:
+      - user_db
+    env_file:
+      - ./.env
+    networks:
+      - backend_net
+
+  user_db:
+    container_name: user_db
+    image: postgres:14-alpine
+    environment:
+      - POSTGRES_USER=${SQL_USER}
+      - POSTGRES_PASSWORD=${SQL_PASSWORD}
+      - POSTGRES_DB=${SQL_DATABASE}
+    volumes:
+      - user_data:/var/lib/postgresql/data
+      - static_volume:/app/static
+    user: "999:999"
+    networks:
+      - backend_net
+    restart: unless-stopped
+
+  game_db:
+    container_name: game_db
+    image: postgres:14-alpine
+    environment:
+      - POSTGRES_DB=${SQL_HOST}
+      - POSTGRES_PASSWORD=${SQL_PASSWORD}
+    volumes:
+      - game_data:/var/lib/postgresql/data
+      - static_volume:/app/static
+    user: "999:999"
+    networks:
+      - backend_net
+    restart: unless-stopped
+
   # redis:
   #   container_name: redis
   #   image: redis:alpine
@@ -250,18 +285,7 @@ services:
   #     - backend_net
   #   restart: unless-stopped
   
-  # game_db:
-  #   container_name: game_db
-  #   image: postgres:14-alpine
-  #   environment:
-  #     - POSTGRES_DB=gamedb
-  #     - POSTGRES_PASSWORD=${GAME_DB_PASSWORD}
-  #   volumes:
-  #     - game_data:/var/lib/postgresql/data
-  #   user: "999:999"
-  #   networks:
-  #     - backend_net
-  #   restart: unless-stopped
+
 
   # match_db:
   #   container_name: match_db
@@ -321,49 +345,49 @@ services:
   #     - monitoring_net
   #   restart: unless-stopped
   
-  elasticsearch:
-    container_name: elasticsearch
-    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    volumes:
-      - es_data:/usr/share/elasticsearch/data
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    networks:
-      - monitoring_net
-    restart: unless-stopped
+  #elasticsearch:
+  #  container_name: elasticsearch
+  #  image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+  #  environment:
+  #    - discovery.type=single-node
+  #    - xpack.security.enabled=false
+  #    - bootstrap.memory_lock=true
+  #    - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+  #  volumes:
+  #    - es_data:/usr/share/elasticsearch/data
+  #  ports:
+  #    - "9200:9200"
+  #    - "9300:9300"
+  #  networks:
+  #    - monitoring_net
+  #  restart: unless-stopped
   
-  logstash:
-    container_name: logstash
-    image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
-    volumes:
-      - ./monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline
-    networks:
-      - monitoring_net
-    ports:
-      - "5000:5000"
-      - "9600:9600"
-    depends_on:
-      - elasticsearch
-    restart: unless-stopped
+  #logstash:
+  #  container_name: logstash
+  #  image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
+  #  volumes:
+  #    - ./monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline
+  #  networks:
+  #    - monitoring_net
+  #  ports:
+  #    - "5000:5000"
+  #    - "9600:9600"
+  #  depends_on:
+  #    - elasticsearch
+  #  restart: unless-stopped
   
-  kibana:
-    container_name: kibana
-    image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
-    ports:
-      - "5601:5601"
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-      - SERVER_BASEPATH=/kibana
-      - SERVER_REWRITEBASEPATH=true
-      - SERVER_NAME=kibana
-    networks:
-      - monitoring_net
-    depends_on:
-      - elasticsearch
-    restart: unless-stopped
+  #kibana:
+  #  container_name: kibana
+  #  image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
+  #  ports:
+  #    - "5601:5601"
+  #  environment:
+  #    - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+  #    - SERVER_BASEPATH=/kibana
+  #    - SERVER_REWRITEBASEPATH=true
+  #    - SERVER_NAME=kibana
+  #  networks:
+  #    - monitoring_net
+  #  depends_on:
+  #    - elasticsearch
+  #  restart: unless-stopped
