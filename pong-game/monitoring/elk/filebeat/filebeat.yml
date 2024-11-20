@@ -1,0 +1,32 @@
+filebeat.inputs:
+- type: filestream
+  id: nginx-logs
+  enabled: true
+  paths:
+    - /var/log/nginx/access.log
+  json.keys_under_root: true
+  json.add_error_key: true
+
+# # Enable if you want to process error logs too
+# - type: filestream
+#   id: nginx-error-logs
+#   enabled: true
+#   paths:
+#    - /var/log/nginx/error.log
+
+# output.logstash:
+#   hosts: ["logstash:5044"]
+#   timeout: 15
+
+# Debug by bypassing Logstash
+output.elasticsearch:
+  hosts: ["elasticsearch:9200"]
+  indices:
+    - index: "nginx-logs-%{+yyyy.MM.dd}"
+
+setup.template.name: "nginx-logs"
+setup.template.pattern: "nginx-logs-*"
+setup.ilm.enabled: false
+
+logging.json: true
+logging.metrics.enabled: false

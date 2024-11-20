@@ -44,6 +44,7 @@ check:
 
 clean:
 	docker compose -f pong-game/docker-compose.yml down -v
+	rm -f pong-game/frontend/nginx/logs/*.log
 	rm pong-game/.env
 
 re: clean all
