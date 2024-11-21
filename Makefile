@@ -29,7 +29,7 @@ check:
 	running_containers=$$(docker compose -f pong-game/docker-compose.yml ps --format '{{.Name}}'); \
 	for container in $$all_containers; do \
 		if ! echo "$$running_containers" | grep -q "$$container"; then \
-			echo "Error: $$container is not running!"; \ 
+			echo "Error: $$container is not running!"; \
 			docker logs "$$container"; \
 			exit 1; \
 		fi; \
