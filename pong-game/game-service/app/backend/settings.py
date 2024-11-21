@@ -108,17 +108,17 @@ DATABASES = {
         "HOST": os.environ.get("SQL_HOST", "localhost"),
         "PORT": os.environ.get("SQL_PORT", "5432"),
     },
-	# "user_db": {
-    #     "ENGINE": os.environ.get("SQL_USER_ENGINE", "django.db.backends.sqlite3"),
-    #     "NAME": os.environ.get("SQL_USER_DATABASE", BASE_DIR / "db.sqlite3"),
-    #     "USER": os.environ.get("SQL_USER_USER", "user"),
-    #     "PASSWORD": os.environ.get("USER_DB_PASSWORD", "password"),
-    #     "HOST": os.environ.get("SQL_USER_HOST", "localhost"),
-    #     "PORT": os.environ.get("SQL_USER_PORT", "5433"),
-    # }
+	"user_db": {
+        "ENGINE": os.environ.get("SQL_USER_ENGINE", "django.db.backends.sqlite3"),
+        "NAME": os.environ.get("SQL_USER_DATABASE", BASE_DIR / "db.sqlite3"),
+        "USER": os.environ.get("SQL_USER_USER", "user"),
+        "PASSWORD": os.environ.get("USER_DB_PASSWORD", "password"),
+        "HOST": os.environ.get("SQL_USER_HOST", "localhost"),
+        "PORT": os.environ.get("SQL_USER_PORT", "5433"),
+    }
 }
 
-# DATABASE_ROUTERS = ['backend.database_router.AppDatabaseRouter']
+DATABASE_ROUTERS = ['backend.database_router.AppDatabaseRouter']
 
 
 # Password validation
