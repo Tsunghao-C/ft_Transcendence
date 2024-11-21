@@ -4,6 +4,8 @@ go: build run
 
 build:
 	cp pong-game/.env.example pong-game/.env
+	mkdir -p pong-game/frontend/nginx/logs
+	chmod -R 755 pong-game/frontend/nginx/logs
 	docker compose -f pong-game/docker-compose.yml build
 
 run:
@@ -50,6 +52,7 @@ check:
 
 clean:
 	docker compose -f pong-game/docker-compose.yml down -v
+	# docker compose -f pong-game/docker-compose.yml run --rm --entrypoint sh nginx -c "rm -rf /var/log/nginx/*"
 	rm -f pong-game/frontend/nginx/logs/*.log
 	rm pong-game/.env
 

@@ -84,7 +84,7 @@ services:
     #   - "80"
     volumes:
       - static_volume:/app/static:ro
-      - ./frontend/nginx/logs:/var/log/nginx
+      - ./frontend/nginx/logs:/var/log/nginx:rw
     # depends_on:
     #   - spa
     # If we don't use WFA
@@ -397,13 +397,17 @@ services:
   filebeat:
     container_name: filebeat
     image: docker.elastic.co/beats/filebeat:${STACK_VERSION}
+    user: root  # Required to read logs
     volumes:
-      - ./monitoring/elk/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./monitoring/elk/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
       # Mount all log directories
       - ./frontend/nginx/logs:/var/log/nginx:ro
       # - ./auth-service/logs:/var/log/auth:ro
+    entrypoint: >
+      sh -c '
+      chmod go-w /usr/share/filebeat/filebeat.yml &&
+      filebeat -e --strict.perms=false'
     networks:
       - monitoring_net
     depends_on:
       - logstash
-    user: root  # Required to read logs

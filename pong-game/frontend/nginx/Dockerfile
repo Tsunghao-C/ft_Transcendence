@@ -44,18 +44,25 @@ RUN mkdir -p /etc/nginx/ssl && \
     -out /etc/nginx/ssl/selfsigned.crt \
     -subj "/C=US/ST=State/L=City/O-Organization/CN=localhost"
 
+# # Create a non-root user (safer practice)
+# RUN useradd -r -u 1000 nginx-user && \
+#     chown -R nginx-user:nginx-user /etc/nginx/ssl && \
+#     chown -R nginx-user:nginx-user /etc/nginx/modsecurity && \
+#     chown -R nginx-user:nginx-user /var/cache/nginx && \
+#     chown -R nginx-user:nginx-user /var/log && \
+#     touch /var/run/nginx.pid && \
+#     chown -R nginx-user:nginx-user /var/run/nginx.pid
 
-# Create a non-root user (safer practice)
-RUN useradd -r -u 1000 nginx-user && \
-    chown -R nginx-user:nginx-user /etc/nginx/ssl && \
-    chown -R nginx-user:nginx-user /etc/nginx/modsecurity && \
-    chown -R nginx-user:nginx-user /var/cache/nginx && \
-    chown -R nginx-user:nginx-user /var/log && \
-    touch /var/run/nginx.pid && \
-    chown -R nginx-user:nginx-user /var/run/nginx.pid
+# # Excecute Nginx server as non-root user
+# USER nginx-user
 
-# Excecute Nginx server as non-root user
-USER nginx-user
+
+# # Set proper permissions for nginx user
+# RUN chown -R nginx:nginx /var/cache/nginx && \
+#     chown -R nginx:nginx /var/log/nginx && \
+#     chown -R nginx:nginx /etc/nginx/ssl && \
+#     touch /var/run/nginx.pid && \
+#     chown -R nginx:nginx /var/run/nginx.pid
 
 # Exposing HTTP and HTTPS ports
 EXPOSE 80 443
