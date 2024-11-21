@@ -399,7 +399,9 @@ services:
     image: docker.elastic.co/beats/filebeat:${STACK_VERSION}
     volumes:
       - ./monitoring/elk/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      # Mount all log directories
       - ./frontend/nginx/logs:/var/log/nginx:ro
+      # - ./auth-service/logs:/var/log/auth:ro
     networks:
       - monitoring_net
     depends_on:
