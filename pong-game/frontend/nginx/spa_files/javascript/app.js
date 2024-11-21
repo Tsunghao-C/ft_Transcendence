@@ -4,16 +4,24 @@ import { changeLanguage } from './settings.js';
 import { changeFontSize } from './settings.js';
 import { changeColorMode } from './settings.js';
 import { setSettingsView } from './settings.js';
+import { translations } from './language_pack.js';
+import { setLoginView } from './profile.js';
+import { setCreateProfileView } from './profile.js';
 
-
-function loadPage(page) {
+export function loadPage(page) {
 	const contentContainer = document.getElementById("content");
 	const currentLanguage = localStorage.getItem("language") || "en";
+	const isLoggedIn = localStorage.getItem("isLoggedIn") || "false" ;
 
 	if (page !== "game") {
 		closeGameWebSocket();
 	}
-
+	if (isLoggedIn != "true" && page !== "login" && page !== "create-profile") {
+		setLoginView(contentContainer);
+	}
+	if (isLoggedIn === "true" && page === "login") {
+		page = "home";
+	}
 	if (page === "home") {
 		contentContainer.innerHTML = '<h1 data-i18n="home">Home</h1><p>Welcome!</p>';
 	} else if (page === "about") {
@@ -22,6 +30,10 @@ function loadPage(page) {
 		setGameView(contentContainer);
 	} else if (page === "settings") {
 		setSettingsView(contentContainer);
+	} else if (page === "login") {
+		setLoginView(contentContainer);
+	} else if (page === "create-profile") {
+		setCreateProfileView(contentContainer);
 	} else {
 contentContainer.innerHTML = `
 		<h1 data-i18n="error404Title">${translations[currentLanguage].error404Title}</h1>
@@ -79,6 +91,17 @@ document.addEventListener("DOMContentLoaded", function () {
 		loadPage(page);
 		updateActiveLink();
 	});
+
+	const logoutButton = document.getElementById("logoutButton");
+	if (logoutButton) {
+		logoutButton.addEventListener("click", function (event) {
+			event.preventDefault();
+			console.log("Logout clicked!");
+			localStorage.setItem("isLoggedIn", "false");
+			updateDropdownMenu(false);
+			loadPage("login");
+		});
+	}
 
 	window.addEventListener('hashchange', updateActiveLink);
 });
