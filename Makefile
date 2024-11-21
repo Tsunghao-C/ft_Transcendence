@@ -29,15 +29,21 @@ check:
 	running_containers=$$(docker compose -f pong-game/docker-compose.yml ps --format '{{.Name}}'); \
 	for container in $$all_containers; do \
 		if ! echo "$$running_containers" | grep -q "$$container"; then \
-			echo "Error: $$container is not running!" && exit 1; \
+			echo "Error: $$container is not running!"; \ 
+			docker logs "$$container"; \
+			exit 1; \
 		fi; \
 		restart_count=$$(docker inspect --format='{{.RestartCount}}' "$$container"); \
 		if [ "$$restart_count" -gt 0 ]; then \
-			echo "Error: $$container has restarted $$restart_count times!" && exit 1; \
+			echo "Error: $$container has restarted $$restart_count times!"; \
+			docker logs "$$container"; \
+			exit 1; \
 		fi; \
 		health_status=$$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$$container"); \
 		if [ "$$health_status" != "none" ] && [ "$$health_status" != "healthy" ]; then \
-			echo "Error: $$container health check failed (status: $$health_status)!" && exit 1; \
+			echo "Error: $$container health check failed (status: $$health_status)!"; \
+			docker logs "$$container"; \
+			exit 1; \
 		fi; \
 	done
 	echo "All containers are running without restart issues."
