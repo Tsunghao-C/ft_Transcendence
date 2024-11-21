@@ -22,14 +22,14 @@ down:
 	docker compose -f pong-game/docker-compose.yml down
 
 check:
-	# wait 5 seconds for sevices to initialize
-	sleep 5
+	# wait 10 seconds for sevices to initialize
+	sleep 10
 	# Check if the application container is running successfully
 	@all_containers=$$(docker compose -f pong-game/docker-compose.yml ps -a --format '{{.Name}}'); \
 	running_containers=$$(docker compose -f pong-game/docker-compose.yml ps --format '{{.Name}}'); \
 	for container in $$all_containers; do \
 		if ! echo "$$running_containers" | grep -q "$$container"; then \
-			echo "Error: $$container is not running!" exit 1; \
+			echo "Error: $$container is not running!" && exit 1; \
 		fi; \
 		restart_count=$$(docker inspect --format='{{.RestartCount}}' "$$container"); \
 		if [ "$$restart_count" -gt 0 ]; then \
