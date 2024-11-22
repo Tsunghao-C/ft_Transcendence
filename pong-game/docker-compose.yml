@@ -84,6 +84,7 @@ services:
     #   - "80"
     volumes:
       - static_volume:/app/static:ro
+      - ./frontend/nginx/logs:/var/log/nginx:rw
     # depends_on:
     #   - spa
     # If we don't use WFA
@@ -110,7 +111,7 @@ services:
         max-size: "10m"
         max-file: "3"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/health" ]
+      test: ["CMD", "curl", "-k", "https://localhost:443/health" ]
       interval: 2s
       timeout: 2s
       retries: 1
@@ -345,49 +346,92 @@ services:
   #     - monitoring_net
   #   restart: unless-stopped
   
-  #elasticsearch:
-  #  container_name: elasticsearch
-  #  image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
-  #  environment:
-  #    - discovery.type=single-node
-  #    - xpack.security.enabled=false
-  #    - bootstrap.memory_lock=true
-  #    - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-  #  volumes:
-  #    - es_data:/usr/share/elasticsearch/data
-  #  ports:
-  #    - "9200:9200"
-  #    - "9300:9300"
-  #  networks:
-  #    - monitoring_net
-  #  restart: unless-stopped
+  elasticsearch:
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - bootstrap.memory_lock=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - monitoring_net
+    restart: unless-stopped
   
-  #logstash:
-  #  container_name: logstash
-  #  image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
-  #  volumes:
-  #    - ./monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline
-  #  networks:
-  #    - monitoring_net
-  #  ports:
-  #    - "5000:5000"
-  #    - "9600:9600"
-  #  depends_on:
-  #    - elasticsearch
-  #  restart: unless-stopped
+  logstash:
+    container_name: logstash
+    image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
+    volumes:
+      - ./monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+      # ELASTIC_HOST: elasticsearch
+    networks:
+      - monitoring_net
+    ports:
+      - "5044:5044"
+    depends_on:
+      - elasticsearch
+    # healthcheck:
+    #   test: ["CMD", "bin/logstash", "-t"]
+    #   interval: 3s
+    #   timeout: 3s
+    #   retries: 1
+    restart: unless-stopped
   
-  #kibana:
-  #  container_name: kibana
-  #  image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
-  #  ports:
-  #    - "5601:5601"
-  #  environment:
-  #    - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-  #    - SERVER_BASEPATH=/kibana
-  #    - SERVER_REWRITEBASEPATH=true
-  #    - SERVER_NAME=kibana
-  #  networks:
-  #    - monitoring_net
-  #  depends_on:
-  #    - elasticsearch
-  #  restart: unless-stopped
+  kibana:
+    container_name: kibana
+    image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - SERVER_BASEPATH=/kibana
+      - SERVER_REWRITEBASEPATH=true
+      - SERVER_NAME=kibana
+      - XPACK_SECURITY_ENABLED=false
+      - TELEMETRY_ENABLED=false
+
+      # # CSP settings
+      # - SERVER_CSP_RULES=none
+
+      # # Disable features that might cause security warnings
+      # - XPACK_SECURITY_AUDIT_ENABLED=false
+      # - XPACK_REPORTING_ENABLED=false
+      # - XPACK_ALERTING_ENABLED=false
+
+      # - SERVER_SSL_ENABLED=false
+      # # Security settings
+      # - XPACK_SECURITY_SECURECOOKIES=false
+      # - XPACK_REPORTING_ENABLED=false
+      # - XPACK_ENCRYPTEDSPACE_ENABLED=false
+      # # Browser compatibility
+      # - XPACK_SECURITY_HTTP_CSP_STRICT=false
+      # - XPACK_SECURITY_HTTP_CSP_RULES="script-src 'self' 'unsafe-eval' 'unsafe-inline' blob:; style-src 'self' 'unsafe-inline';"
+    networks:
+      - monitoring_net
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+  
+  filebeat:
+    container_name: filebeat
+    image: docker.elastic.co/beats/filebeat:${STACK_VERSION}
+    user: root  # Required to read logs
+    volumes:
+      - ./monitoring/elk/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      # Mount all log directories
+      - ./frontend/nginx/logs:/var/log/nginx:ro
+      # - ./auth-service/logs:/var/log/auth:ro
+    entrypoint: >
+      sh -c '
+      chmod go-w /usr/share/filebeat/filebeat.yml &&
+      filebeat -e --strict.perms=false'
+    networks:
+      - monitoring_net
+    depends_on:
+      - logstash
