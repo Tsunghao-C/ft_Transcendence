@@ -54,37 +54,24 @@ export function setSettingsView(contentContainer) {
 
 export function changeLanguage(language) {
 	console.log("Language changed to:", language);
-
 	localStorage.setItem("language", language);
-
 	const elements = document.querySelectorAll("[data-i18n]");
 	elements.forEach((el) => {
-		const key = el.getAttribute("data-i18n");
-
-		if (el.tagName.toLowerCase() === 'a') {
-			const originalHref = el.getAttribute('href'); // Garder l'original href intact
-
-			// Mettre à jour uniquement le texte du lien
-			if (translations[language] && translations[language][key]) {
-				el.textContent = translations[language][key];
-			}
-
-			// Réassigner l'attribut href pour être sûr qu'il ne soit pas modifié
-			el.setAttribute('href', originalHref);
+	  const key = el.getAttribute("data-i18n");
+	  if (translations[language] && translations[language][key]) {
+		if (el.tagName.toLowerCase() === 'p' && key === 'noAccount') {
+		  el.innerHTML = translations[language][key] +
+			' <a href="#create-profile" id="createAccountLink" data-i18n="createAccountLink">' +
+			translations[language]['createAccountLink'] + '</a>';
+		} else if (el.tagName.toLowerCase() === 'a') {
+		  el.textContent = translations[language][key];
 		} else {
-			// Mettre à jour le texte des autres éléments
-			if (translations[language] && translations[language][key]) {
-				el.textContent = translations[language][key];
-			}
+		  el.textContent = translations[language][key];
 		}
+	  }
 	});
-
 	attachNavigationListeners();
-}
-
-
-
-
+   }
 
 export function changeColorMode(colortype) {
 	switch (colortype) {

@@ -17,7 +17,7 @@ export function setLoginView(contentContainer) {
 				</div>
 				<button type="submit" class="btn btn-primary" data-i18n="loginButton">Log In</button>
 			</form>
-			 <p data-i18n="noAccount">Don’t have an account?
+			<p data-i18n="noAccount">Don’t have an account?
 				<a href="#create-profile" id="createAccountLink" data-i18n="createAccountLink">Create one here</a>
 			</p>
 		</div>
@@ -35,7 +35,6 @@ export function setLoginView(contentContainer) {
 			console.log("need to check the login and password with database");
 		});
 	}
-	console.log(contentContainer.innerHTML);
 }
 
 
