@@ -78,23 +78,6 @@ services:
   #     retries: 3
   #   restart: unless-stopped
 
-  # vault:
-  #   container_name: vault
-  #   image: hashicorp/vault
-  #   cap_add:
-  #     - IPC_LOCK
-  #   ports:
-  #     - "8200:8200"   # only for development stage, need to close after
-  #   environment:
-  #     - VAULT_DEV_ROOT_TOKEN_ID=${VAULT_DEV_ROOT_TOKEN}
-  #   volumes:
-  #     - ./security/vault/config:/vault/config
-  #     - vault_data:/vault/file
-  #   user: "1000:1000"
-  #   networks:
-  #     - backend_net
-  #   restart: unless-stopped
-
   # two_fa:
   #   container_name: 2fa
   #   build: ./security/2fa
