@@ -40,6 +40,7 @@ class UpdateMMR(APIView):
 		p2.mmr = self._get_new_mmr(self, p2mmr, p1MMR, outcome)
 		p1.save()
 		p2.save()
+		return Response({"message": f"Player 1 new mmr: {p1.mmr}\nPlayer 2 new mmr: {p2.mmr}"})
 
 class BanPlayer(APIView):
 	def post(self, request):
