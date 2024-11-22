@@ -41,6 +41,10 @@ filebeat.inputs:
   fields:
     type: "waf"
     source: "debug"
+  multiline:
+    pattern: '^\[[.*?\]'
+    negate: true
+    match: after
 
 ## Other logs collection templates for future expansion
 # # Application Services Logs

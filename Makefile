@@ -53,7 +53,6 @@ check:
 
 clean:
 	docker compose -f pong-game/docker-compose.yml down -v
-	# docker compose -f pong-game/docker-compose.yml run --rm --entrypoint sh nginx -c "rm -rf /var/log/nginx/*"
 	rm -f pong-game/frontend/nginx/logs/*.log
 	rm -f pong-game/frontend/nginx/modsec/*.log
 	rm pong-game/.env
