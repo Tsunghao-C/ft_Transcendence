@@ -77,3 +77,7 @@ make clean #It will delete the .env
 - Configure Prometheus in `monitoring/prometheus/`
 - Set up Grafana dashboards in `monitoring/grafana/`
 - Configure ELK stack in `monitoring/elk/`
+
+### Notes
+
+1. To clear everything in docker ```docker stop $(docker ps -qa); docker rm $(docker ps -qa); docker rmi -f $(docker images -qa); docker volume rm $(docker volume ls -q); docker network rm $(docker network ls -q) 2>/dev/null```
