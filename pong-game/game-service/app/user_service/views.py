@@ -34,10 +34,10 @@ class UpdateMMR(APIView):
 		outcome = request.data.get("matchOutcome")
 		if outcome not in [1, 0]:
 			return Response({"error": "Invalid match input"}, status=400)
-		p1.mmr = self._get_new_mmr(self, p1MMR, p2mmr, outcome)
-		# inverse outcome or p2
+		p1.mmr = self._get_new_mmr(p1MMR, p2mmr, outcome)
+		# inverse outcome for p2
 		outcome = 1 - outcome
-		p2.mmr = self._get_new_mmr(self, p2mmr, p1MMR, outcome)
+		p2.mmr = self._get_new_mmr(p2mmr, p1MMR, outcome)
 		p1.save()
 		p2.save()
 		return Response({"message": f"Player 1 new mmr: {p1.mmr}\nPlayer 2 new mmr: {p2.mmr}"})
