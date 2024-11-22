@@ -364,8 +364,10 @@ services:
   kibana:
     container_name: kibana
     image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
-    ports:
-      - "5601:5601"
+    volumes:
+      - ./monitoring/elk/kibana/dashboards:/usr/share/kibana/dashboards
+      - ./monitoring/elk/kibana/visualizations:/usr/share/kibana/visualizations
+      - ./monitoring/elk/kibana/setup:/usr/share/kibana/setup
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
       - SERVER_BASEPATH=/kibana
@@ -373,27 +375,15 @@ services:
       - SERVER_NAME=kibana
       - XPACK_SECURITY_ENABLED=false
       - TELEMETRY_ENABLED=false
-
-      # # CSP settings
-      # - SERVER_CSP_RULES=none
-
-      # # Disable features that might cause security warnings
-      # - XPACK_SECURITY_AUDIT_ENABLED=false
-      # - XPACK_REPORTING_ENABLED=false
-      # - XPACK_ALERTING_ENABLED=false
-
-      # - SERVER_SSL_ENABLED=false
-      # # Security settings
-      # - XPACK_SECURITY_SECURECOOKIES=false
-      # - XPACK_REPORTING_ENABLED=false
-      # - XPACK_ENCRYPTEDSPACE_ENABLED=false
-      # # Browser compatibility
-      # - XPACK_SECURITY_HTTP_CSP_STRICT=false
-      # - XPACK_SECURITY_HTTP_CSP_RULES="script-src 'self' 'unsafe-eval' 'unsafe-inline' blob:; style-src 'self' 'unsafe-inline';"
     networks:
       - monitoring_net
     depends_on:
       - elasticsearch
+    entrypoint: >
+      sh -c '
+        chmod +x /usr/share/kibana/setup/*.sh &&
+        /usr/share/kibana/setup/import-dashboards.sh &
+        /usr/local/bin/kibana-docker'
     restart: unless-stopped
   
   filebeat:
