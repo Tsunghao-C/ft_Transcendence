@@ -18,6 +18,7 @@ volumes:
   match_data: {}
   prometheus_data: {}
   grafana_data: {}
+  filebeat_registry: {}
   es_data:
     driver: local
 
@@ -85,6 +86,7 @@ services:
     volumes:
       - static_volume:/app/static:ro
       - ./frontend/nginx/logs:/var/log/nginx:rw
+      - ./frontend/nginx/modsec:/var/log/modsec:rw
     # depends_on:
     #   - spa
     # If we don't use WFA
@@ -402,6 +404,8 @@ services:
       - ./monitoring/elk/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
       # Mount all log directories
       - ./frontend/nginx/logs:/var/log/nginx:ro
+      - ./frontend/nginx/modsec:/var/log/modsec:ro
+      - filebeat_registry:/usr/share/filebeat/data
       # - ./auth-service/logs:/var/log/auth:ro
     entrypoint: >
       sh -c '

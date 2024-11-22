@@ -35,7 +35,10 @@ COPY modsecurity.conf /etc/nginx/modsecurity/modsecurity.conf
 COPY crs-setup.conf /etc/nginx/modsecurity-crs/crs-setup.conf
 
 # Create ModSecurity log file
-RUN touch /var/log/modsec_audit.log && chmod 666 /var/log/modsec_audit.log
+RUN mkdir -p /var/log/modsec && \
+    chmod -R 755 /var/log/modsec
+RUN touch /var/log/modsec/audit.log && chmod 666 /var/log/modsec/audit.log
+RUN touch /var/log/modsec/debug.log && chmod 666 /var/log/modsec/debug.log
 
 # Generate ssl certificate (kept from main)
 RUN mkdir -p /etc/nginx/ssl && \
