@@ -8,4 +8,6 @@ listener "tcp" {
     tls_key_file = "/vault/certs/selfsigned.key"
 }
 
+disable_mlock = true
+
 ui = true
