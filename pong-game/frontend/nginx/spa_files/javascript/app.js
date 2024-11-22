@@ -16,13 +16,17 @@ export function loadPage(page) {
 	if (page !== "game") {
 		closeGameWebSocket();
 	}
+
+	const navbar = document.getElementById("mainNavBar");
+	if (navbar) navbar.style.display = isLoggedIn === "true" ? "block" : "none";
+
 	if (isLoggedIn != "true" && page !== "login" && page !== "create-profile") {
-		setLoginView(contentContainer);
-	}
-	if (isLoggedIn === "true" && page === "login") {
-		page = "home";
-	}
-	if (page === "home") {
+		window.location.hash = "login";
+		loadPage("login")
+	} else if (isLoggedIn === "true" && (page === "login" || page === "create-profile")) {
+		window.location.hash = "home";
+		loadPage("home");
+	} else if (page === "home") {
 		contentContainer.innerHTML = '<h1 data-i18n="home">Home</h1><p>Welcome!</p>';
 	} else if (page === "about") {
 		contentContainer.innerHTML = '<h1 data-i18n="about">About</h1><p>To fill.</p>';
@@ -41,7 +45,9 @@ contentContainer.innerHTML = `
 	`;
 	}
 	changeLanguage(currentLanguage);
+	console.log(contentContainer.innerHTML);
 }
+
 
 function handleNavigation(event) {
 	event.preventDefault();
@@ -51,6 +57,14 @@ function handleNavigation(event) {
 	window.history.pushState({ page: newPage }, newPage, "#" + newPage);
 
 	updateActiveLink();
+}
+
+export function attachNavigationListeners() {
+	const links = document.querySelectorAll("a[href^='#']");
+	links.forEach((link) => {
+		link.removeEventListener("click", handleNavigation);
+		link.addEventListener("click", handleNavigation);
+	});
 }
 
 function updateActiveLink() {
@@ -65,6 +79,8 @@ function updateActiveLink() {
 		currentLink.classList.add('active');
 	}
 }
+
+
 
 document.addEventListener("DOMContentLoaded", function () {
 
@@ -81,10 +97,7 @@ document.addEventListener("DOMContentLoaded", function () {
 	loadPage(currentPage);
 	updateActiveLink();
 
-	const links = document.querySelectorAll("a");
-	links.forEach(link => {
-		link.addEventListener("click", handleNavigation);
-	});
+	attachNavigationListeners();
 
 	window.addEventListener("popstate", function (event) {
 		const page = event.state ? event.state.page : "home";
@@ -98,10 +111,7 @@ document.addEventListener("DOMContentLoaded", function () {
 			event.preventDefault();
 			console.log("Logout clicked!");
 			localStorage.setItem("isLoggedIn", "false");
-			updateDropdownMenu(false);
 			loadPage("login");
 		});
 	}
-
-	window.addEventListener('hashchange', updateActiveLink);
 });

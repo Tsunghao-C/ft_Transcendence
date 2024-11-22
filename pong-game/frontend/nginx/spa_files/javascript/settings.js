@@ -1,4 +1,5 @@
 import { translations } from './language_pack.js';
+import { attachNavigationListeners } from './app.js';
 
 export function setSettingsView(contentContainer) {
 	const currentLanguage = localStorage.getItem("language") || "en";
@@ -59,11 +60,30 @@ export function changeLanguage(language) {
 	const elements = document.querySelectorAll("[data-i18n]");
 	elements.forEach((el) => {
 		const key = el.getAttribute("data-i18n");
-		if (translations[language] && translations[language][key]) {
-			el.textContent = translations[language][key];
+
+		if (el.tagName.toLowerCase() === 'a') {
+			const originalHref = el.getAttribute('href'); // Garder l'original href intact
+
+			// Mettre à jour uniquement le texte du lien
+			if (translations[language] && translations[language][key]) {
+				el.textContent = translations[language][key];
+			}
+
+			// Réassigner l'attribut href pour être sûr qu'il ne soit pas modifié
+			el.setAttribute('href', originalHref);
+		} else {
+			// Mettre à jour le texte des autres éléments
+			if (translations[language] && translations[language][key]) {
+				el.textContent = translations[language][key];
+			}
 		}
 	});
+
+	attachNavigationListeners();
 }
+
+
+
 
 
 export function changeColorMode(colortype) {

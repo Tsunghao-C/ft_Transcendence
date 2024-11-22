@@ -31,6 +31,8 @@ export const translations = {
 		newPassword: "Password",
 		confirmPassword: "Confirm Password",
 		createAccountButton: "Create Account",
+		newLogin: "Login",
+		newMail: "Mail Address",
 	},
 	fr: {
 		home: "Accueil",
@@ -64,6 +66,8 @@ export const translations = {
 		newPassword: "Mot de passe",
 		confirmPassword: "Confirmer le mot de passe",
 		createAccountButton: "Créer le compte",
+		newLogin: "Identifiant",
+		newMail: "Adresse Mail",
 	},
 	pt: {
 		home: "Início",
@@ -96,7 +100,7 @@ export const translations = {
 		newPassword: "Senha",
 		confirmPassword: "Confirmar senha",
 		createAccountButton: "Criar conta",
-
-
+		newLogin: "Identificador",
+		newMail: "Endereço De Email",
 	},
 };

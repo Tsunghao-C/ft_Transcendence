@@ -1,6 +1,8 @@
 import { loadPage } from "./app.js";
+import { attachNavigationListeners } from "./app.js";
 
 export function setLoginView(contentContainer) {
+
 	contentContainer.innerHTML = `
 		<div class="login-view">
 			<h1 data-i18n="loginTitle">Login</h1>
@@ -15,7 +17,9 @@ export function setLoginView(contentContainer) {
 				</div>
 				<button type="submit" class="btn btn-primary" data-i18n="loginButton">Log In</button>
 			</form>
-			<p data-i18n="noAccount">Don’t have an account? <a href="#create-profile" id="createProfileLink" data-i18n="createAccountLink">Create one here</a></p>
+			 <p data-i18n="noAccount">Don’t have an account?
+				<a href="#create-profile" id="createAccountLink" data-i18n="createAccountLink">Create one here</a>
+			</p>
 		</div>
 	`;
 
@@ -23,10 +27,19 @@ export function setLoginView(contentContainer) {
 	if (loginForm) {
 		loginForm.addEventListener("submit", (event) => {
 			event.preventDefault();
-			console.log("Log In button clicked! Implement login logic here.");
+			const newPage = "home"
+			loadPage(newPage);
+			window.history.pushState({ page: newPage }, newPage, "#" + newPage);
+			localStorage.setItem("isLoggedIn", "true");
+			loadPage("home");
+			console.log("need to check the login and password with database");
 		});
 	}
+	console.log(contentContainer.innerHTML);
 }
+
+
+
 
 export function setCreateProfileView(contentContainer) {
 	contentContainer.innerHTML = `
@@ -34,8 +47,16 @@ export function setCreateProfileView(contentContainer) {
 			<h1 data-i18n="createAccountTitle">Create Account</h1>
 			<form id="createProfileForm">
 				<div class="mb-3">
+					<label for="newLoginInput" class="form-label" data-i18n="newLogin">Login</label>
+					<input type="text" class="form-control" id="newLoginInput" placeholder="Choose a Login">
+				</div>
+				<div class="mb-3">
 					<label for="newUsernameInput" class="form-label" data-i18n="newUsername">Username</label>
 					<input type="text" class="form-control" id="newUsernameInput" placeholder="Choose a username">
+				</div>
+				<div class="mb-3">
+					<label for="newMailInput" class="form-label" data-i18n="newMail">Mail</label>
+					<input type="text" class="form-control" id="newMailInput" placeholder="Enter your mail">
 				</div>
 				<div class="mb-3">
 					<label for="newPasswordInput" class="form-label" data-i18n="newPassword">Password</label>
@@ -54,9 +75,13 @@ export function setCreateProfileView(contentContainer) {
 	if (createProfileForm) {
 		createProfileForm.addEventListener("submit", (event) => {
 			event.preventDefault();
+			const newPage = "login"
+			loadPage(newPage);
+			window.history.pushState({ page: newPage }, newPage, "#" + newPage);
+			loadPage("login");
 			console.log("Create Account button clicked! Implement account creation logic here.");
 		});
 	}
-	}
+}
 
 
