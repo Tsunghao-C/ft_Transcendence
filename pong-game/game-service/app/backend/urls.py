@@ -25,8 +25,8 @@ urlpatterns = [
 	
     # User management
 	path("api/user/register/", CreateUserView.as_view(), name="register"),
-	path("api/token/", TokenObtainPairView.as_view(), name="get_token"),
-	path("api/token/refresh/", TokenRefreshView.as_view(), name="refresh"),
+	path("api/user/token/", TokenObtainPairView.as_view(), name="get_token"),
+	path("api/user/token/refresh/", TokenRefreshView.as_view(), name="refresh"),
     path("api/user/getuser/", CurrentUserView.as_view(), name="get_user"),
     path("api/user/updatemmr/", UpdateMMR.as_view(), name="update_mmr"),
 	path("api/user/banplayer/", BanPlayer.as_view(), name="banplayer"),
