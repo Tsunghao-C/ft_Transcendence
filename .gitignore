@@ -8,7 +8,8 @@
 
 # local env files
 # srcs/.env
-# .env
+pong-game/.env
+.env
 .env.local
 .env.development.local
 
@@ -19,3 +20,9 @@ django/venv/
 # C extensions
 *.so
 *.o
+
+# Vault volume files
+pong-game/security/vault_debian/volumes/file/core
+pong-game/security/vault_debian/volumes/file/logical
+pong-game/security/vault_debian/volumes/file/sys
+pong-game/security/vault_debian/volumes/shared_data/root_token.txt
