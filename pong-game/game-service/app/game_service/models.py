@@ -13,3 +13,4 @@ class MatchResults(models.Model):
 		related_name="matches_as_p2"
 	)
 	matchoutcome = models.IntegerField(choices=[(0, 'Player 2 Wins'), (1, 'Player 1 Wins')])
+	time = models.DateTimeField(auto_now_add=True)
