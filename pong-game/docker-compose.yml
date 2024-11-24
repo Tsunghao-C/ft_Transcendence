@@ -95,19 +95,19 @@ services:
       - "8443:443"
       - "8080:80"
     networks:
-      - frontend_net
+      #- frontend_net
       - backend_net
-      - monitoring_net
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    healthcheck:
-      test: ["CMD", "curl", "-k", "https://localhost:443/health" ]
-      interval: 2s
-      timeout: 2s
-      retries: 1
+      #- monitoring_net
+    #logging:
+    #  driver: "json-file"
+    #  options:
+    #    max-size: "10m"
+    #    max-file: "3"
+    #healthcheck:
+    #  test: ["CMD", "curl", "-k", "https://localhost:443/health" ]
+    #  interval: 2s
+    #  timeout: 2s
+    #  retries: 1
     #restart: unless-stopped
     env_file:
       - ./.env
@@ -180,8 +180,6 @@ services:
     container_name: game_service
     volumes:
       - static_volume:/app/static
-    expose:
-      - 8004
     depends_on:
       - user_db
       - game_db
@@ -189,6 +187,7 @@ services:
       - ./.env
     networks:
       - backend_net
+    #restart: always
 
   user_db:
     container_name: user_db
