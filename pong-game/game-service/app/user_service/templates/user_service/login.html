@@ -1,62 +1,82 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <style>
+        body {
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            margin: 0;
+        }
+
+        form {
+            max-width: 300px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            /* text-align: center; */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .branding {
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #128C7E;
+            /* ChitChat brand color */
+        }
+
+        .btn-container {
+            text-align: center;
+        }
+
+        button {
+            background-color: #128C7E;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #075e54;
+        }
+
+        label {
+            font-weight: bold;
+            text-align: left;
+            width: 85%;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 80%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
 </head>
+
 <body>
-    <h1>Login</h1>
-    <form id="login-form">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required>
-        <br><br>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>
-        <br><br>
-        <button type="submit">Login</button>
+    <form method="post">
+        {% csrf_token %}
+        <div class="branding">Rizz-Chat</div>
+        {{form.as_p}}
+        <div class="btn-container">
+            <button type="submit">Login</button>
+        </div>
     </form>
-    <p id="message" style="color: red;"></p>
-
-    <script>
-        document.getElementById("login-form").addEventListener("submit", async function (event) {
-            event.preventDefault(); // Prevent the form from refreshing the page
-
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
-
-            // API endpoint for login
-            const url = "http://127.0.0.1:8000/api/user/token/";
-
-            try {
-                // Send POST request with username and password
-                const response = await fetch(url, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ username, password }), // Send data as JSON
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-
-                    // Store JWT token in localStorage
-                    localStorage.setItem("jwt_token", data.token);
-
-                    // Redirect or show success message
-                    alert("Login successful!");
-                    window.location.href = "/chat"; // Replace with your desired page
-                } else {
-                    // Handle login errors
-                    const errorData = await response.json();
-                    document.getElementById("message").innerText = errorData.detail || "Login failed";
-                }
-            } catch (error) {
-                console.error("Error during login:", error);
-                document.getElementById("message").innerText = "An error occurred. Please try again.";
-            }
-        });
-    </script>
 </body>
+
 </html>
