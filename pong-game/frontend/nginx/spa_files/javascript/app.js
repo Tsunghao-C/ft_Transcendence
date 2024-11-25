@@ -40,8 +40,8 @@ export function loadPage(page) {
 		setCreateProfileView(contentContainer);
 	} else {
 contentContainer.innerHTML = `
-		<h1 data-i18n="error404Title">${translations[currentLanguage].error404Title}</h1>
-		<p data-i18n="error404Message">${translations[currentLanguage].error404Message}</p>
+		<h1 >${translations[currentLanguage].error404Title}</h1>
+		<p >${translations[currentLanguage].error404Message}</p>
 	`;
 	}
 	console.log("Content at the beginning of changeLanguage:", contentContainer.innerHTML);

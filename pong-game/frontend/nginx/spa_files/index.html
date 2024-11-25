@@ -32,12 +32,12 @@
 			</ul>
 			<ul class="navbar-nav">
 				<li class="nav-item dropdown">
-					<a class="nav-link dropdown-toggle" role="button" data-i18n="user" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-					  User
+					<a class="nav-link dropdown-toggle" href="#" data-i18n="user" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" role="button" tabindex="0">
+						User
 					</a>
-					<ul class="dropdown-menu">
-						<li><a class="dropdown-item" href="#profile" data-i18n="profile">Profile</a></li>
-						<li><a class="dropdown-item" href="#" id="logoutButton" data-i18n="logout">Logout</a></li>
+					<ul class="dropdown-menu" aria-labelledby="userDropdown" role="menu">
+						<li><a class="dropdown-item" href="#profile" data-i18n="profile" role="menuitem" tabindex="0">Profile</a></li>
+						<li><a class="dropdown-item" href="#" data-i18n="logout" id="logoutButton" role="menuitem" tabindex="0">Logout</a></li>
 					</ul>
 				</li>
 			</ul>

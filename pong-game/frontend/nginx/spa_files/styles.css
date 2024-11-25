@@ -1,6 +1,7 @@
 /* styles.css */
 body {
 	font-family: Arial, sans-serif;
+	/* background-image: url('./wtf.jpeg'); */
 	margin: 0;
 	padding: 0;
 	background-color: #f8f9fa;
@@ -42,15 +43,14 @@ select {
 	color: #ffffff;
 	border: 2px solid #9c1743;
 	padding: 10px;
-	font-size: 16px;
 	border-radius: 5px;
-	width: 200px;
 	cursor: pointer;
 	text-align: left;
 	appearance: none;
 	-webkit-appearance: none;
 	-moz-appearance: none;
 }
+
 
 
 select::-ms-expand {
@@ -163,6 +163,19 @@ body.colorblind .navbar .navbar-nav .nav-link:hover {
 }
 
 /* Font size */
+
+.small-font h3 {
+	font-size: 1.5em;
+}
+
+.medium-font h3 {
+	font-size: 2em;
+}
+
+.large-font h3 {
+	font-size: 2em;
+}
+
 body.small-font {
 	font-size: 1em;
 }
@@ -175,7 +188,17 @@ body.large-font {
 	font-size: 3em;
 }
 
+select.small-font {
+	font-size: 1rem;
+}
 
+select.medium-font {
+	font-size: 2rem;
+}
+
+select.large-font {
+	font-size: 3rem;
+}
 
 
 
