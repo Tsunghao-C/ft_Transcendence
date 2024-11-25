@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+</head>
+<body>
+    <h1>Login</h1>
+    <form id="login-form">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+        <br><br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+        <br><br>
+        <button type="submit">Login</button>
+    </form>
+    <p id="message" style="color: red;"></p>
+
+    <script>
+        document.getElementById("login-form").addEventListener("submit", async function (event) {
+            event.preventDefault(); // Prevent the form from refreshing the page
+
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            // API endpoint for login
+            const url = "http://127.0.0.1:8000/api/user/token/";
+
+            try {
+                // Send POST request with username and password
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ username, password }), // Send data as JSON
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    // Store JWT token in localStorage
+                    localStorage.setItem("jwt_token", data.token);
+
+                    // Redirect or show success message
+                    alert("Login successful!");
+                    window.location.href = "/chat"; // Replace with your desired page
+                } else {
+                    // Handle login errors
+                    const errorData = await response.json();
+                    document.getElementById("message").innerText = errorData.detail || "Login failed";
+                }
+            } catch (error) {
+                console.error("Error during login:", error);
+                document.getElementById("message").innerText = "An error occurred. Please try again.";
+            }
+        });
+    </script>
+</body>
+</html>
