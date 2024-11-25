@@ -22,7 +22,7 @@ export function updatePlayer(Player) {
 	}
 }
 
-export function checkCollision(paddle) {
+function checkCollision(paddle) {
 	const closestX = Math.max(paddle.x, Math.min(ball.x, paddle.x + PADDLE_WIDTH));
 	const closestY = Math.max(paddle.y, Math.min(ball.y, paddle.y + PADDLE_HEIGHT));
 	
