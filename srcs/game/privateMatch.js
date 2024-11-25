@@ -1,36 +1,114 @@
-//class Player {
-//		constructor (id, color) {
-//			this.id = id;
-//			this.color = color;
-//			this.Paddle = new Paddle(id, color);
-//			this.score = 0;
-//		}
-//	}
+const canvas = document.getElementById('game');
+const token = localStorage.getItem('token'); //Is this stored there or in cookies!!!!
+var data = {
+	playerId: -1,
+	socket: -1,
+}
+//const token = document.cookie('token'); //need to tokenize it manually ???
 
-	async function getPlayerInfo() {
+async function getPlayerInfo() {
 	try {
 		const dbQuery = await fetch('http://django/api/player/info/', {
 			method: 'GET',
 			headers: {
-				'Auth' : `Bearer ${token}`,
+				'Authorization' : `Bearer ${token}`,
 				'Content-Type': 'application/json'
 			}
 		});
 		if (!dbQuery.ok) {
 			throw new Error('Failed to fetch player info');
-		}
+			}
 		const playerInfo = await dbQuery.json();
 		return playerInfo;
 	} catch (error) {
-		console.error('Error fetching player info:', error);
+		console.error('Error fetching player info: ', error);
 		throw error;
 	}
+}
+
+async function requestRoom(playerInfo) {
+	try {
+		data.playerId = playerInfo['id'];
+		const roomQuery = await fetch('http://django/api/room_handler/', { //query the async app for this
+			method: 'POST',
+			headers: {
+				'Authorization': `Bearer ${token}`,
+				'Content-Type': 'application/json',
+		},
+		body: JSON.stringify({
+			player_id: data.playerId
+		})
+	});
+		if (!roomQuery.ok) {
+			throw new Error('Failed to create game room');
+		}
+		const roomId = await roomQuery.json();
+		return roomId;
+	} catch (error) {
+		console.error('Error creating game room: ', error);
+		throw error;
 	}
+}
 
-	async function requestRoom() {
-
+async function setupGame() {
+	try {
+		await getPlayerInfo();
+		const roomId = await requestRoom(data.playerId); // change this to send the UID instead
+		const socketUrl = `ws://localhost:8000/ws/game/${roomId}/`;
+		data.socket = new WebSocket(socketUrl);
+		data.socket.onopen() = () => {
+			console.log('Websocket connection established');
+		};
+		data.socket.onerror() = (error) => {
+			console.log('Websocket error: ', error);
+			throw error;
+		};
+		data.socket = socket;
+	} catch (error) {
+		throw error;
 	}
+}
+// get frontend on this shit
+async function setupLobby(socket) {
+	const readyButton = document.getElementById('ready-button');
+	readyButton.addEventListener('click', async () => {
+		try {
+			readyButton.disabled = true; //change this to switch state rather than disable
+			readyButton.textContent = 'Waiting for game start...';
+			socket.send(JSON.stringify({
+				type: 'player_ready',
+				player_id: data.playerId
+			}));
+			readyButton.classList.add('ready');
+		} catch (error) {
+			console.error('Could not set up lobby: ', error);
+			throw error;
+			// or just reenable the button and print an error for the user?
+			// readyButton.disabled = false;
+			// readyButton.textContent = 'Ready Up';
+		}
+	});
+}
 
-	function setupRoom() {
-
+async function startGame() {
+	try {
+		if (canvas.getContext) {
+			setupLobby();
+			const ctx = canvas.getContext('2d');
+			gameLoop(ctx, data.socket);
+		}
+		else
+			throw error;
+	} catch {
+		console.error('Exception caught in startGame');
 	}
+}
+
+(async() => {
+	try {
+	await setupGame();
+	startGame();
+	} catch {
+		console.error('Exception caught in privateMatch.js');
+	}
+})();
