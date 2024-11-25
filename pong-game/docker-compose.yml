@@ -8,7 +8,20 @@ networks:
     driver: bridge
 
 volumes:
-  vault_data: {}
+  vault_debian_shared_data:
+    name: vault_debian_data
+    driver: local
+    driver_opts:
+      device: ./security/vault_debian/volumes/shared_data
+      o: bind
+      type: none
+  vault_debian_file:
+    name: vault_file
+    driver: local
+    driver_opts:
+      device: ./security/vault_debian/volumes/file
+      o: bind
+      type: none
   nginx_temp: {}
   auth_data: {}
   user_data: {}
@@ -24,6 +37,24 @@ volumes:
 
 services:
   # Security Layer
+  vault_debian:
+    container_name: vault_debian
+    build:
+      context: ./security/vault_debian
+      dockerfile: Dockerfile
+    cap_add:
+      - IPC_LOCK
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_ADDR: "https://127.0.0.1:8200"
+      VAULT_API_ADDR: "https://127.0.0.1:8200"
+      VAULT_SKIP_VERIFY: "true"
+    volumes:
+      - vault_debian_shared_data:/vault/shared_data
+      - vault_debian_file:/vault/file
+    stop_signal: SIGTERM # DTIW
+
   ## [Alex] to finish WAF later after major modules are tested working
 
   # waf:
@@ -46,23 +77,6 @@ services:
   #     interval: 10s
   #     timeout: 5s
   #     retries: 3
-  #   restart: unless-stopped
-
-  # vault:
-  #   container_name: vault
-  #   image: hashicorp/vault
-  #   cap_add:
-  #     - IPC_LOCK
-  #   ports:
-  #     - "8200:8200"   # only for development stage, need to close after
-  #   environment:
-  #     - VAULT_DEV_ROOT_TOKEN_ID=${VAULT_DEV_ROOT_TOKEN}
-  #   volumes:
-  #     - ./security/vault/config:/vault/config
-  #     - vault_data:/vault/file
-  #   user: "1000:1000"
-  #   networks:
-  #     - backend_net
   #   restart: unless-stopped
 
   # two_fa:

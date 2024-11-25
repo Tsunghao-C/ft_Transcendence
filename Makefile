@@ -5,7 +5,10 @@ go: build run
 build:
 	cp pong-game/.env.example pong-game/.env
 	mkdir -p pong-game/frontend/nginx/logs
-	mkdir -p pong-game/frontend/nginx/modsec
+	- mkdir -p pong-game/security/vault_debian/volumes/file
+	- mkdir -p pong-game/security/vault_debian/volumes/shared_data
+	- chmod -R 755 pong-game/security/vault_debian/volumes/shared_data
+	- chmod -R 755 pong-game/security/vault_debian/volumes/file
 	chmod -R 755 pong-game/frontend/nginx/logs
 	docker compose -f pong-game/docker-compose.yml build
 
