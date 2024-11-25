@@ -1,3 +1,5 @@
+import { gameLoop } from './gameDraw.js'
+
 const canvas = document.getElementById('game');
 const token = localStorage.getItem('token'); //Is this stored there or in cookies!!!!
 var data = {
@@ -95,7 +97,7 @@ async function startGame() {
 		if (canvas.getContext) {
 			setupLobby();
 			const ctx = canvas.getContext('2d');
-			gameLoop(ctx, data.socket, data.playerId);
+			gameLoop(ctx, data.socket, data);
 		}
 		else
 			throw error;

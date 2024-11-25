@@ -1,38 +1,10 @@
 //const canvas = document.getElementById('game');
-// Query backend for available rooms and use that for the url
-// query client for auth token and use that as argument to url maybe? We will need to validate tho right?
-//wss for prod with SSL //get Ben to setup url for game_path
 
 const PADDLE_HEIGHT = 100;
 const PADDLE_WIDTH = 15;
 const PADDLE_SPEED = 5;
-
-class Paddle {
-	constructor (id, color) {
-		if (id == 1) {
-			this.x = canvas.width * 0.10;
-			this.upKey = 'ArrowUp';
-			this.downKey = 'ArrowDown';
-		}
-		else {
-			this.x = canvas.width * 0.90;
-			this.upKey = 'KeyW';
-			this.downKey = 'KeyS';
-		}
-		this.y = canvas.height * 0.30;
-		this.speed = 0;
-		this.color = color;
-	}
-}
-
-class Player {
-	constructor (id, color) {
-		this.id = id;
-		this.color = color;
-		this.Paddle = new Paddle(id, color);
-		this.score = 0;
-	}
-}
+const DOWN = 0;
+const UP = 1;
 
 class Paddle {
 	constructor (id, color) {
@@ -76,16 +48,10 @@ let gameState = {
 	player2: Player
 };
 
-const DOWN = 0;
-const UP = 1;
-
 let playerEvent = {
 	pending: false,
 	type: -1,
 }
-
-const Player1 = new Player(1, 'red');
-const Player2 = new Player(2, 'green');
 
 document.addEventListener('keydown', function(event) {
 	if (event.code == 'ArrowUp') {
@@ -102,6 +68,17 @@ document.addEventListener('keydown', function(event) {
 //	if (event.code == 'ArrowDown' || event.code == 'ArrowUp')
 //	 	playerEvent.pending = false;
 //});
+
+function sendEvents(socket, playerData) {
+	if (playerEvent.pending == true)
+	{
+		socket.send(JSON.stringify({
+				type: 'player_ready',
+				player_id: playerData.playerId
+		}));	
+		playerEvent.pending = false;
+	}
+}
 
 function drawElements(ball, Player1, Player2, ctx) {
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -120,19 +97,30 @@ function drawElements(ball, Player1, Player2, ctx) {
 	ctx.closePath();
 }
 
-function sendEvents(socket, playerData) {
-	if (playerEvent.pending == true)
-	{
-		socket.send(JSON.stringify({
-				type: 'player_ready',
-				player_id: playerData.playerId
-		}));	
-		playerEvent.pending = false;
-	}
+async function getGameState(socket)
+{
+	return new Promise((resolve, reject) => {
+		socket.send(JSON.stringify({ type: 'get_game_state'}));
+		socket.onmessage = (event) => {
+			try {
+				const data = JSON.parse(event.data);
+				if (data.type == 'game_state') {
+					resolve(data.payload);
+				}
+			} catch (error) {
+				console.error('Error parsing socker message in getElements: ', error);
+				return(error);
+			}
+		};
+		socket.onerror = (error) => {
+			console.error('Websocket error: ', error);
+			reject(error);
+		}
+	})
 }
 
-export function gameLoop(ctx, socket) {
-	gameState = getElements(socket);
+export async function gameLoop(ctx, socket, playerData) {
+	gameState = await getGameState(socket);
 	drawElements(gameState.ball, gameState.player1, gameState.player2, ctx);
 	sendEvents(socket, playerData);
 	requestAnimationFrame(gameLoop);
