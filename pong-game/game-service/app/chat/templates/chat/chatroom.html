@@ -1,3 +1,4 @@
+<!--This is a temporary placeholder to demonstrate the back-end-->
 <!DOCTYPE html>
 <html>
 
@@ -116,7 +117,7 @@
             right: 5px;
         }
 
-        .message-username {
+        .message-alias {
             font-size: 12px;
             position: absolute;
             bottom: 5px;
@@ -146,6 +147,7 @@
             <button type="submit" id="id_message_send_button"><i class="fas fa-paper-plane"></i> Send</button>
         </div>
     </div>
+    {{ room_name|json_script:"room-name" }}
     <script>
         const roomName = JSON.parse(document.getElementById('room-name').textContent);
         const chatSocket = new WebSocket(
@@ -173,7 +175,7 @@
             var time = currentTime.toLocaleTimeString();
             chatSocket.send(JSON.stringify({
                 message: messageInput,
-                username: "{{request.user.username}}",
+                alias: "{{request.user.alias}}",
                 time: time
             }));
         };
@@ -182,9 +184,9 @@
             const data = JSON.parse(e.data);
             var messageContainer = document.querySelector("#id_chat_item_container");
             var div = document.createElement("div");
-            div.className = (data.username === "{{request.user.username}}") ? "chat-message right" : "chat-message left";
+            div.className = (data.alias === "{{request.user.alias}}") ? "chat-message right" : "chat-message left";
             div.innerHTML = `<div class="message-content">
-                <span class="message-username">${data.username}</span>
+                <span class="message-alias">${data.alias.charAt(0).toUpperCase() + data.alias.slice(1)}</span>
                 <span class="message-text">${data.message}</span>
                 <span class="message-timestamp">${data.time}</span>
             </div>`;

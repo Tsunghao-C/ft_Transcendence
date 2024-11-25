@@ -12,41 +12,40 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
         self.room_group_name = f"chat_{self.room_name}"
 
-        # Join room group
+        # joon room group
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
-
         await self.accept()
 
     async def disconnect(self, close_code):
-        # Leave room group
+        # leave room group
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
-    # Receive message from WebSocket
+    # receive message from WebSocket
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         message = text_data_json["message"]
-        username = text_data_json.get("username", "anon") #default to anon
+        alias = text_data_json.get("alias", "anon") #default to anon
         time = text_data_json.get("time", "unkown time")
 
-        # Send message to room group
+        # send message to room group
         await self.channel_layer.group_send(
             self.room_group_name, {
                 "type": "chat.message", 
                 "message": message,
-                "username": username,
+                "alias": alias,
                 "time": time,
             }
         )
 
-    # Receive message from room group
+    # receive message from room group
     async def chat_message(self, event):
         message = event["message"]
-        username = event["username"]
+        alias = event["alias"]
         time = event["time"]
 
-        # Send message to WebSocket
+        # send message to WebSocket
         await self.send(text_data=json.dumps({
             "message": message,
-            "username": username,
+            "alias": alias,
             "time": time,
         }))
