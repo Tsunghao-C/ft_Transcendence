@@ -23,17 +23,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("SECRET_KEY")
-#SECRET_KEY = "wowow321"
+# SECRET_KEY = os.environ.get("SECRET_KEY")
+SECRET_KEY = "wowow321"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(os.environ.get("DEBUG", default=0))
-#DEBUG = 1
+# DEBUG = bool(os.environ.get("DEBUG", default=0))
+DEBUG = 1
 
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
-#ALLOWED_HOSTS = [
-#	"*"
-#]
+# ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
+ALLOWED_HOSTS = [
+	"*"
+]
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -52,15 +52,18 @@ SIMPLE_JWT = {
 # Application definition
 
 INSTALLED_APPS = [
+    "chat.apps.chatConfig",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    "daphne",
     'django.contrib.staticfiles',
 	"api",
 	"rest_framework",
 	"corsheaders",
+    "channels",
 ]
 
 MIDDLEWARE = [
@@ -93,6 +96,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'backend.wsgi.application'
+ASGI_APPLICATION = 'backend.asgi.application'
 
 
 # Database
@@ -164,3 +168,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #	"http://0.0.0.0:8000"
 #]
 #CORS_ALLOWS_CREDENTIALS = True
+
+# can replace inmemorychannellayer with redis later
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
+
+LOGIN_REDIRECT_URL = "chat-page"
+LOGOUT_REDIRECT_URL = "login-user"
