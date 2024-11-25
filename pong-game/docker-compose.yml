@@ -132,19 +132,19 @@ services:
       retries: 1
     restart: unless-stopped
 
-  spa:
-    container_name: spa
-    build:
-      context: ./frontend/spa
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    environment:
-      - REACT_APP_API_URL=http://localhost/api
-      - REACT_APP_WS_URL=ws://localhost/ws
-    networks:
-      - frontend_net
-    restart: unless-stopped
+  # spa:
+  #   container_name: spa
+  #   build:
+  #     context: ./frontend/spa
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+  #   environment:
+  #     - REACT_APP_API_URL=http://localhost/api
+  #     - REACT_APP_WS_URL=ws://localhost/ws
+  #   networks:
+  #     - frontend_net
+  #   restart: unless-stopped
 
   ## [Theo] to finish this part
   # spa:
