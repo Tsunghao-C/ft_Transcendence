@@ -116,10 +116,8 @@ services:
       SECRET_KEY: ${SECRET_KEY}
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
       SQL_ENGINE: ${SQL_ENGINE}
-      SQL_DATABASE: ${SQL_DATABASE}
       SQL_USER: ${SQL_USER}
       SQL_PASSWORD: ${SQL_PASSWORD}
-      SQL_HOST: ${SQL_HOST}
       SQL_PORT: ${SQL_PORT}
     logging:
       driver: "json-file"
@@ -380,7 +378,6 @@ services:
     image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
     volumes:
       - ./monitoring/elk/kibana/dashboards:/usr/share/kibana/dashboards
-      - ./monitoring/elk/kibana/visualizations:/usr/share/kibana/visualizations
       - ./monitoring/elk/kibana/setup:/usr/share/kibana/setup
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
@@ -395,9 +392,13 @@ services:
       - elasticsearch
     entrypoint: >
       sh -c '
-        chmod +x /usr/share/kibana/setup/*.sh &&
         /usr/share/kibana/setup/import-dashboards.sh &
         /usr/local/bin/kibana-docker'
+    # entrypoint: >
+    #   sh -c '
+    #     chmod +x /usr/share/kibana/setup/*.sh &&
+    #     /usr/share/kibana/setup/import-dashboards.sh &
+    #     /usr/local/bin/kibana-docker'
     restart: unless-stopped
   
   filebeat:
