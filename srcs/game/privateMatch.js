@@ -95,7 +95,7 @@ async function startGame() {
 		if (canvas.getContext) {
 			setupLobby();
 			const ctx = canvas.getContext('2d');
-			gameLoop(ctx, data.socket);
+			gameLoop(ctx, data.socket, data.playerId);
 		}
 		else
 			throw error;

@@ -6,20 +6,6 @@
 const PADDLE_HEIGHT = 100;
 const PADDLE_WIDTH = 15;
 const PADDLE_SPEED = 5;
-let	ball = {
-	x:canvas.width/2,
-	y:canvas.height/2,
-	color:'white',
-	speedX:6,
-	speedY:6,
-	radius:10
-};
-
-let gameState = {
-	ball: ball,
-	player1: Player,
-	player2: Player
-};
 
 class Paddle {
 	constructor (id, color) {
@@ -48,33 +34,76 @@ class Player {
 	}
 }
 
+class Paddle {
+	constructor (id, color) {
+		if (id == 1) {
+			this.x = canvas.width * 0.10;
+			this.upKey = 'ArrowUp';
+			this.downKey = 'ArrowDown';
+		}
+		else {
+			this.x = canvas.width * 0.90;
+			this.upKey = 'KeyW';
+			this.downKey = 'KeyS';
+		}
+		this.y = canvas.height * 0.30;
+		this.speed = 0;
+		this.color = color;
+	}
+}
+
+class Player {
+	constructor (id, color) {
+		this.id = id;
+		this.color = color;
+		this.Paddle = new Paddle(id, color);
+		this.score = 0;
+	}
+}
+
+let	ball = {
+	x:canvas.width/2,
+	y:canvas.height/2,
+	color:'white',
+	speedX:6,
+	speedY:6,
+	radius:10
+};
+
+let gameState = {
+	ball: ball,
+	player1: Player,
+	player2: Player
+};
+
+const DOWN = 0;
+const UP = 1;
+
+let playerEvent = {
+	pending: false,
+	type: -1,
+}
+
 const Player1 = new Player(1, 'red');
 const Player2 = new Player(2, 'green');
 
 document.addEventListener('keydown', function(event) {
-	if (event.code == Player1.Paddle.upKey) {
-			Player1.Paddle.speed = -PADDLE_SPEED;
+	if (event.code == 'ArrowUp') {
+		playerEvent.pending = true;
+		playerEvent.type = UP;
 	}
-	else if (event.code == Player1.Paddle.downKey) {
-			Player1.Paddle.speed = PADDLE_SPEED;
-	}
-	else if (event.code == Player2.Paddle.upKey) {
-			Player2.Paddle.speed = -PADDLE_SPEED;
-	}
-	else if (event.code == Player2.Paddle.downKey) {
-			Player2.Paddle.speed = PADDLE_SPEED;
+	else if (event.code == 'ArrowDown') {
+		playerEvent.pending = true;
+		playerEvent.type = DOWN;
 	}
 });
 
-document.addEventListener('keyup', function(event) {
-	if (event.code == Player1.Paddle.upKey || event.code == Player1.Paddle.downKey)
-		Player1.Paddle.speed = 0;
-	else if (event.code == Player2.Paddle.upKey || event.code == Player2.Paddle.downKey)
-		Player2.Paddle.speed = 0;
-});
+//document.addEventListener('keyup', function(event) {
+//	if (event.code == 'ArrowDown' || event.code == 'ArrowUp')
+//	 	playerEvent.pending = false;
+//});
 
-function drawElements(ball, Player1, Player2, ctx)
-{
+function drawElements(ball, Player1, Player2, ctx) {
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	//		ctx.font = '48px serif';
 	//		ctx.textBaseline = 'hanging';
@@ -89,13 +118,23 @@ function drawElements(ball, Player1, Player2, ctx)
 	ctx.fillStyle = ball.color;
 	ctx.fill();
 	ctx.closePath();
-
 }
 
-function gameLoop(ctx, socket) {
+function sendEvents(socket, playerData) {
+	if (playerEvent.pending == true)
+	{
+		socket.send(JSON.stringify({
+				type: 'player_ready',
+				player_id: playerData.playerId
+		}));	
+		playerEvent.pending = false;
+	}
+}
+
+export function gameLoop(ctx, socket) {
 	gameState = getElements(socket);
 	drawElements(gameState.ball, gameState.player1, gameState.player2, ctx);
-	sendEvents(socket);
+	sendEvents(socket, playerData);
 	requestAnimationFrame(gameLoop);
 }
 gameLoop();

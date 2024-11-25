@@ -1,3 +1,6 @@
+const Player1 = new Player(1, 'red');
+const Player2 = new Player(2, 'green');
+
 export function updatePlayer(Player) {
 	if (Player.Paddle.speed > 0)
 	{
