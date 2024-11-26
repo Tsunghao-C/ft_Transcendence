@@ -62,6 +62,7 @@ INSTALLED_APPS = [
 	"game_service",
 	"rest_framework",
 	"corsheaders",
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -95,6 +96,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
+ASGI_APPLICATION = 'game_server.asgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
