@@ -7,8 +7,6 @@ build:
 	mkdir -p pong-game/frontend/nginx/logs
 	- mkdir -p pong-game/security/vault_debian/volumes/file
 	- mkdir -p pong-game/security/vault_debian/volumes/shared_data
-	- chmod -R 755 pong-game/security/vault_debian/volumes/shared_data
-	- chmod -R 755 pong-game/security/vault_debian/volumes/file
 	chmod -R 755 pong-game/frontend/nginx/logs
 	docker compose -f pong-game/docker-compose.yml build
 
@@ -56,8 +54,9 @@ check:
 
 clean:
 	docker compose -f pong-game/docker-compose.yml down -v
-	# docker compose -f pong-game/docker-compose.yml run --rm --entrypoint sh nginx -c "rm -rf /var/log/nginx/*"
 	rm -f pong-game/frontend/nginx/logs/*.log
+	- rm -f pong-game/frontend/nginx/modsec/*.log
+	- rm -rf pong-game/security/vault_debian/volumes/*
 	rm pong-game/.env
 
 re: clean all

@@ -31,6 +31,7 @@ volumes:
   match_data: {}
   prometheus_data: {}
   grafana_data: {}
+  filebeat_registry: {}
   es_data:
     driver: local
 
@@ -100,6 +101,7 @@ services:
       - ./frontend/nginx/spa_files:/usr/share/nginx/html
       - static_volume:/app/static:ro
       - ./frontend/nginx/logs:/var/log/nginx:rw
+      - ./frontend/nginx/modsec:/var/log/modsec:rw
     # depends_on:
     #   - spa
     # If we don't use WFA
@@ -115,10 +117,8 @@ services:
       SECRET_KEY: ${SECRET_KEY}
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
       SQL_ENGINE: ${SQL_ENGINE}
-      SQL_DATABASE: ${SQL_DATABASE}
       SQL_USER: ${SQL_USER}
       SQL_PASSWORD: ${SQL_PASSWORD}
-      SQL_HOST: ${SQL_HOST}
       SQL_PORT: ${SQL_PORT}
     logging:
       driver: "json-file"
@@ -348,41 +348,6 @@ services:
   #     - monitoring_net
   #   restart: unless-stopped
 
-  # elasticsearch:
-  #   container_name: elasticsearch
-  #   image: elasticsearch:8.7.0
-  #   user: "1000:1000"
-  #   environment:
-  #     - discovery.type=single-node
-  #     - ES_JAVA_OPTS=-Xms512m -Xmx512m
-  #   volumes:
-  #     - es_data:/usr/share/elasticsearch/data
-  #   networks:
-  #     - monitoring_net
-  #   restart: unless-stopped
-
-  # logstash:
-  #   container_name: logstash
-  #   image: logstash:8.7.0
-  #   user: "1000:1000"
-  #   volumes:
-  #     - ./monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline
-  #   networks:
-  #     - monitoring_net
-  #   restart: unless-stopped
-
-  # kibana:
-  #   container_name: kibana
-  #   image: kibana:8.7.0
-  #   user: "1000:1000"
-  #   ports:
-  #     - "5601:5601"
-  #   environment:
-  #     - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-  #   networks:
-  #     - monitoring_net
-  #   restart: unless-stopped
-
   elasticsearch:
     container_name: elasticsearch
     image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
@@ -393,8 +358,6 @@ services:
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     volumes:
       - es_data:/usr/share/elasticsearch/data
-    ports:
-      - "9200:9200"
     networks:
       - monitoring_net
     restart: unless-stopped
@@ -409,8 +372,6 @@ services:
       # ELASTIC_HOST: elasticsearch
     networks:
       - monitoring_net
-    ports:
-      - "5044:5044"
     depends_on:
       - elasticsearch
     # healthcheck:
@@ -423,8 +384,9 @@ services:
   kibana:
     container_name: kibana
     image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
-    ports:
-      - "5601:5601"
+    volumes:
+      - ./monitoring/elk/kibana/dashboards:/usr/share/kibana/dashboards
+      - ./monitoring/elk/kibana/setup:/usr/share/kibana/setup
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
       - SERVER_BASEPATH=/kibana
@@ -432,27 +394,19 @@ services:
       - SERVER_NAME=kibana
       - XPACK_SECURITY_ENABLED=false
       - TELEMETRY_ENABLED=false
-
-      # # CSP settings
-      # - SERVER_CSP_RULES=none
-
-      # # Disable features that might cause security warnings
-      # - XPACK_SECURITY_AUDIT_ENABLED=false
-      # - XPACK_REPORTING_ENABLED=false
-      # - XPACK_ALERTING_ENABLED=false
-
-      # - SERVER_SSL_ENABLED=false
-      # # Security settings
-      # - XPACK_SECURITY_SECURECOOKIES=false
-      # - XPACK_REPORTING_ENABLED=false
-      # - XPACK_ENCRYPTEDSPACE_ENABLED=false
-      # # Browser compatibility
-      # - XPACK_SECURITY_HTTP_CSP_STRICT=false
-      # - XPACK_SECURITY_HTTP_CSP_RULES="script-src 'self' 'unsafe-eval' 'unsafe-inline' blob:; style-src 'self' 'unsafe-inline';"
     networks:
       - monitoring_net
     depends_on:
       - elasticsearch
+    entrypoint: >
+      sh -c '
+        /usr/share/kibana/setup/import-dashboards.sh &
+        /usr/local/bin/kibana-docker'
+    # entrypoint: >
+    #   sh -c '
+    #     chmod +x /usr/share/kibana/setup/*.sh &&
+    #     /usr/share/kibana/setup/import-dashboards.sh &
+    #     /usr/local/bin/kibana-docker'
     restart: unless-stopped
 
   filebeat:
@@ -463,6 +417,8 @@ services:
       - ./monitoring/elk/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
       # Mount all log directories
       - ./frontend/nginx/logs:/var/log/nginx:ro
+      - ./frontend/nginx/modsec:/var/log/modsec:ro
+      - filebeat_registry:/usr/share/filebeat/data
       # - ./auth-service/logs:/var/log/auth:ro
     entrypoint: >
       sh -c '
