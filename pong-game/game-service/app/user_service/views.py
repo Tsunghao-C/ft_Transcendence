@@ -5,12 +5,14 @@ from .serializers import UserSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.contrib.auth.decorators import login_required
 
 class CreateUserView(generics.CreateAPIView):
 	queryset = CustomUser.objects.all()
 	serializer_class = UserSerializer
 	permission_classes = [AllowAny]
 
+#@login_required
 class CurrentUserView(APIView):
 	def get(self, request):
 		serializer = UserSerializer(request.user)
@@ -78,3 +80,8 @@ class UnbanPlayer(APIView):
 		user.save()
 		return Response({"message": f"Player {id} has been unbanned"})
 
+@login_required
+class updateDetailsView(APIView):
+	def post(self, request):
+		if request.data.get("newAlias"):
+			request.user.alias = request.data.get("newAlias")

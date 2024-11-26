@@ -18,17 +18,12 @@ from django.contrib import admin
 from django.urls import path, include
 from user_service.views import *
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from django.contrib.auth import views as auth_views
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 	
     # User management
-	path("api/user/register/", CreateUserView.as_view(), name="register"),
-	path("api/user/token/", TokenObtainPairView.as_view(), name="get_token"),
-	path("api/user/token/refresh/", TokenRefreshView.as_view(), name="refresh"),
-    path("api/user/getuser/", CurrentUserView.as_view(), name="get_user"),
-    path("api/user/updatemmr/", UpdateMMR.as_view(), name="update_mmr"),
-	path("api/user/banplayer/", BanPlayer.as_view(), name="banplayer"),
-	path("api/user/unbanplayer/", UnbanPlayer.as_view(), name="unbanplayer"),
+    path("api/user/", include("user_service.urls")),
 ]

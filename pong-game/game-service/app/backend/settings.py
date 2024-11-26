@@ -175,3 +175,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #	"http://0.0.0.0:8000"
 #]
 #CORS_ALLOWS_CREDENTIALS = True
+
+# Auth settings
+LOGIN_URL = "/api/user/login"
+LOGIN_REDIRECT_URL = "/chat"
+LOGOUT_REDIRECT_URL = "/api/user/login"
