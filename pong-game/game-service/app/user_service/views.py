@@ -5,6 +5,11 @@ from .serializers import UserSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import authenticate
+from rest_framework import status
+from rest_framework.permissions import AllowAny
+from django.contrib.auth.models import  User
 
 class CreateUserView(generics.CreateAPIView):
 	queryset = CustomUser.objects.all()
@@ -77,4 +82,3 @@ class UnbanPlayer(APIView):
 		user.is_banned = False
 		user.save()
 		return Response({"message": f"Player {id} has been unbanned"})
-

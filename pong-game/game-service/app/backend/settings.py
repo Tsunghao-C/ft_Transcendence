@@ -52,16 +52,19 @@ SIMPLE_JWT = {
 # Application definition
 
 INSTALLED_APPS = [
+    "chat",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    "daphne",
     'django.contrib.staticfiles',
 	"user_service",
 	"game_service",
 	"rest_framework",
 	"corsheaders",
+    "channels",
 ]
 
 MIDDLEWARE = [
@@ -94,6 +97,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'backend.wsgi.application'
+ASGI_APPLICATION = 'backend.asgi.application'
 
 
 # Database
@@ -175,3 +179,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #	"http://0.0.0.0:8000"
 #]
 #CORS_ALLOWS_CREDENTIALS = True
+
+# can replace inmemorychannellayer with redis later
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)]
+        },
+    },
+}
+
+LOGIN_REDIRECT_URL = '/chat/'
