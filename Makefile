@@ -55,7 +55,7 @@ check:
 clean:
 	docker compose -f pong-game/docker-compose.yml down -v
 	rm -f pong-game/frontend/nginx/logs/*.log
-	rm -f pong-game/frontend/nginx/modsec/*.log
+	- rm -f pong-game/frontend/nginx/modsec/*.log
 	- rm -rf pong-game/security/vault_debian/volumes/*
 	rm pong-game/.env
 
