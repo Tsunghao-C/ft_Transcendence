@@ -5,7 +5,9 @@ from django.contrib.auth.views import LoginView, LogoutView
 
 urlpatterns = [
     path("/register/", CreateUserView.as_view(), name="register"),
-	path("/token/", TokenObtainPairView.as_view(), name="get_token"),
+	# path("/token/", TokenObtainPairView.as_view(), name="get_token"),
+	path("/token/", Generate2FAView.as_view(), name="generate_2fa"),
+	path("/token/validate/", Validate2FAView.as_view(), name="validate_2fa"),
 	path("/token/refresh/", TokenRefreshView.as_view(), name="refresh"),
     path("/getuser/", CurrentUserView.as_view(), name="get_user"),
     path("/updatemmr/", UpdateMMR.as_view(), name="update_mmr"),
