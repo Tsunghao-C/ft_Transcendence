@@ -2,9 +2,6 @@
 
 const PADDLE_HEIGHT = 100;
 const PADDLE_WIDTH = 15;
-const PADDLE_SPEED = 5;
-const DOWN = 0;
-const UP = 1;
 
 class Paddle {
 	constructor (id, color) {
@@ -56,25 +53,30 @@ let playerEvent = {
 document.addEventListener('keydown', function(event) {
 	if (event.code == 'ArrowUp') {
 		playerEvent.pending = true;
-		playerEvent.type = UP;
+		playerEvent.type = 'up';
 	}
 	else if (event.code == 'ArrowDown') {
 		playerEvent.pending = true;
-		playerEvent.type = DOWN;
+		playerEvent.type = 'down';
 	}
 });
 
-//document.addEventListener('keyup', function(event) {
-//	if (event.code == 'ArrowDown' || event.code == 'ArrowUp')
-//	 	playerEvent.pending = false;
-//});
+document.addEventListener('keyup', function(event) {
+	if (event.code == 'ArrowDown' || event.code == 'ArrowUp')
+	{
+	 	playerEvent.pending = true;
+		playerEvent.type = 'stop'
+	}
+});
 
 function sendEvents(socket, playerData) {
 	if (playerEvent.pending == true)
 	{
 		socket.send(JSON.stringify({
-				type: 'player_ready',
-				player_id: playerData.playerId
+				type: 'player_event',
+				player_id: playerData.playerId,
+				event: playerEvent.type,
+				game_roomID: playerData.roomUID
 		}));	
 		playerEvent.pending = false;
 	}
@@ -122,7 +124,7 @@ async function getGameState(socket)
 export async function gameLoop(ctx, socket, playerData) {
 	gameState = await getGameState(socket);
 	drawElements(gameState.ball, gameState.player1, gameState.player2, ctx);
-	sendEvents(socket, playerData);
+	sendEvents(socket, playerData, roomUID);
 	requestAnimationFrame(gameLoop);
 }
 gameLoop();

@@ -5,6 +5,7 @@ const token = localStorage.getItem('token'); //Is this stored there or in cookie
 var data = {
 	playerId: -1,
 	socket: -1,
+	roomUID: -1
 }
 //const token = document.cookie('token'); //need to tokenize it manually ???
 
@@ -44,8 +45,8 @@ async function requestRoom(playerInfo) {
 		if (!roomQuery.ok) {
 			throw new Error('Failed to create game room');
 		}
-		const roomId = await roomQuery.json();
-		return roomId;
+		data.roomUID = await roomQuery.json();
+		return data.roomUID;
 	} catch (error) {
 		console.error('Error creating game room: ', error);
 		throw error;

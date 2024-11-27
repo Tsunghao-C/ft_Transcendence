@@ -1,10 +1,14 @@
 import json
+import asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.sessions import SessionMiddlewareStack
+from room_manager import RoomManager
+
+room_manager = RoomManager()
 
 class GameConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.player_id = self.scope['session'].session_key
+        self.player_id = self.scope['session'].session_key #ask ben about this key
         await self.accept()
         await self.send(json.dumps({"message": "Connection established"}))
 
@@ -20,6 +24,11 @@ class GameConsumer(AsyncWebsocketConsumer):
             await self.join_lobby(data["room_name"])
         elif action == "ready_up":
             await self.notify_ready(data["room_name"])
+        elif data['type'] == "player_event":
+            self.game_room.receive_player_event(
+                    data['player_id'],
+                    data['event']
+                    )
     
     async def join_lobby(self, room_name):
         self.current_group = f"lobby_{room_name}"
@@ -27,14 +36,11 @@ class GameConsumer(AsyncWebsocketConsumer):
         await self.send(json.dumps({"message": f"Joined Lobby {room_name}"}))
 
     async def notify_ready(self, room_name):
-        group_name = f"lobby_{room_name}"
-        await self.channel_layer.group_send(
-                group_name,
-                {
-                    "type": "player_ready",
-                    "player_id": self.player_id
-                }
-            )
+        room_manager.mark_ready(room_name, self.player_id)
+        if room_manager.all_ready(room_name):
+            player_channels = [self.channel_name]
+            await room_manager.start_game(room_name)
+            asyncio.create_task(start_game_loop(room_name, player_channels))
 
     async def player_ready(self, event):
         await self.send(json.dumps({
