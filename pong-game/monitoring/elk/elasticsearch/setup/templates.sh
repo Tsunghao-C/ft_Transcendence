@@ -2,13 +2,49 @@
 
 echo "Creating index templates..."
 
-# Create index template for nginx logs
+# Create ILM policy first
+curl -X PUT "localhost:9200/_ilm/policy/logs_lifecycle_policy" -H 'Content-Type: application/json' -d'
+{
+  "policy": {
+    "phases": {
+      "hot": {
+        "actions": {
+          "rollover": {
+            "max_age": "5d",
+            "max_size": "2GB"
+          }
+        }
+      },
+      "warm": {
+        "min_age": "14d",
+        "actions": {
+          "shrink": {
+            "number_of_shards": 1
+          },
+          "forcemerge": {
+            "max_num_segments": 1
+          }
+        }
+      },
+      "delete": {
+        "min_age": "45d",
+        "actions": {
+          "delete": {}
+        }
+      }
+    }
+  }
+}'
+
+# Update your existing nginx template to include lifecycle settings
 curl -X PUT "localhost:9200/_template/nginx_logs" -H 'Content-Type: application/json' -d'
 {
   "index_patterns": ["nginx-*"],
   "settings": {
     "number_of_shards": 1,
     "number_of_replicas": 0,
+    "index.lifecycle.name": "logs_lifecycle_policy",
+    "index.lifecycle.rollover_alias": "nginx",
     "index.refresh_interval": "30s",
     "index.translog.durability": "async",
     "index.translog.sync_interval": "30s"
@@ -28,13 +64,15 @@ curl -X PUT "localhost:9200/_template/nginx_logs" -H 'Content-Type: application/
   }
 }'
 
-# Create index template for WAF logs
+# Update WAF template similarly
 curl -X PUT "localhost:9200/_template/waf_logs" -H 'Content-Type: application/json' -d'
 {
   "index_patterns": ["waf-*"],
   "settings": {
     "number_of_shards": 1,
     "number_of_replicas": 0,
+    "index.lifecycle.name": "logs_lifecycle_policy",
+    "index.lifecycle.rollover_alias": "waf",
     "index.refresh_interval": "30s",
     "index.translog.durability": "async",
     "index.translog.sync_interval": "30s"
@@ -52,4 +90,4 @@ curl -X PUT "localhost:9200/_template/waf_logs" -H 'Content-Type: application/js
   }
 }'
 
-echo "Index templates created"
+echo "Index templates and lifecycle policies created"

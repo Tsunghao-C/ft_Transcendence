@@ -17,6 +17,7 @@ curl -X PUT "localhost:9200/_cluster/settings" -H 'Content-Type: application/jso
       }
     },
     "action.destructive_requires_name": true
+    "indices.lifecycle.poll_interval": "1m"
   }
 }'
 
