@@ -326,83 +326,83 @@ services:
   #     - monitoring_net
   #   restart: unless-stopped
 
-  # elasticsearch:
-  #   container_name: elasticsearch
-  #   image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
-  #   environment:
-  #     - discovery.type=single-node
-  #     - xpack.security.enabled=false
-  #     - bootstrap.memory_lock=false
-  #     - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-  #   volumes:
-  #     - es_data:/usr/share/elasticsearch/data
-  #   networks:
-  #     - monitoring_net
-  #   restart: unless-stopped
+  elasticsearch:
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - bootstrap.memory_lock=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - monitoring_net
+    restart: unless-stopped
 
-  # logstash:
-  #   container_name: logstash
-  #   image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
-  #   volumes:
-  #     - ./monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
-  #   environment:
-  #     LS_JAVA_OPTS: "-Xmx256m -Xms256m"
-  #     # ELASTIC_HOST: elasticsearch
-  #   networks:
-  #     - monitoring_net
-  #   depends_on:
-  #     - elasticsearch
-  #   # healthcheck:
-  #   #   test: ["CMD", "bin/logstash", "-t"]
-  #   #   interval: 3s
-  #   #   timeout: 3s
-  #   #   retries: 1
-  #   restart: unless-stopped
+  logstash:
+    container_name: logstash
+    image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
+    volumes:
+      - ./monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+      # ELASTIC_HOST: elasticsearch
+    networks:
+      - monitoring_net
+    depends_on:
+      - elasticsearch
+    # healthcheck:
+    #   test: ["CMD", "bin/logstash", "-t"]
+    #   interval: 3s
+    #   timeout: 3s
+    #   retries: 1
+    restart: unless-stopped
 
-  # kibana:
-  #   container_name: kibana
-  #   image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
-  #   volumes:
-  #     - ./monitoring/elk/kibana/dashboards:/usr/share/kibana/dashboards
-  #     - ./monitoring/elk/kibana/setup:/usr/share/kibana/setup
-  #   environment:
-  #     - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-  #     - SERVER_BASEPATH=/kibana
-  #     - SERVER_REWRITEBASEPATH=true
-  #     - SERVER_NAME=kibana
-  #     - XPACK_SECURITY_ENABLED=false
-  #     - TELEMETRY_ENABLED=false
-  #   networks:
-  #     - monitoring_net
-  #   depends_on:
-  #     - elasticsearch
-  #   entrypoint: >
-  #     sh -c '
-  #       /usr/share/kibana/setup/import-dashboards.sh &
-  #       /usr/local/bin/kibana-docker'
-  #   # entrypoint: >
-  #   #   sh -c '
-  #   #     chmod +x /usr/share/kibana/setup/*.sh &&
-  #   #     /usr/share/kibana/setup/import-dashboards.sh &
-  #   #     /usr/local/bin/kibana-docker'
-  #   restart: unless-stopped
+  kibana:
+    container_name: kibana
+    image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
+    volumes:
+      - ./monitoring/elk/kibana/dashboards:/usr/share/kibana/dashboards
+      - ./monitoring/elk/kibana/setup:/usr/share/kibana/setup
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - SERVER_BASEPATH=/kibana
+      - SERVER_REWRITEBASEPATH=true
+      - SERVER_NAME=kibana
+      - XPACK_SECURITY_ENABLED=false
+      - TELEMETRY_ENABLED=false
+    networks:
+      - monitoring_net
+    depends_on:
+      - elasticsearch
+    entrypoint: >
+      sh -c '
+        /usr/share/kibana/setup/import-dashboards.sh &
+        /usr/local/bin/kibana-docker'
+    # entrypoint: >
+    #   sh -c '
+    #     chmod +x /usr/share/kibana/setup/*.sh &&
+    #     /usr/share/kibana/setup/import-dashboards.sh &
+    #     /usr/local/bin/kibana-docker'
+    restart: unless-stopped
 
-  # filebeat:
-  #   container_name: filebeat
-  #   image: docker.elastic.co/beats/filebeat:${STACK_VERSION}
-  #   user: root  # Required to read logs
-  #   volumes:
-  #     - ./monitoring/elk/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
-  #     # Mount all log directories
-  #     - ./frontend/nginx/logs:/var/log/nginx:ro
-  #     - ./frontend/nginx/modsec:/var/log/modsec:ro
-  #     - filebeat_registry:/usr/share/filebeat/data
-  #     # - ./auth-service/logs:/var/log/auth:ro
-  #   entrypoint: >
-  #     sh -c '
-  #     chmod go-w /usr/share/filebeat/filebeat.yml &&
-  #     filebeat -e --strict.perms=false'
-  #   networks:
-  #     - monitoring_net
-  #   depends_on:
-  #     - logstash
+  filebeat:
+    container_name: filebeat
+    image: docker.elastic.co/beats/filebeat:${STACK_VERSION}
+    user: root  # Required to read logs
+    volumes:
+      - ./monitoring/elk/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      # Mount all log directories
+      - ./frontend/nginx/logs:/var/log/nginx:ro
+      - ./frontend/nginx/modsec:/var/log/modsec:ro
+      - filebeat_registry:/usr/share/filebeat/data
+      # - ./auth-service/logs:/var/log/auth:ro
+    entrypoint: >
+      sh -c '
+      chmod go-w /usr/share/filebeat/filebeat.yml &&
+      filebeat -e --strict.perms=false'
+    networks:
+      - monitoring_net
+    depends_on:
+      - logstash
