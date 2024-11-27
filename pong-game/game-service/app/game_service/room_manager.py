@@ -4,10 +4,6 @@ from game_room import GameRoom
 class RoomManager:
     def __init__(self): self.rooms = {} #Format: {"room_name": {"players": [...], "ready": [...]}}
 
-    def add_player(self, room_name, player_id):
-        if room_name not in self.rooms:
-            self.rooms[room_name] = {"players": [], "ready": []}
-        self.rooms[room_name]["ready"].append(player_id)
 
     def mark_ready(self, room_name, player_id):
         if player_id in self.rooms[room_name]["players"]:

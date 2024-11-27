@@ -1,4 +1,3 @@
-import threading
 import time
 import json
 from channels.layers import get_channel_layer
@@ -19,9 +18,8 @@ class Player():
         self.y = canvas_height * 0.30
         self.speed = 0
 
-class GameRoom(threading.Thread):
+class GameRoom():
     def __init__(self, room_id, player_channels):
-        super().__init__()
         self.room_id = room_id
         self.channel_layer = get_channel_layer()
         self.player_channels = player_channels
