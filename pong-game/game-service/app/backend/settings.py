@@ -52,16 +52,19 @@ SIMPLE_JWT = {
 # Application definition
 
 INSTALLED_APPS = [
+    "chat",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    "daphne",
     'django.contrib.staticfiles',
 	"user_service",
 	"game_service",
 	"rest_framework",
 	"corsheaders",
+    "channels",
 ]
 
 MIDDLEWARE = [
@@ -94,6 +97,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'backend.wsgi.application'
+ASGI_APPLICATION = 'backend.asgi.application'
 
 
 # Database
@@ -176,7 +180,22 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #]
 #CORS_ALLOWS_CREDENTIALS = True
 
-# Auth settings
-LOGIN_URL = "/api/user/login"
-LOGIN_REDIRECT_URL = "/chat"
-LOGOUT_REDIRECT_URL = "/api/user/login"
+# can replace inmemorychannellayer with redis later
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)]
+        },
+    },
+}
+
+LOGIN_REDIRECT_URL = '/chat/'
+
+# Alex add for Email host setup
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Hôte SMTP
+EMAIL_PORT = 587              # Port SMTP pour TLS
+EMAIL_USE_TLS = True          # Activer TLS
+EMAIL_HOST_USER = '42transcendental@gmail.com'  # Votre adresse e-mail
+EMAIL_HOST_PASSWORD = 'zlywwbcyedhomdet'  # Votre mot de passe ou App Password /!\ CODE A CACHER DANS L'ENV
