@@ -195,103 +195,81 @@ services:
 
   # User Service
   ## [Ben]
-  # user_service:
-  #   container_name: user_service
-  #   build: ./user-service
-  #   user: "1000:1000"
-  #   ports:
-  #     - "8002:8002"     # only for development stage, need to close after
-  #   environment:
-  #     - DATABASE_URL=postgresql://postgres:${USER_DB_PASSWORD}@user_db:5433/userdb
-  #     - REDIS_URL=redis://redis:6379/0
-  #     # - VAULT_ADDR=http://vault:8200
-  #   depends_on:
-  #     - user_db
-  #     # - vault
-  #   networks:
-  #     - backend_net
-  #   restart: unless-stopped
 
-  # user_db:
-  #   container_name: user_db
-  #   image: postgres:14-alpine
-  #   environment:
-  #     - POSTGRES_USER=${SQL_USER}
-  #     - POSTGRES_PASSWORD=${SQL_PASSWORD}
-  #     - POSTGRES_DB=${SQL_DATABASE}
-  #   volumes:
-  #     - user_data:/var/lib/postgresql/data
-  #     - static_volume:/app/static
-  #   user: "999:999"
-  #   networks:
-  #     - backend_net
-  #   restart: unless-stopped
+  redis:
+    container_name: redis
+    image: redis:alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"     # only for development stage, need to close after
+    networks:
+      - backend_net
+    restart: unless-stopped
 
-  # redis:
-  #   container_name: redis
-  #   image: redis:alpine
-  #   command: redis-server --appendonly yes
-  #   volumes:
-  #     - redis_data:/data
-  #   ports:
-  #     - "6379:6379"     # only for development stage, need to close after
-  #   networks:
-  #     - backend_net
-  #   restart: unless-stopped
+  game_service:
+     container_name: game_service
+     build:
+       context: ./game-service
+       dockerfile: Dockerfile
+     image: game_service
+     pull_policy: never
+     volumes:
+       - static_volume:/app/static # Match the path
+     expose:
+       - 8004
+    #  ports:
+    #    - "8004:8004"     # only for development stage, need to close after
+     environment:
+       # - DATABASE_URL=postgresql://postgres:${GAME_DB_PASSWORD}@game_db:5434/gamedb
+       # - MATCH_DB_URL=postgresql://postgres:${MATCH_DB_PASSWORD}@match_db:5432/matchdb
+       # - VAULT_ADDR=http://vault:8200
+       # - VAULT_TOKEN=${VAULT_DEV_ROOT_TOKEN}
+       DEBUG: ${DEBUG}
+       SECRET_KEY: ${SECRET_KEY}
+       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
+       SQL_ENGINE: ${SQL_ENGINE}
+       GAME_DB_DATABASE: ${GAME_DB_DATABASE}
+       USER_DB_DATABASE: ${USER_DB_DATABASE}
+       SQL_USER: ${SQL_USER}
+       SQL_PASSWORD: ${SQL_PASSWORD}
+       SQL_PORT: ${SQL_PORT}
+       SQL_HOST: game_db
+       USER_DB_HOST: user_db
+     depends_on:
+       - game_db
+       - user_db
+     networks:
+       - backend_net
+     restart: unless-stopped
 
-  # Game Services
-  # game_service:
-  #   container_name: game_service
-  #   build:
-  #     context: ./game-service
-  #     dockerfile: Dockerfile
-  #     args:
-  #       - SQL_HOST=${SQL_HOST}
-  #       - SQL_PORT=${SQL_PORT}
-  #   image: game_service
-  #   pull_policy: never
-  #   user: "1000:1000"
-  #   volumes:
-  #     - static_volume:/app/static
-  #   expose:
-  #     - 8004
-    # ports:
-    #   - "8004:8004"     # only for development stage, need to close after
-    # environment:
-    #   # - DATABASE_URL=postgresql://postgres:${GAME_DB_PASSWORD}@game_db:5434/gamedb
-    #   # - MATCH_DB_URL=postgresql://postgres:${MATCH_DB_PASSWORD}@match_db:5432/matchdb
-    #   # - VAULT_ADDR=http://vault:8200
-    #   # - VAULT_TOKEN=${VAULT_DEV_ROOT_TOKEN}
-    #   DEBUG: ${DEBUG}
-    #   SECRET_KEY: ${SECRET_KEY}
-    #   DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
-    #   SQL_ENGINE: ${SQL_ENGINE}
-    #   SQL_DATABASE: ${SQL_DATABASE}
-    #   SQL_USER: ${SQL_USER}
-    #   SQL_PASSWORD: ${SQL_PASSWORD}
-    #   SQL_HOST: ${SQL_HOST}
-    #   SQL_PORT: ${SQL_PORT}
-    # depends_on:
-    #   - game_db
-    #   - user_db
-    #   - match_db
-    #   - vault
-    # networks:
-    #   - backend_net
-    # restart: unless-stopped
+  game_db:
+     container_name: game_db
+     image: postgres:14-alpine
+     environment:
+       - POSTGRES_DB=game_db
+       - POSTGRES_USER=${SQL_USER}
+       - POSTGRES_PASSWORD=${SQL_PASSWORD}
+     volumes:
+       - game_data:/var/lib/postgresql/data
+     networks:
+       - backend_net
+     restart: unless-stopped
 
-  # game_db:
-  #   container_name: game_db
-  #   image: postgres:14-alpine
-  #   environment:
-  #     - POSTGRES_DB=gamedb
-  #     - POSTGRES_PASSWORD=${GAME_DB_PASSWORD}
-  #   volumes:
-  #     - game_data:/var/lib/postgresql/data
-  #   user: "999:999"
-  #   networks:
-  #     - backend_net
-  #   restart: unless-stopped
+  user_db:
+     container_name: user_db
+     image: postgres:14-alpine
+     environment:
+       - POSTGRES_DB=user_db
+       - POSTGRES_USER=${SQL_USER}
+       - POSTGRES_PASSWORD=${SQL_PASSWORD}
+     volumes:
+       - user_data:/var/lib/postgresql/data
+       - static_volume:/app/static
+     networks:
+       - backend_net
+     restart: unless-stopped
 
   # match_db:
   #   container_name: match_db
