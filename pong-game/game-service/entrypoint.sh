@@ -3,7 +3,8 @@ set -e  # fail on error
 echo "Starting entrypoint script..."
 
 # Create static directory and set permissions
-mkdir -p /app/static #&& \
+mkdir -p /home/app/pong-game/staticfiles #&& \
+# mkdir -p /app/static #&& \
 # chmod -R 755 /app/static
 
 echo "Waiting for database to be ready..."
@@ -27,4 +28,4 @@ ls -la /app/static
 
 # Start Gunicorn server
 echo "Starting Gunicorn server..."
-exec gunicorn backend.wsgi:application --bind localhost:8004 || { echo "Gunicorn failed"; exit 1; }
+exec gunicorn backend.wsgi:application --bind 0.0.0.0:8004 --workers 3 || { echo "Gunicorn failed"; exit 1; }
