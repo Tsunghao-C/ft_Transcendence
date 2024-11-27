@@ -201,3 +201,10 @@ CHANNEL_LAYERS = {
                 }
             }
         }
+# Alex add for Email host setup
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Hôte SMTP
+EMAIL_PORT = 587              # Port SMTP pour TLS
+EMAIL_USE_TLS = True          # Activer TLS
+EMAIL_HOST_USER = '42transcendental@gmail.com'  # Votre adresse e-mail
+EMAIL_HOST_PASSWORD = 'zlywwbcyedhomdet'  # Votre mot de passe ou App Password /!\ CODE A CACHER DANS L'ENV
