@@ -4,7 +4,7 @@ FROM python:3.11.4-slim-buster
 ENV HOME=/home/app
 ENV APP_HOME=/home/app/pong-game
 RUN mkdir -p $APP_HOME
-RUN mkdir -p $APP_HOME/staticfiles
+RUN mkdir -p $APP_HOME/static
 WORKDIR $APP_HOME
 
 ENV PYTHONDONTWRITEBYTECODE 1
