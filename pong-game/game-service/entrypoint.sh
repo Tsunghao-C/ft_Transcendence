@@ -3,9 +3,9 @@ set -e  # fail on error
 echo "Starting entrypoint script..."
 
 # Create static directory and set permissions
-mkdir -p /home/app/pong-game/staticfiles #&& \
-# mkdir -p /app/static #&& \
-# chmod -R 755 /app/static
+# mkdir -p /home/app/pong-game/staticfiles && \
+mkdir -p /app/static #&& \
+chmod -R 755 /app/static
 
 echo "Waiting for database to be ready..."
 echo "SQL_PORT: ${SQL_PORT}"
@@ -24,7 +24,6 @@ python manage.py migrate
 echo "Collecting static files..."
 python manage.py collectstatic --noinput -v 2 || { echo "static collection failed"; exit 1; }
 echo "Static files directory contents:"
-ls -la /app/static
 
 # Start Gunicorn server
 echo "Starting Gunicorn server..."

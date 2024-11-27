@@ -214,7 +214,7 @@ services:
      image: game_service
      pull_policy: never
      volumes:
-       - static_volume:/home/app/pong-game/staticfiles # Match the path
+       - static_volume:/app/static # Match the path
      expose:
        - 8004
     #  ports:
