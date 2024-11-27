@@ -95,8 +95,6 @@ services:
     build:
       context: ./frontend/nginx
       dockerfile: Dockerfile
-    # expose:
-    #   - "80"
     volumes:
       - ./frontend/nginx/spa_files:/usr/share/nginx/html
       - static_volume:/app/static:ro
@@ -134,21 +132,6 @@ services:
       retries: 1
     restart: unless-stopped
 
-  # spa:
-  #   container_name: spa
-  #   build:
-  #     context: ./frontend/spa
-  #   volumes:
-  #     - ./frontend:/app
-  #     - /app/node_modules
-  #   environment:
-  #     - REACT_APP_API_URL=http://localhost/api
-  #     - REACT_APP_WS_URL=ws://localhost/ws
-  #   networks:
-  #     - frontend_net
-  #   restart: unless-stopped
-
-  ## [Theo] to finish this part
   # spa:
   #   container_name: spa
   #   build:
@@ -430,11 +413,6 @@ services:
       sh -c '
         /usr/share/kibana/setup/import-dashboards.sh &
         /usr/local/bin/kibana-docker'
-    # entrypoint: >
-    #   sh -c '
-    #     chmod +x /usr/share/kibana/setup/*.sh &&
-    #     /usr/share/kibana/setup/import-dashboards.sh &
-    #     /usr/local/bin/kibana-docker'
     restart: unless-stopped
 
   filebeat:
