@@ -192,23 +192,10 @@ CHANNEL_LAYERS = {
 
 LOGIN_REDIRECT_URL = '/chat/'
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-        },
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': True,
-        },
-    },
-}
+# Alex add for Email host setup
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Hôte SMTP
+EMAIL_PORT = 587              # Port SMTP pour TLS
+EMAIL_USE_TLS = True          # Activer TLS
+EMAIL_HOST_USER = '42transcendental@gmail.com'  # Votre adresse e-mail
+EMAIL_HOST_PASSWORD = 'zlywwbcyedhomdet'  # Votre mot de passe ou App Password /!\ CODE A CACHER DANS L'ENV
