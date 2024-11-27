@@ -4,23 +4,33 @@ import { changeLanguage } from './settings.js';
 import { changeFontSize } from './settings.js';
 import { changeColorMode } from './settings.js';
 import { setSettingsView } from './settings.js';
-import { translations } from './language_pack.js';
 import { setLoginView } from './profile.js';
 import { setCreateProfileView } from './profile.js';
+import { set404View } from './404.js';
+import { setLeaderboardView } from './leaderboard.js';
 
 export function loadPage(page) {
 	const contentContainer = document.getElementById("content");
 	const currentLanguage = localStorage.getItem("language") || "en";
 	const isLoggedIn = localStorage.getItem("isLoggedIn") || "false" ;
+	const path = window.location.pathname;
 
 	if (page !== "game") {
 		closeGameWebSocket();
 	}
-
 	const navbar = document.getElementById("mainNavBar");
 	if (navbar) navbar.style.display = isLoggedIn === "true" ? "block" : "none";
 
-	if (isLoggedIn != "true" && page !== "login" && page !== "create-profile") {
+	if (isLoggedIn === "true") {
+		userAvatar.src = "wtf.jpeg";
+		userAvatar.style.display = "block";
+	} else {
+		userAvatar.style.display = "none";
+	}
+
+	if (path !== '/') {
+		set404View(contentContainer);
+	} else if (isLoggedIn != "true" && page !== "login" && page !== "create-profile") {
 		window.location.hash = "login";
 		loadPage("login")
 	} else if (isLoggedIn === "true" && (page === "login" || page === "create-profile")) {
@@ -32,6 +42,8 @@ export function loadPage(page) {
 		contentContainer.innerHTML = '<h1 data-i18n="about">About</h1><p>To fill.</p>';
 	} else if (page === "game") {
 		setGameView(contentContainer);
+	} else if (page === "leaderboard") {
+		setLeaderboardView(contentContainer);
 	} else if (page === "settings") {
 		setSettingsView(contentContainer);
 	} else if (page === "login") {
@@ -39,14 +51,9 @@ export function loadPage(page) {
 	} else if (page === "create-profile") {
 		setCreateProfileView(contentContainer);
 	} else {
-contentContainer.innerHTML = `
-		<h1 >${translations[currentLanguage].error404Title}</h1>
-		<p >${translations[currentLanguage].error404Message}</p>
-	`;
+		set404View(contentContainer);
 	}
-	console.log("Content at the beginning of changeLanguage:", contentContainer.innerHTML);
 	changeLanguage(currentLanguage);
-	console.log("Content at the end of changeLanguage:", contentContainer.innerHTML);
 }
 
 
@@ -54,9 +61,8 @@ function handleNavigation(event) {
 	event.preventDefault();
 
 	const newPage = event.target.getAttribute("href").substring(1);
+	window.history.pushState({ page: newPage }, newPage, '/#' + newPage);
 	loadPage(newPage);
-	window.history.pushState({ page: newPage }, newPage, "#" + newPage);
-
 	updateActiveLink();
 }
 

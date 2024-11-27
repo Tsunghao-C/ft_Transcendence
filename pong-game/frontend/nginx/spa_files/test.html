@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Transcendence</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: black;
+    }
+    .login-container {
+      background-color: black;
+    color: white;
+    border-color: white;
+      padding: 2em;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 1em;
+    }
+    .input-group {
+      margin-bottom: 1em;
+    }
+    .input-group label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 0.5em;
+    }
+    .input-group input {
+      width: 100%;
+      padding: 0.8em;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    .login-button {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      padding: 0.8em 1.5em;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .login-button:hover {
+      background-color: #0056b3;
+    }
+    .error-message {
+      color: red;
+      margin-top: 1em;
+    }
+    .input-group input.input-disabled {
+      background-color: #e9ecef !important; /* Gris clair */
+      color: #6c757d !important; /* Texte atténué */
+      pointer-events: none; /* Empêche toute interaction */
+      border-color: #ced4da; /* Bordure grisée */
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h1>Login</h1>
+    <form id="loginForm">
+      <div class="input-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required>
+      </div>
+      <div class="input-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+      </div>
+      <button type="submit" class="login-button">Log In</button>
+      <p class="error-message" id="errorMessage"></p>
+      <div class="input-group" id="twoFaInput" style="display: none;">
+        <label for="otpCode">2FA Code</label>
+        <input type="text" id="otpCode" name="otpCode">
+        <button type="button" onclick="verify2FA()" class="login-button">Verify 2FA</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    function show2FAInput() {
+      // Rendre les champs Username et Password non modifiables
+      const usernameInput = document.getElementById('username');
+      const passwordInput = document.getElementById('password');
+      usernameInput.setAttribute('readonly', true);
+      passwordInput.setAttribute('readonly', true);
+
+      // Ajouter une classe pour griser les champs
+      usernameInput.classList.add('input-disabled');
+      passwordInput.classList.add('input-disabled');
+
+      // Rendre le champ de code 2FA requis et afficher la section 2FA
+      const otpInput = document.getElementById('otpCode');
+      otpInput.required = true; // Rendre le champ requis lorsqu'il est affiché
+      document.getElementById('twoFaInput').style.display = 'block';
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+    // 5. Enclenche un bloc "try" pour gérer les erreurs potentielles lors de la soumission.
+      try {
+        // 6. Effectue une requête HTTP vers le backend Django pour vérifier les informations d'identification.
+        const response = await fetch('http://localhost:8000/api/auth/login/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username, password })
+        });
+
+        // 10. Extrait la réponse JSON du serveur (cela contient les informations renvoyées, comme un token JWT).
+        const data = await response.json();
+
+        console.log("response is : ");
+        console.log(response);
+        console.log("response.headers is : ");
+        console.log(response.headers);
+        console.log("data is : ");
+        console.log(data);
+        console.log("data.token is : ");
+        console.log(data.token);
+
+        if (response.ok && data.message === "A 2FA code has been sent") {
+          // Demander le code 2FA à l'utilisateur
+          document.getElementById('errorMessage').textContent = 'Enter the 2FA code sent to your email.';
+
+          // Afficher un champ de saisie pour le code 2FA et un bouton de validation
+          show2FAInput();
+        } else {
+          document.getElementById('errorMessage').textContent = data.error || 'Login failed. Please try again.';
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('errorMessage').textContent = 'An error occurred. Please try again later.';
+      }
+    });
+
+    ////////////////////////////////////////////
+
+    async function verify2FA() {
+      const otpCode = document.getElementById('otpCode').value;
+      const username = document.getElementById('username').value;
+
+      console.log("we are in verify");
+      console.log("username is : " + username);
+
+      try {
+        // Effectuer une requête POST vers le backend avec le code 2FA
+        // const response = await fetch('http://localhost:8081', {
+        const response = await fetch('http://localhost:8000/api/auth/verify_2fa/', {
+            method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username, otpCode })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          // Succès : connecter l'utilisateur ou rediriger
+          document.getElementById('errorMessage').textContent = '2FA verified successfully!';
+          console.log('Login successful:', data);
+
+          // Exemple de redirection après succès
+          window.location.href = '/dashboard';
+        } else {
+          // Afficher l'erreur si la vérification échoue
+          document.getElementById('errorMessage').textContent = data.error || '2FA verification failed.';
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('errorMessage').textContent = 'An error occurred during 2FA verification.';
+      }
+    }
+  </script>
+</body>
+</html>
