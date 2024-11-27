@@ -24,6 +24,7 @@ class GameRoom(threading.Thread):
         super().__init__()
         self.room_id = room_id
         self.channel_layer = get_channel_layer()
+        self.player_channels = player_channels
         self.players = {
                 player_channels[0]: Player(player_channels[0], 'left', CANVAS_WIDTH, CANVAS_HEIGHT),
                 player_channels[1]: Player(player_channels[1], 'right', CANVAS_WIDTH, CANVAS_HEIGHT)
@@ -33,7 +34,8 @@ class GameRoom(threading.Thread):
         self.ball = {"x":self.canvas_width * 0.5, "y":self.canvas_height * 0.5, "speedX":5, "speedY":5}
         self.running = True
 
-    def updatePlayers():
+    def updatePlayers(self):
+        receiveEvents(self.players_channels, )
 
     def run(self):
         while self.running:

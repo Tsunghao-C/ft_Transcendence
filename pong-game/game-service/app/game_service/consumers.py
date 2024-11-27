@@ -29,6 +29,10 @@ class GameConsumer(AsyncWebsocketConsumer):
                     data['player_id'],
                     data['event']
                     )
+            game_room = room_manager.get_game_room(data['game_roomID'])
+            if game_room:
+                await game_room.receive_player_event(data['player_id'], data['event'])
+
     
     async def join_lobby(self, room_name):
         self.current_group = f"lobby_{room_name}"

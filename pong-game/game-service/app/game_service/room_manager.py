@@ -22,4 +22,3 @@ class RoomManager:
         game_room.start()
         #print and log here
         del self.rooms[room_name]
-
