@@ -214,11 +214,11 @@ services:
      image: game_service
      pull_policy: never
      volumes:
-       - static_volume:/app/static
+       - static_volume:/app/static # Match the path
      expose:
        - 8004
-     ports:
-       - "8004:8004"     # only for development stage, need to close after
+    #  ports:
+    #    - "8004:8004"     # only for development stage, need to close after
      environment:
        # - DATABASE_URL=postgresql://postgres:${GAME_DB_PASSWORD}@game_db:5434/gamedb
        # - MATCH_DB_URL=postgresql://postgres:${MATCH_DB_PASSWORD}@match_db:5432/matchdb
@@ -230,9 +230,11 @@ services:
        SQL_ENGINE: ${SQL_ENGINE}
        GAME_DB_DATABASE: ${GAME_DB_DATABASE}
        USER_DB_DATABASE: ${USER_DB_DATABASE}
+       SQL_USER: ${SQL_USER}
        SQL_PASSWORD: ${SQL_PASSWORD}
        SQL_PORT: ${SQL_PORT}
-       SQL_USER: ${SQL_USER}
+       SQL_HOST: game_db
+       USER_DB_HOST: user_db
      depends_on:
        - game_db
        - user_db
