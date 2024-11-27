@@ -118,7 +118,7 @@ class Generate2FAView(APIView):
 				[user.email],
 				fail_silently=False,
 			)
-			return Response({"detail": "Code 2FA envoyé. Veuillez le valider."}, status=status.HTTP_200_OK)
+			return Response({"detail": "2FA code has been sent"}, status=status.HTTP_200_OK)
 		return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
 # Check and validate/refuse the 2FA code entered by user
