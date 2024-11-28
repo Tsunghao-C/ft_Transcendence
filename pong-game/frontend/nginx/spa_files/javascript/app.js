@@ -5,8 +5,8 @@ import { changeFontSize } from './settings.js';
 import { changeColorMode } from './settings.js';
 import { setSettingsView } from './settings.js';
 import { translations } from './language_pack.js';
-import { setLoginView } from './profile.js';
-import { setCreateProfileView } from './profile.js';
+import { setLoginView } from './profile_login.js';
+import { setRegisterView } from './profile_register.js';
 
 export function loadPage(page) {
 	const contentContainer = document.getElementById("content");
@@ -20,10 +20,10 @@ export function loadPage(page) {
 	const navbar = document.getElementById("mainNavBar");
 	if (navbar) navbar.style.display = isLoggedIn === "true" ? "block" : "none";
 
-	if (isLoggedIn != "true" && page !== "login" && page !== "create-profile") {
+	if (isLoggedIn != "true" && page !== "login" && page !== "register") {
 		window.location.hash = "login";
 		loadPage("login")
-	} else if (isLoggedIn === "true" && (page === "login" || page === "create-profile")) {
+	} else if (isLoggedIn === "true" && (page === "login" || page === "register")) {
 		window.location.hash = "home";
 		loadPage("home");
 	} else if (page === "home") {
@@ -36,8 +36,8 @@ export function loadPage(page) {
 		setSettingsView(contentContainer);
 	} else if (page === "login") {
 		setLoginView(contentContainer);
-	} else if (page === "create-profile") {
-		setCreateProfileView(contentContainer);
+	} else if (page === "register") {
+		setRegisterView(contentContainer);
 	} else {
 contentContainer.innerHTML = `
 		<h1 >${translations[currentLanguage].error404Title}</h1>

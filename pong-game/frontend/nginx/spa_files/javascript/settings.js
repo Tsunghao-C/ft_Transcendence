@@ -62,8 +62,8 @@ export function changeLanguage(language) {
 	  if (translations[language] && translations[language][key]) {
 		if (el.tagName.toLowerCase() === 'p' && key === 'noAccount') {
 		  el.innerHTML = translations[language][key] +
-			' <a href="#create-profile" id="createAccountLink" data-i18n="createAccountLink">' +
-			translations[language]['createAccountLink'] + '</a>';
+			' <a href="#register" id="registerLink" data-i18n="registerLink">' +
+			translations[language]['registerLink'] + '</a>';
 		// } else if (el.tagName.toLowerCase() === 'a') {
 		//   el.textContent = translations[language][key];
 		} else {
