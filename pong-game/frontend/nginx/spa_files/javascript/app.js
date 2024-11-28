@@ -44,9 +44,9 @@ contentContainer.innerHTML = `
 		<p >${translations[currentLanguage].error404Message}</p>
 	`;
 	}
-	console.log("Content at the beginning of changeLanguage:", contentContainer.innerHTML);
+	// console.log("Content at the beginning of changeLanguage:", contentContainer.innerHTML);
 	changeLanguage(currentLanguage);
-	console.log("Content at the end of changeLanguage:", contentContainer.innerHTML);
+	// console.log("Content at the end of changeLanguage:", contentContainer.innerHTML);
 }
 
 
