@@ -200,5 +200,14 @@ select.large-font {
 	font-size: 3rem;
 }
 
+/******************************************/
 
+#successMessage {
+	font-size: 1rem;
+	color:green;
+}
 
+#errorMessage {
+	font-size: 1rem;
+	color:red;
+}
