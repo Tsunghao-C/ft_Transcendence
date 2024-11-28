@@ -133,5 +133,6 @@ class Validate2FAView(APIView):
 			return Response({
 				"refresh": str(refresh),
 				"access": str(refresh.access_token),
+				"detail": "2FA code validated",
 			}, status=status.HTTP_200_OK)
 		return Response({"detail": "Invalid or expired OTP"}, status=status.HTTP_400_BAD_REQUEST)
