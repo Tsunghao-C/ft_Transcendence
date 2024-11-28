@@ -4,12 +4,16 @@ import { changeLanguage } from './settings.js';
 import { changeFontSize } from './settings.js';
 import { changeColorMode } from './settings.js';
 import { setSettingsView } from './settings.js';
-import { setLoginView } from './profile.js';
-import { setCreateProfileView } from './profile.js';
+import { setLoginView } from './login.js';
+import { setCreateProfileView } from './login.js';
 import { set404View } from './404.js';
 import { setLeaderboardView } from './leaderboard.js';
+import { setPersonnalDataView } from './personnal-data.js';
+import { setProfileView } from './profile.js';
+import { setFriendsView } from './friends.js';
 
 export function loadPage(page) {
+	//add a checker to check there is no more than one /
 	const contentContainer = document.getElementById("content");
 	const currentLanguage = localStorage.getItem("language") || "en";
 	const isLoggedIn = localStorage.getItem("isLoggedIn") || "false" ;
@@ -23,11 +27,14 @@ export function loadPage(page) {
 
 	if (isLoggedIn === "true") {
 		userAvatar.src = "wtf.jpeg";
+		userDropdown.textContent = localStorage.getItem("currentLogin");
+		//ici afficher la bonne pp
+		//rajouter plus tard le nom du user logged in
 		userAvatar.style.display = "block";
 	} else {
 		userAvatar.style.display = "none";
 	}
-
+	console.log("page is ", page);
 	if (path !== '/') {
 		set404View(contentContainer);
 	} else if (isLoggedIn != "true" && page !== "login" && page !== "create-profile") {
@@ -44,12 +51,26 @@ export function loadPage(page) {
 		setGameView(contentContainer);
 	} else if (page === "leaderboard") {
 		setLeaderboardView(contentContainer);
+	} else if (page === "profile") {
+		//change this to make a request for current username
+		const username = localStorage.getItem("currentLogin");
+		setProfileView(contentContainer, username);
+	} else if (page.startsWith("profile/")) {
+		let username = page.split("/")[1];
+		if (!username) {
+			username = localStorage.getItem("currentLogin");
+		}
+		setProfileView(contentContainer, username);
 	} else if (page === "settings") {
 		setSettingsView(contentContainer);
+	} else if (page === "friends") {
+		setFriendsView(contentContainer);
 	} else if (page === "login") {
 		setLoginView(contentContainer);
 	} else if (page === "create-profile") {
 		setCreateProfileView(contentContainer);
+	} else if (page === "personnal-data") {
+		setPersonnalDataView(contentContainer);
 	} else {
 		set404View(contentContainer);
 	}
@@ -118,6 +139,7 @@ document.addEventListener("DOMContentLoaded", function () {
 			event.preventDefault();
 			console.log("Logout clicked!");
 			localStorage.setItem("isLoggedIn", "false");
+			localStorage.setItem("isLoggedIn", "falutfava");
 			loadPage("login");
 		});
 	}

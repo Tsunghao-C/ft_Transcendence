@@ -1,162 +1,200 @@
-import { loadPage } from "./app.js";
+
+
+import { playerDatas } from "./data_test.js";
 import { translations } from "./language_pack.js";
 
-function setCustomValidation(inputId) {
-	const inputElement = document.getElementById(inputId);
-	const currentLanguage = localStorage.getItem("language") || "en";
-	if (!inputElement) {
-		console.error(`Element with ID ${inputId} not found.`);
-		return;
+export function setProfileView(contentContainer, usernameInHash) {
+	contentContainer.innerHTML = `
+		<div class="profile-view">
+			<h1 data-i18n="profileTitle">Search Profile</h1>
+			<div class="search-bar mb-3">
+				<input type="text" id="searchInput" class="form-control" placeholder="Enter a username..." />
+				<button id="searchButton" class="btn btn-primary mt-2" data-i18n="searchButton">Search</button>
+			</div>
+			<div id="profileResult"></div>
+		</div>
+	`;
+	const searchInput = document.getElementById("searchInput");
+	const searchButton = document.getElementById("searchButton");
+	const profileResult = document.getElementById("profileResult");
+
+	const foundPlayer = Object.values(playerDatas.players).find(
+		(player) => player.username === usernameInHash
+	);
+	if (foundPlayer) {
+		displayProfile(foundPlayer);
+	} else {
+		profileResult.innerHTML = `<p data-i18n="userNotFound">User not found.</p>`;
 	}
 
-	inputElement.addEventListener("invalid", (event) => {
-		event.target.setCustomValidity(translations[currentLanguage].emptyField);
-	});
-
-	inputElement.addEventListener("input", (event) => {
-		event.target.setCustomValidity("");
-	});
-}
-
-function validateProfilePicture() {
-	const profilePictureInput = document.getElementById("profilePictureInput");
-	const currentLanguage = localStorage.getItem("language") || "en";
-	const allowedExtensions = /(\.jpg|\.jpeg|\.png)$/i;
-
-	profilePictureInput.addEventListener("change", (event) => {
-		const file = event.target.files[0];
-
-		if (!allowedExtensions.test(file.name)) {
-			profilePictureInput.setCustomValidity(translations[currentLanguage].invalidFormat);
-		} else {
-			profilePictureInput.setCustomValidity("");
+	searchButton.addEventListener("click", () => {
+		const searchQuery = searchInput.value.trim();
+		//2 possibilities, the button can do nothing if the field is empty or trigger a warning
+		if (!searchQuery) {
+			// searchInput.classList.add("is-invalid");
+			// const errorMessage = document.createElement("div");
+			// errorMessage.className = "invalid-feedback";
+			// errorMessage.textContent = "This field is required.";
+			// if (!searchInput.nextElementSibling) {
+			// 	searchInput.parentNode.appendChild(errorMessage);
+			// }
+			return;
+		// } else {
+		// 	searchInput.classList.remove("is-invalid");
+		// 	if (searchInput.nextElementSibling) {
+		// 		searchInput.nextElementSibling.remove();
+		// 	}
 		}
-	});
-}
 
+		const foundPlayer = Object.values(playerDatas.players).find(
+			(player) => player.username === searchQuery
+		);
 
-function validatePasswordMatch() {
-	const passwordInput = document.getElementById("newPasswordInput");
-	const confirmPasswordInput = document.getElementById("confirmPasswordInput");
-	const currentLanguage = localStorage.getItem("language") || "en";
-	console.log("we have passwordInput.value = ", passwordInput.value, " and confirm = ", confirmPasswordInput.value);
-	confirmPasswordInput.addEventListener("input", () => {
-		if (passwordInput.value !== confirmPasswordInput.value) {
-			confirmPasswordInput.setCustomValidity(translations[currentLanguage].passwordMismatch || "Passwords do not match");
+		window.history.pushState(
+			{ page: `profile/${searchQuery}` },
+			`Profile of ${searchQuery}`,
+			`#profile/${searchQuery}`
+		);
+		if (foundPlayer) {
+			displayProfile(foundPlayer);
 		} else {
-			confirmPasswordInput.setCustomValidity("");
+			profileResult.innerHTML = `<p data-i18n="userNotFound">User not found.</p>`;
 		}
 	});
 
-	passwordInput.addEventListener("input", () => {
-		if (passwordInput.value !== confirmPasswordInput.value) {
-			confirmPasswordInput.setCustomValidity(translations[currentLanguage].passwordMismatch || "Passwords do not match");
-		} else {
-			confirmPasswordInput.setCustomValidity("");
+	function displayProfile(player) {
+		const currentLanguage = localStorage.getItem("language") || "en";
+		const currentLogin = localStorage.getItem("currentLogin");
+		const currentPlayer = playerDatas.players[currentLogin];
+		const statusClasses = {
+			online: "text-success",
+			offline: "text-secondary",
+			ingame: "text-warning",
+		};
+		const statusText = translations[currentLanguage][player.status];
+		const isCurrentPlayer = player.username === currentLogin;
+
+		profileResult.innerHTML = `
+			<div class="card">
+				<div class="card-body">
+					<div class="row">
+						<div class="col-md-4">
+							<img src="${player.profilePicture}" alt="${player.username}" class="img-thumbnail" style="max-width: 150px;">
+							<h3>${player.username}</h3>
+							<p class="${statusClasses[player.status]}">${statusText}</p>
+						</div>
+						<div class="col-md-4">
+							<h4>${translations[currentLanguage].rank}: ${player.rank}</h4>
+							<h4>${translations[currentLanguage].mmr}: ${player.mmr}</h4>
+							<h4>${translations[currentLanguage].winRate}: ${calculateWinRate(player.win, player.lose)}%</h4>
+							<p title="${translations[currentLanguage].wins}: ${player.win}, ${translations[currentLanguage].losses}: ${player.lose}">${player.win}${translations[currentLanguage].w} / ${player.lose}${translations[currentLanguage].l}</p>
+						</div>
+						<div class="col-md-4">
+							<h4 data-i18n="matchHistory">Match History</h4>
+							<ul class="list-group">
+							${player.matchHistory
+								.map(
+									(match) =>
+										`<li class="list-group-item">
+											<span>${match[0]}</span> -
+											<span>${match[1] === "W" ? translations[currentLanguage].win : translations[currentLanguage].loss}</span> vs
+											<a href="#profile/${match[2]}" class="profile-link">${match[2]}</a>
+											<span>[${match[3][0]}-${match[3][1]}]</span>
+										</li>`
+								)
+								.join("")}
+							</ul>
+						</div>
+					</div>
+					${!isCurrentPlayer ? `
+						<div class="mt-3">
+							<button class="btn btn-info btn-sm" id="sendMessageBtn">${translations[currentLanguage].sendMessage}</button>
+							<button class="btn btn-warning btn-sm" id="sendDuelRequestBtn">${translations[currentLanguage].requestDuel}</button>
+							<button class="btn btn-success btn-sm" id="addFriendBtn">${translations[currentLanguage].addFriend}</button>
+							<button class="btn btn-danger btn-sm" id="removeFriendBtn">${translations[currentLanguage].removeFriend}</button>
+						</div>
+					` : ""}
+				</div>
+			</div>
+		`;
+		if (!isCurrentPlayer) {
+			const sendMessageButton = document.getElementById("sendMessageBtn");
+			sendMessageButton.addEventListener("click", () => {
+				sendMessage(player.username);
+			});
+			const sendDuelRequestButton = document.getElementById("sendDuelRequestBtn");
+			sendDuelRequestButton.addEventListener("click", () => {
+				sendDuelRequest(player.username);
+			});
+			updateFriendshipButtons(player);
 		}
-	});
-}
+	}
 
-export function setLoginView(contentContainer) {
-
-	const currentLanguage = localStorage.getItem("language") || "en";
-	contentContainer.innerHTML = `
-		<div class="login-view">
-			<h1 data-i18n="loginTitle">Login</h1>
-			<form id="loginForm">
-				<div class="mb-3">
-					<label for="loginInput" class="form-label" data-i18n="username">Username</label>
-					<input type="text" class="form-control" id="loginInput" placeholder="Enter your username" required>
-				</div>
-				<div class="mb-3">
-					<label for="passwordInput" class="form-label" data-i18n="password">Password</label>
-					<input type="password" class="form-control" id="passwordInput" placeholder="Enter your password" required>
-				</div>
-				<button type="submit" class="btn btn-primary" data-i18n="loginButton">Log In</button>
-				<p class="error-message" id="errorMessage"></p>
-				<div class="input-group" id="twoFaInput" style="display: none;">
-					<label for="otpCode">2FA Code</label>
-					<input type="text" id="otpCode" name="otpCode">
-					<button type="button" onclick="verify2FA()" class="login-button">Verify 2FA</button>
-				</div>
-			</form>
-			<p data-i18n="noAccount">Don’t have an account?
-				<a href="#create-profile" id="createAccountLink" data-i18n="createAccountLink">Create one here</a>
-			</p>
-		</div>
-	`;
-	setCustomValidation("loginInput");
-	setCustomValidation("passwordInput");
-
-	const loginForm = document.getElementById("loginForm");
-	loginForm.addEventListener("submit", (event) => {
-		event.preventDefault();
-		const newPage = "home"
-		loadPage(newPage);
-		window.history.pushState({ page: newPage }, newPage, "#" + newPage);
-		localStorage.setItem("isLoggedIn", "true");
-		loadPage("home");
-		console.log("need to check the login and password with database");
-	});
-}
+	function updateFriendshipButtons(player) {
+		const currentLanguage = localStorage.getItem("language") || "en";
+		const currentLogin = localStorage.getItem("currentLogin");
+		const currentPlayer = playerDatas.players[currentLogin];
 
 
+		const addFriendButton = document.getElementById("addFriendBtn");
+		const removeFriendButton = document.getElementById("removeFriendBtn");
+		if (!currentPlayer.friends.includes(player.username)) {
+			addFriendButton.style.display = 'inline-block';
+			removeFriendButton.style.display = 'none';
 
+			addFriendButton.addEventListener('click', () => {
+				addFriend(player.username);
+				addFriendButton.style.display = 'none';
+				removeFriendButton.style.display = 'inline-block';
+			});
+		} else {
+			removeFriendButton.style.display = 'inline-block';
+			addFriendButton.style.display = 'none';
 
+			removeFriendButton.addEventListener('click', () => {
+				const confirmation = confirm(`Are you sure you want to remove ${player.username} from your friends list?`);
+				if (confirmation) {
+					removeFriend(player.username);
+					removeFriendButton.style.display = 'none';
+					addFriendButton.style.display = 'inline-block';
+				}
+			});
+		}
+	}
 
+	function calculateWinRate(wins, losses) {
+		return ((wins / (wins + losses)) * 100).toFixed(2);
+	}
 
-export function setCreateProfileView(contentContainer) {
-	contentContainer.innerHTML = `
-		<div class="create-profile-view">
-			<h1 data-i18n="createAccountTitle">Create Account</h1>
-			<form id="createProfileForm">
-				<div class="mb-3">
-					<label for="newLoginInput" class="form-label" data-i18n="newLogin">Login</label>
-					<input type="text" class="form-control" id="newLoginInput" placeholder="Choose a Login" required>
-				</div>
-				<div class="mb-3">
-					<label for="newUsernameInput" class="form-label" data-i18n="newUsername">Username</label>
-					<input type="text" class="form-control" id="newUsernameInput" placeholder="Choose a username" required>
-				</div>
-				<div class="mb-3">
-					<label for="newMailInput" class="form-label" data-i18n="newMail">Mail</label>
-					<input type="text" class="form-control" id="newMailInput" placeholder="Enter your mail" required>
-				</div>
-				<div class="mb-3">
-					<label for="newPasswordInput" class="form-label" data-i18n="newPassword">Password</label>
-					<input type="password" class="form-control" id="newPasswordInput" placeholder="Choose a password" required>
-				</div>
-				<div class="mb-3">
-					<label for="confirmPasswordInput" class="form-label" data-i18n="confirmPassword">Confirm Password</label>
-					<input type="password" class="form-control" id="confirmPasswordInput" placeholder="Re-enter your password" required>
-				</div>
-				<div class="mb-3">
-						<label for="profilePictureInput" class="form-label" data-i18n="profilePicture">Profile Picture</label>
-						<input type="file" class="form-control" id="profilePictureInput" accept=".jpg, .jpeg, .png">
-						<small class="form-text text-muted" data-i18n="profilePictureHint">Only .jpg and .png files are allowed.</small>
-				</div>
-				<button type="submit" class="btn btn-primary" data-i18n="createAccountButton">Create Account</button>
-			</form>
-		</div>
-	`;
+	function sendMessage(friendUsername) {
+		console.log(`Sending message to ${friendUsername}`);
+	}
 
-	setCustomValidation("newLoginInput");
-	setCustomValidation("newUsernameInput");
-	setCustomValidation("newMailInput");
-	setCustomValidation("newPasswordInput");
+	function sendDuelRequest(friendUsername) {
+		console.log(`Requesting duel with ${friendUsername}`);
+	}
 
-	validatePasswordMatch();
-	validateProfilePicture();
-	//photo de profile pas obligatoire, en mettre une par defaut si pas de pp
-	const createProfileForm = document.getElementById("createProfileForm");
-	if (createProfileForm) {
-		createProfileForm.addEventListener("submit", (event) => {
-			event.preventDefault();
-			const newPage = "login"
-			loadPage(newPage);
-			window.history.pushState({ page: newPage }, newPage, "#" + newPage);
-			loadPage("login");
-			console.log("Create Account button clicked! Implement account creation logic here.");
-		});
+	function addFriend(friendUsername) {
+		const currentLogin = localStorage.getItem("currentLogin");
+		const currentPlayer = playerDatas.players[currentLogin];
+		if (currentPlayer && !currentPlayer.friends.includes(friendUsername)) {
+			currentPlayer.friends.push(friendUsername);
+			console.log(`${friendUsername} added to ${currentLogin}'s friends list.`);
+			updateFriendshipButtons(currentPlayer);
+		} else {
+			console.log(`${friendUsername} is already a friend or not found.`);
+		}
+	}
+
+	function removeFriend(friendUsername) {
+		const currentLogin = localStorage.getItem("currentLogin");
+		const currentPlayer = playerDatas.players[currentLogin];
+
+			const index = currentPlayer.friends.indexOf(friendUsername);
+			if (index > -1) {
+				currentPlayer.friends.splice(index, 1);
+				console.log(`${friendUsername} removed from ${currentLogin}'s friends list.`);
+				updateFriendshipButtons(currentPlayer);
+			}
 	}
 }
