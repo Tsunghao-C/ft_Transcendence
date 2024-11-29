@@ -66,6 +66,8 @@ class GameRoom():
                 player.set_speed(5)
             elif input == "move_stop":
                 player.set_speed(0)
+            elif input == "idle":
+                pass
 
     def update_players(self):
         for player in self.players:
@@ -134,30 +136,31 @@ class GameRoom():
                 self.players[0].score += 1
                 self.ball.x = CANVAS_WIDTH * 0.3
                 self.ball.y = CANVAS_WIDTH * 0.5
-                
 
     async def send_update(self):
         game_state = {
                 'players': {
                     player_id: {
                         'x': player.x,
-                        'y': player.y
+                        'y': player.y,
+                        'score': player.score,
                         } for player_id, player in self.players.items()
                     },
                 'ball': {
                     'x': self.ball.x,
-                    'y': self.ball.x,
+                    'y': self.ball.y,
                     'radius': self.ball.radius
                     }
                 }
         for player_channel in self.player_channels:
-            await async_to_sync(self.channel_layer.send){
+            await async_to_sync(self.channel_layer.send)(
                     player_channel,
                     {
                         'type': 'game_update',
+                        'payload': game_state,
                         'game_state': json.dumps(game_state)
                         }
-                    }
+                    )
 
     async def run(self):
         while self.running:

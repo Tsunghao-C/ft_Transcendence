@@ -3,23 +3,23 @@
 const PADDLE_HEIGHT = 100;
 const PADDLE_WIDTH = 15;
 
-class Paddle {
-	constructor (id, color) {
-		if (id == 1) {
-			this.x = canvas.width * 0.10;
-			this.upKey = 'ArrowUp';
-			this.downKey = 'ArrowDown';
-		}
-		else {
-			this.x = canvas.width * 0.90;
-			this.upKey = 'KeyW';
-			this.downKey = 'KeyS';
-		}
-		this.y = canvas.height * 0.30;
-		this.speed = 0;
-		this.color = color;
-	}
-}
+//class Paddle {
+//	constructor (id, color) {
+//		if (id == 1) {
+//			this.x = canvas.width * 0.10;
+//			this.upKey = 'ArrowUp';
+//			this.downKey = 'ArrowDown';
+//		}
+//		else {
+//			this.x = canvas.width * 0.90;
+//			this.upKey = 'KeyW';
+//			this.downKey = 'KeyS';
+//		}
+//		this.y = canvas.height * 0.30;
+//		this.speed = 0;
+//		this.color = color;
+//	}
+//}
 
 class Player {
 	constructor (id, color) {
@@ -70,8 +70,7 @@ document.addEventListener('keyup', function(event) {
 });
 
 function sendEvents(socket, playerData) {
-	if (playerEvent.pending == true)
-	{
+	if (playerEvent.pending == true) {
 		socket.send(JSON.stringify({
 				type: 'player_input',
 				player_id: playerData.playerId,
@@ -79,6 +78,14 @@ function sendEvents(socket, playerData) {
 				game_roomID: playerData.roomUID
 		}));	
 		playerEvent.pending = false;
+	}
+	else {
+		socket.send(JSON.stringify({
+			type: 'player_input',
+			player_id: playerData.playerId,
+			input: 'idle',
+			game_roomID: playerData.roomUID
+		}));
 	}
 }
 
@@ -102,11 +109,10 @@ function drawElements(ball, Player1, Player2, ctx) {
 async function getGameState(socket)
 {
 	return new Promise((resolve, reject) => {
-		socket.send(JSON.stringify({ type: 'get_game_state'}));
 		socket.onmessage = (event) => {
 			try {
 				const data = JSON.parse(event.data);
-				if (data.type == 'game_state') {
+				if (data.type == 'game_update') {
 					resolve(data.payload);
 				}
 			} catch (error) {
