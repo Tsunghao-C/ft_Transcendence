@@ -95,8 +95,6 @@ services:
     build:
       context: ./frontend/nginx
       dockerfile: Dockerfile
-    # expose:
-    #   - "80"
     volumes:
       - ./frontend/nginx/spa_files:/usr/share/nginx/html
       - static_volume:/app/static:ro
@@ -125,6 +123,8 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    depends_on:
+      - kibana
     healthcheck:
       test: ["CMD", "curl", "-k", "https://localhost:443/health" ]
       interval: 2s
@@ -132,21 +132,6 @@ services:
       retries: 1
     restart: unless-stopped
 
-  # spa:
-  #   container_name: spa
-  #   build:
-  #     context: ./frontend/spa
-  #   volumes:
-  #     - ./frontend:/app
-  #     - /app/node_modules
-  #   environment:
-  #     - REACT_APP_API_URL=http://localhost/api
-  #     - REACT_APP_WS_URL=ws://localhost/ws
-  #   networks:
-  #     - frontend_net
-  #   restart: unless-stopped
-
-  ## [Theo] to finish this part
   # spa:
   #   container_name: spa
   #   build:
@@ -330,14 +315,45 @@ services:
     container_name: elasticsearch
     image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
     environment:
+      # Cluster configuration
+      - node.name=es01
+      - cluster.name=pong-game-logs
       - discovery.type=single-node
-      - xpack.security.enabled=false
+      - network.host=0.0.0.0
+      # Basic settings
       - bootstrap.memory_lock=false
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      # Disk allocation setting
+      - "cluster.routing.allocation.disk.threshold_enabled=true"
+      - "cluster.routing.allocation.disk.watermark.low=85%"
+      - "cluster.routing.allocation.disk.watermark.high=90%"
+      - "cluster.routing.allocation.disk.watermark.flood_stage=95%"
+      # Security settings (for development)
+      - xpack.security.enabled=false
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
     volumes:
       - es_data:/usr/share/elasticsearch/data
+      - ./monitoring/elk/elasticsearch/setup:/setup
+    entrypoint: >
+      sh -c '
+        /usr/local/bin/docker-entrypoint.sh &
+        ELASTIC_PID=$!
+        sleep 10 &&
+        /setup/init.sh &
+        wait $ELASTIC_PID'
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
     networks:
       - monitoring_net
+    # healthcheck:
+    #   test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -vq '\"status\":\"red\"'"]
+    #   interval: 5s
+    #   timeout: 10s
+    #   retries: 1
     restart: unless-stopped
 
   logstash:
@@ -366,25 +382,37 @@ services:
       - ./monitoring/elk/kibana/dashboards:/usr/share/kibana/dashboards
       - ./monitoring/elk/kibana/setup:/usr/share/kibana/setup
     environment:
+      # Elasticsearch connection
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=${ELASTIC_USERNAME}
+      - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}
+      # Server settings
+      - SERVER_HOST=0.0.0.0
+      - SERVER_NAME=kibana
       - SERVER_BASEPATH=/kibana
       - SERVER_REWRITEBASEPATH=true
-      - SERVER_NAME=kibana
+      # Security settings
       - XPACK_SECURITY_ENABLED=false
+      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}
+      # Performance settings
+      - ELASTICSEARCH_REQUESTTIMEOUT=90000  # Added timeout
+      - OPTIMIZATION_PROFILING=false
+      # Other settings
       - TELEMETRY_ENABLED=false
+      - ELASTIC_APM_ACTIVE=false
     networks:
       - monitoring_net
     depends_on:
       - elasticsearch
+    # healthcheck:
+    #   test: ["CMD-SHELL", "curl -s http://localhost:5601/api/status | grep -q '200 OK'"]
+    #   interval: 20s
+    #   timeout: 10s
+    #   retries: 3
     entrypoint: >
       sh -c '
         /usr/share/kibana/setup/import-dashboards.sh &
         /usr/local/bin/kibana-docker'
-    # entrypoint: >
-    #   sh -c '
-    #     chmod +x /usr/share/kibana/setup/*.sh &&
-    #     /usr/share/kibana/setup/import-dashboards.sh &
-    #     /usr/local/bin/kibana-docker'
     restart: unless-stopped
 
   filebeat:
