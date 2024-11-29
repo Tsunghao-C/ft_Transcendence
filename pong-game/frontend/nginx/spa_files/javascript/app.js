@@ -80,11 +80,18 @@ export function loadPage(page) {
 function handleNavigation(event) {
 	event.preventDefault();
 
-	const newPage = event.target.getAttribute("href").substring(1);
-	window.history.pushState({ page: newPage }, newPage, '/#' + newPage);
-	loadPage(newPage);
-	updateActiveLink();
+	if (event.target.hasAttribute("data-bs-toggle") && event.target.getAttribute("data-bs-toggle") === "tab") {
+		return;
+	}
+	const newPage = event.target.getAttribute("href")?.substring(1);
+	if (newPage) {
+		window.history.pushState({ page: newPage }, newPage, '/#' + newPage);
+		loadPage(newPage);
+		updateActiveLink();
+	}
 }
+
+
 
 export function attachNavigationListeners() {
 	const links = document.querySelectorAll("a[href^='#']");

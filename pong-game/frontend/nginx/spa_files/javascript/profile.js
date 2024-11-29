@@ -29,7 +29,7 @@ export function setProfileView(contentContainer, usernameInHash) {
 
 	searchButton.addEventListener("click", () => {
 		const searchQuery = searchInput.value.trim();
-		//2 possibilities, the button can do nothing if the field is empty or trigger a warning
+		//2 possibilities, the button can do nothing if the field is empty or trigger a warning (warning is commented)
 		if (!searchQuery) {
 			// searchInput.classList.add("is-invalid");
 			// const errorMessage = document.createElement("div");
@@ -182,6 +182,7 @@ export function setProfileView(contentContainer, usernameInHash) {
 	function addFriend(friendUsername) {
 		const currentLogin = localStorage.getItem("currentLogin");
 		const currentPlayer = playerDatas.players[currentLogin];
+		//shouldn't happen;
 		if (currentPlayer && !currentPlayer.friends.includes(friendUsername)) {
 			currentPlayer.friends.push(friendUsername);
 			console.log(`${friendUsername} added to ${currentLogin}'s friends list.`);
