@@ -137,7 +137,27 @@ class GameRoom():
                 
 
     async def send_update(self):
-        pass
+        game_state = {
+                'players': {
+                    player_id: {
+                        'x': player.x,
+                        'y': player.y
+                        } for player_id, player in self.players.items()
+                    },
+                'ball': {
+                    'x': self.ball.x,
+                    'y': self.ball.x,
+                    'radius': self.ball.radius
+                    }
+                }
+        for player_channel in self.player_channels:
+            await async_to_sync(self.channel_layer.send){
+                    player_channel,
+                    {
+                        'type': 'game_update',
+                        'game_state': json.dumps(game_state)
+                        }
+                    }
 
     async def run(self):
         while self.running:
