@@ -1,4 +1,5 @@
 import time
+import math
 import json
 import asyncio
 import threading
@@ -9,6 +10,7 @@ CANVAS_WIDTH = 800
 CANVAS_HEIGHT = 600
 PADDLE_HEIGHT = 100
 PADDLE_WIDTH = 15
+BALL_RADIUS = 10
 
 class Player():
     def __init__(self, player_id, side, canvas_width, canvas_height):
@@ -29,6 +31,17 @@ class Player():
         with self.speed_lock:
             self.speed = value
 
+class Ball():
+    def __init__(self, canvas_width, canvas_height):
+        self.canvas_width = canvas_width
+        self.canvas_height = canvas_height
+        self.x = canvas_width * 0.5
+        self.y = canvas_height * 0.5
+        self.speedX = 5
+        self.speedY = 5
+        self.radius = BALL_RADIUS
+        
+
 class GameRoom():
     def __init__(self, room_id, player_channels):
         self.room_id = room_id
@@ -40,7 +53,7 @@ class GameRoom():
         }
         self.canvas_width = CANVAS_WIDTH
         self.canvas_height = CANVAS_HEIGHT
-        self.ball = {"x":self.canvas_width * 0.5, "y":self.canvas_height * 0.5, "speedX":5, "speedY":5}
+        self.ball = Ball(self.canvas_width, self.canvas_height)
         self.running = True
 
     async def receive_player_inputs(self, player_id, input):
@@ -71,8 +84,40 @@ class GameRoom():
                 else:
                     player.y += speed
     
-    def check_collisions(self):
-        pass
+    def check_collisions(self, player):
+        d = dict()
+        closestX = max(player.x, min(self.ball.x, player.x + PADDLE_WIDTH))
+        closestY = max(player.y, min(self.ball.y, player.y + PADDLE_HEIGHT))
+        
+        distanceX = self.ball.x - closestX
+        distanceY = self.ball.y - closestY
+        distance = math.sqrt(distanceX ** 2 + distanceY ** 2)
+        d['hasCollision'] = distance <= self.ball.radius
+        d['isVertical'] = abs(distanceY) > abs(distanceX)
+        d['distanceX'] = distanceX
+        d['distanceY'] = distanceY
+        return d
+
+    def handle_collisions(self):
+        for player in self.players:
+            collision = self.check_collisions(player)
+            if collision['hasCollision']:
+                if (collision['isVertical']):
+                    self.ball.speedY *= -1
+                    if collision['distanceY'] > 0:
+                        self.ball.y = player.y + PADDLE_HEIGHT + self.ball.radius
+                    else:
+                        self.ball.y = player.y - self.ball.radius
+                else:
+                    self.ball.speedX *= -1          
+                    relativeIntersection = player.y + PADDLE_HEIGHT * 0.5 - self.ball.y
+                    normalizedIntersection = relativeIntersection / (PADDLE_HEIGHT * 0.5)
+                    self.ball.speedY = -normalizedIntersection * 5
+                    if collision['distanceX'] > 0:
+                        self.ball.x = player.x + PADDLE_WIDTH + self.ball.radius
+                    else:
+                        self.ball.x = player.x - self.ball.radius
+
 
     def update_ball(self):
         pass
@@ -83,51 +128,10 @@ class GameRoom():
     async def run(self):
         while self.running:
             self.update_players()
-            self.check_collisions()
+            self.handle_collisions()
             self.update_ball()
             await self.send_update()
             await asyncio.sleep(0.016)
-
-function checkCollision(paddle) {
-	const closestX = Math.max(paddle.x, Math.min(ball.x, paddle.x + PADDLE_WIDTH));
-	const closestY = Math.max(paddle.y, Math.min(ball.y, paddle.y + PADDLE_HEIGHT));
-	
-	const distanceX = ball.x - closestX;
-	const distanceY = ball.y - closestY;
-	const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
-	
-	return {
-		hasCollision: distance <= ball.radius,
-		isVertical: Math.abs(distanceY) > Math.abs(distanceX),
-		distanceX: distanceX,
-		distanceY: distanceY
-	};
-}
-
-export function handlePaddleCollision(player) {
-	const collision = checkCollision(player.Paddle);
-	
-	if (collision.hasCollision) {
-		if (collision.isVertical) {
-			ball.speedY *= -1;
-			if (collision.distanceY > 0) {
-				ball.y = player.Paddle.y + PADDLE_HEIGHT + ball.radius;
-			} else {
-				ball.y = player.Paddle.y - ball.radius;
-			}
-		} else {
-			ball.speedX *= -1;
-			let relativeIntersection = (player.Paddle.y + (PADDLE_HEIGHT * 0.5) - ball.y);
-			let normalizedIntersection = relativeIntersection / (PADDLE_HEIGHT * 0.5);
-			ball.speedY = -normalizedIntersection * 5;
-			if (collision.distanceX > 0) {
-				ball.x = player.Paddle.x + PADDLE_WIDTH + ball.radius;
-			} else {
-				ball.x = player.Paddle.x - ball.radius;
-			}
-		}
-	}
-}
 
 export function updateBall() {
 	ball.x += ball.speedX;

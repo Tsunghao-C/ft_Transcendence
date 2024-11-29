@@ -8,7 +8,7 @@ from game_room import GameRoom
 
 active_game_rooms = {}
 
-class GameConsumer(AsyncWebsocketConsumer):
+class GameConsumer(AsyncWebsocketConsumer): #refactor from relying on the websocket to the db player_id
     async def connect(self):
         self.player_id = self.scope['session'].session_key #ask ben about this key
         await self.accept()
