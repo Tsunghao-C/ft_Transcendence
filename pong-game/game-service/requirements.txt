@@ -10,3 +10,6 @@ pytz==2024.2
 sqlparse==0.5.2
 wait-for-it==2.3.0
 gunicorn==21.2.0
+daphne==4.1.2
+channels==4.2.0
+channels_redis==4.2.1

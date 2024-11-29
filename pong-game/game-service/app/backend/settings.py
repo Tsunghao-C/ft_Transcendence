@@ -23,17 +23,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-#SECRET_KEY = os.environ.get("SECRET_KEY")
-SECRET_KEY = "wowow321"
+SECRET_KEY = os.environ.get("SECRET_KEY")
+# SECRET_KEY = "wowow321"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-#DEBUG = bool(os.environ.get("DEBUG", default=0))
-DEBUG = 1
+DEBUG = bool(os.environ.get("DEBUG", default=0))
+# DEBUG = 1
 
-#ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
-ALLOWED_HOSTS = [
-	"*"
-]
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
+# ALLOWED_HOSTS = [
+	# "*"
+# ]
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -52,16 +52,19 @@ SIMPLE_JWT = {
 # Application definition
 
 INSTALLED_APPS = [
+    "chat",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    "daphne",
     'django.contrib.staticfiles',
 	"user_service",
 	"game_service",
 	"rest_framework",
 	"corsheaders",
+    "channels",
 ]
 
 MIDDLEWARE = [
@@ -94,6 +97,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'backend.wsgi.application'
+ASGI_APPLICATION = 'backend.asgi.application'
 
 
 # Database
@@ -102,19 +106,19 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
+        "NAME": os.environ.get("USER_DB_DATABASE", BASE_DIR / "db.sqlite3"),
+        "USER": os.environ.get("SQL_USER", "user"),
+        "PASSWORD": os.environ.get("SQL_PASSWORD", "password"),
+        "HOST": "user_db",
+        "PORT": os.environ.get("SQL_PORT", "5432"),
+    },
+	"game_db": {
+        "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
         "NAME": os.environ.get("GAME_DB_DATABASE", BASE_DIR / "db.sqlite3"),
         "USER": os.environ.get("SQL_USER", "user"),
         "PASSWORD": os.environ.get("SQL_PASSWORD", "password"),
         "HOST": "game_db",
         "PORT": os.environ.get("SQL_PORT", "5432"),
-    },
-	"user_db": {
-        "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
-        "NAME": os.environ.get("USER_DB_DATABASE", BASE_DIR / "db.sqlite3"),
-        "USER": os.environ.get("SQL_USER", "user"),
-        "PASSWORD": os.environ.get("SQL_PASSWORD", "password"),
-        "HOST": "user_db",
-        "PORT": os.environ.get("SQL_PORT", "5433"),
     }
 }
 
@@ -175,3 +179,23 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #	"http://0.0.0.0:8000"
 #]
 #CORS_ALLOWS_CREDENTIALS = True
+
+# can replace inmemorychannellayer with redis later
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)]
+        },
+    },
+}
+
+LOGIN_REDIRECT_URL = '/chat/'
+
+# Alex add for Email host setup
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Hôte SMTP
+EMAIL_PORT = 587              # Port SMTP pour TLS
+EMAIL_USE_TLS = True          # Activer TLS
+EMAIL_HOST_USER = '42transcendental@gmail.com'  # Votre adresse e-mail
+EMAIL_HOST_PASSWORD = 'zlywwbcyedhomdet'  # Votre mot de passe ou App Password /!\ CODE A CACHER DANS L'ENV
