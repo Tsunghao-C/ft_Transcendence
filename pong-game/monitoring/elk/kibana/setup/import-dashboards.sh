@@ -28,9 +28,19 @@ create_index_pattern() {
     -H "Content-Type: application/json" \
     -d "{\"attributes\":{\"title\":\"$pattern\",\"timeFieldName\":\"$time_field\"}}")
   
+  # Verify creation
+  if echo "$RESPONSE" | grep -q "error"; then
+      echo "Failed to create pattern: $RESPONSE" >&2
+      return 1
+  fi
+
   local PATTERN_ID
   PATTERN_ID=$(echo "$PATTERN_RESPONSE" | grep -o '"id":"[^"]*' | cut -d'"' -f4)
   # echo "Created index pattern $pattern with ID: $PATTERN_ID"
+  # Verify pattern exists
+  until curl -s "localhost:5601/kibana/api/saved_objects/index-pattern/$PATTERN_ID" | grep -q "$pattern"; do
+      sleep 1
+  done
   echo "$PATTERN_ID"
 }
 

@@ -24,6 +24,6 @@ from django.contrib.auth import views as auth_views
 urlpatterns = [
     path('admin/', admin.site.urls),
 	
-    path("api/user", include("user_service.urls")),
+    path("api/user/", include("user_service.urls")),
     path("chat/", include("chat.urls"))
 ]
