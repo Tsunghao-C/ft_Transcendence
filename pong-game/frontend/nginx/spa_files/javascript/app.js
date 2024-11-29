@@ -39,7 +39,7 @@ export function loadPage(page) {
 	} else if (isLoggedIn != "true" && page !== "login" && page !== "create-profile") {
 		window.location.hash = "login";
 		loadPage("login")
-	} else if (isLoggedIn === "true" && (page === "login" || page === "create-profile")) {
+	} else if (isLoggedIn === "true" && (page === "login" || page === "register")) {
 		window.location.hash = "home";
 		loadPage("home");
 	} else if (page === "home") {

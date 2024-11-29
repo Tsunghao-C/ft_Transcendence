@@ -14,7 +14,7 @@ urlpatterns = [
 	path("banplayer/", BanPlayer.as_view(), name="banplayer"),
 	path("unbanplayer/", UnbanPlayer.as_view(), name="unbanplayer"),
 
-    path("login/", LoginView.as_view(template_name="user_service/login.html"), name="login-user"),
-	path("token/", Generate2FAView.as_view(), name="generate_2fa"),
+    # path("login/", LoginView.as_view(template_name="user_service/login.html"), name="login-user"),
+	path("login/", Generate2FAView.as_view(), name="generate_2fa"),
     path("logout/", LogoutView.as_view(), name="logout-user"),
 ]

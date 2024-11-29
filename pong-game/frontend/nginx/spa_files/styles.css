@@ -207,5 +207,14 @@ select.large-font {
 	padding: 5px;
 	background-color: #f9f9f9;
 }
+/******************************************/
 
+#successMessage {
+	font-size: 1rem;
+	color:green;
+}
 
+#errorMessage {
+	font-size: 1rem;
+	color:red;
+}
