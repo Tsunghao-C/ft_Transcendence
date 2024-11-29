@@ -35,7 +35,7 @@ class GameRoom():
     def updatePlayers(self):
         receiveEvents(self.players_channels, )
 
-    def run(self):
+    async def run(self):
         while self.running:
             self.updatePlayers()
             self.checkCollissions()

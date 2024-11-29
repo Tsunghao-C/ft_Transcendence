@@ -6,7 +6,6 @@ from channels.sessions import SessionMiddlewareStack
 from room_manager import RoomManager
 from game_room import GameRoom
 
-room_manager = RoomManager()
 active_game_rooms = {}
 
 class GameConsumer(AsyncWebsocketConsumer):
@@ -17,7 +16,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 
     async def disconnect(self, close_code):
         if hasattr(self, 'current_group'):
-            await self.channel_layer.group
+            await self.channel_layer.group_discard(self.current_group, self.channel_name)
 
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -29,18 +28,17 @@ class GameConsumer(AsyncWebsocketConsumer):
             room_name = uuid.uuid4() 
             await self.create_private_lobby(room_name)
         elif action == "ready_up":
-            await self.notify_ready(data["room_name"])
-        elif data['type'] == "player_event":
+            await self.update_ready_status(data["room_name"], data["player_id"])
+        elif data['type'] == "player_input":
             roomID = data['game_roomID']
             if roomID in active_game_rooms:
                 game_room = active_game_rooms[roomID]
-                await game_room.receive_player_event(data['player_id'], data['event'])
+                await game_room.receive_player_event(data['player_id'], data['input'])
             else:
                 await self.send(json.dumps({
                        "error": f"Game room {data['game_roomID']} not found"
                        }))
 
-    
     async def create_private_lobby(self, room_name):
         if not hasattr(self, 'room_data'):
             self.room_data = {}
@@ -65,19 +63,38 @@ class GameConsumer(AsyncWebsocketConsumer):
         await self.send(json.dumps({"message": f"Joined lobby {room_name}"}))
 
     async def update_ready_status(self, room_name, player_id):
-        if room_name in self.room_data and player_id in self.rooms[room_name]["players"]:
-            self.rooms[room_name]["ready"].append(player_id)
+        if not hasattr(self, 'room_data'):
+            await self.send(json.dumps({"error": f"lobby {room_name} not found"}))
+            return
+        if "ready" not in self.room_data[room_name]:
+            self.room_data[room_name]["ready"] = []
+        if room_name in self.room_data:
+            if player_id not in self.room_data[room_name].get("ready", []):
+                self.room_data[room_name]["ready"].append(player_id)
         if self.all_ready(room_name):
-            player_channels = [self.channel_name]
+            player_channels = self.room_data[room_name].get("players", [])
             game_room = GameRoom(room_name, player_channels)
             active_game_rooms[room_name] = game_room #make sure to clean that shit up
             asyncio.create_task(game_room.run())
 
     def all_ready(self, room_name):
-        return set(self.rooms[room_name]["players"]) == set(self.rooms[room_name]["ready"])
+        if room_name not in self.room_data:
+            return False
+        players = self.room_data[room_name].get("players", [])
+        ready_players = self.room_data[room_name].get("ready", [])
+        return set(players) == set(ready_players)
 
     async def player_ready(self, event):
         await self.send(json.dumps({
             "event": "player_ready",
             "player_id": event["player_id"]
         }))
+
+    def cleanup_rooms(self):
+        rooms_to_remove = [
+                room_id for room_id, game_room in active_game_rooms.items()
+                if game_room.is_game_done()
+                if game_room.has_timed_out() #decide whether the consumer or the game_room will track the time
+                ]
+        for room_id in rooms_to_remove:
+            del active_game_rooms[room_id]

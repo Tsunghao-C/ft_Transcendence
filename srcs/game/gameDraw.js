@@ -73,9 +73,9 @@ function sendEvents(socket, playerData) {
 	if (playerEvent.pending == true)
 	{
 		socket.send(JSON.stringify({
-				type: 'player_event',
+				type: 'player_input',
 				player_id: playerData.playerId,
-				event: playerEvent.type,
+				input: playerEvent.type,
 				game_roomID: playerData.roomUID
 		}));	
 		playerEvent.pending = false;
