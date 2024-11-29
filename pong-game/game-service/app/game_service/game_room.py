@@ -21,6 +21,7 @@ class Player():
             self.x = canvas_width * 0.90
         self.y = canvas_height * 0.30
         self.speed = 0
+        self.score = 0
         self.speed_lock = threading.Lock()
 
     def get_speed(self):
@@ -120,7 +121,20 @@ class GameRoom():
 
 
     def update_ball(self):
-        pass
+        self.ball.x += self.ball.speedX
+        self.ball.y += self.ball.speedY
+        if self.ball.y - self.ball.radius < 0 or self.ball.y + self.ball.radius > CANVAS_HEIGHT:
+            self.ball.speedY *= -1
+        if self.ball.x - self.ball.radius < 0 or self.ball.x + self.ball.radius > CANVAS_WIDTH:
+            if self.ball.x - self.ball.radius < 0:
+                self.players[1].score += 1
+                self.ball.x = CANVAS_WIDTH * 0.7
+                self.ball.y = CANVAS_WIDTH * 0.5
+            else:
+                self.players[0].score += 1
+                self.ball.x = CANVAS_WIDTH * 0.3
+                self.ball.y = CANVAS_WIDTH * 0.5
+                
 
     async def send_update(self):
         pass
@@ -132,25 +146,3 @@ class GameRoom():
             self.update_ball()
             await self.send_update()
             await asyncio.sleep(0.016)
-
-export function updateBall() {
-	ball.x += ball.speedX;
-	ball.y += ball.speedY;
-	if (ball.y - ball.radius < 0 || ball.y + ball.radius > canvas.height)
-		ball.speedY *= -1;
-	if (ball.x - ball.radius < 0 || ball.x + ball.radius > canvas.width)
-	{
-		if (ball.x - ball.radius < 0)
-		{
-			Player2.score++;
-			ball.x = canvas.width * 0.7;
-			ball.y = canvas.height * 0.5;
-		}
-		else
-		{
-			Player1.score++;
-			ball.x = canvas.width * 0.3;
-			ball.y = canvas.height * 0.5;
-		}
-	}
-}
