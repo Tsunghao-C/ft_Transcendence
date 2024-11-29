@@ -21,7 +21,6 @@ class CreateUserView(generics.CreateAPIView):
 	serializer_class = UserSerializer
 	permission_classes = [AllowAny]
 
-#@login_required
 class CurrentUserView(APIView):
 	def get(self, request):
 		serializer = UserSerializer(request.user)
@@ -89,14 +88,18 @@ class UnbanPlayer(APIView):
 		user.save()
 		return Response({"message": f"Player {id} has been unbanned"})
 
-@login_required
 class updateDetailsView(APIView):
 	def post(self, request):
-		if request.data.get("newAlias"):
-			request.user.alias = request.data.get("newAlias")# Generate 2FA when logging in
+		newUsername = request.data.get("newUsername")
+		newAlias = request.data.get("newAlias")
+		if newAlias:
+			request.user.alias = newAlias
+		if newUsername:
+			request.user.username = newUsername
+		request.user.save()
+		return Response({"message": f"Player {id} has had their details updated"})
 			
 class Generate2FAView(APIView):
-
 	authentication_classes = []  # Pas d'authentification nécessaire
 	permission_classes = [AllowAny]  # Tout le monde peut accéder à cette vue
 

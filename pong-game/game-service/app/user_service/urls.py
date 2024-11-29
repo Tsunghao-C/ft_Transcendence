@@ -17,4 +17,7 @@ urlpatterns = [
     path("login/", LoginView.as_view(template_name="user_service/login.html"), name="login-user"),
 	path("token/", Generate2FAView.as_view(), name="generate_2fa"),
     path("logout/", LogoutView.as_view(), name="logout-user"),
+
+	# change user profile
+	
 ]
