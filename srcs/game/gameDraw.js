@@ -53,11 +53,11 @@ let playerEvent = {
 document.addEventListener('keydown', function(event) {
 	if (event.code == 'ArrowUp') {
 		playerEvent.pending = true;
-		playerEvent.type = 'up';
+		playerEvent.type = 'move_up';
 	}
 	else if (event.code == 'ArrowDown') {
 		playerEvent.pending = true;
-		playerEvent.type = 'down';
+		playerEvent.type = 'move_down';
 	}
 });
 
@@ -65,7 +65,7 @@ document.addEventListener('keyup', function(event) {
 	if (event.code == 'ArrowDown' || event.code == 'ArrowUp')
 	{
 	 	playerEvent.pending = true;
-		playerEvent.type = 'stop'
+		playerEvent.type = 'move_stop'
 	}
 });
 

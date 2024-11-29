@@ -33,7 +33,7 @@ class GameConsumer(AsyncWebsocketConsumer):
             roomID = data['game_roomID']
             if roomID in active_game_rooms:
                 game_room = active_game_rooms[roomID]
-                await game_room.receive_player_event(data['player_id'], data['input'])
+                await game_room.receive_player_input(data['player_id'], data['input'])
             else:
                 await self.send(json.dumps({
                        "error": f"Game room {data['game_roomID']} not found"

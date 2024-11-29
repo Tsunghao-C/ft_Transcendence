@@ -1,5 +1,7 @@
 import time
 import json
+import asyncio
+import threading
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
@@ -17,6 +19,15 @@ class Player():
             self.x = canvas_width * 0.90
         self.y = canvas_height * 0.30
         self.speed = 0
+        self.speed_lock = threading.Lock()
+
+    def get_speed(self):
+        with self.speed_lock:
+            return self.speed
+
+    def set_speed(self, value):
+        with self.speed_lock:
+            self.speed = value
 
 class GameRoom():
     def __init__(self, room_id, player_channels):
@@ -32,37 +43,50 @@ class GameRoom():
         self.ball = {"x":self.canvas_width * 0.5, "y":self.canvas_height * 0.5, "speedX":5, "speedY":5}
         self.running = True
 
-    def updatePlayers(self):
-        receiveEvents(self.players_channels, )
+    async def receive_player_inputs(self, player_id, input):
+        if player_id in self.players:
+            player = self.players[player_id]
+            if input == "move_up":
+                player.set_speed(-5)
+            elif input == "move_down":
+                player.set_speed(5)
+            elif input == "move_stop":
+                player.set_speed(0)
+
+    def update_players(self):
+        for player in self.players:
+            speed = player.get_speed()
+            if speed > 0:
+                if player.y + PADDLE_HEIGHT == CANVAS_HEIGHT:
+                    continue
+                if (player.y + PADDLE_HEIGHT) + speed >= CANVAS_HEIGHT:
+                    player.y += CANVAS_HEIGHT - (player.y + PADDLE_HEIGHT)
+                else:
+                    player.y += speed
+            else:
+                if player.y == 0:
+                    continue
+                if (player.y - speed <= 0):
+                    player.y += CANVAS_HEIGHT - player.y
+                else:
+                    player.y += speed
+    
+    def check_collisions(self):
+        pass
+
+    def update_ball(self):
+        pass
+
+    async def send_update(self):
+        pass
 
     async def run(self):
         while self.running:
-            self.updatePlayers()
-            self.checkCollissions()
-            self.updateBall()
-            self.sendUpdate()
-            time.sleep(0.016)
-
-export function updatePlayer(Player) {
-	if (Player.Paddle.speed > 0)
-	{
-		if (Player.Paddle.y + PADDLE_HEIGHT == canvas.height)
-			return ;
-		if ((Player.Paddle.y + PADDLE_HEIGHT) + Player.Paddle.speed >= canvas.height)
-			Player.Paddle.y += canvas.height - (Player.Paddle.y + PADDLE_HEIGHT);
-		else
-			Player.Paddle.y += Player.Paddle.speed;
-	}
-	else
-	{
-		if (Player.Paddle.y == 0)
-			return ;
-		if (Player.Paddle.y - Player.Paddle.speed <= 0)
-			Player.Paddle.y += canvas.height - Player.Paddle.y;
-		else
-			Player.Paddle.y += Player.Paddle.speed;
-	}
-}
+            self.update_players()
+            self.check_collisions()
+            self.update_ball()
+            await self.send_update()
+            await asyncio.sleep(0.016)
 
 function checkCollision(paddle) {
 	const closestX = Math.max(paddle.x, Math.min(ball.x, paddle.x + PADDLE_WIDTH));
