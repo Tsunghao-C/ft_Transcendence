@@ -58,19 +58,11 @@ export function changeLanguage(language) {
 	elements.forEach((el) => {
 	  const key = el.getAttribute("data-i18n");
 	  if (translations[language] && translations[language][key]) {
-		if (el.tagName.toLowerCase() === 'p' && key === 'noAccount') {
-		  el.innerHTML = translations[language][key] +
-			' <a href="#create-profile" id="createAccountLink" data-i18n="createAccountLink">' +
-			translations[language]['createAccountLink'] + '</a>';
-		// } else if (el.tagName.toLowerCase() === 'a') {
-		//   el.textContent = translations[language][key];
-		} else {
 		  el.textContent = translations[language][key];
 		}
-	  }
 	});
 	attachNavigationListeners();
-   }
+	}
 
 export function changeColorMode(colortype) {
 	switch (colortype) {

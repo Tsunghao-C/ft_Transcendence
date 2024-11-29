@@ -27,7 +27,7 @@ export const playerDatas = {
 			rank: 2,
 			status: "offline",
 			friends: ["Player1"],
-			matchHistory: [["27/11/2024", "W", "Player1", [11, 2]]]
+			matchHistory: []
 		},
 
 		Player3: {

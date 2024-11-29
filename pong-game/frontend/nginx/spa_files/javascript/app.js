@@ -11,6 +11,7 @@ import { setLeaderboardView } from './leaderboard.js';
 import { setPersonnalDataView } from './personnal-data.js';
 import { setProfileView } from './profile.js';
 import { setFriendsView } from './friends.js';
+import { playerDatas } from './data_test.js';
 
 export function loadPage(page) {
 	//add a checker to check there is no more than one /
@@ -26,13 +27,11 @@ export function loadPage(page) {
 	if (navbar) navbar.style.display = isLoggedIn === "true" ? "block" : "none";
 
 	if (isLoggedIn === "true") {
-		userAvatar.src = "wtf.jpeg";
-		userDropdown.textContent = localStorage.getItem("currentLogin");
-		//ici afficher la bonne pp
-		//rajouter plus tard le nom du user logged in
+		const currentLogin = localStorage.getItem("currentLogin");
+		userAvatar.src = playerDatas.players[currentLogin].profilePicture;;
+		userDropdown.textContent = currentLogin;
+		// ici afficher la bonne pp
 		userAvatar.style.display = "block";
-	} else {
-		userAvatar.style.display = "none";
 	}
 	console.log("page is ", page);
 	if (path !== '/') {

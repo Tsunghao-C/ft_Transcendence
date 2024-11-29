@@ -1,12 +1,14 @@
 import { playerDatas } from "./data_test.js";
+import { translations } from "./language_pack.js";
 
 export function setFriendsView(contentContainer) {
 	const currentLogin = localStorage.getItem("currentLogin");
 	const currentPlayer = playerDatas.players[currentLogin];
+	const currentLanguage = localStorage.getItem("language")
 
 	contentContainer.innerHTML = `
-		<h2>${currentPlayer.username}'s Friends</h2>
-		<button id="addFriendButton" class="btn btn-success mb-3">Add New Friend</button>
+		<h2>${translations[currentLanguage].friendList}</h2>
+		<button id="addFriendButton" class="btn btn-success mb-3">${translations[currentLanguage].addNewFriend}</button>
 		<ul id="friendsList" class="list-group"></ul>
 	`;
 
@@ -24,7 +26,7 @@ export function setFriendsView(contentContainer) {
 		if (friend) {
 			const friendItem = document.createElement("li");
 			friendItem.classList.add("list-group-item");
-
+			const statusText = translations[currentLanguage][friend.status];
 			friendItem.innerHTML = `
 				<div class="row">
 					<div class="col-md-2">
@@ -32,13 +34,13 @@ export function setFriendsView(contentContainer) {
 					</div>
 					<div class="col-md-6">
 						<a href="#profile/${friend.username}" class="profile-link">${friend.username}</a>
-						<p class="${statusClasses[friend.status]}" title="${friend.status}">${friend.status}</p>
-						<p>Rank: ${friend.rank} - MMR: ${friend.mmr}</p>
+						<p class="${statusClasses[friend.status]}" title="${friend.status}">${statusText}</p>
+						<p>${translations[currentLanguage].rank}: ${friend.rank} - ${translations[currentLanguage].mmr}: ${friend.mmr}</p>
 					</div>
 					<div class="col-md-4 text-right">
-						<button class="btn btn-info btn-sm float-right ml-2">Send Message</button>
-						<button class="btn btn-warning btn-sm float-right">Request Duel</button>
-						<button class="btn btn-danger btn-sm float-right ml-2" id="removeFriendButton">Remove Friend</button>
+						<button class="btn btn-info btn-sm float-right ml-2">${translations[currentLanguage].sendMessage}</button>
+						<button class="btn btn-warning btn-sm float-right">${translations[currentLanguage].requestDuel}</button>
+						<button class="btn btn-danger btn-sm float-right ml-2" id="removeFriendButton">${translations[currentLanguage].removeFriend}</button>
 					</div>
 				</div>
 			`;
@@ -71,7 +73,7 @@ export function setFriendsView(contentContainer) {
 	}
 
 	function removeFriend(friendUsername) {
-		const confirmation = confirm(`Are you sure you want to remove ${friendUsername} from your friends list?`);
+		const confirmation = confirm(`${translations[currentLanguage].validationRemovalFirst} ${friendUsername} ${translations[currentLanguage].validationRemovalSecond} ?`);
 		if (confirmation) {
 			const index = currentPlayer.friends.indexOf(friendUsername);
 			if (index > -1) {
@@ -80,20 +82,22 @@ export function setFriendsView(contentContainer) {
 			}
 		}
 	}
-
+	//this will need to change, kinda disgusting to be honest
 	addFriendButton.addEventListener("click", () => {
-		const newFriendUsername = prompt("Enter the username of the friend you want to add:");
+		const newFriendUsername = prompt(`${translations[currentLanguage].promptAddFriend}:`);
 		if (newFriendUsername) {
 			const newFriend = playerDatas.players[newFriendUsername];
 			if (newFriend) {
-				if (!currentPlayer.friends.includes(newFriendUsername)) {
+				if (newFriend.username === currentPlayer.username) {
+					alert(`${translations[currentLanguage].lonelyTest}`);
+				} else if (!currentPlayer.friends.includes(newFriendUsername)) {
 					currentPlayer.friends.push(newFriendUsername);
 					setFriendsView(contentContainer);
 				} else {
-					alert(`${newFriendUsername} is already your friend.`);
+					alert(`${newFriendUsername} ${translations[currentLanguage].alreadyFriend}.`);
 				}
 			} else {
-				alert(`User ${newFriendUsername} not found.`);
+				alert(`${translations[currentLanguage].user} ${newFriendUsername} ${translations[currentLanguage].notFound}.`);
 			}
 		}
 	});

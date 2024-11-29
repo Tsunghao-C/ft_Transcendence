@@ -89,23 +89,28 @@ export function setProfileView(contentContainer, usernameInHash) {
 							<h4>${translations[currentLanguage].winRate}: ${calculateWinRate(player.win, player.lose)}%</h4>
 							<p title="${translations[currentLanguage].wins}: ${player.win}, ${translations[currentLanguage].losses}: ${player.lose}">${player.win}${translations[currentLanguage].w} / ${player.lose}${translations[currentLanguage].l}</p>
 						</div>
-						<div class="col-md-4">
-							<h4 data-i18n="matchHistory">Match History</h4>
-							<ul class="list-group">
-							${player.matchHistory
-								.map(
-									(match) =>
-										`<li class="list-group-item">
-											<span>${match[0]}</span> -
-											<span>${match[1] === "W" ? translations[currentLanguage].win : translations[currentLanguage].loss}</span> vs
-											<a href="#profile/${match[2]}" class="profile-link">${match[2]}</a>
-											<span>[${match[3][0]}-${match[3][1]}]</span>
-										</li>`
-								)
-								.join("")}
-							</ul>
-						</div>
-					</div>
+							<div class="col-md-4">
+								<h4 data-i18n="matchHistory">Match History</h4>
+								<div class="match-history-scroll">
+									${
+										player.matchHistory.length > 0
+											? `<ul class="list-group">
+												${player.matchHistory
+													.map(
+														(match) =>
+															`<li class="list-group-item">
+																<span>${match[0]}</span> -
+																<span>${match[1] === "W" ? translations[currentLanguage].win : translations[currentLanguage].loss}</span> vs
+																<a href="#profile/${match[2]}" class="profile-link">${match[2]}</a>
+																<span>[${match[3][0]}-${match[3][1]}]</span>
+															</li>`
+													)
+													.join("")}
+											</ul>`
+											: `<p class="text-muted" data-i18n="noMatchHistory">No match history found.</p>`
+									}
+								</div>
+							</div>
 					${!isCurrentPlayer ? `
 						<div class="mt-3">
 							<button class="btn btn-info btn-sm" id="sendMessageBtn">${translations[currentLanguage].sendMessage}</button>
@@ -150,7 +155,7 @@ export function setProfileView(contentContainer, usernameInHash) {
 		} else {
 			removeFriendButton.style.display = 'inline-block';
 			addFriendButton.style.display = 'none';
-
+			//disgusting, will need to change
 			removeFriendButton.addEventListener('click', () => {
 				const confirmation = confirm(`Are you sure you want to remove ${player.username} from your friends list?`);
 				if (confirmation) {

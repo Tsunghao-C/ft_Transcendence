@@ -82,7 +82,7 @@ export function setPersonnalDataView(contentContainer) {
 			mailAddress: updatedMail,
 			profilePicture: updatedProfilePicture,
 		};
-
+		loadPage(personnal-data);
 		alert("Your personal information has been updated!");
 	});
 }

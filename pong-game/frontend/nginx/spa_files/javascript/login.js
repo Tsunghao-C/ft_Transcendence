@@ -59,6 +59,7 @@ function validatePasswordMatch() {
 
 export function setLoginView(contentContainer) {
 
+	const currentLanguage = localStorage.getItem("language");
 	contentContainer.innerHTML = `
 		<div class="login-view">
 			<h1 data-i18n="loginTitle">Login</h1>
@@ -79,8 +80,8 @@ export function setLoginView(contentContainer) {
 					<button type="button" onclick="verify2FA()" class="login-button">Verify 2FA</button>
 				</div>
 			</form>
-			<p data-i18n="noAccount">Don’t have an account?
-				<a href="#create-profile" id="createAccountLink" data-i18n="createAccountLink">Create one here</a>
+			<p>${translations[currentLanguage].noAccount}
+				<a href="#create-profile" id="createAccountLink">${translations[currentLanguage].createAccountLink}</a>
 			</p>
 		</div>
 	`;
