@@ -2,7 +2,7 @@
 
 # Wait for Elasticsearch to be ready
 until curl -s http://localhost:9200 >/dev/null; do
-    echo "Waiting for Elasticsearch..."
+    echo "Waiting for Elasticsearch in init..."
     sleep 5
 done
 

@@ -1,0 +1,9 @@
+# Updated elasticsearch.yml configuration
+cluster.name: "pong-game-logs"
+node.name: "es01"
+network.host: 0.0.0.0
+discovery.type: single-node
+
+# Security settings
+xpack.security.enabled: true
+xpack.security.autoconfiguration.enabled: true

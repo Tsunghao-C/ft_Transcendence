@@ -34,6 +34,8 @@ volumes:
   filebeat_registry: {}
   es_data:
     driver: local
+  es_certs:
+    driver: local
 
 services:
   # Security Layer
@@ -316,31 +318,36 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
     environment:
       # Cluster configuration
-      - node.name=es01
-      - cluster.name=pong-game-logs
-      - discovery.type=single-node
-      - network.host=0.0.0.0
+      # - node.name=es01
+      # - cluster.name=pong-game-logs
+      # - discovery.type=single-node
+      # - network.host=0.0.0.0
       # Basic settings
       - bootstrap.memory_lock=false
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - discovery.type=single-node
+      - xpack.security.enabled=true
+      - xpack.security.autoconfiguration.enabled=true
       # Disk allocation setting
       - "cluster.routing.allocation.disk.threshold_enabled=true"
       - "cluster.routing.allocation.disk.watermark.low=85%"
       - "cluster.routing.allocation.disk.watermark.high=90%"
       - "cluster.routing.allocation.disk.watermark.flood_stage=95%"
       # Security settings (for development)
-      - xpack.security.enabled=false
+      # - xpack.security.enabled=true
+      # - xpack.security.transport.ssl.enabled=true
+      # - xpack.security.transport.ssl.verification_mode=certificate
+      # - xpack.security.transport.ssl.keystore.path=certs/es01.p12
+      # - xpack.security.transport.ssl.truststore.path=certs/ca.p12
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - ELASTIC_CERT_PASSWORD=${ELASTIC_CERT_PASSWORD}
     volumes:
       - es_data:/usr/share/elasticsearch/data
       - ./monitoring/elk/elasticsearch/setup:/setup
-    entrypoint: >
-      sh -c '
-        /usr/local/bin/docker-entrypoint.sh &
-        ELASTIC_PID=$!
-        sleep 10 &&
-        /setup/init.sh &
-        wait $ELASTIC_PID'
+      - ./monitoring/elk/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    # entrypoint: ["/usr/share/elasticsearch/setup/init-security.sh"]
+    user: root
+    entrypoint: [ "/setup/init-security.sh" ]
     deploy:
       resources:
         limits:
@@ -356,24 +363,25 @@ services:
     #   retries: 1
     restart: unless-stopped
 
-  logstash:
-    container_name: logstash
-    image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
-    volumes:
-      - ./monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
-    environment:
-      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
-      # ELASTIC_HOST: elasticsearch
-    networks:
-      - monitoring_net
-    depends_on:
-      - elasticsearch
-    # healthcheck:
-    #   test: ["CMD", "bin/logstash", "-t"]
-    #   interval: 3s
-    #   timeout: 3s
-    #   retries: 1
-    restart: unless-stopped
+  # logstash:
+  #   container_name: logstash
+  #   image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
+  #   volumes:
+  #     - ./monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
+  #   environment:
+  #     - "LS_JAVA_OPTS=-Xmx256m -Xms256m"
+  #     - "xpack.monitoring.elasticsearch.ssl.certificate_authority=/usr/share/elasticsearch/config/certs/ca.p12"
+  #     # ELASTIC_HOST: elasticsearch
+  #   networks:
+  #     - monitoring_net
+  #   depends_on:
+  #     - elasticsearch
+  #   # healthcheck:
+  #   #   test: ["CMD", "bin/logstash", "-t"]
+  #   #   interval: 3s
+  #   #   timeout: 3s
+  #   #   retries: 1
+  #   restart: unless-stopped
 
   kibana:
     container_name: kibana
@@ -394,6 +402,7 @@ services:
       # Security settings
       - XPACK_SECURITY_ENABLED=false
       - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}
+      - "elasticsearch.ssl.certificateAuthorities=/usr/share/elasticsearch/config/certs/ca.p12"
       # Performance settings
       - ELASTICSEARCH_REQUESTTIMEOUT=90000  # Added timeout
       - OPTIMIZATION_PROFILING=false
@@ -415,22 +424,22 @@ services:
         /usr/local/bin/kibana-docker'
     restart: unless-stopped
 
-  filebeat:
-    container_name: filebeat
-    image: docker.elastic.co/beats/filebeat:${STACK_VERSION}
-    user: root  # Required to read logs
-    volumes:
-      - ./monitoring/elk/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
-      # Mount all log directories
-      - ./frontend/nginx/logs:/var/log/nginx:ro
-      - ./frontend/nginx/modsec:/var/log/modsec:ro
-      - filebeat_registry:/usr/share/filebeat/data
-      # - ./auth-service/logs:/var/log/auth:ro
-    entrypoint: >
-      sh -c '
-      chmod go-w /usr/share/filebeat/filebeat.yml &&
-      filebeat -e --strict.perms=false'
-    networks:
-      - monitoring_net
-    depends_on:
-      - logstash
+  # filebeat:
+  #   container_name: filebeat
+  #   image: docker.elastic.co/beats/filebeat:${STACK_VERSION}
+  #   user: root  # Required to read logs
+  #   volumes:
+  #     - ./monitoring/elk/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
+  #     # Mount all log directories
+  #     - ./frontend/nginx/logs:/var/log/nginx:ro
+  #     - ./frontend/nginx/modsec:/var/log/modsec:ro
+  #     - filebeat_registry:/usr/share/filebeat/data
+  #     # - ./auth-service/logs:/var/log/auth:ro
+  #   entrypoint: >
+  #     sh -c '
+  #     chmod go-w /usr/share/filebeat/filebeat.yml &&
+  #     filebeat -e --strict.perms=false'
+  #   networks:
+  #     - monitoring_net
+  #   depends_on:
+  #     - logstash
