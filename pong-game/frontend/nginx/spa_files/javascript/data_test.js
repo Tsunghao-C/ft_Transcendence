@@ -11,7 +11,8 @@ export const playerDatas = {
 			lose: 12,
 			rank: 3,
 			status: "online",
-			friends: ["Player2", "Player3", "Player4"],
+			friends: ["Player2", "Player4"],
+			blocks: ["Player3"],
 			matchHistory: [["27/11/2024", "W", "Player2", [11, 2]]]
 		},
 
@@ -27,6 +28,7 @@ export const playerDatas = {
 			rank: 2,
 			status: "offline",
 			friends: ["Player1"],
+			blocks: ["Player3"],
 			matchHistory: []
 		},
 
@@ -42,6 +44,7 @@ export const playerDatas = {
 			rank: 1,
 			status: "online",
 			friends: [],
+			blocks: ["Player3"],
 			matchHistory: [["27/11/2024", "W", "Player4", [11, 2]]]
 		},
 
@@ -57,6 +60,7 @@ export const playerDatas = {
 				rank: 4,
 				status: "ingame",
 				friends: [],
+				blocks: ["Player3"],
 				matchHistory: [["27/11/2024", "W", "Player2", [11, 2]], ["27/11/2024", "L", "Player1", [5, 11]], ["26/11/2024", "W", "Player3", [11, 1]],["25/11/2024", "W", "Player2", [11, 2]], ["24/11/2024", "L", "Player1", [5, 11]], ["23/11/2024", "W", "Player3", [11, 1]], ["22/11/2024", "W", "Player2", [11, 2]], ["21/11/2024", "L", "Player1", [5, 11]], ["20/11/2024", "W", "Player3", [11, 1]], ["19/11/2024", "W", "Player2", [11, 2]], ["18/11/2024", "L", "Player1", [5, 11]], ["17/11/2024", "W", "Player3", [11, 1]], ["16/11/2024", "W", "Player2", [11, 2]], ["14/11/2024", "L", "Player1", [5, 11]], ["/11/2024", "W", "Player3", [11, 1]], ["27/11/2024", "W", "Player2", [11, 2]], ["27/11/2024", "L", "Player1", [5, 11]], ["26/11/2024", "W", "Player3", [11, 1]], ["27/11/2024", "W", "Player2", [11, 2]], ["27/11/2024", "L", "Player1", [5, 11]], ["26/11/2024", "W", "Player3", [11, 1]]]
 		}
 	},
