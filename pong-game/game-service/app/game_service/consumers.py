@@ -72,10 +72,28 @@ class GameConsumer(AsyncWebsocketConsumer):
             if player_id not in self.room_data[room_name].get("ready", []):
                 self.room_data[room_name]["ready"].append(player_id)
         if self.all_ready(room_name):
-            player_channels = self.room_data[room_name].get("players", [])
-            game_room = GameRoom(room_name, player_channels)
-            active_game_rooms[room_name] = game_room #make sure to clean that shit up
-            asyncio.create_task(game_room.run())
+            try:
+                player_channels = self.room_data[room_name].get("players", [])
+                game_room = GameRoom(room_name, player_channels)
+                active_game_rooms[room_name] = game_room
+                game_task = asyncio.create_task(game_room.run())
+                game_task.add_done_callback(self.handle_game_task_completion) #this is fucking wack, shouldn't the task be passed as parameter?
+            except Exception as e:
+                await self.send(json.dumps({
+                    "error": f"Failed to start game: {str(e)}"
+                    }))
+
+    def handle_game_task_completion(self, task):
+        try:
+            task.result()
+        except asyncio.CancelledError:
+            print("Game task was cancelled")
+        except Exception as e:
+            print(f"Game task encountered error: {e}")
+        finally:
+            room_name = task.get_name()
+            if room_name in active_game_rooms:
+                del active_game_rooms[room_name]
 
     def all_ready(self, room_name):
         if room_name not in self.room_data:
@@ -90,10 +108,9 @@ class GameConsumer(AsyncWebsocketConsumer):
             "player_id": event["player_id"]
         }))
 
-    def cleanup_rooms(self):
+    def cleanup_timed_out_rooms(self): #Potentially could be handled in handle_game_task_completion
         rooms_to_remove = [
                 room_id for room_id, game_room in active_game_rooms.items()
-                if game_room.is_game_done()
                 if game_room.has_timed_out() #decide whether the consumer or the game_room will track the time
                 ]
         for room_id in rooms_to_remove:
