@@ -3,24 +3,6 @@
 const PADDLE_HEIGHT = 100;
 const PADDLE_WIDTH = 15;
 
-//class Paddle {
-//	constructor (id, color) {
-//		if (id == 1) {
-//			this.x = canvas.width * 0.10;
-//			this.upKey = 'ArrowUp';
-//			this.downKey = 'ArrowDown';
-//		}
-//		else {
-//			this.x = canvas.width * 0.90;
-//			this.upKey = 'KeyW';
-//			this.downKey = 'KeyS';
-//		}
-//		this.y = canvas.height * 0.30;
-//		this.speed = 0;
-//		this.color = color;
-//	}
-//}
-
 class Player {
 	constructor (id, color) {
 		this.id = id;
@@ -106,6 +88,10 @@ function drawElements(ball, Player1, Player2, ctx) {
 	ctx.closePath();
 }
 
+function drawGameOverScreen(gameState){
+	return; //xd
+}
+
 async function getGameState(socket)
 {
 	return new Promise((resolve, reject) => {
@@ -115,6 +101,8 @@ async function getGameState(socket)
 				if (data.type == 'game_update') {
 					resolve(data.payload);
 				}
+				if (data.type == 'game_over')
+					resolve (data.paylord);
 			} catch (error) {
 				console.error('Error parsing socker message in getElements: ', error);
 				return(error);
@@ -129,6 +117,10 @@ async function getGameState(socket)
 
 export async function gameLoop(ctx, socket, playerData) {
 	gameState = await getGameState(socket);
+	if (gameState.type == 'game_over'){
+		drawGameOverScreen(gameState);
+		return; // end the loop ig???
+	}
 	drawElements(gameState.ball, gameState.player1, gameState.player2, ctx);
 	sendEvents(socket, playerData, roomUID);
 	requestAnimationFrame(gameLoop);

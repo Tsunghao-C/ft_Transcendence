@@ -2,7 +2,7 @@ import time
 import math
 import json
 import asyncio
-import threading
+import httpx
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
@@ -22,15 +22,12 @@ class Player():
         self.y = canvas_height * 0.30
         self.speed = 0
         self.score = 0
-        self.speed_lock = threading.Lock()
 
     def get_speed(self):
-        with self.speed_lock:
-            return self.speed
+        return self.speed
 
     def set_speed(self, value):
-        with self.speed_lock:
-            self.speed = value
+        self.speed = value
 
 class Ball():
     def __init__(self, canvas_width, canvas_height):
@@ -121,6 +118,22 @@ class GameRoom():
                     else:
                         self.ball.x = player.x - self.ball.radius
 
+    async def send_report_to_db(self, winner):
+        game_report = {
+                "p1ID": self.player_channels[0].player_id,
+                "p2ID": self.player_channels[1].player_id,
+                "matchOutcome": winner
+                }
+        backend_url = "http://the-backend-here"
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(backend_url, json=game_report)
+                response.raise_for_status()
+                print(f"Report succesfully sent. Reponse: {response.text}")
+        except httpx.HTTPStatusError as exc:
+            print(f"Error response {exc.response.status_code}: {exc.response.text}")
+        except Exception as e:
+            print(f"An error occurred: {e}")
     async def declare_winner(self, winner):
         game_report = {
                 'score_left': self.players[0].score,
@@ -135,7 +148,7 @@ class GameRoom():
                         'game_state': json.dumps(game_report)
                         }
                     )
-        await self.update_player_stats(winner)
+        await self.send_report_to_db(winner) # send json post with "p1ID" and "p2ID" and matchOutcome, set matchOutcome to 0 for p0 victory or 1 for p1 victory
         await asyncio.sleep(10)
 
     def update_ball(self):
