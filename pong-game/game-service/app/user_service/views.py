@@ -85,26 +85,21 @@ class UnbanPlayer(APIView):
 		return Response({"message": f"Player {id} has been unbanned"})
 			
 class Generate2FAView(APIView):
-	authentication_classes = []  # Pas d'authentification nécessaire
-	permission_classes = [AllowAny]  # Tout le monde peut accéder à cette vue
-
+	authentication_classes = []  # No auth necessary
+	permission_classes = [AllowAny]  # Anyone can access this view
 	def post(self, request):
 		username = request.data.get("username")
 		password = request.data.get("password")
-
 		user = authenticate(username=username, password=password)
 		if user:
-			# Générer un code OTP aléatoire
 			otp_code = random.randint(100000, 999999)
+			# /!\ delete this print when in produtction
 			print("**********************************")
 			print("user.id is : " + str(user.id))
 			print("otp_code is : " + str(otp_code))
 			print("**********************************")
-			# Stocker le code dans un cache ou une base de données temporaire (lié à l'utilisateur)
-			cache.set(f"otp_{user.id}", otp_code, timeout=300)  # Expire en 5 minutes
-
+			cache.set(f"otp_{user.id}", otp_code, timeout=300) # Expires in 5 minutes
 			message = f"Hello {user.username},\n\nYour verification code is : {otp_code}\nThis code is valid for 5 minutes."
-			# Envoyer le code OTP (par email ou SMS)
 			send_mail(
 				"Your 2FA verification code",
 				message,
@@ -112,30 +107,27 @@ class Generate2FAView(APIView):
 				[user.email],
 				fail_silently=False,
 			)
-			return Response({"detail": "2FA code has been sent"}, status=status.HTTP_200_OK)
+			return Response({"detail": "A 2FA code has been sent", "user_id": str(user.id)}, status=status.HTTP_200_OK)
 		return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
 # Check and validate/refuse the 2FA code entered by user
 class Validate2FAView(APIView):
-
-	authentication_classes = []  # Pas d'authentification nécessaire
-	permission_classes = [AllowAny]  # Tout le monde peut accéder à cette vue
-
+	authentication_classes = []  # No auth necessary
+	permission_classes = [AllowAny]  # Anyone can access this view
 	def post(self, request):
 		user_id = request.data.get("user_id")
-		otp_code = request.data.get("otp_code")
-
-		# Récupérer le code OTP stocké
+		otp_code = request.data.get("otpCode")
 		stored_otp = cache.get(f"otp_{user_id}")
-
+		# /!\ delete these print when in produtction
+		print("user_id is : " + str(user_id))
 		print("stored_otp is : " + str(stored_otp) + " and otp_code is : " + str(otp_code))
-
 		if stored_otp and str(stored_otp) == str(otp_code):
-			# Code valide, générer les tokens JWT
+			# Code is valid > generate JWT
 			user = CustomUser.objects.get(id=user_id)
 			refresh = RefreshToken.for_user(user)
 			return Response({
 				"refresh": str(refresh),
 				"access": str(refresh.access_token),
+				"detail": "2FA code validated",
 			}, status=status.HTTP_200_OK)
 		return Response({"detail": "Invalid or expired OTP"}, status=status.HTTP_400_BAD_REQUEST)
