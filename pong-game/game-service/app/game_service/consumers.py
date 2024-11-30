@@ -3,7 +3,6 @@ import uuid
 import asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.sessions import SessionMiddlewareStack
-from room_manager import RoomManager
 from game_room import GameRoom
 
 active_game_rooms = {}

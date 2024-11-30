@@ -41,7 +41,6 @@ class Ball():
         self.speedX = 5
         self.speedY = 5
         self.radius = BALL_RADIUS
-        
 
 class GameRoom():
     def __init__(self, room_id, player_channels):
@@ -56,6 +55,8 @@ class GameRoom():
         self.canvas_height = CANVAS_HEIGHT
         self.ball = Ball(self.canvas_width, self.canvas_height)
         self.running = True
+        self.game_over = False
+        self.winner = -1
 
     async def receive_player_inputs(self, player_id, input):
         if player_id in self.players:
@@ -91,7 +92,6 @@ class GameRoom():
         d = dict()
         closestX = max(player.x, min(self.ball.x, player.x + PADDLE_WIDTH))
         closestY = max(player.y, min(self.ball.y, player.y + PADDLE_HEIGHT))
-        
         distanceX = self.ball.x - closestX
         distanceY = self.ball.y - closestY
         distance = math.sqrt(distanceX ** 2 + distanceY ** 2)
@@ -101,7 +101,7 @@ class GameRoom():
         d['distanceY'] = distanceY
         return d
 
-    def handle_collisions(self):
+    def handle_player_collisions(self):
         for player in self.players:
             collision = self.check_collisions(player)
             if collision['hasCollision']:
@@ -121,6 +121,22 @@ class GameRoom():
                     else:
                         self.ball.x = player.x - self.ball.radius
 
+    async def declare_winner(self, winner):
+        game_report = {
+                'score_left': self.players[0].score,
+                'score_right': self.players[1].score,
+                'winner': self.players[winner].player_id
+                }
+        for player_channel in self.player_channels:
+            await async_to_sync(self.channel_layer.send)(
+                    player_channel, {
+                        'type': 'game_over',
+                        'payload': game_report,
+                        'game_state': json.dumps(game_report)
+                        }
+                    )
+        await self.update_player_stats(winner)
+        await asyncio.sleep(10)
 
     def update_ball(self):
         self.ball.x += self.ball.speedX
@@ -130,10 +146,16 @@ class GameRoom():
         if self.ball.x - self.ball.radius < 0 or self.ball.x + self.ball.radius > CANVAS_WIDTH:
             if self.ball.x - self.ball.radius < 0:
                 self.players[1].score += 1
+                if self.players[1].score == 5:
+                    self.winner = 1
+                    self.game_over = True
                 self.ball.x = CANVAS_WIDTH * 0.7
                 self.ball.y = CANVAS_WIDTH * 0.5
             else:
                 self.players[0].score += 1
+                if self.players[0].score == 5:
+                    self.winner = 0
+                    self.game_over = True
                 self.ball.x = CANVAS_WIDTH * 0.3
                 self.ball.y = CANVAS_WIDTH * 0.5
 
@@ -154,8 +176,7 @@ class GameRoom():
                 }
         for player_channel in self.player_channels:
             await async_to_sync(self.channel_layer.send)(
-                    player_channel,
-                    {
+                    player_channel,{
                         'type': 'game_update',
                         'payload': game_state,
                         'game_state': json.dumps(game_state)
@@ -165,7 +186,10 @@ class GameRoom():
     async def run(self):
         while self.running:
             self.update_players()
-            self.handle_collisions()
+            self.handle_player_collisions()
             self.update_ball()
+            if self.game_over:
+                await self.declare_winner(self.winner)
+                return 
             await self.send_update()
             await asyncio.sleep(0.016)
