@@ -29,14 +29,11 @@ class CurrentUserView(APIView):
 class updateUsernameView(APIView):
 	def post(self, request):
 		user = request.user
-		if user.is_authenticated:
-			serializer = UserSerializer(instance=user, data=request.data, partial=True)
-			if serializer.is_valid():
-				serializer.save()
-				return Response(serializer.data, status=201)
-			return Response(serializer.errors, status=400)
-		else:
-			return Response({"error": "User is not authenticated"}, status=400)
+		serializer = UserSerializer(instance=user, data=request.data, partial=True)
+		if serializer.is_valid():
+			serializer.save()
+			return Response(serializer.data, status=201)
+		return Response(serializer.errors, status=400)
 
 # I'll need to add in some sort of match authentication later
 class UpdateMMR(APIView):
