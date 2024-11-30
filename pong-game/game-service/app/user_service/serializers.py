@@ -1,16 +1,18 @@
 from .models import CustomUser
 from rest_framework import serializers
-import profanity_filter import ProfanityFilter
-
-pf = ProfanityFilter(languages=['en','fr'])
+from better_profanity import profanity as pf
 
 def isNameClean(nameToCheck):
-	return pf.is_clean(nameToCheck)
+	return pf.contains_profanity(nameToCheck)
 
 class UserSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = CustomUser
-		fields = ["id", "username", "email", "password", "alias", "mmr", "is_banned"]
+		fields = [
+			"id", "username", "email",
+			"password", "alias", "mmr",
+			"is_banned", 
+			]
 		extra_kwargs = {
 			"password": {"write_only": True}, # we accept the password as an input but we don't return it
 			"mmr": {"read_only": True}, # used for matchmaking / leaderboards
@@ -20,8 +22,6 @@ class UserSerializer(serializers.ModelSerializer):
 	def validate_username(self, value):
 		if not isNameClean(value):
 			raise serializers.ValidationError({"username": "this username contains bad language"})
-		if CustomUser.objects.filter(username=validated_data["username"]).exists():
-				raise serializers.ValidationError({"username": "this username already exists"})
 		return value
 
 	def validate_alias(self, value):
