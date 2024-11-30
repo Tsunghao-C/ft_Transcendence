@@ -9,7 +9,6 @@ urlpatterns = [
 	
 	path("token/validate/", Validate2FAView.as_view(), name="validate_2fa"),
 	path("token/refresh/", TokenRefreshView.as_view(), name="refresh"),
-    path("getuser/", CurrentUserView.as_view(), name="get_user"),
     path("updatemmr/", UpdateMMR.as_view(), name="update_mmr"),
 	path("banplayer/", BanPlayer.as_view(), name="banplayer"),
 	path("unbanplayer/", UnbanPlayer.as_view(), name="unbanplayer"),
@@ -18,6 +17,7 @@ urlpatterns = [
 	path("token/", Generate2FAView.as_view(), name="generate_2fa"),
     path("logout/", LogoutView.as_view(), name="logout-user"),
 
-	# change user profile
-	
+	# user profile
+	path("getuser/", CurrentUserView.as_view(), name="get_user"),
+	path("updateUser/", updateUserView.as_view(), name="update_user"),
 ]

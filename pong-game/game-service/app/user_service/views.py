@@ -25,6 +25,14 @@ class CurrentUserView(APIView):
 	def get(self, request):
 		serializer = UserSerializer(request.user)
 		return Response(serializer.data)
+	
+class updateUserView(APIView):
+	def post(self, request):
+		serializer = UserSerializer(request.data)
+		if serializer.is_valid():
+			serializer.save()
+			return Response(serializer.data, status=201)
+		return Response(serializer.errors, status=400)
 
 # I'll need to add in some sort of match authentication later
 class UpdateMMR(APIView):
@@ -57,12 +65,6 @@ class BanPlayer(APIView):
 		if not request.user.is_superuser:
 			return Response({"error":"Only super users can ban players"}, status=400)
 		id = request.data.get("playerId")
-		if id is None:
-			return Response({"error": "playerId is required"}, status=400)
-		try:
-			id = int(id)
-		except ValueError:
-			return Response({"error": "Invalid input type"}, status=400)
 		user = get_object_or_404(CustomUser, id=id)
 		if user.is_banned:
 			return Response({"error": "this user is already banned"}, status=400)
@@ -75,29 +77,12 @@ class UnbanPlayer(APIView):
 		if not request.user.is_superuser:
 			return Response({"error":"Only super users can unban players"}, status=400)
 		id = request.data.get("playerId")
-		if id is None:
-			return Response({"error": "playerId is required"}, status=400)
-		try:
-			id = int(id)
-		except ValueError:
-			return Response({"error": "Invalid input type"}, status=400)
 		user = get_object_or_404(CustomUser, id=id)
 		if not user.is_banned:
 			return Response({"error": "this user is not banned"}, status=400)
 		user.is_banned = False
 		user.save()
 		return Response({"message": f"Player {id} has been unbanned"})
-
-class updateDetailsView(APIView):
-	def post(self, request):
-		newUsername = request.data.get("newUsername")
-		newAlias = request.data.get("newAlias")
-		if newAlias:
-			request.user.alias = newAlias
-		if newUsername:
-			request.user.username = newUsername
-		request.user.save()
-		return Response({"message": f"Player {id} has had their details updated"})
 			
 class Generate2FAView(APIView):
 	authentication_classes = []  # Pas d'authentification nécessaire
