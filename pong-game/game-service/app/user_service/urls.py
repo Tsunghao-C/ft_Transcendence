@@ -4,8 +4,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.contrib.auth.views import LoginView, LogoutView
 
 urlpatterns = [
-    path("register/", CreateUserView.as_view(), name="register"),
-	# path("/token/", TokenObtainPairView.as_view(), name="get_token"),
+	path("register/", CreateUserView.as_view(), name="register"),
+	path("token/getToken", TokenObtainPairView.as_view(), name="get_token"), # can delete this later
 	
 	path("token/validate/", Validate2FAView.as_view(), name="validate_2fa"),
 	path("token/refresh/", TokenRefreshView.as_view(), name="refresh"),
@@ -19,5 +19,5 @@ urlpatterns = [
 
 	# user profile
 	path("getuser/", CurrentUserView.as_view(), name="get_user"),
-	path("updateUser/", updateUserView.as_view(), name="update_user"),
+	path("updateUsername/", updateUsernameView.as_view(), name="update_user"),
 ]
