@@ -2,7 +2,7 @@ from .models import CustomUser
 from rest_framework import serializers
 from better_profanity import profanity as pf
 
-def isNameClean(nameToCheck):
+def nameNotClean(nameToCheck):
 	return pf.contains_profanity(nameToCheck)
 
 class UserSerializer(serializers.ModelSerializer):
@@ -20,12 +20,12 @@ class UserSerializer(serializers.ModelSerializer):
 		}
 
 	def validate_username(self, value):
-		if not isNameClean(value):
+		if nameNotClean(value):
 			raise serializers.ValidationError({"username": "this username contains bad language"})
 		return value
 
 	def validate_alias(self, value):
-		if not isNameClean(value):
+		if nameNotClean(value):
 			raise serializers.ValidationError({"alias": "this alias contains bad language"})
 		return value
 
