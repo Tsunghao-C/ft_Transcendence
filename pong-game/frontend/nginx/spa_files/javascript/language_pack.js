@@ -1,5 +1,8 @@
 export const translations = {
 	en: {
+		confirm: "confirm",
+		cancel: "cancel",
+		close: "close",
 		home: "Home",
 		game: "Game",
 		leaderboard: "Leaderboard",
@@ -62,6 +65,7 @@ export const translations = {
 		requestDuel: "Send Duel Request",
 		addFriend: "Add to friend list",
 		addNewFriend: "Add a new friend",
+		enterUsername: "Enter username",
 		removeFriend: "Remove from friend list",
 		friendList: "Friend list",
 		validationRemovalFirst: "Are you sure you want to remove",
@@ -83,6 +87,9 @@ export const translations = {
 		okSasuke: "... Just how much do you hate yourself ? but no we can't let you do that..."
 	},
 	fr: {
+		confirm: "",
+		cancel: "",
+		close: "",
 		home: "Accueil",
 		game: "Jeu",
 		leaderboard: "Classement",
@@ -167,6 +174,9 @@ export const translations = {
 		chat: "Chat",
 	},
 	pt: {
+		confirm: "",
+		cancel: "",
+		close: "",
 		home: "Início",
 		game: "Jogo",
 		leaderboard: "Classificação",

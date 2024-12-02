@@ -32,7 +32,6 @@ export function setFriendsView(contentContainer) {
 		</div>
 	`;
 
-	// Initialisation des éléments
 	const friendsList = document.getElementById("friendsList");
 	const blockList = document.getElementById("blockList");
 	const addFriendButton = document.getElementById("addFriendButton");
@@ -44,7 +43,6 @@ export function setFriendsView(contentContainer) {
 		ingame: "text-warning",
 	};
 
-	// Fonctionnalité Friends List
 	function renderFriends() {
 		friendsList.innerHTML = "";
 		currentPlayer.friends.forEach((friendUsername) => {
@@ -71,7 +69,6 @@ export function setFriendsView(contentContainer) {
 					</div>
 				`;
 
-				// Gestion des boutons
 				const sendMessageButton = friendItem.querySelector("button.btn-info");
 				sendMessageButton.addEventListener("click", () => sendMessage(friend.username));
 

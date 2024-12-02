@@ -1,5 +1,5 @@
-import { setGameView } from './game.js';
-import { closeGameWebSocket } from './game.js';
+import { setGameView } from './game_menu.js';
+import { closeGameWebSocket } from './game_menu.js';
 import { changeLanguage } from './settings.js';
 import { changeFontSize } from './settings.js';
 import { changeColorMode } from './settings.js';
