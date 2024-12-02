@@ -9,7 +9,7 @@ active_game_rooms = {}
 
 class GameConsumer(AsyncWebsocketConsumer): #refactor from relying on the websocket to the db player_id, or the jwt token??
     async def connect(self):
-        self.player_id = self.scope['session'].session_key #This is tied to the individual instance of GameConsumer per sockets, just need to figure out which data to use
+        self.player_id = self.scope['session'].session_key #get player id, let front do the db query
         await self.accept()
         await self.send(json.dumps({"message": "Connection established"}))
 

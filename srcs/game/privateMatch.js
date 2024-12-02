@@ -11,7 +11,7 @@ var data = {
 
 async function getPlayerInfo() {
 	try {
-		const dbQuery = await fetch('http://django/api/player/info/', {
+		const dbQuery = await fetch('http://django/api/user/getuser/', {
 			method: 'GET',
 			headers: {
 				'Authorization' : `Bearer ${token}`,

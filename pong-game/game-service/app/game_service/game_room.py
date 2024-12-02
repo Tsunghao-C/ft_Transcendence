@@ -134,6 +134,7 @@ class GameRoom():
             print(f"Error response {exc.response.status_code}: {exc.response.text}")
         except Exception as e:
             print(f"An error occurred: {e}")
+
     async def declare_winner(self, winner):
         game_report = {
                 'score_left': self.players[0].score,
