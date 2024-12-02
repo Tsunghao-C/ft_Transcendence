@@ -204,7 +204,20 @@ class rejectFriendRequestView(APIView):
 
 	def post(self, request):
 		to_user = request.user
-		from_user = get_object_or_404(CustomUser, alias=request.get("fromAlias"))
+		from_user = get_object_or_404(CustomUser, alias=request.data.get("fromAlias"))
 		frequest = get_object_or_404(FriendRequest, from_user=from_user, to_user=to_user)
 		frequest.delete()
 		return Response({"detail": "friend request deleted"}, status=200)
+	
+class blockUserView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def post(self, request):
+		user = request.user
+		otherUser = get_object_or_404(CustomUser, alias=request.data.get("alias"))
+		if user.has_blocked(otherUser):
+			return Response({"detail": "this user is already blocked"}, status=400)
+		if user == otherUser:
+			return Response({"detail": "you cannot block yourself"}, status=400)
+		user.blockList.add(otherUser)
+		return Response({"detail": "user successfully blocked"}, status=200)
