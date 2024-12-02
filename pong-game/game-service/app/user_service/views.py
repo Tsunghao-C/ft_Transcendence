@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from .models import CustomUser
+from .models import CustomUser, FriendRequest
 from rest_framework import generics
 from .serializers import UserSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -171,3 +171,40 @@ class changeEmailView(APIView):
 			cache.delete(cacheName)
 			return Response({"detail": "email change success"}, status=200)
 		return Response({"error": "invalid or expired otp"}, status=400)
+	
+class sendFriendRequestView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def post(self, request):
+		from_user = request.user
+		to_user = get_object_or_404(CustomUser, id=request.data.get("toAlias"))
+		if from_user == to_user:
+			return Response({"detail": "you cannot befriend yourself"}, status=400)
+		if from_user.is_friend(to_user):
+			return Response({"detail": "you are already friends with this user"}, status=400)
+		if FriendRequest.objects.filter(from_user=from_user, to_user=to_user).exists():
+			return Response({"detail": "Friend request was already sent."}, status=400)
+		FriendRequest.objects.create(from_user, to_user)
+		return Response({"detail": "friend request sent"}, status=200)
+
+class acceptFriendRequestView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def post(self, request):
+		to_user = request.user
+		from_user = get_object_or_404(CustomUser, alias=request.data.get("fromAlias"))
+		frequest = get_object_or_404(FriendRequest, from_user=from_user, to_user=to_user)
+		to_user.friendList.add(from_user)
+		from_user.friendList.add(to_user)
+		frequest.delete()
+		return Response({"detail": "friend request accepted"}, status=200)
+	
+class rejectFriendRequestView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def post(self, request):
+		to_user = request.user
+		from_user = get_object_or_404(CustomUser, alias=request.get("fromAlias"))
+		frequest = get_object_or_404(FriendRequest, from_user=from_user, to_user=to_user)
+		frequest.delete()
+		return Response({"detail": "friend request deleted"}, status=200)
