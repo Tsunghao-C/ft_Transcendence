@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 import json
 import uuid
 import asyncio
@@ -5,27 +7,30 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.sessions import SessionMiddlewareStack
 from game_room import GameRoom
 
+load_dotenv()
 active_game_rooms = {}
 
-class GameConsumer(AsyncWebsocketConsumer): #refactor from relying on the websocket to the db player_id, or the jwt token??
+class GameConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.player_id = self.scope['session'].session_key #get player id, let front do the db query
         await self.accept()
         await self.send(json.dumps({"message": "Connection established"}))
 
-    async def disconnect(self, close_code):
+    async def disconnect(self, code):
         if hasattr(self, 'current_group'):
             await self.channel_layer.group_discard(self.current_group, self.channel_name)
 
-    async def receive(self, text_data):
+    async def receive(self, text_data=None, bytes_data=None):
+        if text_data is None:
+            return
         data = json.loads(text_data)
         action = data.get("action")
+        player_id = data.get("id")
 
         if action == "join_private_match":
-            await self.join_lobby(data["room_name"])
+            await self.join_lobby(data["room_name"], player_id)
         elif action == "create_private_match":
-            room_name = uuid.uuid4() 
-            await self.create_private_lobby(room_name)
+            room_name = str(uuid.uuid4())
+            await self.create_private_lobby(room_name, player_id)
         elif action == "ready_up":
             await self.update_ready_status(data["room_name"], data["player_id"])
         elif data['type'] == "player_input":
@@ -38,10 +43,10 @@ class GameConsumer(AsyncWebsocketConsumer): #refactor from relying on the websoc
                        "error": f"Game room {data['game_roomID']} not found"
                        }))
 
-    async def create_private_lobby(self, room_name):
+    async def create_private_lobby(self, room_name, player_id):
         if not hasattr(self, 'room_data'):
             self.room_data = {}
-        self.room_data[room_name] = {"players": []}
+        self.room_data[room_name] = {"players": [player_id]}
         self.current_group = f"lobby_{room_name}"
         await self.channel_layer.group_add(self.current_group, self.channel_name)
         await self.send(json.dumps({
@@ -49,10 +54,12 @@ class GameConsumer(AsyncWebsocketConsumer): #refactor from relying on the websoc
             "room_name": room_name
             }))
 
-    async def join_lobby(self, room_name):
+    async def join_lobby(self, room_name, player_id):
         self.current_group = f"lobby_{room_name}"
         if not hasattr(self, 'room_data') or room_name not in self.room_data:
             await self.send(json.dumps({"error": f"lobby {room_name} does not exist"}))
+            return
+        if player_id in self.room_data[room_name]:
             return
         if len(self.room_data[room_name]["players"]) >= 2:
             await self.send(json.dumps({"error": f"lobby {room_name} is full"}))
@@ -73,7 +80,7 @@ class GameConsumer(AsyncWebsocketConsumer): #refactor from relying on the websoc
         if self.all_ready(room_name):
             try:
                 player_channels = self.room_data[room_name].get("players", [])
-                game_room = GameRoom(room_name, player_channels)
+                game_room = GameRoom(room_name, player_channels, self)
                 active_game_rooms[room_name] = game_room
                 game_task = asyncio.create_task(game_room.run())
                 game_task.add_done_callback(self.handle_game_task_completion) #this is fucking wack, shouldn't the task be passed as parameter?
