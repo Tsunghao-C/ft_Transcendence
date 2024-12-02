@@ -9,7 +9,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from rest_framework import status
 from rest_framework.permissions import AllowAny
-from django.contrib.auth.models import  User
+import re
 
 # 2FA
 import random
@@ -25,6 +25,15 @@ class CurrentUserView(APIView):
 	def get(self, request):
 		serializer = UserSerializer(request.user)
 		return Response(serializer.data)
+	
+class updateUsernameView(APIView):
+	def post(self, request):
+		user = request.user
+		serializer = UserSerializer(instance=user, data=request.data, partial=True)
+		if serializer.is_valid():
+			serializer.save()
+			return Response(serializer.data, status=201)
+		return Response(serializer.errors, status=400)
 
 # I'll need to add in some sort of match authentication later
 class UpdateMMR(APIView):
@@ -57,12 +66,6 @@ class BanPlayer(APIView):
 		if not request.user.is_superuser:
 			return Response({"error":"Only super users can ban players"}, status=400)
 		id = request.data.get("playerId")
-		if id is None:
-			return Response({"error": "playerId is required"}, status=400)
-		try:
-			id = int(id)
-		except ValueError:
-			return Response({"error": "Invalid input type"}, status=400)
 		user = get_object_or_404(CustomUser, id=id)
 		if user.is_banned:
 			return Response({"error": "this user is already banned"}, status=400)
@@ -75,12 +78,6 @@ class UnbanPlayer(APIView):
 		if not request.user.is_superuser:
 			return Response({"error":"Only super users can unban players"}, status=400)
 		id = request.data.get("playerId")
-		if id is None:
-			return Response({"error": "playerId is required"}, status=400)
-		try:
-			id = int(id)
-		except ValueError:
-			return Response({"error": "Invalid input type"}, status=400)
 		user = get_object_or_404(CustomUser, id=id)
 		if not user.is_banned:
 			return Response({"error": "this user is not banned"}, status=400)
@@ -88,7 +85,37 @@ class UnbanPlayer(APIView):
 		user.save()
 		return Response({"message": f"Player {id} has been unbanned"})
 
-# Generate 2FA when logging in
+def sendOTP(email:str, username:str, userID, cacheName:str):
+	otp_code = random.randint(100000, 999999)
+	cache.set(cacheName, {
+			'otp': otp_code,
+			'email': email
+		},
+		timeout=300
+	)
+	message = f"Hello {username},\n\nYour verification code is : {otp_code}\nThis code is valid for 5 minutes."
+	send_mail(
+		"Your 2FA verification code",
+		message,
+		"no-reply@example.com",
+		[email],
+		fail_silently=False,
+	)
+	# delete the below later
+	print("**********************************")
+	print("user.id is : " + str(userID))
+	print("otp_code is : " + str(otp_code))
+	print("**********************************")
+
+def isOtpValid(userID, enteredOTP, cacheName):
+	cachedData = cache.get(cacheName)
+	if not cachedData:
+		return False
+	storedOtp = cachedData.get("otp")
+	if storedOtp and str(storedOtp) == str(enteredOTP):
+		return True
+	return False
+
 class Generate2FAView(APIView):
 	authentication_classes = []  # No auth necessary
 	permission_classes = [AllowAny]  # Anyone can access this view
@@ -97,21 +124,8 @@ class Generate2FAView(APIView):
 		password = request.data.get("password")
 		user = authenticate(username=username, password=password)
 		if user:
-			otp_code = random.randint(100000, 999999)
 			# /!\ delete this print when in produtction
-			print("**********************************")
-			print("user.id is : " + str(user.id))
-			print("otp_code is : " + str(otp_code))
-			print("**********************************")
-			cache.set(f"otp_{user.id}", otp_code, timeout=300) # Expires in 5 minutes
-			message = f"Hello {user.username},\n\nYour verification code is : {otp_code}\nThis code is valid for 5 minutes."
-			send_mail(
-				"Your 2FA verification code",
-				message,
-				"no-reply@example.com",
-				[user.email],
-				fail_silently=False,
-			)
+			sendOTP(user.email, user.username, user.id, f"otp_{user.id}")
 			return Response({"detail": "A 2FA code has been sent", "user_id": str(user.id)}, status=status.HTTP_200_OK)
 		return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -120,19 +134,40 @@ class Validate2FAView(APIView):
 	authentication_classes = []  # No auth necessary
 	permission_classes = [AllowAny]  # Anyone can access this view
 	def post(self, request):
-		user_id = request.data.get("user_id")
-		otp_code = request.data.get("otpCode")
-		stored_otp = cache.get(f"otp_{user_id}")
-		# /!\ delete these print when in produtction
-		print("user_id is : " + str(user_id))
-		print("stored_otp is : " + str(stored_otp) + " and otp_code is : " + str(otp_code))
-		if stored_otp and str(stored_otp) == str(otp_code):
+		userId = request.data.get("user_id")
+		otpCode = request.data.get("otp")
+		if isOtpValid(userId, otpCode, f"otp_{userId}"):
 			# Code is valid > generate JWT
-			user = CustomUser.objects.get(id=user_id)
-			refresh = RefreshToken.for_user(user)
+			refresh = RefreshToken.for_user(request.user)
 			return Response({
 				"refresh": str(refresh),
 				"access": str(refresh.access_token),
 				"detail": "2FA code validated",
 			}, status=status.HTTP_200_OK)
 		return Response({"detail": "Invalid or expired OTP"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class changeEmailView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def post(self, request):
+		user = request.user
+		newEmail = request.data.get("new_email")
+		if not newEmail or not re.match(r"[^@]+@[^@]+\.[^@]+", newEmail):
+			return Response({"error": "invalid email format"}, status=400)
+		if CustomUser.objects.filter(email=newEmail).exists():
+			return Response({"error": "email is already in use"}, status=400)
+		sendOTP(newEmail, user.username, user.id, f"email_change_{user.id}")
+		return Response({"detail": "otp code sent"}, status=200)
+
+	def put(self, request):
+		user = request.user
+		otpCode = request.data.get('otp')
+		cacheName = f"email_change_{user.id}"
+		if isOtpValid(user.id, otpCode, cacheName):
+			cachedData = cache.get(cacheName)
+			user.email = cachedData.get("email")
+			user.save()
+			cache.delete(cacheName)
+			return Response({"detail": "email change success"}, status=200)
+		return Response({"error": "invalid or expired otp"}, status=400)
