@@ -1,4 +1,3 @@
-import time
 import math
 import json
 import asyncio
@@ -40,9 +39,9 @@ class Ball():
         self.radius = BALL_RADIUS
 
 class GameRoom():
-    def __init__(self, room_id, player_channels):
+    def __init__(self, room_id, player_channels, consumer):
         self.room_id = room_id
-        self.channel_layer = get_channel_layer()
+        self.channel_layer = consumer.get_channel_layer() #this seems weird
         self.player_channels = player_channels
         self.players = {
                 player_channels[0]: Player(player_channels[0], 'left', CANVAS_WIDTH, CANVAS_HEIGHT),
@@ -141,8 +140,9 @@ class GameRoom():
                 'score_right': self.players[1].score,
                 'winner': self.players[winner].player_id
                 }
+
         for player_channel in self.player_channels:
-            await async_to_sync(self.channel_layer.send)(
+            await self.channel_layer.send(
                     player_channel, {
                         'type': 'game_over',
                         'payload': game_report,
@@ -189,7 +189,7 @@ class GameRoom():
                     }
                 }
         for player_channel in self.player_channels:
-            await async_to_sync(self.channel_layer.send)(
+            await self.channel_layer.send(
                     player_channel,{
                         'type': 'game_update',
                         'payload': game_state,

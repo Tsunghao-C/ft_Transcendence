@@ -65,6 +65,7 @@ INSTALLED_APPS = [
 	"rest_framework",
 	"corsheaders",
     "channels",
+#    "sessionMiddleWareStack",
 ]
 
 MIDDLEWARE = [
@@ -98,8 +99,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 ASGI_APPLICATION = 'backend.asgi.application'
-
-ASGI_APPLICATION = 'game_server.asgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -193,14 +192,6 @@ CHANNEL_LAYERS = {
 
 LOGIN_REDIRECT_URL = '/chat/'
 
-CHANNEL_LAYERS = {
-        'default': {
-            'BACKEND': 'channels_redis.core.RedisChannelLayer',
-            'CONFIG': {
-                "hosts": [("127.0.0.1", 6379)],
-                }
-            }
-        }
 # Alex add for Email host setup
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'  # Hôte SMTP

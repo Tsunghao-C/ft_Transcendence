@@ -5,12 +5,17 @@ import uuid
 import asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.sessions import SessionMiddlewareStack
+from channels.layers import get_channel_layer
 from game_room import GameRoom
 
 load_dotenv()
 active_game_rooms = {}
 
 class GameConsumer(AsyncWebsocketConsumer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.channel_layer = get_channel_layer()
+
     async def connect(self):
         await self.accept()
         await self.send(json.dumps({"message": "Connection established"}))
