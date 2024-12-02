@@ -1,4 +1,5 @@
 import { setGameView } from './game_menu.js';
+import { setGameMenu } from './game_menu.js';
 import { closeGameWebSocket } from './game_menu.js';
 import { changeLanguage } from './settings.js';
 import { changeFontSize } from './settings.js';
@@ -19,6 +20,7 @@ export function loadPage(page) {
 	const currentLanguage = localStorage.getItem("language") || "en";
 	const isLoggedIn = localStorage.getItem("isLoggedIn") || "false" ;
 	const path = window.location.pathname;
+
 
 	if (page !== "game") {
 		closeGameWebSocket();
@@ -47,7 +49,7 @@ export function loadPage(page) {
 	} else if (page === "about") {
 		contentContainer.innerHTML = '<h1 data-i18n="about">About</h1><p>To fill.</p>';
 	} else if (page === "game") {
-		setGameView(contentContainer);
+		setGameMenu(contentContainer);
 	} else if (page === "leaderboard") {
 		setLeaderboardView(contentContainer);
 	} else if (page === "profile") {

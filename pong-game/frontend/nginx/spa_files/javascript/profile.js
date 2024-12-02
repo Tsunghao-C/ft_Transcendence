@@ -131,14 +131,29 @@ export function setProfileView(contentContainer, usernameInHash) {
 			sendDuelRequestButton.addEventListener("click", () => {
 				sendDuelRequest(player.username);
 			});
+			const addFriendButton = document.getElementById("addFriendBtn");
+			addFriendButton.addEventListener('click', () => {
+				addFriend(player.username);
+				addFriendButton.style.display = 'none';
+				removeFriendButton.style.display = 'inline-block';
+			});
+			const removeFriendButton = document.getElementById("removeFriendBtn");
+			removeFriendButton.addEventListener('click', () => {
+				const confirmation = confirm(`${translations[currentLanguage].validationRemovalFirst} ${player.username} ${translations[currentLanguage].validationRemovalSecond} ?`);
+				if (confirmation) {
+					removeFriend(player.username);
+					removeFriendButton.style.display = 'none';
+					addFriendButton.style.display = 'inline-block';
+				}
+			});
 			updateFriendshipButtons(player);
 		}
 	}
 
 	function updateFriendshipButtons(player) {
-		const currentLanguage = localStorage.getItem("language") || "en";
 		const currentLogin = localStorage.getItem("currentLogin");
 		const currentPlayer = playerDatas.players[currentLogin];
+		console.log("player is ", player);
 
 
 		const addFriendButton = document.getElementById("addFriendBtn");
@@ -146,24 +161,9 @@ export function setProfileView(contentContainer, usernameInHash) {
 		if (!currentPlayer.friends.includes(player.username)) {
 			addFriendButton.style.display = 'inline-block';
 			removeFriendButton.style.display = 'none';
-
-			addFriendButton.addEventListener('click', () => {
-				addFriend(player.username);
-				addFriendButton.style.display = 'none';
-				removeFriendButton.style.display = 'inline-block';
-			});
 		} else {
 			removeFriendButton.style.display = 'inline-block';
 			addFriendButton.style.display = 'none';
-			//disgusting, will need to change
-			removeFriendButton.addEventListener('click', () => {
-				const confirmation = confirm(`Are you sure you want to remove ${player.username} from your friends list?`);
-				if (confirmation) {
-					removeFriend(player.username);
-					removeFriendButton.style.display = 'none';
-					addFriendButton.style.display = 'inline-block';
-				}
-			});
 		}
 	}
 
@@ -182,11 +182,12 @@ export function setProfileView(contentContainer, usernameInHash) {
 	function addFriend(friendUsername) {
 		const currentLogin = localStorage.getItem("currentLogin");
 		const currentPlayer = playerDatas.players[currentLogin];
+		const friendPlayer = playerDatas.players[friendUsername];
 		//shouldn't happen;
 		if (currentPlayer && !currentPlayer.friends.includes(friendUsername)) {
 			currentPlayer.friends.push(friendUsername);
 			console.log(`${friendUsername} added to ${currentLogin}'s friends list.`);
-			updateFriendshipButtons(currentPlayer);
+			updateFriendshipButtons(friendPlayer);
 		} else {
 			console.log(`${friendUsername} is already a friend or not found.`);
 		}
@@ -195,12 +196,13 @@ export function setProfileView(contentContainer, usernameInHash) {
 	function removeFriend(friendUsername) {
 		const currentLogin = localStorage.getItem("currentLogin");
 		const currentPlayer = playerDatas.players[currentLogin];
+		const friendPlayer = playerDatas.players[friendUsername];
 
 			const index = currentPlayer.friends.indexOf(friendUsername);
 			if (index > -1) {
 				currentPlayer.friends.splice(index, 1);
 				console.log(`${friendUsername} removed from ${currentLogin}'s friends list.`);
-				updateFriendshipButtons(currentPlayer);
+				updateFriendshipButtons(friendPlayer);
 			}
 	}
 }
