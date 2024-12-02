@@ -12,7 +12,8 @@ class CustomUser(AbstractUser):
         "self", 
         blank=True, 
         related_name="friends_with",
-        verbose_name="friends"    
+        verbose_name="friends",
+        symmetrical=False
     )
     blockList = models.ManyToManyField(
         "self", 
