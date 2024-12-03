@@ -12,7 +12,7 @@ var data = {
 function createSocket() {
 	try {
 		//await getPlayerInfo(); hardcode player info for tests
-		const socketUrl = `ws://localhost:8000/ws/game/${roomId}/`;
+		const socketUrl = `ws://localhost:8000/ws/game/`;
 		data.socket = new WebSocket(socketUrl);
 		data.socket.onopen() = () => {
 			console.log('Websocket connection established');
@@ -111,7 +111,16 @@ async function startGame() {
 	}
 }
 
-(async() => {
+document.addEventListener("DOMContentLoaded", function() {
+	const createPrivateMatchBtn = document.getElementById('createPrivateMatchBtn');
+
+	createPrivateMatchBtn.addEventListener('click', function() {
+		console.log("Creating private match...");
+		create_private_match();
+	})
+})
+
+async function create_private_match() {
 	try {
 		createSocket();
 		requestRoom();
@@ -119,4 +128,4 @@ async function startGame() {
 	} catch {
 		console.error('Exception caught in privateMatch.js');
 	}
-})();
+}

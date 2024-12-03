@@ -1,5 +1,17 @@
 from django.shortcuts import render
 from django.http import JsonResponse
+from django.http import HttpResponse
+from django.conf import settings
+import os
+
+def serve_js(request, filename):
+    filepath = os.path.join(settings.BASE_DIR, 'game_service/templates', filename)
+    if os.path.exists(filepath):
+        with open(filepath, 'r') as file:
+            content = file.read()
+        return HttpResponse(content, content_type="application/javascript")
+    else:
+        return HttpResponse(status=404)
 
 def game_home(request):
     """

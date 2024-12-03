@@ -166,7 +166,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = '/app/static'
 STATICFILES_DIRS = [
-    BASE_DIR / "static",
+    BASE_DIR / 'game_service' / 'static',
 ]
 
 # Default primary key field type

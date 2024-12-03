@@ -46,12 +46,11 @@
     <h1>Game Lobby</h1>
     <p>Select an option below to get started:</p>
     <div>
-        <button onclick="create_private_match()">Create Private Match</button>
-        <button onclick="join_match()">Join Match</button>
+        <button id="createPrivateMatchBtn">Create Private Match</button>
+        <button id="joinMatchBn">Join Match</button>
     </div>
-
-		<script src="{% static './static/js/privateMatch.sj' %}"></script>
-		<script src="{% static './static/js/joinMatch.js' %}"></script>
+		<script src="privateMatch.js"></script>
+		<script src="joinMatch.js"></script>
 </body>
 </html>
 

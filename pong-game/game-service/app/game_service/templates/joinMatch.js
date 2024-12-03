@@ -10,7 +10,7 @@ var data = {
 function createSocket() {
 	try {
 		//await getPlayerInfo(); hardcode player info for tests
-		const socketUrl = `ws://localhost:8000/ws/game/${roomId}/`;
+		const socketUrl = `ws://localhost:8000/ws/game/`;
 		data.socket = new WebSocket(socketUrl);
 		data.socket.onopen() = () => {
 			console.log('Websocket connection established');
@@ -147,7 +147,16 @@ async function startGame() {
 	}
 }
 
-(async() => {
+document.addEventListener("DOMContentLoaded", function() {
+	const joinMatchBtn = document.getElementById('joinMatchBtn');
+
+	joinMatchBtn.addEventListener('click', function() {
+		console.log("Joining match...");
+		join_match();
+	}); 
+});
+
+function join_match() {
 	try {
 		createSocket();
 		joinRoom();
@@ -155,4 +164,4 @@ async function startGame() {
 	} catch {
 		console.error('Exception caught in joinMatch.js')
 	}
-})();
+}
