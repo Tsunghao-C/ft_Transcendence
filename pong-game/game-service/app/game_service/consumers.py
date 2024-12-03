@@ -20,7 +20,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         await self.accept()
         await self.send(json.dumps({"message": "Connection established"}))
 
-    async def disconnect(self, code):
+    async def disconnect(self, code): #beef it up with socket closing and such
         if hasattr(self, 'current_group'):
             await self.channel_layer.group_discard(self.current_group, self.channel_name)
 
