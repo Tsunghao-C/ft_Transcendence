@@ -5,8 +5,10 @@ import { changeLanguage } from './settings.js';
 import { changeFontSize } from './settings.js';
 import { changeColorMode } from './settings.js';
 import { setSettingsView } from './settings.js';
-import { setLoginView } from './login.js';
-import { setCreateProfileView } from './login.js';
+// import { setLoginView } from './login.js';
+// import { setRegisterView } from './login.js';
+import { setLoginView } from './login_login.js';
+import { setRegisterView } from './login_register.js';
 import { set404View } from './404.js';
 import { setLeaderboardView } from './leaderboard.js';
 import { setPersonnalDataView } from './personnal-data.js';
@@ -20,7 +22,6 @@ export function loadPage(page) {
 	const currentLanguage = localStorage.getItem("language") || "en";
 	const isLoggedIn = localStorage.getItem("isLoggedIn") || "false" ;
 	const path = window.location.pathname;
-
 
 	if (page !== "game") {
 		closeGameWebSocket();
@@ -38,7 +39,7 @@ export function loadPage(page) {
 	console.log("page is ", page);
 	if (path !== '/') {
 		set404View(contentContainer);
-	} else if (isLoggedIn != "true" && page !== "login" && page !== "create-profile") {
+	} else if (isLoggedIn != "true" && page !== "login" && page !== "register") {
 		window.location.hash = "login";
 		loadPage("login")
 	} else if (isLoggedIn === "true" && (page === "login" || page === "register")) {
@@ -68,8 +69,8 @@ export function loadPage(page) {
 		setFriendsView(contentContainer);
 	} else if (page === "login") {
 		setLoginView(contentContainer);
-	} else if (page === "create-profile") {
-		setCreateProfileView(contentContainer);
+	} else if (page === "register") {
+		setRegisterView(contentContainer);
 	} else if (page === "personnal-data") {
 		setPersonnalDataView(contentContainer);
 	} else {
