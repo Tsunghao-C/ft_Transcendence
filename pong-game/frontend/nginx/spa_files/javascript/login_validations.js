@@ -55,3 +55,17 @@ export function validatePasswordMatch() {
 		}
 	});
 }
+
+export function showError(message) {
+	const errorMessage = document.getElementById('errorMessage');
+	errorMessage.textContent = message;
+	const successMessage = document.getElementById('successMessage');
+	successMessage.textContent = "";
+}
+
+export function showSuccess(message) {
+	const successMessage = document.getElementById('successMessage');
+	successMessage.textContent = message;
+	const errorMessage = document.getElementById('errorMessage');
+	errorMessage.textContent = "";
+}

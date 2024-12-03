@@ -1,24 +1,13 @@
 import { loadPage } from "./app.js";
 import { setLoginViewHtml } from './login_html.js';
 import { setCustomValidation } from "./login_validations.js";
-
+import { showError } from "./login_validations.js";
+import { showSuccess } from "./login_validations.js";
 //validations before sending to backend
 
 
 
 ///////////////////// UI Helpers /////////////////////
-
-function showError(message) {
-	console.error('Error:', error); // /!\ can be deleted in production
-    const errorMessage = document.getElementById('errorMessage');
-    errorMessage.textContent = message;
-}
-
-function showSuccess(message) {
-	console.log(message) // /!\ can be deleted in production
-    const successMessage = document.getElementById('successMessage');
-    successMessage.textContent = message;
-}
 
 function show2FAInput() {
 	document.getElementById('usernameInput').setAttribute('readonly', true);
@@ -60,8 +49,11 @@ function setupLoginFormEventHandler() {
 		try {
 			const response = await loginUserInBackend(username, password);
 			const data = await response.json();
-			if (response.ok && data.detail === "A 2FA code has been sent") {
-				localStorage.setItem("user_id", data.user_id);
+			if (data.detail === "Invalid credentials") {
+				showError("Login failed: Invalid Login or Password");
+			}
+			else if (data.detail === "A 2FA code has been sent") {
+				localStorage.setItem("user_id", data.user_id); // not so sure about that
 				showSuccess('Enter the 2FA code sent to your email.');
 				show2FAInput();
 			} else {

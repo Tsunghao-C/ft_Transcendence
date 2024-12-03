@@ -80,6 +80,7 @@ export function setRegisterViewHtml(contentContainer) {
 					<p id="successMessage"></p>
 				</div>
 				<button type="submit" class="btn btn-primary" data-i18n="registerButton">Register</button>
+				<a href="#login" class="btn btn-primary" >Back to log in</button a>
 			</form>
 	`;
 }
