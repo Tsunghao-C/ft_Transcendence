@@ -73,9 +73,9 @@ function sendEvents(socket, playerData) {
 
 function drawElements(ball, Player1, Player2, ctx) {
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	//		ctx.font = '48px serif';
-	//		ctx.textBaseline = 'hanging';
-	//		ctx.fillStyle = 'white';
+	ctx.font = '48px serif';
+	ctx.textBaseline = 'hanging';
+	ctx.fillStyle = 'white';
 	ctx.fillText(Player1.score + " : " + Player2.score, canvas.width * 0.45, canvas.height * 0.10);
 	ctx.fillStyle = Player1.color;
 	ctx.fillRect(Player1.Paddle.x, Player1.Paddle.y, PADDLE_WIDTH, PADDLE_HEIGHT);
@@ -88,8 +88,14 @@ function drawElements(ball, Player1, Player2, ctx) {
 	ctx.closePath();
 }
 
-function drawGameOverScreen(gameState){
-	return; //xd
+function drawGameOverScreen(gameState) {
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	ctx.font = '48px serif';
+	ctx.textBaseline = 'hanging';
+	ctx.fillStyle = 'white';
+	ctx.fillText("Game Over", canvas.width * 0.5, canvas.height * 0.30);
+	ctx.fillText(gameState.score_left, canvas.width * 0.25, canvas.height * 0.50);
+	ctx.fillText(gameState.score_right, canvas.width * 0.75, canvas.height * 0.50);
 }
 
 async function getGameState(socket)

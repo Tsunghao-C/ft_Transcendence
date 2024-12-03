@@ -18,7 +18,10 @@ class GameConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
         await self.accept()
-        await self.send(json.dumps({"message": "Connection established"}))
+        await self.send(json.dumps({
+            "type": "notice",
+            "message": "Connection established"
+            }))
 
     async def disconnect(self, code): #beef it up with socket closing and such
         if hasattr(self, 'current_group'):
@@ -45,7 +48,8 @@ class GameConsumer(AsyncWebsocketConsumer):
                 await game_room.receive_player_input(data['player_id'], data['input'])
             else:
                 await self.send(json.dumps({
-                       "error": f"Game room {data['game_roomID']} not found"
+                       "type": "error",
+                       "message": f"Game room {data['game_roomID']} not found"
                        }))
 
     async def create_private_lobby(self, room_name, player_id):
@@ -55,6 +59,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         self.current_group = f"lobby_{room_name}"
         await self.channel_layer.group_add(self.current_group, self.channel_name)
         await self.send(json.dumps({
+            "type": "room_creation",
             "message": f"Created Lobby {room_name}",
             "room_name": room_name
             }))
@@ -62,7 +67,10 @@ class GameConsumer(AsyncWebsocketConsumer):
     async def join_lobby(self, room_name, player_id):
         self.current_group = f"lobby_{room_name}"
         if not hasattr(self, 'room_data') or room_name not in self.room_data:
-            await self.send(json.dumps({"error": f"lobby {room_name} does not exist"}))
+            await self.send(json.dumps({
+                "type": "error",
+                "message": f"lobby {room_name} does not exist"
+                }))
             return
         if player_id in self.room_data[room_name]:
             return
@@ -71,11 +79,17 @@ class GameConsumer(AsyncWebsocketConsumer):
             return
         self.room_data[room_name]["players"].append(self.channel_name)
         await self.channel_layer.group_add(self.current_group, self.channel_name)
-        await self.send(json.dumps({"message": f"Joined lobby {room_name}"}))
+        await self.send(json.dumps({
+            "type": "notice",
+            "message": f"Joined lobby {room_name}"
+            }))
 
     async def update_ready_status(self, room_name, player_id):
         if not hasattr(self, 'room_data'):
-            await self.send(json.dumps({"error": f"lobby {room_name} not found"}))
+            await self.send(json.dumps({
+                "type": "error",
+                "error": f"lobby {room_name} not found"
+                }))
             return
         if "ready" not in self.room_data[room_name]:
             self.room_data[room_name]["ready"] = []
@@ -91,6 +105,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                 game_task.add_done_callback(self.handle_game_task_completion) #this is fucking wack, shouldn't the task be passed as parameter?
             except Exception as e:
                 await self.send(json.dumps({
+                    "type": "error",
                     "error": f"Failed to start game: {str(e)}"
                     }))
 
@@ -115,8 +130,9 @@ class GameConsumer(AsyncWebsocketConsumer):
 
     async def player_ready(self, event):
         await self.send(json.dumps({
-            "event": "player_ready",
-            "player_id": event["player_id"]
+            "type": "notice",
+            "player_id": event["player_id"],
+            "message": "All players in room ready"
         }))
 
     def cleanup_timed_out_rooms(self): #Potentially could be handled in handle_game_task_completion
