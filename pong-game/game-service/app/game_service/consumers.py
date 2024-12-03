@@ -98,6 +98,10 @@ class GameConsumer(AsyncWebsocketConsumer):
                 self.room_data[room_name]["ready"].append(player_id)
         if self.all_ready(room_name):
             try:
+                await self.send(json.dumps({
+                    "type": "notice",
+                    "message": "Game is starting"
+                    }))
                 player_channels = self.room_data[room_name].get("players", [])
                 game_room = GameRoom(room_name, player_channels, self)
                 active_game_rooms[room_name] = game_room
@@ -127,13 +131,6 @@ class GameConsumer(AsyncWebsocketConsumer):
         players = self.room_data[room_name].get("players", [])
         ready_players = self.room_data[room_name].get("ready", [])
         return set(players) == set(ready_players)
-
-    async def player_ready(self, event):
-        await self.send(json.dumps({
-            "type": "notice",
-            "player_id": event["player_id"],
-            "message": "All players in room ready"
-        }))
 
     def cleanup_timed_out_rooms(self): #Potentially could be handled in handle_game_task_completion
         rooms_to_remove = [

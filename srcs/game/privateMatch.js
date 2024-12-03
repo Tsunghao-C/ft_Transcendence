@@ -62,17 +62,21 @@ data.socket.onmessage = function (event) {
 		}
 		else if (response.type == 'room_creation') {
 			console.log('Room creation notice received')
-			data.roomUID = response.room_name
+			data.roomUID = response.room_name;
 		}
+		else if (response.type == 'game_start') {
+			console.log(response.message);
+			startGame();
+	}
 		else if (response.error)
-			console.error(response.error)
+			console.error(response.error);
 	}
 	catch (error) {
 		console.error('Error processing server response:', error);
 	}
 }
 
-async function setupLobby(socket) {
+async function waitForReady(socket) {
 	const readyButton = document.getElementById('ready-button');
 	readyButton.addEventListener('click', async () => {
 		try {
@@ -96,7 +100,6 @@ async function setupLobby(socket) {
 async function startGame() {
 	try {
 		if (canvas.getContext) {
-			setupLobby();
 			const ctx = canvas.getContext('2d');
 			gameLoop(ctx, data.socket, data);
 		}
@@ -111,8 +114,7 @@ async function startGame() {
 	try {
 		createSocket();
 		requestRoom();
-		await setupGame();
-		startGame();
+		await waitForReady();
 	} catch {
 		console.error('Exception caught in privateMatch.js');
 	}

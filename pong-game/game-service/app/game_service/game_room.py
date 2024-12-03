@@ -198,6 +198,13 @@ class GameRoom():
                     )
 
     async def run(self):
+        for player_channel in self.player_channels:
+                await self.channel_layer.send(
+                        player_channel,{
+                            'type': 'game_start',
+                            'message': 'Game has started'
+                            }
+                        )
         while self.running:
             self.update_players()
             self.handle_player_collisions()
