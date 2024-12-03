@@ -53,26 +53,16 @@ export function setSettingsView(contentContainer) {
 }
 
 export function changeLanguage(language) {
-	console.log("Language changed to:", language);
 	localStorage.setItem("language", language);
 	const elements = document.querySelectorAll("[data-i18n]");
 	elements.forEach((el) => {
 	  const key = el.getAttribute("data-i18n");
-	//   console.log("traduction de ", translations[language][key]);
 	  if (translations[language] && translations[language][key]) {
-		if (el.tagName.toLowerCase() === 'p' && key === 'noAccount') {
-		  el.innerHTML = translations[language][key] +
-			' <a href="#register" id="registerLink" data-i18n="registerLink">' +
-			translations[language]['registerLink'] + '</a>';
-		// } else if (el.tagName.toLowerCase() === 'a') {
-		//   el.textContent = translations[language][key];
-		} else {
 		  el.textContent = translations[language][key];
 		}
-	  }
 	});
 	attachNavigationListeners();
-   }
+	}
 
 export function changeColorMode(colortype) {
 	switch (colortype) {
