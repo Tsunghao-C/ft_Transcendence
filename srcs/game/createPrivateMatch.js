@@ -6,7 +6,7 @@ var data = {
 	playerId: -1,
 	socket: -1,
 	roomUID: -1
-};
+}
 //const token = document.cookie('token'); //need to tokenize it manually ???
 
 function createSocket() {
