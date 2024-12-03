@@ -173,10 +173,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # will need to change this when we get a url
 #CORS_ALLOWED_ORIGINS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
-CORS_ALLOWED_ORIGINS = [
-	"*"
-]
-CORS_ALLOWS_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = True
 
 # can replace inmemorychannellayer with redis later
 CHANNEL_LAYERS = {
