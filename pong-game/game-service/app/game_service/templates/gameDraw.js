@@ -1,5 +1,3 @@
-//const canvas = document.getElementById('game');
-
 const PADDLE_HEIGHT = 100;
 const PADDLE_WIDTH = 15;
 

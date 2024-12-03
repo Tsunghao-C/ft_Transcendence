@@ -84,7 +84,10 @@ ROOT_URLCONF = 'backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            # only absolute paths here
+            BASE_DIR / 'game_service' / 'templates', 
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

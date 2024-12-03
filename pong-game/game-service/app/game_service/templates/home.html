@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Lobby</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #282c34;
+            color: white;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #61dafb;
+            color: #282c34;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #21a1f1;
+        }
+
+        button:active {
+            background-color: #0e86d4;
+        }
+    </style>
+</head>
+<body>
+    <h1>Game Lobby</h1>
+    <p>Select an option below to get started:</p>
+    <div>
+        <button onclick="create_private_match()">Create Private Match</button>
+        <button onclick="join_match()">Join Match</button>
+    </div>
+
+		<script src="{% static './static/js/privateMatch.sj' %}"></script>
+		<script src="{% static './static/js/joinMatch.js' %}"></script>
+</body>
+</html>
+
