@@ -30,7 +30,7 @@ function show2FAInput() {
 ///////////////////// API Calls /////////////////////
 
 async function loginUserInBackend(username, password) {
-	const response = await fetch('http://localhost:8000/api/user/login/', {
+	const response = await fetch('https://localhost:8443/api/user/login/', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ username, password })
@@ -39,7 +39,7 @@ async function loginUserInBackend(username, password) {
 }
 
 async function verify2FAInBackend(user_id, otpCode) {
-    const response = await fetch('http://localhost:8000/api/user/token/validate/', {
+    const response = await fetch('https://localhost:8443/api/user/token/validate/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id, otpCode })

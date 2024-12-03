@@ -17,7 +17,7 @@ function showSuccess(message) {
 ///////////////////// API Calls /////////////////////
 
 async function registerUserInBackend(username, password, email, alias) {
-    const response = await fetch('http://localhost:8443/api/user/register/', {
+    const response = await fetch('https://localhost:8443/api/user/register/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password, email, alias })
