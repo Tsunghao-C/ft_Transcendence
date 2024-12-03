@@ -30,10 +30,10 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 DEBUG = bool(os.environ.get("DEBUG", default=0))
 # DEBUG = 1
 
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
-# ALLOWED_HOSTS = [
-	# "*"
-# ]
+#ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
+ALLOWED_HOSTS = [
+	 "*"
+]
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -173,12 +173,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # will need to change this when we get a url
 #CORS_ALLOWED_ORIGINS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
-#CORS_ALLOWED_ORIGINS = [
-#	"http://localhost:8000",
-#	"http://127.0.0.1:8000",
-#	"http://0.0.0.0:8000"
-#]
-#CORS_ALLOWS_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+	"*"
+]
+CORS_ALLOWS_CREDENTIALS = True
 
 # can replace inmemorychannellayer with redis later
 CHANNEL_LAYERS = {
@@ -190,7 +188,7 @@ CHANNEL_LAYERS = {
     },
 }
 
-LOGIN_REDIRECT_URL = '/chat/'
+#LOGIN_REDIRECT_URL = '/chat/'
 
 # Alex add for Email host setup
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
