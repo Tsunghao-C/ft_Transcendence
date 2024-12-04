@@ -6,12 +6,12 @@ import { showSuccess } from './login_validations.js';
 ///////////////////// API Calls /////////////////////
 
 async function registerUserInBackend(username, password, email, alias) {
-	const response = await fetch('https://localhost:8443/api/user/register/', {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ username, password, email, alias })
-	});
-	return response;
+    const response = await fetch('/api/user/register/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, email, alias })
+    });
+    return response;
 }
 
 ///////////////////// Event Handlers /////////////////////

@@ -19,7 +19,7 @@ function show2FAInput() {
 ///////////////////// API Calls /////////////////////
 
 async function loginUserInBackend(username, password) {
-	const response = await fetch('https://localhost:8443/api/user/login/', {
+	const response = await fetch('/api/user/login/', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ username, password })
@@ -28,7 +28,7 @@ async function loginUserInBackend(username, password) {
 }
 
 async function verify2FAInBackend(user_id, otpCode) {
-    const response = await fetch('https://localhost:8443/api/user/token/validate/', {
+    const response = await fetch('/api/user/token/validate/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id, otpCode })
@@ -79,7 +79,9 @@ function setup2FAFormEventHandler() {
 				if (response.ok && data.detail === "2FA code validated") {
 					showSuccess("2FA verified successfully!");
                     localStorage.setItem("isLoggedIn", "true");
+					showSuccess("Logged in!");
                     loadPage("home");
+					showSuccess("logged to home!");
 				} else {
                     showError('2FA verification failed.');
 				}
