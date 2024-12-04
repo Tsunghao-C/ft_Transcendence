@@ -94,8 +94,8 @@
 		function createSocket() {
 			try {
 				//await getPlayerInfo(); hardcode player info for tests
-				const roomName = "example-room";
-				const socketUrl = `wss://localhost:8443/ws/game/${roomName}/`;
+				const roomName = "42";
+				const socketUrl = `wss://localhost:6379/ws/game/${roomName}/`;
 				console.log(socketUrl);
 				data.socket = new WebSocket(socketUrl);
 				data.socket.onopen() = () => {
@@ -110,7 +110,6 @@
 				throw error;
 				}
 			};
-
 
 		document.addEventListener('keydown', function(event) {
 			if (event.code == 'ArrowUp') {
