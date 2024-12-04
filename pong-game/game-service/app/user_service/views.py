@@ -97,14 +97,14 @@ def sendOTP(email:str, username:str, userID, cacheName:str):
 		timeout=300
 	)
 	message = f"Hello {username},\n\nYour verification code is : {otp_code}\nThis code is valid for 5 minutes."
-	# send_mail(
-	# 	"Your 2FA verification code",
-	# 	message,
-	# 	"no-reply@example.com",
-	# 	[email],
-	# 	fail_silently=False,
-	# )
-	# delete the below later
+	send_mail(
+		"Your 2FA verification code",
+		message,
+		"no-reply@example.com",
+		[email],
+		fail_silently=False,
+	)
+	# /!\ delete the below later
 	print("**********************************")
 	print("user.id is : " + str(userID))
 	print("otp_code is : " + str(otp_code))
@@ -115,6 +115,7 @@ def isOtpValid(userID, enteredOTP, cacheName):
 	if not cachedData:
 		return False
 	storedOtp = cachedData.get("otp")
+	print("stored Otp is : " + str(storedOtp))
 	if storedOtp and str(storedOtp) == str(enteredOTP):
 		return True
 	return False
