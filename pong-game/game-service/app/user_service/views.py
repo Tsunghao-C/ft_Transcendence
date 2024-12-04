@@ -94,13 +94,13 @@ def sendOTP(email:str, username:str, userID, cacheName:str):
 		timeout=300
 	)
 	message = f"Hello {username},\n\nYour verification code is : {otp_code}\nThis code is valid for 5 minutes."
-	send_mail(
-		"Your 2FA verification code",
-		message,
-		"no-reply@example.com",
-		[email],
-		fail_silently=False,
-	)
+	# send_mail(
+	# 	"Your 2FA verification code",
+	# 	message,
+	# 	"no-reply@example.com",
+	# 	[email],
+	# 	fail_silently=False,
+	# )
 	# delete the below later
 	print("**********************************")
 	print("user.id is : " + str(userID))
@@ -125,6 +125,7 @@ class Generate2FAView(APIView):
 		user = authenticate(username=username, password=password)
 		if user:
 			# /!\ delete this print when in produtction
+			# print("The 2FA code is : " + )
 			sendOTP(user.email, user.username, user.id, f"otp_{user.id}")
 			return Response({"detail": "A 2FA code has been sent", "user_id": str(user.id)}, status=status.HTTP_200_OK)
 		return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -135,7 +136,9 @@ class Validate2FAView(APIView):
 	permission_classes = [AllowAny]  # Anyone can access this view
 	def post(self, request):
 		userId = request.data.get("user_id")
-		otpCode = request.data.get("otp")
+		otpCode = request.data.get("otpCode")
+		print("userId is : " + str(userId))
+		print("otp is : " + str(otpCode))
 		if isOtpValid(userId, otpCode, f"otp_{userId}"):
 			# Code is valid > generate JWT
 			refresh = RefreshToken.for_user(request.user)

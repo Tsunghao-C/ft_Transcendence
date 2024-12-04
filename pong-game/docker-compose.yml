@@ -100,9 +100,6 @@ services:
       - static_volume:/app/static:ro
       - ./frontend/nginx/logs:/var/log/nginx:rw
       - ./frontend/nginx/modsec:/var/log/modsec:rw
-    # depends_on:
-    #   - spa
-    # If we don't use WFA
     ports:
       - "8443:443"
       - "8080:80"

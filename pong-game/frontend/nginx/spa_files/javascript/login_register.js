@@ -1,4 +1,4 @@
-import { setRegisterViewHtml } from './profile_html.js';
+import { setRegisterViewHtml } from './login_html.js';
 
 ///////////////////// UI Helpers /////////////////////
 
@@ -17,7 +17,7 @@ function showSuccess(message) {
 ///////////////////// API Calls /////////////////////
 
 async function registerUserInBackend(username, password, email, alias) {
-    const response = await fetch('http://localhost:8000/api/user/register/', {
+    const response = await fetch('/api/user/register/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password, email, alias })
