@@ -28,12 +28,12 @@ async function loginUserInBackend(username, password) {
 }
 
 async function verify2FAInBackend(user_id, otpCode) {
-    const response = await fetch('/api/user/token/validate/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id, otpCode })
-    });
-    return response;
+	const response = await fetch('/api/user/token/validate/', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ user_id, otpCode })
+	});
+	return response;
 }
 
 ///////////////////// Event Handlers /////////////////////
@@ -76,14 +76,16 @@ function setup2FAFormEventHandler() {
 			try {
 				const response = await verify2FAInBackend(user_id, otpCode);
 				const data = await response.json();
-				if (response.ok && data.detail === "2FA code validated") {
+				if (data.detail === "2FA code validated") {
 					showSuccess("2FA verified successfully!");
-                    localStorage.setItem("isLoggedIn", "true");
+					localStorage.setItem("isLoggedIn", "true");
+					localStorage.setItem("accessToken", data.access);
+					// here we should store that JWT token in a cookie it is safer i think
 					showSuccess("Logged in!");
-                    loadPage("home");
+					loadPage("home");
 					showSuccess("logged to home!");
 				} else {
-                    showError('2FA verification failed.');
+					showError('2FA verification failed.');
 				}
 			} catch (error) {
 				showError('An error occurred during 2FA verification.');

@@ -15,6 +15,7 @@ import { setPersonnalDataView } from './personnal-data.js';
 import { setProfileView } from './profile.js';
 import { setFriendsView } from './friends.js';
 import { playerDatas } from './data_test.js';
+import { setHomePage } from './home.js';
 
 export function loadPage(page) {
 	//add a checker to check there is no more than one /
@@ -33,16 +34,16 @@ export function loadPage(page) {
 		const currentLogin = localStorage.getItem("currentLogin");
 		const userAvatar = document.getElementById("userAvatar");
         const userDropdown = document.getElementById("userDropdown");
-        
+
         // Update user dropdown text if element exists
         if (userDropdown && currentLogin) {
             userDropdown.textContent = currentLogin;
         }
 
         if (userAvatar) {
-            if (playerDatas && 
-                playerDatas.players && 
-                playerDatas.players[currentLogin] && 
+            if (playerDatas &&
+                playerDatas.players &&
+                playerDatas.players[currentLogin] &&
                 playerDatas.players[currentLogin].profilePicture) {
                 // Use profile picture if available
                 userAvatar.src = playerDatas.players[currentLogin].profilePicture;
@@ -70,7 +71,7 @@ export function loadPage(page) {
 		// Handle different page views
         switch (page) {
             case "home":
-                contentContainer.innerHTML = '<h1 data-i18n="home">Home</h1><p>Welcome!</p>';
+                setHomePage(contentContainer);
                 break;
             case "about":
                 contentContainer.innerHTML = '<h1 data-i18n="about">About</h1><p>To fill.</p>';
@@ -82,7 +83,7 @@ export function loadPage(page) {
                 setLeaderboardView(contentContainer);
                 break;
             case "profile":
-                const username = localStorage.getItem("currentLogin");
+                const username = localStorage.getItem("currentLogin"); // will not be necessary
                 setProfileView(contentContainer, username);
                 break;
             case "settings":

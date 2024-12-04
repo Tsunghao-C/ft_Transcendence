@@ -1,6 +1,9 @@
 import { setRegisterViewHtml } from './login_html.js';
 import { showError } from './login_validations.js';
 import { showSuccess } from './login_validations.js';
+import { setCustomValidation } from './login_validations.js';
+import { validatePasswordMatch } from './login_validations.js';
+import { validateProfilePicture } from './login_validations.js';
 ///////////////////// UI Helpers /////////////////////
 
 ///////////////////// API Calls /////////////////////
@@ -17,13 +20,13 @@ async function registerUserInBackend(username, password, email, alias) {
 ///////////////////// Event Handlers /////////////////////
 
 function setupRegisterFormEventHandler() {
-	setCustomValidation("newLoginInput");
-	setCustomValidation("newUsernameInput");
+	setCustomValidation("newUsername");
+	setCustomValidation("newAlias");
 	setCustomValidation("newMailInput");
 	setCustomValidation("newPasswordInput");
 
 	validatePasswordMatch();
-	validateProfilePicture();
+	// validateProfilePicture();
 	const registerForm = document.getElementById("registerForm");
 	registerForm.addEventListener("submit", async (event) => {
 		event.preventDefault();
