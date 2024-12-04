@@ -81,7 +81,7 @@ export function setLoginView(contentContainer) {
 				</div>
 			</form>
 			<p>${translations[currentLanguage].noAccount}
-				<a href="#create-profile" id="createAccountLink">${translations[currentLanguage].registerLink}</a>
+				<a href="#register" id="createAccountLink">${translations[currentLanguage].registerLink}</a>
 			</p>
 		</div>
 	`;
@@ -106,7 +106,7 @@ export function setLoginView(contentContainer) {
 
 
 
-export function setCreateProfileView(contentContainer) {
+export function setRegisterView(contentContainer) {
 	contentContainer.innerHTML = `
 		<div class="create-profile-view">
 			<h1 data-i18n="createAccountTitle">Create Account</h1>
