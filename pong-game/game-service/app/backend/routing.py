@@ -7,7 +7,7 @@ chat_urlpatterns = [
         ]
 
 game_urlpatterns = [
-        re_path(r'ws/game/(?P<room_name>\w+)/$', GameConsumer.as_asgi()),
+        re_path(r"ws/game/(?P<room_name>\w+)/$", GameConsumer.as_asgi()),
         ]
 
 websocket_urlpatterns = chat_urlpatterns + game_urlpatterns

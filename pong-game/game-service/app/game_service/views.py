@@ -17,6 +17,7 @@ def game_home(request):
     """
     Render a landing page for the game (optional).
     """
+    print("Game_home called")
     return render(request, "home.html")
 
 

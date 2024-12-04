@@ -17,6 +17,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         self.channel_layer = get_channel_layer()
 
     async def connect(self):
+        print("Receiving new connection")
         await self.accept()
         await self.send(json.dumps({
             "type": "notice",
