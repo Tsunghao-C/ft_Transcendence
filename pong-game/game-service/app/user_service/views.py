@@ -22,11 +22,15 @@ class CreateUserView(generics.CreateAPIView):
 	permission_classes = [AllowAny]
 
 class CurrentUserView(APIView):
+	permission_classes = [IsAuthenticated]
+
 	def get(self, request):
 		serializer = UserSerializer(request.user)
 		return Response(serializer.data)
 	
 class updateUsernameView(APIView):
+	permission_classes = [IsAuthenticated]
+
 	def post(self, request):
 		user = request.user
 		serializer = UserSerializer(instance=user, data=request.data, partial=True)
@@ -202,6 +206,21 @@ class acceptFriendRequestView(APIView):
 		from_user.friendList.add(to_user)
 		frequest.delete()
 		return Response({"detail": "friend request accepted"}, status=200)
+
+class deleteFriendView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def post(self, request):
+		user = request.user
+		fr_id = request.data.get("fr_id");
+		if not fr_id:
+			return Response({"detail": "fr_id required"}, status=400)
+		fr_user = get_object_or_404(CustomUser, id=fr_id)
+		if fr_user not in user.friendList.all():
+			return Response({"detail": "this user is not in your friend list"}, status=400)
+		user.friendList.remove(fr_user)
+		fr_user.friendList.remove(user)
+		return Response({"detail": "successfully deleted friend."}, status=200)
 	
 class rejectFriendRequestView(APIView):
 	permission_classes = [IsAuthenticated]

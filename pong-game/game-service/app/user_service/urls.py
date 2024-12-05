@@ -23,7 +23,7 @@ urlpatterns = [
 	path("change-password/", 
 	  PasswordChangeView.as_view(
 		  template_name="user_service/change_password.html",
-		  success_url="/api/user/change-password-done/"
+		  success_url="/api/user/change-password-done/" 
 	  ), 
 	  name="update_password"),
 	path("change-password-done/", PasswordChangeDoneView.as_view(), name="update_password_success"),
@@ -31,6 +31,7 @@ urlpatterns = [
     path("send-friend-request/", sendFriendRequestView.as_view(), name="add_friend"),
     path("accept-friend-request/", acceptFriendRequestView.as_view(), name="accept_friend"),
     path("reject-friend-request/", rejectFriendRequestView.as_view(), name="reject_friend"),
+	path("delete-friend/", deleteFriendView.as_view(), name="delete_friend"),
     path("block-user/", blockUserView.as_view(), name="block_user"),
     path("unblock-user/", unblockUserView.as_view(), name="unblock_user"),
     path("get-friend-requests/", getOpenFriendRequestsView.as_view(), name="get_friend_requests"),
