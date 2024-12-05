@@ -17,12 +17,12 @@ class UserSerializer(serializers.ModelSerializer):
 			"mmr",
 			"is_banned",
 			"avatar",
-			"status",
 			]
 		extra_kwargs = {
 			"password": {"write_only": True}, # we accept the password as an input but we don't return it
 			"mmr": {"read_only": True}, # used for matchmaking / leaderboards
-			"is_banned": {"read_only": True} # used later when banning people
+			"is_banned": {"read_only": True}, # used later when banning people
+			"avatar": {"required": False}
 		}
 
 	def validate_username(self, value):

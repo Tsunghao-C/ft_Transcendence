@@ -1,6 +1,6 @@
 from django.urls import path, include
 from django.conf import settings
-from django.conf import 
+from django.conf.urls.static import static
 from .views import *
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView, PasswordChangeDoneView
@@ -30,4 +30,5 @@ urlpatterns = [
 	  name="update_password"),
 	path("change-password-done/", PasswordChangeDoneView.as_view(), name="update_password_success"),
 	path("change-email/", changeEmailView.as_view(), name="email_change"),
+	path("upload-avatar/", upload_avatar, name="upload_avatar"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -9,6 +9,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from rest_framework import status
 from rest_framework.permissions import AllowAny
+from django.contrib.auth.decorators import login_required
+from .forms import AvatarUploadForm
 import re
 
 # 2FA
@@ -174,3 +176,15 @@ class changeEmailView(APIView):
 			cache.delete(cacheName)
 			return Response({"detail": "email change success"}, status=200)
 		return Response({"error": "invalid or expired otp"}, status=400)
+
+@login_required
+def upload_avatar(request):
+	user = request.user
+	if request.method == "POST":
+		form = AvatarUploadForm(request.POST, request.FILES, instance=user)
+		if form.is_valid():
+			form.save()
+			return redirect('profile')
+	else:
+		form = AvatarUploadForm(instance=user)
+	return render(request, 'upload_avatar.html', {'form': form, 'user': user})
