@@ -150,7 +150,6 @@ class Validate2FAView(APIView):
 			}, status=status.HTTP_200_OK)
 		return Response({"detail": "Invalid or expired OTP"}, status=status.HTTP_400_BAD_REQUEST)
 
-
 class changeEmailView(APIView):
 	permission_classes = [IsAuthenticated]
 

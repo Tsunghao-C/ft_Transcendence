@@ -9,9 +9,15 @@ class UserSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = CustomUser
 		fields = [
-			"id", "username", "email",
-			"password", "alias", "mmr",
-			"is_banned", 
+			"id", 
+			"username", 
+			"email",
+			"password", 
+			"alias", 
+			"mmr",
+			"is_banned",
+			"avatar",
+			"status",
 			]
 		extra_kwargs = {
 			"password": {"write_only": True}, # we accept the password as an input but we don't return it
