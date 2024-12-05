@@ -1,0 +1,23 @@
+<h1>pQnGx</h1>
+<h2 data-i18n="loginTitle">Login</h2>
+<form id="loginForm">
+		<label for="usernameInput" class="form-label" data-i18n="username">Username</label>
+		<input type="text" class="form-control" id="usernameInput" placeholder="Enter your username" required>
+		<label for="passwordInput" class="form-label" data-i18n="password">Password</label>
+		<input type="password" class="form-control" id="passwordInput" placeholder="Enter your password" required>
+	<div>
+		<p id="errorMessage"></p>
+		<p id="successMessage"></p>
+	</div>
+	<button type="submit" class="btn btn-light" data-i18n="loginButton">Log In</button>
+</form>
+<form id="2faForm">
+	<div id="2faDiv" style="display: none;">
+		<label for="2faInput" class="form-label" data-i18n="2fa">2FA Code</label>
+		<input type="text" class="form-control" id="2faInput" placeholder="Enter 2FA Code">
+		<button type="submit" class="btn btn-primary" class="login-button">Verify 2FA</button>
+	</div>
+</form>
+<p>${translations[currentLanguage].noAccount}
+	<a href="#register" id="registerLink">${translations[currentLanguage].registerLink}</a>
+</p>
