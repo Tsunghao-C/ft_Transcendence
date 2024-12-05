@@ -84,10 +84,12 @@ function setup2FAFormEventHandler() {
 				const response = await verify2FAInBackend(user_id, otpCode);
 				const data = await response.json();
 				if (response.ok && data.detail === "2FA code validated") {
-					showSuccess("2FA verified successfully!");
-                    localStorage.setItem("isLoggedIn", "true");
-					showSuccess("Logged in!");
-                    loadPage("home");
+					const newPage = "home";
+					loadPage(newPage);
+					window.history.pushState({ page: newPage }, newPage, "#" + newPage);
+					localStorage.setItem("isLoggedIn", "true");
+					loadPage("home");
+					// showSuccess("2FA verified successfully!");
 					console.log("logged to home!");
 				} else {
                     showError('2FA verification failed.');
