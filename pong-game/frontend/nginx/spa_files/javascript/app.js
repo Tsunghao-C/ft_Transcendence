@@ -16,9 +16,25 @@ import { setProfileView } from './profile.js';
 import { setFriendsView } from './friends.js';
 import { playerDatas } from './data_test.js';
 
-export function loadPage(page) {
+export async function setContainerHtml(container, url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Failed to load navbar.html: ${response.statusText}`);
+        }
+        const containerHtml = await response.text();
+		// console.log("navbarHtml  is : " + navbarHtml);
+        container.innerHTML = containerHtml;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+export async function loadPage(page) {
 	//add a checker to check there is no more than one /
-	const contentContainer = document.getElementById("content");
+	const contentContainer = document.getElementById("center-box");
+	const navbar = document.getElementById("mainNavBar");
+	const innerContent = document.getElementById("innerContent");
 	const currentLanguage = localStorage.getItem("language") || "en";
 	const isLoggedIn = localStorage.getItem("isLoggedIn") || "false" ;
 	const path = window.location.pathname;
@@ -26,8 +42,8 @@ export function loadPage(page) {
 	if (page !== "game") {
 		closeGameWebSocket();
 	}
-	const navbar = document.getElementById("mainNavBar");
-	if (navbar) navbar.style.display = isLoggedIn === "true" ? "block" : "none";
+	if (isLoggedIn === "true")
+			await setContainerHtml(navbar, "./html/navbar.html");
 
 	if (isLoggedIn === "true") {
 		const currentLogin = localStorage.getItem("currentLogin");
@@ -57,7 +73,6 @@ export function loadPage(page) {
 		// // ici afficher la bonne pp
 		// userAvatar.style.display = "block";
 	}
-	console.log("page is ", page);
 	if (path !== '/') {
 		set404View(contentContainer);
 	} else if (isLoggedIn != "true" && page !== "login" && page !== "register") {
@@ -70,42 +85,42 @@ export function loadPage(page) {
 		// Handle different page views
         switch (page) {
             case "home":
-                contentContainer.innerHTML = '<h1 data-i18n="home">Home</h1><p>Welcome!</p>';
+                innerContent.innerHTML = '<h2 data-i18n="home">Home</h2><p>Welcome!</p>';
                 break;
             case "about":
-                contentContainer.innerHTML = '<h1 data-i18n="about">About</h1><p>To fill.</p>';
+				innerContent.innerHTML = '<h1 data-i18n="about">About</h1><p>To fill.</p>';
                 break;
             case "game":
-                setGameMenu(contentContainer);
+                setGameMenu(innerContent);
                 break;
             case "leaderboard":
-                setLeaderboardView(contentContainer);
+                setLeaderboardView(innerContent);
                 break;
             case "profile":
                 const username = localStorage.getItem("currentLogin");
-                setProfileView(contentContainer, username);
+                setProfileView(innerContent, username);
                 break;
             case "settings":
-                setSettingsView(contentContainer);
+                setSettingsView(innerContent);
                 break;
             case "friends":
-                setFriendsView(contentContainer);
+                setFriendsView(innerContent);
                 break;
             case "login":
-                setLoginView(contentContainer);
+                setLoginView(innerContent);
                 break;
             case "register":
-                setRegisterView(contentContainer);
+                setRegisterView(innerContent);
                 break;
             case "personnal-data":
-                setPersonnalDataView(contentContainer);
+                setPersonnalDataView(innerContent);
                 break;
             default:
                 if (page.startsWith("profile/")) {
                     const profileUsername = page.split("/")[1] || localStorage.getItem("currentLogin");
-                    setProfileView(contentContainer, profileUsername);
+                    setProfileView(innerContent, profileUsername);
                 } else {
-                    set404View(contentContainer);
+                    set404View(innerContent);
                 }
         }
 	}
@@ -154,10 +169,11 @@ function updateActiveLink() {
 
 document.addEventListener("DOMContentLoaded", function () {
 
+	// /!\PR [by Alex] I commented the lines below because they would setup the login localStorage as false everytime we refresh, even after having logged in
 	// Clear any stale login state on fresh page load
-	if (!localStorage.getItem("currentLogin")) {
-		localStorage.setItem("isLoggedIn", "false");
-	}
+	// if (!localStorage.getItem("currentLogin")) {
+	// 	localStorage.setItem("isLoggedIn", "false");
+	// }
 	const savedFontSize = localStorage.getItem("fontSize") || "medium";
 	changeFontSize(savedFontSize);
 
