@@ -2,8 +2,9 @@
 
 import { playerDatas } from "./data_test.js";
 import { translations } from "./language_pack.js";
+import { fetchWithToken } from "./fetch_request.js";
 
-export function setProfileView(contentContainer, usernameInHash) {
+export async function setProfileView(contentContainer, usernameInHash) {
 	contentContainer.innerHTML = `
 		<div class="profile-view">
 			<h1 data-i18n="profileTitle">Search Profile</h1>
@@ -65,7 +66,6 @@ export function setProfileView(contentContainer, usernameInHash) {
 	function displayProfile(player) {
 		const currentLanguage = localStorage.getItem("language") || "en";
 		const currentLogin = localStorage.getItem("currentLogin");
-		const currentPlayer = playerDatas.players[currentLogin];
 		const statusClasses = {
 			online: "text-success",
 			offline: "text-secondary",

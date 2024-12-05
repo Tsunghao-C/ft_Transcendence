@@ -11,8 +11,10 @@ export const playerDatas = {
 			lose: 12,
 			rank: 3,
 			status: "online",
-			friends: ["Player2", "Player4"],
+			friends: ["Player4"],
 			blocks: ["Player3"],
+			pending: ["Player3"],
+			sent: ["Player2"],
 			matchHistory: [["27/11/2024", "W", "Player2", [11, 2]]]
 		},
 
