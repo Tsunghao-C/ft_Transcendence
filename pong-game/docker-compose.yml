@@ -3,7 +3,8 @@ networks:
     driver: bridge
   backend_net:
     driver: bridge
-    internal: true
+    # internal: true
+    internal: false # in order to send 2FA
   monitoring_net:
     driver: bridge
 
@@ -100,9 +101,6 @@ services:
       - static_volume:/app/static:ro
       - ./frontend/nginx/logs:/var/log/nginx:rw
       - ./frontend/nginx/modsec:/var/log/modsec:rw
-    # depends_on:
-    #   - spa
-    # If we don't use WFA
     ports:
       - "8443:443"
       - "8080:80"
@@ -186,7 +184,7 @@ services:
     volumes:
       - redis_data:/data
     ports:
-      - "6379:6379"     # only for development stage, need to close after
+      - "6380:6379"     # only for development stage, need to close after
     networks:
       - backend_net
     restart: unless-stopped
