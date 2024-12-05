@@ -73,7 +73,6 @@ function setupLoginFormEventHandler() {
 	})
 }
 
-
 function setup2FAFormEventHandler() {
 	const twoFAForm = document.getElementById("2faForm");
 	if (twoFAForm) {
@@ -89,7 +88,7 @@ function setup2FAFormEventHandler() {
                     localStorage.setItem("isLoggedIn", "true");
 					showSuccess("Logged in!");
                     loadPage("home");
-					showSuccess("logged to home!");
+					console.log("logged to home!");
 				} else {
                     showError('2FA verification failed.');
 				}

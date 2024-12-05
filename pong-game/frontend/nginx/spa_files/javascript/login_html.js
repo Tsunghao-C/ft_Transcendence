@@ -36,6 +36,7 @@ async function loadHtml(url) {
 export function setLoginViewHtml(contentContainer) {
 	const currentLanguage = localStorage.getItem("language");
 	contentContainer.innerHTML = `
+			<h1>pQnGx</h1>
 			<h2 data-i18n="loginTitle">Login</h2>
 			<form id="loginForm">
 					<label for="usernameInput" class="form-label" data-i18n="username">Username</label>
@@ -63,6 +64,7 @@ export function setLoginViewHtml(contentContainer) {
 
 export function setRegisterViewHtml(contentContainer) {
 	contentContainer.innerHTML = `
+			<h1>pQnGx</h1>
 			<h2 data-i18n="registerTitle">Register</h2>
 			<form id="registerForm">
 					<label for="newUsername" class="form-label" data-i18n="newUsername">Login</label>

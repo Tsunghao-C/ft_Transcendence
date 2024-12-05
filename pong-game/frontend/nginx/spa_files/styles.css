@@ -1,220 +1,237 @@
-/* styles.css */
+/************************** Font import **************************/
+
+@font-face {
+	font-family: 'Block';
+	src: url('./fonts/block/block.ttf') format('truetype');
+	font-weight: normal;
+	font-style: normal;
+}
+
+/************************** Dynamic background **************************/
+
+ /* HTML CSSResult Skip Results Iframe
+ @import url('https://fonts.googleapis.com/css2?family=Quicksand&display=swap'); */
+ 
+ :root {
+   font-size: 15px;
+ }
+ 
+ body {
+	margin: 0;
+	min-height: 100vh;
+	background-color: #FFFFFF; /* Fond principal blanc */
+	background-image: 
+        radial-gradient(closest-side, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0)), /* Blanc */
+        radial-gradient(closest-side, rgba(220, 220, 220, 1), rgba(220, 220, 220, 0)), /* Gris clair */
+        radial-gradient(closest-side, rgba(180, 180, 180, 1), rgba(180, 180, 180, 0)), /* Gris moyen clair */
+        radial-gradient(closest-side, rgba(120, 120, 120, 1), rgba(120, 120, 120, 0)), /* Gris moyen foncé */
+        radial-gradient(closest-side, rgba(60, 60, 60, 1), rgba(60, 60, 60, 0)); /* Gris foncé */
+    background-size: 
+	   130vmax 130vmax,
+	   80vmax 80vmax,
+	   90vmax 90vmax,
+	   110vmax 110vmax,
+	   90vmax 90vmax;
+	background-position:
+	   -80vmax -80vmax,
+	   60vmax -30vmax,
+	   10vmax 10vmax,
+	   -30vmax -10vmax,
+	   50vmax 50vmax;
+	background-repeat: no-repeat;
+	animation: 10s movement linear infinite;
+ }
+ 
+ .blurred-background {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: -1; /* S'assurer que le flou est derrière le contenu */
+}
+.content {
+    position: relative;
+    z-index: 1;
+}
+ 
+ @keyframes movement {
+   0%, 100% {
+	 background-size: 
+	   130vmax 130vmax,
+	   80vmax 80vmax,
+	   90vmax 90vmax,
+	   110vmax 110vmax,
+	   90vmax 90vmax;
+	 background-position:
+	   -80vmax -80vmax,
+	   60vmax -30vmax,
+	   10vmax 10vmax,
+	   -30vmax -10vmax,
+	   50vmax 50vmax;
+   }
+   25% {
+	 background-size: 
+	   100vmax 100vmax,
+	   90vmax 90vmax,
+	   100vmax 100vmax,
+	   90vmax 90vmax,
+	   60vmax 60vmax;
+	 background-position:
+	   -60vmax -90vmax,
+	   50vmax -40vmax,
+	   0vmax -20vmax,
+	   -40vmax -20vmax,
+	   40vmax 60vmax;
+   }
+   50% {
+	 background-size: 
+	   80vmax 80vmax,
+	   110vmax 110vmax,
+	   80vmax 80vmax,
+	   60vmax 60vmax,
+	   80vmax 80vmax;
+	 background-position:
+	   -50vmax -70vmax,
+	   40vmax -30vmax,
+	   10vmax 0vmax,
+	   20vmax 10vmax,
+	   30vmax 70vmax;
+   }
+   75% {
+	 background-size: 
+	   90vmax 90vmax,
+	   90vmax 90vmax,
+	   100vmax 100vmax,
+	   90vmax 90vmax,
+	   70vmax 70vmax;
+	 background-position:
+	   -50vmax -40vmax,
+	   50vmax -30vmax,
+	   20vmax 0vmax,
+	   -10vmax 10vmax,
+	   40vmax 60vmax;
+   }
+ }
+
+
+/**************************** General ****************************/
+
 body {
-	font-family: Arial, sans-serif;
-	/* background-image: url('./wtf.jpeg'); */
+	font-family: "Space Mono";
+	/* font-family: monospace; */
 	margin: 0;
 	padding: 0;
-	background-color: #f8f9fa;
-	font-size: 1em;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100vh;
+	background-color: #f4f4f9; /* Couleur de fond */
 }
 
-body.dark {
-	background-color: #000;
-	color: #fff;
+/* Contains the whole content (navbar and box) */
+.content {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
 }
 
-body.colorblind {
-	background-color: #57c40f;
-	color: #e90b0b;
+/* The centered box */
+.center-box {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	width: 50%;
+	min-width: 300px;
+	max-width: 550px;
+	background-color: rgba(255, 255, 255, 0.1); /* Couleur de fond de la box */
+	border-radius: 10px;
+	/* border-color: black; */
+	/* border: 4px solid black; */
+	/* box-shadow: 5px 5px 6px rgba(0, 0, 0, 0.1); */
+	padding: 20px;
+	box-sizing: border-box;
 }
 
-nav {
-    background-color: #c51616;
-    padding: 10px;
-    text-align: center;
+/* PONG title */
+.center-box h1 {
+	font-family: 'Block';
 }
 
-nav a {
-    color: white;
-    text-decoration: none;
-    margin: 0 15px;
-}
-
-#content {
-	margin: 20px;
-}
-
-button:focus, a:focus {
-	outline: 10px solid #007bff;
-}
-
-select {
-	background-color: #43807a;
-	color: #ffffff;
-	border: 2px solid #9c1743;
+/* Section title */
+.center-box h2 {
+	align-self: flex-start;
+	margin: 0px;
 	padding: 10px;
+}
+
+.center-box form {
+	/* justify-content: left;
+	align-items: left; */
+	/* align-self: flex-start;
+	margin: 10px 0;
+	padding: 10px; */
+	width: 100%;
+	padding: 10px 10px 0 10px;
+	box-sizing: border-box;
+	/* background-color:red; */
+}
+
+.center-box form label {
+	font-size: 0.9rem;
+	margin: 0px;
+}
+
+/* .container img {
+	max-width: 100%;
+	height: auto;
+	margin-bottom: 10px;
+} */
+
+.center-box input,
+.center-box textarea,
+.center-box button {
+	width: 100%;
+	margin: 2px 0 10px 0;
+	padding: 10px;
+	font-size: 12px;
+	border: 1px solid #ccc;
 	border-radius: 5px;
-	cursor: pointer;
-	text-align: left;
-	appearance: none;
-	-webkit-appearance: none;
-	-moz-appearance: none;
+	box-sizing: border-box;
 }
 
-
-
-select::-ms-expand {
-	display: none;
+.center-box input {
+	background-color: rgba(255, 255, 255, 0.1);
+	border: 0;
 }
 
-
-
-/* light colors */
-
-select:focus {
-	outline: 10px solid #007bff;
-	border-color: #6e2a56;
+.center-box input:focus,
+.center-box input:valid,
+.center-box input:invalid {
+    background-color: rgba(255, 255, 255, 0.1); /* Same background as the default */
+    outline: none; /* Remove the default browser outline if necessary */
 }
 
-select:hover {
-	background-color: #3a6e63;
+.center-box p {
+	padding: 0 10px 0 10px;
+	align-self: flex-start;
+	font-size: 0.8rem;
 }
 
-select:hover {
-	background-color: #3a6e63;
+.center-box button {
+    background-color: #d3d3d3;
+    color: #505050;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
-body .navbar {
-	background-color: #43807a !important;
-	color: #9c1743 !important;
-}
-
-body .navbar .navbar-nav .nav-link {
-	color: #000000 !important;
-}
-
-body .navbar .navbar-nav .nav-link:hover {
-	color: #be1717 !important;
-}
-
-/* dark colors */
-body.dark select {
-	background-color: #030303;
-	color: #ffffff;
-	border: 2px solid #b437ae;
-}
-
-body.dark select:focus {
-	outline: 10px solid #007bff;
-	border-color: #6e2a56;
-}
-
-body.dark select:hover {
-	background-color: #3a6e63;
-}
-
-body.dark select:hover {
-	background-color: #3a6e63;
-}
-
-body.dark {
-	background-color: #000;
-	color: #fff;
-}
-
-body.dark .navbar {
-	background-color: #666d3c !important;
-	color: #370cd4 !important;
-}
-
-body.dark .navbar .navbar-nav .nav-link {
-	color: #ffffff !important;
-}
-
-body.dark .navbar .navbar-nav .nav-link:hover {
-	color: #ffcc00 !important;
-}
-
-/* colorblind colors */
-body.colorblind select {
-	background-color: #030303;
-	color: #ffffff;
-	border: 2px solid #b437ae;
-}
-
-body.colorblind select:focus {
-	outline: 10px solid #007bff;
-	border-color: #6e2a56;
-}
-
-body.colorblind select:hover {
-	background-color: #3a6e63;
-}
-
-body.colorblind select:hover {
-	background-color: #3a6e63;
-}
-
-body.colorblind {
-	background-color: #57c40f;
-	color: #e90b0b;
-}
-body.colorblind .navbar {
-	background-color: #9cad3b !important;
-	color: #4e0848 !important;
-}
-
-body.colorblind .navbar .navbar-nav .nav-link {
-	color: #3c0a46 !important;
-}
-
-body.colorblind .navbar .navbar-nav .nav-link:hover {
-	color: #d6b328 !important;
-}
-
-/* Font size */
-
-.small-font h3 {
-	font-size: 1.5em;
-}
-
-.medium-font h3 {
-	font-size: 2em;
-}
-
-.large-font h3 {
-	font-size: 2em;
-}
-
-body.small-font {
-	font-size: 1em;
-}
-
-body.medium-font {
-	font-size: 2em;
-}
-
-body.large-font {
-	font-size: 3em;
-}
-
-select.small-font {
-	font-size: 1rem;
-}
-
-select.medium-font {
-	font-size: 2rem;
-}
-
-select.large-font {
-	font-size: 3rem;
-}
-
-.match-history-scroll {
-	max-height: 200px;
-	overflow-y: auto;
-	border: 1px solid #ddd;
-	padding: 5px;
-	background-color: #f9f9f9;
-}
-/******************************************/
-
-#successMessage {
-	font-size: 1rem;
-	color:green;
-}
-
-#errorMessage {
-	font-size: 1rem;
-	color:red;
+.center-box button:hover {
+    background-color: #696969;
+	color: white;
 }
