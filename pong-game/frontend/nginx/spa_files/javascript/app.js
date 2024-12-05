@@ -16,6 +16,8 @@ import { setProfileView } from './profile.js';
 import { setFriendsView } from './friends.js';
 import { playerDatas } from './data_test.js';
 import { setHomePage } from './home.js';
+import { ChatWebSocket } from './chat.js';
+import { setChatView, cleanupChatView } from './chat_view.js';
 
 export function loadPage(page) {
 	//add a checker to check there is no more than one /
@@ -26,6 +28,9 @@ export function loadPage(page) {
 
 	if (page !== "game") {
 		closeGameWebSocket();
+	}
+	if (page !== "chat") {
+		cleanupChatView();
 	}
 	const navbar = document.getElementById("mainNavBar");
 	if (navbar) navbar.style.display = isLoggedIn === "true" ? "block" : "none";
@@ -105,7 +110,9 @@ export function loadPage(page) {
                 if (page.startsWith("profile/")) {
                     const profileUsername = page.split("/")[1] || localStorage.getItem("currentLogin");
                     setProfileView(contentContainer, profileUsername);
-                } else {
+                } else if (page === "chat") {
+					setChatView(contentContainer);
+				} else {
                     set404View(contentContainer);
                 }
         }
