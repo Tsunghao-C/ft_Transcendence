@@ -242,6 +242,9 @@ class blockUserView(APIView):
 			return Response({"detail": "this user is already blocked"}, status=400)
 		if user == otherUser:
 			return Response({"detail": "you cannot block yourself"}, status=400)
+		if user.is_friend(otherUser):
+			otherUser.friendList.remove(user)
+			user.friendList.remove(otherUser)
 		user.blockList.add(otherUser)
 		return Response({"detail": "user successfully blocked"}, status=200)
 	
