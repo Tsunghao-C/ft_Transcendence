@@ -1,23 +1,9 @@
 //// We may fuse this with the search bar of profile view so that we can search for someone in the leaderboard
 
-export function setLeaderboardView(contentContainer) {
-	contentContainer.innerHTML = `
-		<div class="leaderboard-view">
-			<h1 data-i18n="leaderboard">Leaderboard</h1>
-			<table class="table">
-				<thead>
-					<tr>
-						<th>#</th>
-						<th data-i18n="username">Username</th>
-						<th >MMR</th>
-					</tr>
-				</thead>
-				<tbody id="leaderboardTableBody">
-				</tbody>
-			</table>
-		</div>
-	`;
+import { setContainerHtml } from './app.js'
 
+export async function setLeaderboardView(contentContainer) {
+	await setContainerHtml(contentContainer, "./html/leaderboard.html");
 	fetchLeaderboardData();
 }
 
