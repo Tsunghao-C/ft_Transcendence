@@ -53,7 +53,11 @@ check:
 	echo "All containers are running without restart issues."
 
 clean:
-	docker compose -f pong-game/docker-compose.yml down -v
+	docker volume prune --force
+	docker builder prune --force         # clear build cache
+	docker image prune --force           # clear dangling images
+	docker system prune --force --volumes  # cleanup unused resources
+	docker compose -f pong-game/docker-compose.yml down -v --remove-orphans
 	rm -f pong-game/frontend/nginx/logs/*.log
 	- rm -f pong-game/frontend/nginx/modsec/*.log
 	- rm -rf pong-game/security/vault_debian/volumes/*
