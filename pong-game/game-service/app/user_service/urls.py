@@ -30,5 +30,5 @@ urlpatterns = [
 	  name="update_password"),
 	path("change-password-done/", PasswordChangeDoneView.as_view(), name="update_password_success"),
 	path("change-email/", changeEmailView.as_view(), name="email_change"),
-	path("upload-avatar/", upload_avatar, name="upload_avatar"),
+	path("change-avatar/", changeAvatarView.as_view(), name="avatar_change"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
