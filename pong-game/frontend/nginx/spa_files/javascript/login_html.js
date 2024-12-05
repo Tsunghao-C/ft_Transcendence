@@ -7,7 +7,7 @@ async function loadHtml(url) {
             throw new Error(`Failed to load ${url}: ${response.statusText}`);
         }
         const text = await response.text();
-        console.log(`Content loaded from ${url}:\n\n\n`, text); // Log pour vérifier le contenu
+        console.log(`Content loaded from ${url}:\n\n`, text); // Log pour vérifier le contenu
         return text;
     } catch (error) {
         console.error(`Error loading ${url}:`, error);
@@ -17,7 +17,7 @@ async function loadHtml(url) {
 
 // export async function setLoginViewHtml(contentContainer) {
 //     try {
-//         const htmlContent = await loadHtml('javascript/login_view.html');
+//         const htmlContent = await loadHtml('./html/login_view.html');
 //         contentContainer.innerHTML = htmlContent;
 //     } catch (error) {
 //         console.error('Error loading login view:', error);
@@ -26,7 +26,7 @@ async function loadHtml(url) {
 
 // export async function setRegisterViewHtml(contentContainer) {
 //     try {
-//         const htmlContent = await loadHtml('javascript/register_view.html');
+//         const htmlContent = await loadHtml('./html/register_view.html');
 //         contentContainer.innerHTML = htmlContent;
 //     } catch (error) {
 //         console.error('Error loading register view:', error);
