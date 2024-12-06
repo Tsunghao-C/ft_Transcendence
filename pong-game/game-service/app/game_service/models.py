@@ -17,3 +17,24 @@ class MatchResults(models.Model):
 
 	def __str__(self):
 		return f"{self.player1.alias} vs {self.player2.alias} - Outcome: {self.match_outcome}"
+
+class LeaderBoard(models.Model):
+	player = models.ForeignKey(
+		CustomUser,
+		on_delete=models.CASCADE,
+		related_name="player_rank"
+	)
+	class Meta:
+		ordering = []
+
+	@property
+	def mmr(self):
+		return self.player.mmr
+	
+	@property
+	def wins(self):
+		return self.player.winCount
+
+	@property
+	def losses(self):
+		return self.player.lossCount
