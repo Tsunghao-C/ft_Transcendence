@@ -10,20 +10,26 @@ function getCookie(name) {
 }
 
 
-export async function fetchWithToken(url) {
+export async function fetchWithToken(url, body = null, method = 'GET') {
 	let token = getCookie("accessToken");
 	if (!token) {
 		throw new Error("No refresh token available.");
 	}
 
 	const fetchWithAccessToken = async (token) => {
-		const response = await fetch(url, {
-			method: 'GET',
+		const options = {
+			method: method,
 			headers: {
 				'Authorization': `Bearer ${token}`,
 				'Content-Type': 'application/json',
 			},
-		});
+		};
+
+		if (body) {
+			options.body = body
+		}
+
+		const response = await fetch(url, options);
 
 		if (response.status === 401) {
 			console.log("Access token expired, refreshing...");
@@ -50,9 +56,10 @@ export async function fetchWithToken(url) {
 				throw new Error("Failed to refresh token.");
 			}
 		}
-
+		// console.log("response after fectch" , response);
 		return response.json();
 	};
 
 	return fetchWithAccessToken(token);
 }
+

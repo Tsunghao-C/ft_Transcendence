@@ -20,6 +20,7 @@ import { fetchWithToken } from './fetch_request.js';
 
 export async function loadPage(page) {
 	//add a checker to check there is no more than one /
+	//if invalid token, the server explodes
 	let isLoggedIn;
 	let data;
 	try {

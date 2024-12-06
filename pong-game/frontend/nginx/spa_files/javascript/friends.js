@@ -1,202 +1,373 @@
 import { playerDatas } from "./data_test.js";
 import { translations } from "./language_pack.js";
+import { fetchWithToken } from "./fetch_request.js";
+import { loadPage } from "./app.js";
 
-export function setFriendsView(contentContainer) {
-	const currentLogin = localStorage.getItem("currentLogin");
-	const currentPlayer = playerDatas.players[currentLogin];
-	const currentLanguage = localStorage.getItem("language");
+export async function setFriendsView(contentContainer) {
+    const currentLanguage = localStorage.getItem("language") || "en";
+    let currentPlayer;
+    let friendRequest;
+    let sentFriendRequest;
+    try {
+        currentPlayer = await fetchWithToken('/api/user/getuser/');
+        friendRequest = await fetchWithToken('/api/user/get-friend-requests/');
+        sentFriendRequest = await fetchWithToken('/api/user/get-sent-friend-requests/');
+        console.log("User data: ", currentPlayer);
+        console.log("friendRequest data: ", friendRequest);
+        console.log("sentFriendRequest data: ", sentFriendRequest);
+   
 
-	contentContainer.innerHTML = `
-		<!-- Onglets Bootstrap -->
-		<ul class="nav nav-tabs" id="friendsBlockTabs" role="tablist">
-			<li class="nav-item">
-				<a class="nav-link active" id="friends-tab" data-bs-toggle="tab" href="#friends" role="tab" aria-controls="friends" aria-selected="true">${translations[currentLanguage].friendList}</a>
-			</li>
-			<li class="nav-item">
-				<a class="nav-link" id="block-tab" data-bs-toggle="tab" href="#block" role="tab" aria-controls="block" aria-selected="false">${translations[currentLanguage].blockList}</a>
-			</li>
-		</ul>
-		<div class="tab-content">
-			<!-- Contenu de Friends List -->
-			<div class="tab-pane fade show active" id="friends" role="tabpanel" aria-labelledby="friends-tab">
-				<h2>${translations[currentLanguage].friendList}</h2>
-				<button id="addFriendButton" class="btn btn-success mb-3">${translations[currentLanguage].addNewFriend}</button>
-				<ul id="friendsList" class="list-group"></ul>
-			</div>
-			<!-- Contenu de Block List -->
-			<div class="tab-pane fade" id="block" role="tabpanel" aria-labelledby="block-tab">
-				<h2>${translations[currentLanguage].blockList}</h2>
-				<button id="addBlockButton" class="btn btn-success mb-3">${translations[currentLanguage].addBlock}</button>
-				<ul id="blockList" class="list-group"></ul>
-			</div>
-		</div>
-	`;
+    contentContainer.innerHTML = `
+        <!-- Onglets Bootstrap -->
+        <ul class="nav nav-tabs" id="friendsBlockTabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="friends-tab" data-bs-toggle="tab" href="#friends" role="tab" aria-controls="friends" aria-selected="true">${translations[currentLanguage].friendList}</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="friend-requests-tab" data-bs-toggle="tab" href="#friend-requests" role="tab" aria-controls="friend-requests" aria-selected="false">${translations[currentLanguage].friendRequests}</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="sent-requests-tab" data-bs-toggle="tab" href="#sent-requests" role="tab" aria-controls="sent-requests" aria-selected="false">${translations[currentLanguage].sentRequests}</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="block-tab" data-bs-toggle="tab" href="#block" role="tab" aria-controls="block" aria-selected="false">${translations[currentLanguage].blockList}</a>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <!-- Contenu de Friends List -->
+            <div class="tab-pane fade show active" id="friends" role="tabpanel" aria-labelledby="friends-tab">
+                <h2>${translations[currentLanguage].friendList}</h2>
+                <button id="addFriendButton" class="btn btn-success mb-3">${translations[currentLanguage].addNewFriend}</button>
+                <ul id="friendsList" class="list-group"></ul>
+            </div>
+            <!-- Contenu de Friend Requests -->
+            <div class="tab-pane fade" id="friend-requests" role="tabpanel" aria-labelledby="friend-requests-tab">
+                <h2>${translations[currentLanguage].friendRequests}</h2>
+                <ul id="friendRequestList" class="list-group"></ul>
+            </div>
+            <!-- Contenu de Sent Requests -->
+            <div class="tab-pane fade" id="sent-requests" role="tabpanel" aria-labelledby="sent-requests-tab">
+                <h2>${translations[currentLanguage].sentRequests}</h2>
+                <ul id="sentFriendRequestList" class="list-group"></ul>
+            </div>
+            <!-- Contenu de Block List -->
+            <div class="tab-pane fade" id="block" role="tabpanel" aria-labelledby="block-tab">
+                <h2>${translations[currentLanguage].blockList}</h2>
+                <button id="addBlockButton" class="btn btn-success mb-3">${translations[currentLanguage].addBlock}</button>
+                <ul id="blockList" class="list-group"></ul>
+            </div>
+        </div>
+    `;
 
-	const friendsList = document.getElementById("friendsList");
-	const blockList = document.getElementById("blockList");
-	const addFriendButton = document.getElementById("addFriendButton");
-	const addBlockButton = document.getElementById("addBlockButton");
+    const friendsList = document.getElementById("friendsList");
+    const friendRequestList = document.getElementById("friendRequestList");
+    const sentFriendRequestList = document.getElementById("sentFriendRequestList");
+    const blockList = document.getElementById("blockList");
+    const addFriendButton = document.getElementById("addFriendButton");
+    const addBlockButton = document.getElementById("addBlockButton");
 
-	const statusClasses = {
-		online: "text-success",
-		offline: "text-secondary",
-		ingame: "text-warning",
-	};
+    async function renderFriends() {
+        friendsList.innerHTML = "";
+        currentPlayer = await fetchWithToken('/api/user/getuser/');
 
-	function renderFriends() {
-		friendsList.innerHTML = "";
-		currentPlayer.friends.forEach((friendUsername) => {
-			const friend = playerDatas.players[friendUsername];
-			if (friend) {
-				const friendItem = document.createElement("li");
-				friendItem.classList.add("list-group-item");
-				const statusText = translations[currentLanguage][friend.status];
-				friendItem.innerHTML = `
-					<div class="row">
-						<div class="col-md-2">
-							<img src="${friend.profilePicture}" alt="${friend.username}" class="img-thumbnail" style="max-width: 50px;">
-						</div>
-						<div class="col-md-6">
-							<a href="#profile/${friend.username}" class="profile-link">${friend.username}</a>
-							<p class="${statusClasses[friend.status]}" title="${friend.status}">${statusText}</p>
-							<p>${translations[currentLanguage].rank}: ${friend.rank} - ${translations[currentLanguage].mmr}: ${friend.mmr}</p>
-						</div>
-						<div class="col-md-4 text-right">
-							<button class="btn btn-info btn-sm float-right ml-2">${translations[currentLanguage].sendMessage}</button>
-							<button class="btn btn-warning btn-sm float-right">${translations[currentLanguage].requestDuel}</button>
-							<button class="btn btn-danger btn-sm float-right ml-2">${translations[currentLanguage].removeFriend}</button>
-						</div>
-					</div>
-				`;
-
+        if (currentPlayer.friendList && currentPlayer.friendList.length > 0) {
+            currentPlayer.friendList.forEach((friend) => {
+                const friendItem = document.createElement("li");
+                friendItem.classList.add("list-group-item");
+                friendItem.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <a href="#profile/${friend.username}" class="profile-link">${friend.username}</a>
+                        </div>
+                        <div class="col-md-4 text-right">
+                            <button class="btn btn-info btn-sm">${translations[currentLanguage].sendMessage}</button>
+                            <button class="btn btn-warning btn-sm">${translations[currentLanguage].requestDuel}</button>
+                            <button class="btn btn-danger btn-sm">${translations[currentLanguage].removeFriend}</button>
+                        </div>
+                    </div>
+                `;
+                friendsList.appendChild(friendItem);
 				const sendMessageButton = friendItem.querySelector("button.btn-info");
 				sendMessageButton.addEventListener("click", () => sendMessage(friend.username));
-
+		
 				const sendDuelRequestButton = friendItem.querySelector("button.btn-warning");
 				sendDuelRequestButton.addEventListener("click", () => sendDuelRequest(friend.username));
-
+		
 				const removeFriendButton = friendItem.querySelector("button.btn-danger");
 				removeFriendButton.addEventListener("click", () => confirmRemoveFriend(friend.username));
+            });
+        } else {
+            friendsList.innerHTML = `<p>${translations[currentLanguage].noFriends}</p>`;
+        }
+    }
 
-				friendsList.appendChild(friendItem);
-			}
-		});
-	}
+    async function renderFriendRequests() {
+        friendRequest = await fetchWithToken('/api/user/get-friend-requests/');
+        friendRequestList.innerHTML = "";
+        if (friendRequest && friendRequest.count > 0) {
+            console.log("ton pere le cheval ");
+            friendRequest.requests.forEach((friendRequesto) => {
+                const requestItem = document.createElement("li");
+                requestItem.classList.add("list-group-item");
+                //We could use the time stamp later
+                requestItem.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <a href="#profile/${friendRequesto.from_user}" class="profile-link">${friendRequesto.from_user}</a>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <button class="btn btn-success btn-sm">${translations[currentLanguage].accept}</button>
+                            <button class="btn btn-danger btn-sm">${translations[currentLanguage].cancel}</button>
+                        </div>
+                    </div>
+                `;
+                requestItem.querySelector(".btn-success").addEventListener("click", () => acceptFriendRequest(friendRequesto.from_user));
+                requestItem.querySelector(".btn-danger").addEventListener("click", () => rejectFriendRequest(friendRequesto.from_user));
+                friendRequestList.appendChild(requestItem);
+            });
+        } else {
+            friendRequestList.innerHTML = `<p>${translations[currentLanguage].noFriendRequests}</p>`;
+        }
+    }
 
-	function renderBlocks() {
-		blockList.innerHTML = "";
-		currentPlayer.blocks.forEach((blockedUsername) => {
-				const blockedUser = playerDatas.players[blockedUsername];
-				if (blockedUser) {
-					const blockItem = document.createElement("li");
-					blockItem.classList.add("list-group-item");
-					blockItem.innerHTML = `
-						<div class="d-flex justify-content-between align-items-center">
-							<a href="#profile/${blockedUser.username}" class="profile-link">${blockedUser.username}</a>
-							<button class="btn btn-danger btn-sm">${translations[currentLanguage].unblock}</button>
-						</div>
-					`;
+    async function renderSentRequests() {
+        sentFriendRequest = await fetchWithToken('/api/user/get-sent-friend-requests/');
+        sentFriendRequestList.innerHTML = "";
+        if (sentFriendRequest && sentFriendRequest.count > 0) {
+            sentFriendRequest.requests.forEach((sentRequest) => {
+                const sentItem = document.createElement("li");
+                sentItem.classList.add("list-group-item");
+                //we could use the timestamp as well
+                sentItem.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <a href="#profile/${sentRequest.to_user}" class="profile-link">${sentRequest.to_user}</a>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <button class="btn btn-danger btn-sm">${translations[currentLanguage].cancel}</button>
+                        </div>
+                    </div>
+                `;
+                sentItem.querySelector(".btn-danger").addEventListener("click", () => cancelFriendRequest(sentRequest.to_user));
+                sentFriendRequestList.appendChild(sentItem);
+            });
+        } else {
+            sentFriendRequestList.innerHTML = `<p>${translations[currentLanguage].noSentRequests}</p>`;
+        }
+    }
 
-					const unblockButton = blockItem.querySelector("button");
-					unblockButton.addEventListener("click", () => unblockUser(blockedUser.username));
-
-					blockList.appendChild(blockItem);
-				}
-			});
-	}
+    async function renderBlockList() {
+        currentPlayer = await fetchWithToken('/api/user/getuser/');
+        blockList.innerHTML = "";
+        if (currentPlayer.blockList && currentPlayer.blockList.length > 0) {
+            currentPlayer.blockList.forEach((block) => {
+                const blockItem = document.createElement("li");
+                blockItem.classList.add("list-group-item");
+                blockItem.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="#profile/${block}" class="profile-link">${block}</a>
+                        <button class="btn btn-danger btn-sm">${translations[currentLanguage].unblock}</button>
+                    </div>
+                `;
+                blockItem.querySelector(".btn-danger").addEventListener("click", () => unblockUser(block));
+                blockList.appendChild(blockItem);
+            });
+        } else {
+            blockList.innerHTML = `<p>${translations[currentLanguage].noBlocks}</p>`;
+        }
+    }
 
 	function sendMessage(friendUsername) {
 		console.log(`Sending message to ${friendUsername}`);
 	}
-
+	
 	function sendDuelRequest(friendUsername) {
 		console.log(`Requesting duel with ${friendUsername}`);
 	}
-
+	
 	function confirmRemoveFriend(friendUsername) {
 		const confirmation = confirm(
 			`${translations[currentLanguage].validationRemovalFirst} ${friendUsername} ${translations[currentLanguage].validationRemovalSecond} ?`
 		);
 		if (confirmation) {
-			const index = currentPlayer.friends.indexOf(friendUsername);
-			if (index > -1) {
-				currentPlayer.friends.splice(index, 1);
-				renderFriends();
-			}
+			removeFriend(friendUsername);
 		}
 	}
 
-	//REQUEST
-	function unblockUser(blockedUsername) {
-		const index = currentPlayer.blocks.indexOf(blockedUsername);
-		if (index > -1) {
-			currentPlayer.blocks.splice(index, 1);
-			renderBlocks();
-		}
+    async function removeFriend(friendUsername) {
+		console.log(`removing friend from ${friendUsername}`);
+        let data;
+            try {
+                const body = JSON.stringify({
+                    friendAlias : friendUsername
+                  });
+                data = await fetchWithToken('/api/user/delete-friend/', body, 'POST');
+                console.log("User data: ", data);
+            } catch (error) {
+                console.log(error);
+                return;
+            }
+        renderFriends();
 	}
+	
+	async function acceptFriendRequest(friendUsername) {
+		console.log(`Accepting friend request from ${friendUsername}`);
+        let data;
+            try {
+                const body = JSON.stringify({
+                    fromAlias: friendUsername,
+                  });
+                data = await fetchWithToken('/api/user/accept-friend-request/', body, 'POST');
+                console.log("User data: ", data);
+            } catch (error) {
+                console.log(error);
+                return;
+            }
+        renderFriends();
+        renderFriendRequests();
+	}
+	
+	async function rejectFriendRequest(notFriendUsername) {
+		console.log(`Brutally Rejecting friend request from ${notFriendUsername}`);
+        let data;
+            try {
+                const body = JSON.stringify({
+                    fromAlias: notFriendUsername,
+                  });
+                data = await fetchWithToken('/api/user/reject-friend-request/', body, 'POST');
+                console.log("User data: ", data);
+            } catch (error) {
+                console.log(error);
+                return;
+            }
+        renderFriendRequests();
+	}
+	
+	async function cancelFriendRequest(friendAlias) {
+		console.log(`Canceling sent friend request to ${friendAlias}`);
+        let data;
+            try {
+                const body = JSON.stringify({
+                    toAlias: friendAlias
+                  });
+                data = await fetchWithToken('/api/user/cancel-friend-request/', body, 'POST');
+                console.log("User data: ", data);
+            } catch (error) {
+                console.log(error);
+                return;
+            }
+        renderSentRequests();
+	}
+	
+    async function unblockUser(blockedUser) {
+        console.log(`unblocking friend from ${blockedUser}`);
+        let data;
+            try {
+                const body = JSON.stringify({
+                    alias: blockedUser,
+                    });
+                data = await fetchWithToken('/api/user/unblock-user/', body, 'POST');
+                console.log("User data: ", data);
+            } catch (error) {
+                console.log(error);
+                return;
+            }
+        renderBlockList();
+    }
 
-	//REQUEST
-	addBlockButton.addEventListener("click", () => {
+	addBlockButton.addEventListener("click", async () => {
 		const newBlockUsername = prompt(`${translations[currentLanguage].prompAddBLock}:`);
 		if (newBlockUsername) {
-			const newBlock = playerDatas.players[newBlockUsername];
-			if (newBlock) {
-				if (newBlock.username === currentPlayer.username) {
-					alert(`${translations[currentLanguage].okSasuke}`);
-				} else if (!currentPlayer.blocks.includes(newBlockUsername)) {
-					currentPlayer.blocks.push(newBlockUsername);
-					renderBlocks();
-				} else {
-					alert(`${newBlockUsername} ${translations[currentLanguage].alreadyBlock}.`);
-				}
-			} else {
-				alert(`${translations[currentLanguage].user} ${newBlockUsername} ${translations[currentLanguage].notFound}.`);
-			}
-		}
-		renderBlocks();
+            let data;
+            try {
+                const body = JSON.stringify({ alias: newBlockUsername });
+                data = await fetchWithToken('/api/user/block-user/', body, 'POST');
+                console.log("User data: ", data);
+            } catch (error) {
+                console.log(error);
+                return;
+            }
+            if (data.detail === 'this user is already blocked') {
+                alert(`${newBlockUsername} ${translations[currentLanguage].alreadyBlock}.`);
+            } else if (data.detail === 'No CustomUser matches the given query.' ) {
+                alert(`${translations[currentLanguage].user} ${newBlockUsername} ${translations[currentLanguage].notFound}.`);
+            } else if (data.detail === 'you cannot befriend yourself' ) {
+                alert(`${translations[currentLanguage].okSasuke}`);
+            }
+        }
+		renderBlockList();
 	});
 
 	//REQUEST
-	addFriendButton.addEventListener("click", () => {
-		const newFriendUsername = prompt(`${translations[currentLanguage].promptAddFriend}:`);
-		if (newFriendUsername) {
-			const newFriend = playerDatas.players[newFriendUsername];
-			if (newFriend) {
-				if (newFriend.username === currentPlayer.username) {
-					alert(`${translations[currentLanguage].lonelyTest}`);
-				} else if (!currentPlayer.friends.includes(newFriendUsername)) {
-					currentPlayer.friends.push(newFriendUsername);
-					renderFriends();
-				} else {
-					alert(`${newFriendUsername} ${translations[currentLanguage].alreadyFriend}.`);
-				}
-			} else {
-				alert(`${translations[currentLanguage].user} ${newFriendUsername} ${translations[currentLanguage].notFound}.`);
+	addFriendButton.addEventListener("click", async () => {
+		const newfriend = prompt(`${translations[currentLanguage].promptAddFriend}:`);
+		if (newfriend) {
+			let data;
+			try {
+				const body = JSON.stringify({ toAlias: newfriend });
+				data = await fetchWithToken('/api/user/send-friend-request/', body, 'POST');
+				// console.log("User data: ", data);
+			} catch (error) {
+				console.log(error);
+				return;
+			}
+			if (data.detail === 'Friend request was already sent.') {
+						alert(`${newfriend} ${translations[currentLanguage].alreadyFriend}.`);
+			} else if (data.detail === 'No CustomUser matches the given query.' ) {
+				alert(`${translations[currentLanguage].user} ${newfriend} ${translations[currentLanguage].notFound}.`);
+			} else if (data.detail === 'you cannot befriend yourself' ) {
+				alert(`${translations[currentLanguage].lonelyTest}`);
 			}
 		}
+        renderSentRequests();
 	});
 
-	renderFriends();
-	renderBlocks();
+    renderFriends();
+    renderFriendRequests();
+    renderSentRequests();
+    renderBlockList();
 
 	const friendsTab = document.getElementById("friends-tab");
 	const blockTab = document.getElementById("block-tab");
+	const friendRequestsTab = document.getElementById("friend-requests-tab");
+	const sentRequestsTab = document.getElementById("sent-requests-tab");
 
 	const tabs = new bootstrap.Tab(friendsTab);
 	tabs.show();
 
-	const friendsTabElement = document.getElementById("friends-tab");
-	const blockTabElement = document.getElementById("block-tab");
 
-	friendsTabElement.addEventListener("shown.bs.tab", function () {
+
+	friendsTab.addEventListener("shown.bs.tab", function () {
 		document.getElementById('friends').classList.add('show', 'active');
+		document.getElementById('friend-requests').classList.remove('show', 'active');
+		document.getElementById('sent-requests').classList.remove('show', 'active');
 		document.getElementById('block').classList.remove('show', 'active');
 	});
 
-	blockTabElement.addEventListener("shown.bs.tab", function () {
+	friendRequestsTab.addEventListener("shown.bs.tab", function () {
+		document.getElementById('friend-requests').classList.add('show', 'active');
+		document.getElementById('friends').classList.remove('show', 'active');
+		document.getElementById('sent-requests').classList.remove('show', 'active');
+		document.getElementById('block').classList.remove('show', 'active');
+	});
+
+	sentRequestsTab.addEventListener("shown.bs.tab", function () {
+		document.getElementById('sent-requests').classList.add('show', 'active');
+		document.getElementById('friends').classList.remove('show', 'active');
+		document.getElementById('friend-requests').classList.remove('show', 'active');
+		document.getElementById('block').classList.remove('show', 'active');
+	});
+
+	blockTab.addEventListener("shown.bs.tab", function () {
 		document.getElementById('block').classList.add('show', 'active');
 		document.getElementById('friends').classList.remove('show', 'active');
+		document.getElementById('friend-requests').classList.remove('show', 'active');
+		document.getElementById('sent-requests').classList.remove('show', 'active');
 	});
+    } catch (error) {
+        window.location.hash = "login";
+        console.log(error);
+        loadPage("login");
+        return;
+    }
 }
-
-
