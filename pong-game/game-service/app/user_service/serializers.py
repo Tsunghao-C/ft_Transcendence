@@ -20,13 +20,17 @@ class UserSerializer(serializers.ModelSerializer):
 			"blockList",
 			"winCount",
 			"lossCount",
+			"language",
 			]
 		extra_kwargs = {
 			"password": {"write_only": True}, # we accept the password as an input but we don't return it
 			"mmr": {"read_only": True}, # used for matchmaking / leaderboards
 			"is_banned": {"read_only": True}, # used later when banning people
-			"wincount": {"read_only": True},
+			"winCount": {"read_only": True},
 			"lossCount": {"read_only": True},
+			"blockList": {"read_only": True},
+			"friendList": {"read_only": True},
+			"language": {"read_only": True},
 		}
 
 	def validate_username(self, value):

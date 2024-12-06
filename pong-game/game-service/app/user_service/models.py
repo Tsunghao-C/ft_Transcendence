@@ -5,6 +5,10 @@ def user_dir_path(instance, filename):
     return 'user_{0}/{1}'.format(instance.user.id, filename)
 
 class CustomUser(AbstractUser):
+    class Language(models.TextChoices):
+        FR = "fr", "French"
+        EN = "en", "English"
+
     alias = models.CharField(max_length=20, blank=False, unique=True)
     mmr = models.FloatField(default=1000)
     is_banned = models.BooleanField(default=False)
@@ -24,17 +28,21 @@ class CustomUser(AbstractUser):
     )
     winCount = models.PositiveIntegerField(default=0)
     lossCount = models.PositiveIntegerField(default=0)
-    # profilePic = models.ImageField(upload_to = user_dir_path)
+    language = models.CharField(
+        max_length=2,
+        choices=Language.choices,
+        default=Language.EN
+    )
 
     def __str__(self):
         return self.username
-    
+
     def is_friend(self, user):
         return user in self.friendList.all()
-    
+
     def has_blocked(self, user):
         return user in self.blockList.all()
-    
+
     def is_blocked_by(self, user):
         return user in self.is_blocked_by.all()
 

@@ -27,7 +27,7 @@ class CurrentUserView(APIView):
 	def get(self, request):
 		serializer = UserSerializer(request.user)
 		return Response(serializer.data)
-	
+
 class updateUsernameView(APIView):
 	permission_classes = [IsAuthenticated]
 
@@ -289,3 +289,39 @@ class getOpenFriendRequestsView(APIView):
 			"count": openRequests.count(),
 			"requests": friendRequestsData
 		}, status=200)
+
+class getSentFriendRequestsView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def get(self, request):
+		user = request.user
+		openRequests = FriendRequest.objects.filter(from_user=user.alias)
+		if not openRequests.exists():
+			return Response({"detail": "No open friend requests."}, status=200)
+		friendRequestsData = [
+            {
+                "from_user": request.from_user.alias,
+                "to_user": request.to_user.alias,
+                "timestamp": request.timestamp
+            }
+            for request in openRequests
+        ]
+		return Response({
+			"count": openRequests.count(),
+			"requests": friendRequestsData
+		}, status=200)
+
+class changeLanguageView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def post(self, request):
+		user = request.user
+		currLang = user.language
+		newLang = request.data.get("newLang")
+		if not newLang or newLang not in ("fr", "en"):
+			return Response({"error": "newLang must be supplied as fr or en"}, status=400)
+		if newLang == currLang:
+			return Response({"error": f"current language is already set to {currLang}"}, status=400)
+		user.language = newLang
+		user.save()
+		return Response({"detail": f"successfully changed language to {newLang}"}, status=200)

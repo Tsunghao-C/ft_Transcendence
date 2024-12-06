@@ -35,4 +35,6 @@ urlpatterns = [
     path("block-user/", blockUserView.as_view(), name="block_user"),
     path("unblock-user/", unblockUserView.as_view(), name="unblock_user"),
     path("get-friend-requests/", getOpenFriendRequestsView.as_view(), name="get_friend_requests"),
+	path("get-sent-friend-requests/", getSentFriendRequestsView.as_view(), name="get_sent_frequests"),
+	path("change-language/", changeLanguageView.as_view(), name="change_language"),
 ]
