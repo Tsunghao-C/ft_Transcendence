@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from .models import CustomUser
+from .models import CustomUser, FriendRequest
 from rest_framework import generics
 from .serializers import UserSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -22,11 +22,15 @@ class CreateUserView(generics.CreateAPIView):
 	permission_classes = [AllowAny]
 
 class CurrentUserView(APIView):
+	permission_classes = [IsAuthenticated]
+
 	def get(self, request):
 		serializer = UserSerializer(request.user)
 		return Response(serializer.data)
-	
+
 class updateUsernameView(APIView):
+	permission_classes = [IsAuthenticated]
+
 	def post(self, request):
 		user = request.user
 		serializer = UserSerializer(instance=user, data=request.data, partial=True)
@@ -41,6 +45,12 @@ class UpdateMMR(APIView):
 		# Calculate the 'expected score'
 		E = 1 / (1 + 10**((oppMMR - userMMR)/400))
 		return int(userMMR + 30 * (matchOutcome - E))
+	
+	def __updateCounters(self, user, matchOutcome):
+		if matchOutcome:
+			user.winCount += 1
+		else:
+			user.lossCount += 1
 
 	def post(self, request):
 		p1ID = request.data.get("p1ID")
@@ -54,9 +64,11 @@ class UpdateMMR(APIView):
 		if outcome not in [1, 0]:
 			return Response({"error": "Invalid match input"}, status=400)
 		p1.mmr = self._get_new_mmr(p1MMR, p2mmr, outcome)
+		self.__updateCounters(p1, outcome);
 		# inverse outcome for p2
 		outcome = 1 - outcome
 		p2.mmr = self._get_new_mmr(p2mmr, p1MMR, outcome)
+		self.__updateCounters(p2, outcome)
 		p1.save()
 		p2.save()
 		return Response({"message": f"Player 1 new mmr: {p1.mmr}\nPlayer 2 new mmr: {p2.mmr}"})
@@ -175,3 +187,141 @@ class changeEmailView(APIView):
 			cache.delete(cacheName)
 			return Response({"detail": "email change success"}, status=200)
 		return Response({"error": "invalid or expired otp"}, status=400)
+	
+class sendFriendRequestView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def post(self, request):
+		from_user = request.user
+		to_user = get_object_or_404(CustomUser, alias=request.data.get("toAlias"))
+		if from_user == to_user:
+			return Response({"detail": "you cannot befriend yourself"}, status=400)
+		if from_user.is_friend(to_user):
+			return Response({"detail": "you are already friends with this user"}, status=400)
+		if FriendRequest.objects.filter(from_user=from_user, to_user=to_user).exists():
+			return Response({"detail": "Friend request was already sent."}, status=400)
+		FriendRequest.objects.create(from_user=from_user, to_user=to_user)
+		return Response({"detail": "friend request sent"}, status=200)
+
+class acceptFriendRequestView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def post(self, request):
+		to_user = request.user
+		from_user = get_object_or_404(CustomUser, alias=request.data.get("fromAlias"))
+		frequest = get_object_or_404(FriendRequest, from_user=from_user, to_user=to_user)
+		to_user.friendList.add(from_user)
+		from_user.friendList.add(to_user)
+		frequest.delete()
+		return Response({"detail": "friend request accepted"}, status=200)
+
+class deleteFriendView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def post(self, request):
+		user = request.user
+		fr_id = request.data.get("fr_id");
+		if not fr_id:
+			return Response({"detail": "fr_id required"}, status=400)
+		fr_user = get_object_or_404(CustomUser, id=fr_id)
+		if fr_user not in user.friendList.all():
+			return Response({"detail": "this user is not in your friend list"}, status=400)
+		user.friendList.remove(fr_user)
+		fr_user.friendList.remove(user)
+		return Response({"detail": "successfully deleted friend."}, status=200)
+	
+class rejectFriendRequestView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def post(self, request):
+		to_user = request.user
+		from_user = get_object_or_404(CustomUser, alias=request.data.get("fromAlias"))
+		frequest = get_object_or_404(FriendRequest, from_user=from_user, to_user=to_user)
+		frequest.delete()
+		return Response({"detail": "friend request deleted"}, status=200)
+	
+class blockUserView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def post(self, request):
+		user = request.user
+		otherUser = get_object_or_404(CustomUser, alias=request.data.get("alias"))
+		if user.has_blocked(otherUser):
+			return Response({"detail": "this user is already blocked"}, status=400)
+		if user == otherUser:
+			return Response({"detail": "you cannot block yourself"}, status=400)
+		if user.is_friend(otherUser):
+			otherUser.friendList.remove(user)
+			user.friendList.remove(otherUser)
+		user.blockList.add(otherUser)
+		return Response({"detail": "user successfully blocked"}, status=200)
+	
+class unblockUserView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def post(self, request):
+		user = request.user
+		otherUser = get_object_or_404(CustomUser, alias=request.data.get("alias"))
+		if not user.has_blocked(otherUser):
+			return Response({"detail": "this user is not blocked"}, status=400)
+		if user == otherUser:
+			return Response({"detail": "you cannot block yourself"}, status=400)
+		user.blockList.remove(otherUser)
+		return Response({"detail": "user was successfully unblocked"}, status=200)
+	
+class getOpenFriendRequestsView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def get(self, request):
+		user = request.user
+		openRequests = FriendRequest.objects.filter(to_user=user.alias)
+		if not openRequests.exists():
+			return Response({"detail": "No open friend requests."}, status=200)
+		friendRequestsData = [
+            {
+                "from_user": request.from_user.alias,
+                "to_user": request.to_user.alias,
+                "timestamp": request.timestamp
+            }
+            for request in openRequests
+        ]
+		return Response({
+			"count": openRequests.count(),
+			"requests": friendRequestsData
+		}, status=200)
+
+class getSentFriendRequestsView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def get(self, request):
+		user = request.user
+		openRequests = FriendRequest.objects.filter(from_user=user.alias)
+		if not openRequests.exists():
+			return Response({"detail": "No open friend requests."}, status=200)
+		friendRequestsData = [
+            {
+                "from_user": request.from_user.alias,
+                "to_user": request.to_user.alias,
+                "timestamp": request.timestamp
+            }
+            for request in openRequests
+        ]
+		return Response({
+			"count": openRequests.count(),
+			"requests": friendRequestsData
+		}, status=200)
+
+class changeLanguageView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def post(self, request):
+		user = request.user
+		currLang = user.language
+		newLang = request.data.get("newLang")
+		if not newLang or newLang not in ("fr", "en"):
+			return Response({"error": "newLang must be supplied as fr or en"}, status=400)
+		if newLang == currLang:
+			return Response({"error": f"current language is already set to {currLang}"}, status=400)
+		user.language = newLang
+		user.save()
+		return Response({"detail": f"successfully changed language to {newLang}"}, status=200)
