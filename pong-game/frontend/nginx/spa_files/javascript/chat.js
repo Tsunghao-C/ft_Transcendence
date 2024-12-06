@@ -1,42 +1,73 @@
 export class ChatWebSocket {
     constructor(roomName) {
         this.roomName = roomName;
-        this.messageContainer = null;
+        // this.messageContainer = null;
         this.socket = null;
         this.isConnected = false;
     }
 
+    createInterface() {
+        if (localStorage.getItem("isLoggedIn") !== "true") {
+            return null;
+        }
+
+        return `
+            <div id="chat-container">
+                <div id="chat-messages"></div>
+                <form id="chat-form">
+                    <input type="text" id="alias-input" placeholder="Your name" value="Anonymous">
+                    <input type="text" id="message-input" placeholder="Type a message...">
+                    <button type="submit">Send</button>
+                </form>
+            </div>
+        `;
+    }
+
     // Initialize chat interface
-    connect(messageContainerID ='chat=messages') {
-        this.messageContainer = document.getElementById(messageContainerID) || this.createMessageContainer();
+    connect(messageContainerId ='chat-messages') {
+        // Only try to connect if we're logged in
+        if (localStorage.getItem("isLoggedIn") !== "true") {
+            console.log("Not connecting WebSocket -user not logged in");
+            return;
+        }
 
-        const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
-        const wsUrl = `${wsScheme}://${window.location.host}/ws/chat/${this.roomName}/`;
-        this.socket = new WebSocket(wsUrl);
+        this.messageContainer = document.getElementById(messageContainerId);
+        if (!this.messageContainer) {
+            console.log("Chat container not found - not connecting");
+            return;
+        }
 
-        // Set up event handlers
-        this.socket.onopen = () => {
-            console.log('WebSocket Connected');
-            this.isConnected = true;
-            this.addSystemMessage('Connected to chat room');
-        };
+        try {
+            const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+            const wsUrl = `${wsScheme}://${window.location.host}/ws/chat/${this.roomName}/`;
+            this.socket = new WebSocket(wsUrl);
 
-        this.socket.onclose = (e) => {
-            console.log('WebSocket Disconnected');
-            this.isConnected = false;
-            this.addSystemMessage('Disconnected from chat room');
-            setTimeout(() => this.reconnect(), 2000);
-        };
+            // Set up event handlers
+            this.socket.onopen = () => {
+                console.log('WebSocket Connected');
+                this.isConnected = true;
+                this.addSystemMessage('Connected to chat room');
+            };
 
-        this.socket.onerror = (error) => {
-            console.error('WebSocket Error:', error);
-            this.addSystemMessage('Error in connection');
-        };
+            this.socket.onclose = (e) => {
+                console.log('WebSocket Disconnected');
+                this.isConnected = false;
+                this.addSystemMessage('Disconnected from chat room');
+                setTimeout(() => this.reconnect(), 2000);
+            };
 
-        this.socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            this.displayMessage(data);
-        };
+            this.socket.onerror = (error) => {
+                console.error('WebSocket Error:', error);
+                this.addSystemMessage('Error in connection');
+            };
+
+            this.socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                this.displayMessage(data);
+            };
+        } catch (error) {
+            console.log("Failed to create WebSocket connection:", error);
+        }
     }
 
     reconnect() {

@@ -24,17 +24,40 @@ export function loadPage(page) {
 	const contentContainer = document.getElementById("content");
 	const currentLanguage = localStorage.getItem("language") || "en";
 	const isLoggedIn = localStorage.getItem("isLoggedIn") || "false" ;
+	const chatElements = document.querySelectorAll('#chat-container');
+	chatElements.forEach(element => element.remove());
 	const path = window.location.pathname;
+	// check authentication first
+	if (path !== '/') {
+		set404View(contentContainer);
+		return;
+	} else if (isLoggedIn != "true" && page !== "login" && page !== "register") {
+		window.location.hash = "login";
+		loadPage("login");
+		return;
+	} else if (isLoggedIn === "true" && (page === "login" || page === "register")) {
+		window.location.hash = "home";
+		loadPage("home");
+		console.log("logged in, redirect to home");
+		return;
+	}
+	// cleanup only if user is logged in
+	if (isLoggedIn === "true") {
+		if (page !== "game") {closeGameWebSocket();}
+		if (page !== "chat") {
+			cleanupChatView();
+			const chatContainer = document.getElementById('chat-container');
+			if (chatContainer) {
+				chatContainer.remove();
+			}
+		}
+		console.log("here");
+	}
 
-	if (page !== "game") {
-		closeGameWebSocket();
-	}
-	if (page !== "chat") {
-		cleanupChatView();
-	}
 	const navbar = document.getElementById("mainNavBar");
 	if (navbar) navbar.style.display = isLoggedIn === "true" ? "block" : "none";
 
+	// load user info if user is logged in
 	if (isLoggedIn === "true") {
 		const currentLogin = localStorage.getItem("currentLogin");
 		const userAvatar = document.getElementById("userAvatar");
@@ -64,58 +87,53 @@ export function loadPage(page) {
 		// userAvatar.style.display = "block";
 	}
 	console.log("page is ", page);
-	if (path !== '/') {
-		set404View(contentContainer);
-	} else if (isLoggedIn != "true" && page !== "login" && page !== "register") {
-		window.location.hash = "login";
-		loadPage("login")
-	} else if (isLoggedIn === "true" && (page === "login" || page === "register")) {
-		window.location.hash = "home";
-		loadPage("home");
-	} else {
-		// Handle different page views
-        switch (page) {
-            case "home":
-                setHomePage(contentContainer);
-                break;
-            case "about":
-                contentContainer.innerHTML = '<h1 data-i18n="about">About</h1><p>To fill.</p>';
-                break;
-            case "game":
-                setGameMenu(contentContainer);
-                break;
-            case "leaderboard":
-                setLeaderboardView(contentContainer);
-                break;
-            case "profile":
-                const username = localStorage.getItem("currentLogin"); // will not be necessary
-                setProfileView(contentContainer, username);
-                break;
-            case "settings":
-                setSettingsView(contentContainer);
-                break;
-            case "friends":
-                setFriendsView(contentContainer);
-                break;
-            case "login":
-                setLoginView(contentContainer);
-                break;
-            case "register":
-                setRegisterView(contentContainer);
-                break;
-            case "personnal-data":
-                setPersonnalDataView(contentContainer);
-                break;
-            default:
-                if (page.startsWith("profile/")) {
-                    const profileUsername = page.split("/")[1] || localStorage.getItem("currentLogin");
-                    setProfileView(contentContainer, profileUsername);
-                } else if (page === "chat") {
-					setChatView(contentContainer);
-				} else {
-                    set404View(contentContainer);
-                }
-        }
+	switch (page) {
+		case "home":
+			setHomePage(contentContainer);
+			break;
+		case "about":
+			contentContainer.innerHTML = '<h1 data-i18n="about">About</h1><p>To fill.</p>';
+			break;
+		case "game":
+			setGameMenu(contentContainer);
+			break;
+		case "leaderboard":
+			setLeaderboardView(contentContainer);
+			break;
+		case "profile":
+			const username = localStorage.getItem("currentLogin"); // will not be necessary
+			setProfileView(contentContainer, username);
+			break;
+		case "settings":
+			setSettingsView(contentContainer);
+			break;
+		case "friends":
+			setFriendsView(contentContainer);
+			break;
+		case "login":
+			setLoginView(contentContainer);
+			break;
+		case "register":
+			setRegisterView(contentContainer);
+			break;
+		case "personnal-data":
+			setPersonnalDataView(contentContainer);
+			break;
+		case "chat":
+			if (localStorage.getItem("isLoggedIn") === "true") {
+				setChatView(contentContainer);
+			} else {
+				window.location.hash = "login";
+				loadPage("login");
+			}
+			break;
+		default:
+			if (page.startsWith("profile/")) {
+				const profileUsername = page.split("/")[1] || localStorage.getItem("currentLogin");
+				setProfileView(contentContainer, profileUsername);
+			} else {
+				set404View(contentContainer);
+			}
 	}
 	changeLanguage(currentLanguage);
 }
