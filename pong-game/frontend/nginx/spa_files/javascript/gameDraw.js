@@ -12,8 +12,8 @@ class Player {
 }
 
 let	ball = {
-	x:canvas.width/2,
 	y:canvas.height/2,
+	x:canvas.width/2,
 	color:'white',
 	speedX:6,
 	speedY:6,

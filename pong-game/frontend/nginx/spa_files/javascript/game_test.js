@@ -101,22 +101,15 @@ export function setGameTestView(contentContainer) {
 	};
 
 	function createSocket() {
-		try {
-			//await getPlayerInfo(); hardcode player info for tests
-			//		const roomName = "42";
-			const socketUrl = 'ws://localhost:8000/ws/game/42'; //set room_name instead
-			console.log(socketUrl);
-			data.socket = new WebSocket(socketUrl);
-			data.socket.onopen() = () => {
-				console.log('Websocket connection established');
+		//await getPlayerInfo(); hardcode player info for tests
+		//		const roomName = "42";
+		const socketUrl = 'wss://localhost:8000/ws/game/42'; //set room_name instead
+		console.log(socketUrl);
+		data.socket = new WebSocket(socketUrl);
+		data.socket.onerror = (error) => {
+			console.error('Websocket error: ', error);
+			throw error;
 		};
-		data.socket.onerror() = (error) => {
-		console.error('Websocket error: ', error);
-		throw error;
-	};
-	} catch (error) {
-		throw error;
-		}
 	};
 
 
@@ -243,6 +236,13 @@ export function setGameTestView(contentContainer) {
 		}
 	}
 
+	data.socket.onerror = (event) => {
+		console.error("WebSocket error:", event);
+		if (event.error) {
+			console.error("Error details:", event.error.message);
+		}
+	}
+
 	function joinRoom() {
 		// Create a container for the input field and button
 		const container = document.createElement('div');
@@ -347,8 +347,11 @@ export function setGameTestView(contentContainer) {
 	function join_match() {
 		try {
 			createSocket();
-		joinRoom();
-			waitForReady();
+			data.socket.onopen = () => {
+				console.log('Websocket connection established');
+				joinRoom();
+				waitForReady();
+			}
 		} catch {
 			console.error('Exception caught in joinMatch.js')
 		}
@@ -378,10 +381,13 @@ export function setGameTestView(contentContainer) {
 	async function create_private_match() {
 		try {
 			createSocket();
-			requestRoom();
-			await waitForReady();
-		} catch {
-			console.error('Exception caught in privateMatch.js');
+			data.socket.onopen = async () => {
+				console.log('Websocket connection established');
+				requestRoom();
+				await waitForReady();
+			}
+		} catch (error) {
+			console.error('Exception caught in privateMatch.js:', error);
 		}
 	}
 }
