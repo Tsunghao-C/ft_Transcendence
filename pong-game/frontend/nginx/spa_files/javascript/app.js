@@ -209,9 +209,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
 	// /!\PR [by Alex] I commented the lines below because they would setup the login localStorage as false everytime we refresh, even after having logged in
 	// Clear any stale login state on fresh page load
-	// if (!localStorage.getItem("currentLogin")) {
-	// 	localStorage.setItem("isLoggedIn", "false");
-	// }
+	if (!localStorage.getItem("currentLogin")) {
+		localStorage.setItem("isLoggedIn", "false");
+	}
 	const savedFontSize = localStorage.getItem("fontSize") || "medium";
 	changeFontSize(savedFontSize);
 
