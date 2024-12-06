@@ -87,10 +87,12 @@ function setupLoginFormEventHandler() {
 			const response = await loginUserInBackend(username, password);
 			const data = await response.json();
 			if (!response.ok) {
-				showError("This is a nightmare");
-			}
-			else if (data.detail === "No active account found with the given credentials") {
-				showError("Login failed: Invalid Login or Password");
+				if (data.detail === "No active account found with the given credentials") {
+				   showError("Login failed: Invalid Login or Password");
+				}
+				else {
+					showError("This is a nightmare");
+				}
 			}
 			else {
 				showSuccess("2FA verified successfully!");

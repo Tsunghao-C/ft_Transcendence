@@ -40,7 +40,18 @@ function setupRegisterFormEventHandler() {
 			if (response.ok) {
 				showSuccess('Success! User profile has been created, you can now log in.');
 			} else {
-				showError(data.error || "Login failed. Please try again.");
+				if (data.username) {
+					showError(data.username);
+				}
+				else if (data.alias) {
+					showError(data.alias);
+				}
+				else if (data.email) {
+					showError(data.email);
+				}
+				else {
+					showError("Register failed, please try again later.")
+				}
 			}
 		} catch (error) {
 			showError('An error occurred. Please try again later.');
