@@ -22,6 +22,8 @@ class CustomUser(AbstractUser):
         symmetrical=False,
         verbose_name="blocked_users"
     )
+    winCount = models.PositiveIntegerField(default=0)
+    lossCount = models.PositiveIntegerField(default=0)
     # profilePic = models.ImageField(upload_to = user_dir_path)
 
     def __str__(self):

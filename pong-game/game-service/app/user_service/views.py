@@ -45,6 +45,12 @@ class UpdateMMR(APIView):
 		# Calculate the 'expected score'
 		E = 1 / (1 + 10**((oppMMR - userMMR)/400))
 		return int(userMMR + 30 * (matchOutcome - E))
+	
+	def __updateCounters(self, user, matchOutcome):
+		if matchOutcome:
+			user.winCount += 1
+		else:
+			user.lossCount += 1
 
 	def post(self, request):
 		p1ID = request.data.get("p1ID")
@@ -58,9 +64,11 @@ class UpdateMMR(APIView):
 		if outcome not in [1, 0]:
 			return Response({"error": "Invalid match input"}, status=400)
 		p1.mmr = self._get_new_mmr(p1MMR, p2mmr, outcome)
+		self.__updateCounters(p1, outcome);
 		# inverse outcome for p2
 		outcome = 1 - outcome
 		p2.mmr = self._get_new_mmr(p2mmr, p1MMR, outcome)
+		self.__updateCounters(p2, outcome)
 		p1.save()
 		p2.save()
 		return Response({"message": f"Player 1 new mmr: {p1.mmr}\nPlayer 2 new mmr: {p2.mmr}"})
