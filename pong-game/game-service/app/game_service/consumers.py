@@ -1,3 +1,5 @@
+
+# python manage.py test game_service.consumerTest
 import os
 import logging
 from dotenv import load_dotenv
@@ -7,10 +9,12 @@ import asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.sessions import SessionMiddlewareStack
 from channels.layers import get_channel_layer
+from channels.testing import WebsocketCommunicator
 from .game_room import GameRoom
 
 load_dotenv()
 active_game_rooms = {}
+active_lobbies = {} #This has no methods cleaning it up yet. Need to clean when gamerooms terminate or if players leave a lobby
 logger = logging.getLogger(__name__)
 
 class GameConsumer(AsyncWebsocketConsumer):
@@ -59,9 +63,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                        }))
 
     async def create_private_lobby(self, room_name, player_id):
-        if not hasattr(self, 'room_data'):
-            self.room_data = {}
-        self.room_data[room_name] = {"players": [player_id]}
+        active_lobbies[room_name] = {"players": [player_id]}
         self.current_group = f"lobby_{room_name}"
         await self.channel_layer.group_add(self.current_group, self.channel_name)
         await self.send(json.dumps({
@@ -71,19 +73,22 @@ class GameConsumer(AsyncWebsocketConsumer):
             }))
 
     async def join_lobby(self, room_name, player_id):
-        self.current_group = f"lobby_{room_name}"
-        if not hasattr(self, 'room_data') or room_name not in self.room_data:
+        if room_name not in active_lobbies:
             await self.send(json.dumps({
                 "type": "error",
                 "message": f"lobby {room_name} does not exist"
                 }))
+        self.current_group = f"lobby_{room_name}"
+        if player_id in active_lobbies[room_name]["players"]:
+            await self.send(json.dumps({
+                "type": "error",
+                "message": "player is already in lobby"
+                }))
             return
-        if player_id in self.room_data[room_name]:
-            return
-        if len(self.room_data[room_name]["players"]) >= 2:
+        if len(active_lobbies[room_name]["players"]) >= 2:
             await self.send(json.dumps({"error": f"lobby {room_name} is full"}))
             return
-        self.room_data[room_name]["players"].append(self.channel_name)
+        active_lobbies[room_name]["players"].append(player_id)
         await self.channel_layer.group_add(self.current_group, self.channel_name)
         await self.send(json.dumps({
             "type": "notice",
@@ -145,3 +150,4 @@ class GameConsumer(AsyncWebsocketConsumer):
                 ]
         for room_id in rooms_to_remove:
             del active_game_rooms[room_id]
+

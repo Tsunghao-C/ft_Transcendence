@@ -183,10 +183,13 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 # can replace inmemorychannellayer with redis later
 CHANNEL_LAYERS = {
-    "default": { "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)]
-        },
+#    "default": { "BACKEND": "channels_redis.core.RedisChannelLayer",
+#        "CONFIG": {
+#            "hosts": [("127.0.0.1", 6379)]
+#        },
+#    },
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
     },
 }
 
@@ -200,7 +203,19 @@ LOGGING = {
     },
     'root': {
         'handlers': ['console'],
-        'level': 'INFO',
+        'level': 'DEBUG',  # Set to DEBUG for detailed logs
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'django.channels': {
+            'handlers': ['console'],
+            'level': 'DEBUG',  # Log WebSocket-related events
+            'propagate': False,
+        },
     },
 }
 
