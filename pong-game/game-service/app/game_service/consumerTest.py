@@ -85,11 +85,17 @@ class GameConsumerTest(TestCase):
         creator_communicator = WebsocketCommunicator(URLRouter(websocket_urlpatterns), "/ws/game/test_room/")
         await creator_communicator.connect()
         
+        creation_response = await creator_communicator.receive_json_from()
+        self.assertEqual(creation_response['type'], 'notice')
+        self.assertEqual(creation_response['message'], 'Connection established')
+        print(json.dumps(creation_response, indent=4))
         await creator_communicator.send_json_to({
             "action": "create_private_match",
             "id": "player1"
         })
         room_response = await creator_communicator.receive_json_from()
+
+        print(json.dumps(room_response, indent=4))
         room_name = room_response['room_name']
         
         joiner_communicator = WebsocketCommunicator(URLRouter(websocket_urlpatterns), "/ws/game/test_room/")
@@ -109,12 +115,18 @@ class GameConsumerTest(TestCase):
             "player_id": "player1"
         })
         
+        response = await creator_communicator.receive_json_from()
+        self.assertEqual(response['type'], 'notice')
+        self.assertEqual(response['message'], 'Player has readied up')
+
         await joiner_communicator.send_json_to({
             "action": "ready_up",
             "room_name": room_name,
             "player_id": "player2"
         })
-        
+        response = await creator_communicator.receive_json_from()
+        self.assertEqual(response['type'], 'notice')
+        self.assertEqual(response['message'], 'Player has readied up')
         # Check for game start notice
         start_response = await creator_communicator.receive_json_from()
         self.assertEqual(start_response['type'], 'notice')

@@ -96,24 +96,28 @@ class GameConsumer(AsyncWebsocketConsumer):
             }))
 
     async def update_ready_status(self, room_name, player_id):
-        if not hasattr(self, 'room_data'):
+        if room_name not in active_lobbies:
             await self.send(json.dumps({
                 "type": "error",
                 "error": f"lobby {room_name} not found"
                 }))
             return
-        if "ready" not in self.room_data[room_name]:
-            self.room_data[room_name]["ready"] = []
-        if room_name in self.room_data:
-            if player_id not in self.room_data[room_name].get("ready", []):
-                self.room_data[room_name]["ready"].append(player_id)
+        if "ready" not in active_lobbies[room_name]:
+            active_lobbies[room_name]["ready"] = []
+        if room_name in active_lobbies:
+            if player_id not in active_lobbies[room_name].get("ready", []):
+                active_lobbies[room_name]["ready"].append(player_id)
+                await self.send(json.dumps({
+                    "type": "notice",
+                    "message": "Player has readied up"
+                    }))
         if self.all_ready(room_name):
             try:
                 await self.send(json.dumps({
                     "type": "notice",
                     "message": "Game is starting"
                     }))
-                player_channels = self.room_data[room_name].get("players", [])
+                player_channels = active_lobbies[room_name].get("players", [])
                 game_room = GameRoom(room_name, player_channels, self)
                 active_game_rooms[room_name] = game_room
                 game_task = asyncio.create_task(game_room.run())
@@ -137,10 +141,10 @@ class GameConsumer(AsyncWebsocketConsumer):
                 del active_game_rooms[room_name]
 
     def all_ready(self, room_name):
-        if room_name not in self.room_data:
+        if room_name not in active_lobbies:
             return False
-        players = self.room_data[room_name].get("players", [])
-        ready_players = self.room_data[room_name].get("ready", [])
+        players = active_lobbies[room_name].get("players", [])
+        ready_players = active_lobbies[room_name].get("ready", [])
         return set(players) == set(ready_players)
 
     def cleanup_timed_out_rooms(self): #Potentially could be handled in handle_game_task_completion
