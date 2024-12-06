@@ -104,7 +104,7 @@ export function setGameTestView(contentContainer) {
 		try {
 			//await getPlayerInfo(); hardcode player info for tests
 			//		const roomName = "42";
-			const socketUrl = 'wss://localhost:8443/ws/game/42'; //set room_name instead
+			const socketUrl = 'ws://localhost:8000/ws/game/42'; //set room_name instead
 			console.log(socketUrl);
 			data.socket = new WebSocket(socketUrl);
 			data.socket.onopen() = () => {
@@ -114,7 +114,6 @@ export function setGameTestView(contentContainer) {
 		console.error('Websocket error: ', error);
 		throw error;
 	};
-		data.socket = socket;
 	} catch (error) {
 		throw error;
 		}

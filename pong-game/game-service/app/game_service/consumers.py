@@ -1,4 +1,5 @@
 import os
+import logging
 from dotenv import load_dotenv
 import json
 import uuid
@@ -6,10 +7,11 @@ import asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.sessions import SessionMiddlewareStack
 from channels.layers import get_channel_layer
-from game_room import GameRoom
+from .game_room import GameRoom
 
 load_dotenv()
 active_game_rooms = {}
+logger = logging.getLogger(__name__)
 
 class GameConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
@@ -17,8 +19,11 @@ class GameConsumer(AsyncWebsocketConsumer):
         self.channel_layer = get_channel_layer()
 
     async def connect(self):
-        print("Receiving new connection")
-        await self.accept()
+        logger.info(f"WebSocket connection attempt: {self.scope['path']}")
+        try:
+            await self.accept()
+        except Exception as e:
+            logger.error(f"WebSocket connection error: {e}")
         await self.send(json.dumps({
             "type": "notice",
             "message": "Connection established"
