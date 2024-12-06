@@ -254,7 +254,39 @@ body {
 	border-radius: 10px 10px 0 0 !important;
 }
 
+/**************************** Inner-content ****************************/
+
+#innerContent {
+	/* background-color: red; */
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+/**************************** Leaderboard ****************************/
+
+.leaderboard-view {
+	/* background-color: red; */
+	width: 80%;
+	margin: 10px;
+}
+
+table {
+	/* background-color: red; */
+	margin: 0 0 30px 0;
+
+}
+
 /**************************** Settings ****************************/
+
+.settings-view {
+	/* background-color: red; */
+	width: 80%;
+	margin: 10px;
+}
 
 .form-select {
 	background-color: rgba(255, 255, 255, 0.1) !important;
@@ -266,4 +298,28 @@ body {
 .form-select label {
 	margin: 0 0 0 10px;
 	color: red;
+}
+
+/**************************** Profile view ****************************/
+
+.profile-view {
+	/* background-color: red; */
+	width: 80%;
+	margin: 10px;
+}
+
+/**************************** friends-view ****************************/
+
+.friends-view {
+	/* background-color: red; */
+	width: 80%;
+	margin: 10px;
+}
+
+/**************************** 404-view ****************************/
+
+.error404-view {
+	/* background-color: red; */
+	width: 80%;
+	margin: 10px;
 }

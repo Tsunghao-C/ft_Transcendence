@@ -1,33 +1,38 @@
 import { playerDatas } from "./data_test.js";
 import { translations } from "./language_pack.js";
+import { setContainerHtml } from './app.js'
 
 export function setFriendsView(contentContainer) {
 	const currentLogin = localStorage.getItem("currentLogin");
 	const currentPlayer = playerDatas.players[currentLogin];
 	const currentLanguage = localStorage.getItem("language");
 
+	// setContainerHtml(contentContainer, "./html/friends.html");
+
 	contentContainer.innerHTML = `
 		<!-- Onglets Bootstrap -->
-		<ul class="nav nav-tabs" id="friendsBlockTabs" role="tablist">
-			<li class="nav-item">
-				<a class="nav-link active" id="friends-tab" data-bs-toggle="tab" href="#friends" role="tab" aria-controls="friends" aria-selected="true">${translations[currentLanguage].friendList}</a>
-			</li>
-			<li class="nav-item">
-				<a class="nav-link" id="block-tab" data-bs-toggle="tab" href="#block" role="tab" aria-controls="block" aria-selected="false">${translations[currentLanguage].blockList}</a>
-			</li>
-		</ul>
-		<div class="tab-content">
-			<!-- Contenu de Friends List -->
-			<div class="tab-pane fade show active" id="friends" role="tabpanel" aria-labelledby="friends-tab">
-				<h2>${translations[currentLanguage].friendList}</h2>
-				<button id="addFriendButton" class="btn btn-success mb-3">${translations[currentLanguage].addNewFriend}</button>
-				<ul id="friendsList" class="list-group"></ul>
-			</div>
-			<!-- Contenu de Block List -->
-			<div class="tab-pane fade" id="block" role="tabpanel" aria-labelledby="block-tab">
-				<h2>${translations[currentLanguage].blockList}</h2>
-				<button id="addBlockButton" class="btn btn-success mb-3">${translations[currentLanguage].addBlock}</button>
-				<ul id="blockList" class="list-group"></ul>
+		<div class="friends-view">
+			<ul class="nav nav-tabs" id="friendsBlockTabs" role="tablist">
+				<li class="nav-item">
+					<a class="nav-link active" id="friends-tab" data-bs-toggle="tab" href="#friends" role="tab" aria-controls="friends" aria-selected="true">${translations[currentLanguage].friendList}</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" id="block-tab" data-bs-toggle="tab" href="#block" role="tab" aria-controls="block" aria-selected="false">${translations[currentLanguage].blockList}</a>
+				</li>
+			</ul>
+			<div class="tab-content">
+				<!-- Contenu de Friends List -->
+				<div class="tab-pane fade show active" id="friends" role="tabpanel" aria-labelledby="friends-tab">
+					<h2>${translations[currentLanguage].friendList}</h2>
+					<button id="addFriendButton" class="btn btn-success mb-3">${translations[currentLanguage].addNewFriend}</button>
+					<ul id="friendsList" class="list-group"></ul>
+				</div>
+				<!-- Contenu de Block List -->
+				<div class="tab-pane fade" id="block" role="tabpanel" aria-labelledby="block-tab">
+					<h2>${translations[currentLanguage].blockList}</h2>
+					<button id="addBlockButton" class="btn btn-success mb-3">${translations[currentLanguage].addBlock}</button>
+					<ul id="blockList" class="list-group"></ul>
+				</div>
 			</div>
 		</div>
 	`;

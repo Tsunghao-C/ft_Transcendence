@@ -2,11 +2,13 @@
 
 import { playerDatas } from "./data_test.js";
 import { translations } from "./language_pack.js";
+import { setContainerHtml } from './app.js'
 
-export function setProfileView(contentContainer, usernameInHash) {
+export async function setProfileView(contentContainer, usernameInHash) {
+	// await setContainerHtml(contentContainer, "./html/profile.html");
 	contentContainer.innerHTML = `
 		<div class="profile-view">
-			<h1 data-i18n="profileTitle">Search Profile</h1>
+			<h2 data-i18n="profileTitle">Search Profile</h2>
 			<div class="search-bar mb-3">
 				<input type="text" id="searchInput" class="form-control" placeholder="Enter a username..." />
 				<button id="searchButton" class="btn btn-primary mt-2" data-i18n="searchButton">Search</button>
@@ -14,6 +16,7 @@ export function setProfileView(contentContainer, usernameInHash) {
 			<div id="profileResult"></div>
 		</div>
 	`;
+
 	const searchInput = document.getElementById("searchInput");
 	const searchButton = document.getElementById("searchButton");
 	const profileResult = document.getElementById("profileResult");

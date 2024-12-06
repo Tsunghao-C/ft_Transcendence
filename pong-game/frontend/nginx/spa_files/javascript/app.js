@@ -30,6 +30,49 @@ export async function setContainerHtml(container, url) {
     }
 }
 
+function setNavbarHtml(container) {
+		container.innerHTML = `
+			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="navbarNav">
+				<ul class="navbar-nav mx-auto">
+					<li class="nav-item">
+						<a class="nav-link" href="#game" data-i18n="game"><span data-i18n="game">Game</span></a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="#leaderboard" data-i18n="leaderboard"><span data-i18n="leaderboard">Leaderboard</span></a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="#settings" data-i18n="settings"><span data-i18n="settings">Settings</span></a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="#profile" data-i18n="profile"><span data-i18n="profile">Profile</span></a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="#friends" data-i18n="friends"><span data-i18n="friends">Friends</span></a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="#chat" data-i18n="chat"><span data-i18n="chat">Chat</span></a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="#about" data-i18n="about"><span data-i18n="about">About</span></a>
+					</li>
+				</ul>
+				<ul class="navbar-nav">
+					<li class="nav-item dropdown d-flex align-items-center">
+						<img id="userAvatar" src="wtf.jpeg" alt="User Avatar" class="rounded-circle me-2" style="width: 30px; height: 30px; display: block;">
+						<a class="nav-link dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" role="button" tabindex="0">User</a>
+						<ul class="dropdown-menu" aria-labelledby="userDropdown" role="menu">
+							<li><a class="dropdown-item" href="#personnal-data" data-i18n="personnalData" role="menuitem" tabindex="0">My information</a></li>
+							<li><a class="dropdown-item" href="#" data-i18n="logout" id="logoutButton" role="menuitem" tabindex="0">Logout</a></li>
+						</ul>
+					</li>
+				</ul>
+			</div>
+		`
+}
+
 export async function loadPage(page) {
 	//add a checker to check there is no more than one /
 	const contentContainer = document.getElementById("center-box");
@@ -43,7 +86,7 @@ export async function loadPage(page) {
 		closeGameWebSocket();
 	}
 	if (isLoggedIn === "true")
-			await setContainerHtml(navbar, "./html/navbar.html");
+			setNavbarHtml(navbar);
 
 	if (isLoggedIn === "true") {
 		const currentLogin = localStorage.getItem("currentLogin");
@@ -127,7 +170,6 @@ export async function loadPage(page) {
 	changeLanguage(currentLanguage);
 }
 
-
 function handleNavigation(event) {
 	event.preventDefault();
 
@@ -141,8 +183,6 @@ function handleNavigation(event) {
 		updateActiveLink();
 	}
 }
-
-
 
 export function attachNavigationListeners() {
 	const links = document.querySelectorAll("a[href^='#']");
@@ -164,8 +204,6 @@ function updateActiveLink() {
 		currentLink.classList.add('active');
 	}
 }
-
-
 
 document.addEventListener("DOMContentLoaded", function () {
 

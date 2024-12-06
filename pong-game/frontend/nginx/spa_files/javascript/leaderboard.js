@@ -3,7 +3,23 @@
 import { setContainerHtml } from './app.js'
 
 export async function setLeaderboardView(contentContainer) {
-	await setContainerHtml(contentContainer, "./html/leaderboard.html");
+	// await setContainerHtml(contentContainer, "./html/leaderboard.html");
+	contentContainer.innerHTML = `
+		<div class="leaderboard-view">
+			<h2 data-i18n="leaderboard">Leaderboard</h2>
+			<table class="table">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th data-i18n="username">Username</th>
+						<th >MMR</th>
+					</tr>
+				</thead>
+				<tbody id="leaderboardTableBody">
+				</tbody>
+			</table>
+		</div>
+	`;
 	fetchLeaderboardData();
 }
 
