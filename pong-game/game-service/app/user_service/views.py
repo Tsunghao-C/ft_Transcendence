@@ -132,7 +132,7 @@ class Generate2FAView(APIView):
 			# print("The 2FA code is : " + )
 			sendOTP(user.email, user.username, user.id, f"otp_{user.id}")
 			return Response({"detail": "A 2FA code has been sent", "user_id": str(user.id)}, status=status.HTTP_200_OK)
-		return Response({"detail": "Invalid credentials"}, status=status.HTTP_200_OK)
+		return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
 # Check and validate/refuse the 2FA code entered by user
 class Validate2FAView(APIView):
@@ -151,7 +151,7 @@ class Validate2FAView(APIView):
 				"access": str(refresh.access_token),
 				"detail": "2FA code validated",
 			}, status=status.HTTP_200_OK)
-		return Response({"detail": "Invalid or expired OTP"}, status=status.HTTP_200_OK)
+		return Response({"detail": "Invalid or expired OTP"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class changeEmailView(APIView):
@@ -161,9 +161,9 @@ class changeEmailView(APIView):
 		user = request.user
 		newEmail = request.data.get("new_email")
 		if not newEmail or not re.match(r"[^@]+@[^@]+\.[^@]+", newEmail):
-			return Response({"error": "invalid email format"}, status=200)
+			return Response({"error": "invalid email format"}, status=400)
 		if CustomUser.objects.filter(email=newEmail).exists():
-			return Response({"error": "email is already in use"}, status=200)
+			return Response({"error": "email is already in use"}, status=400)
 		sendOTP(newEmail, user.username, user.id, f"email_change_{user.id}")
 		return Response({"detail": "otp code sent"}, status=200)
 
@@ -177,4 +177,4 @@ class changeEmailView(APIView):
 			user.save()
 			cache.delete(cacheName)
 			return Response({"detail": "email change success"}, status=200)
-		return Response({"error": "invalid or expired otp"}, status=200)
+		return Response({"error": "invalid or expired otp"}, status=400)
