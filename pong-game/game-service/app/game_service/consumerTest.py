@@ -40,6 +40,7 @@ class GameConsumerTest(TestCase):
         })
         
         # Check the response response = await communicator.receive_json_from()
+        response = await communicator.receive_json_from()
         print(json.dumps(response, indent=4))
         self.assertEqual(response['type'], 'room_creation')
         self.assertIn('room_name', response)
@@ -169,9 +170,7 @@ class GameConsumerTest(TestCase):
  
         update_messages = []
         while True:
-            logger.info("==========================")
-            logger.info("ITERATING THROUGH MESSAGES")
-            logger.info("==========================")
+            logger.info("====GAME LOOP ITERATION====")
             await joiner_communicator.send_json_to({
                 'type': 'player_input',
                 'game_roomID': room_name,
@@ -185,7 +184,7 @@ class GameConsumerTest(TestCase):
                 'input': 'move_up',
                 })
             update_message = await asyncio.wait_for(creator_communicator.receive_json_from(),
-                                                    timeout=5.0)
+                                                    timeout=1)
             print(json.dumps(update_message, indent=4))
             if update_message['type'] == 'game_over':
                 break

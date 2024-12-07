@@ -159,6 +159,7 @@ class GameConsumer(AsyncWebsocketConsumer):
             print("Game task was cancelled")
         except Exception as e:
             print(f"Game task encountered error: {e}")
+            raise
         finally:
             room_name = task.get_name()
             if room_name in active_game_rooms:

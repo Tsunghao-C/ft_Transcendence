@@ -5,7 +5,7 @@ import httpx
 import logging
 from asgiref.sync import async_to_sync
 
-CANVAS_WIDTH = 800
+CANVAS_WIDTH = 800 #original value is 800, change it in case I fucked it up for tests
 CANVAS_HEIGHT = 600
 PADDLE_HEIGHT = 100
 PADDLE_WIDTH = 15
@@ -44,8 +44,8 @@ class GameRoom():
         self.room_id = "lobby_" + room_id
         self.player_channel = player_channel
         self.players = {
-                players[0]: Player(players[0], 'left', CANVAS_WIDTH, CANVAS_HEIGHT),
-                players[1]: Player(players[1], 'right', CANVAS_WIDTH, CANVAS_HEIGHT)
+                0: Player(players[0], 'left', CANVAS_WIDTH, CANVAS_HEIGHT),
+                1: Player(players[1], 'right', CANVAS_WIDTH, CANVAS_HEIGHT)
         }
         self.canvas_width = CANVAS_WIDTH
         self.canvas_height = CANVAS_HEIGHT
@@ -150,8 +150,8 @@ class GameRoom():
                     'payload': game_report,
                     'message': message
                 })
-        await self.send_report_to_db(winner) # send json post with "p1ID" and "p2ID" and matchOutcome, set matchOutcome to 0 for p0 victory or 1 for p1 victory
-        await asyncio.sleep(10)
+#        await self.send_report_to_db(winner) # send json post with "p1ID" and "p2ID" and matchOutcome, set matchOutcome to 0 for p0 victory or 1 for p1 victory
+#        await asyncio.sleep(1)
 
     def update_ball(self):
         self.ball.x += self.ball.speedX
