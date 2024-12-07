@@ -21,6 +21,7 @@ class UserSerializer(serializers.ModelSerializer):
 			"winCount",
 			"lossCount",
 			"language",
+			"avatar",
 			]
 		extra_kwargs = {
 			"password": {"write_only": True}, # we accept the password as an input but we don't return it
@@ -31,6 +32,7 @@ class UserSerializer(serializers.ModelSerializer):
 			"blockList": {"read_only": True},
 			"friendList": {"read_only": True},
 			"language": {"read_only": True},
+			"avatar": {"required": False},
 		}
 
 	def validate_username(self, value):

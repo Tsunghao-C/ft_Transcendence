@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from .models import CustomUser, FriendRequest
 from rest_framework import generics
-from .serializers import UserSerializer
+
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -9,7 +9,14 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from rest_framework import status
 from rest_framework.permissions import AllowAny
-import re
+from django.contrib.auth.decorators import login_required
+from django.dispatch import receiver
+from django.db.models.signals import pre_save
+from .forms import UploadAvatarForm
+from .serializers import UserSerializer
+from .models import CustomUser
+import re, os
+import uuid
 
 # 2FA
 import random
@@ -161,7 +168,6 @@ class Validate2FAView(APIView):
 				"detail": "2FA code validated",
 			}, status=status.HTTP_200_OK)
 		return Response({"detail": "Invalid or expired OTP"}, status=status.HTTP_400_BAD_REQUEST)
-
 
 class changeEmailView(APIView):
 	permission_classes = [IsAuthenticated]
@@ -325,3 +331,27 @@ class changeLanguageView(APIView):
 		user.language = newLang
 		user.save()
 		return Response({"detail": f"successfully changed language to {newLang}"}, status=200)
+
+
+class changeAvatarView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def post(self, request):
+		user = request.user
+		form = UploadAvatarForm(request.POST, request.FILES, instance=user)
+		if form.is_valid():
+			form.save()
+			return Response({"detail": "Avatar uploaded successfully"}, status=200)
+		return Response({"errors": form.errors}, status=400)
+
+@receiver(pre_save, sender=CustomUser) # gets called before CustomUser changes are saved
+def deleteOldAvatar(sender, instance, **kwargs):
+	if not instance.pk:
+		return #new user, no old avatar
+	try:
+		oldAvatar = sender.objects.get(pk=instance.pk).avatar
+	except sender.DoesNotExist:
+		return # user doesn't exist yet, nothing to delete
+	if oldAvatar and oldAvatar != instance.avatar:
+		if os.path.isfile(oldAvatar.path) and oldAvatar.name != 'default.jpg':
+			os.remove(oldAvatar.path)
