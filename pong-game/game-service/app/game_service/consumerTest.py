@@ -139,7 +139,6 @@ class GameConsumerTest(TestCase):
         self.assertEqual(joiner_response['type'], 'notice')
         print(json.dumps(joiner_response, indent=4))
 
-
   #      try:
         print("===Testing consumer game starting notice====")
         # Check for game start notice
@@ -169,13 +168,27 @@ class GameConsumerTest(TestCase):
 
  
         update_messages = []
-        for _ in range(3):
+        while True:
             logger.info("==========================")
             logger.info("ITERATING THROUGH MESSAGES")
             logger.info("==========================")
+            await joiner_communicator.send_json_to({
+                'type': 'player_input',
+                'game_roomID': room_name,
+                'player_id': 'player2',
+                'input': 'move_down',
+                })
+            await creator_communicator.send_json_to({
+                'type': 'player_input',
+                'game_roomID': room_name,
+                'player_id': 'player1',
+                'input': 'move_up',
+                })
             update_message = await asyncio.wait_for(creator_communicator.receive_json_from(),
                                                     timeout=5.0)
             print(json.dumps(update_message, indent=4))
+            if update_message['type'] == 'game_over':
+                break
             update_messages.append(update_message)
             self.assertEqual(update_message['type'], 'game_update')
             self.assertIn('payload', update_message)

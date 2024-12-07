@@ -54,7 +54,8 @@ class GameRoom():
         self.game_over = False
         self.winner = -1
 
-    async def receive_player_inputs(self, player_id, input):
+    async def receive_player_input(self, player_id, input):
+        logger.info("GameRoom: Received player input")
         if player_id in self.players:
             player = self.players[player_id]
             if input == "move_up":

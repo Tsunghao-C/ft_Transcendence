@@ -53,7 +53,9 @@ class GameConsumer(AsyncWebsocketConsumer):
             roomID = data['game_roomID']
             if roomID in active_game_rooms:
                 game_room = active_game_rooms[roomID]
+                logger.info("Consumer: Received player input")
                 await game_room.receive_player_input(data['player_id'], data['input'])
+                logger.info("Consumer: Forwarded player input")
             else:
                 await self.send(json.dumps({
                        "type": "error",
