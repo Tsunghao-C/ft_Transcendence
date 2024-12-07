@@ -15,8 +15,10 @@ import { setPersonnalDataView } from './personnal-data.js';
 import { setProfileView } from './profile.js';
 import { setFriendsView } from './friends.js';
 import { playerDatas } from './data_test.js';
+import { setGameTestView } from  './game_test.js';
 
 export function loadPage(page) {
+	localStorage.setItem("isLoggedIn", "true");
 	//add a checker to check there is no more than one /
 	const contentContainer = document.getElementById("content");
 	const currentLanguage = localStorage.getItem("language") || "en";
@@ -100,6 +102,9 @@ export function loadPage(page) {
             case "personnal-data":
                 setPersonnalDataView(contentContainer);
                 break;
+			case "test_game":
+				setGameTestView(contentContainer);
+				break;
             default:
                 if (page.startsWith("profile/")) {
                     const profileUsername = page.split("/")[1] || localStorage.getItem("currentLogin");

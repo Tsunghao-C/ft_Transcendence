@@ -8,4 +8,3 @@ def room(request, room_name):
         return redirect("/api/user/login/")
     return render(request, "chat/chatroom.html", {"room_name": room_name})
 
-

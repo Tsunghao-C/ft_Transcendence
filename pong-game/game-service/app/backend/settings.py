@@ -67,6 +67,7 @@ INSTALLED_APPS = [
 	"rest_framework",
 	"corsheaders",
     "channels",
+#    "sessionMiddleWareStack",
 ]
 
 MIDDLEWARE = [
@@ -85,7 +86,10 @@ ROOT_URLCONF = 'backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            # only absolute paths here
+            BASE_DIR / 'game_service' / 'templates', 
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -100,7 +104,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 ASGI_APPLICATION = 'backend.asgi.application'
-
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -164,9 +167,6 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = '/app/static'
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -185,15 +185,43 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 # can replace inmemorychannellayer with redis later
 CHANNEL_LAYERS = {
+#    "default": { "BACKEND": "channels_redis.core.RedisChannelLayer",
+#        "CONFIG": {
+#            "hosts": [("127.0.0.1", 6379)]
+#        },
+#    },
     "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)]
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    },
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'DEBUG',  # Set to DEBUG for detailed logs
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'django.channels': {
+            'handlers': ['console'],
+            'level': 'DEBUG',  # Log WebSocket-related events
+            'propagate': False,
         },
     },
 }
 
-# LOGIN_REDIRECT_URL = '/chat/'
+LOGIN_REDIRECT_URL = '/chat/'
 
 # Alex add for Email host setup
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
