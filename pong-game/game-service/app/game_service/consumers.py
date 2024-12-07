@@ -135,7 +135,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                         "type": "group_message",
                         "message": "Game is starting"
                     })
-                logger.info("Player notified of game start")
+                logger.info(f"Starting game id: lobby_{room_name}")
                 player_channels = get_channel_layer()
                 game_room = GameRoom(room_name, player_channels, active_lobbies[room_name]["players"])
                 logger.info("GameRoom created")

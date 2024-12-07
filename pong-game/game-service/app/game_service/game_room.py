@@ -41,7 +41,7 @@ class Ball():
 
 class GameRoom():
     def __init__(self, room_id, player_channel, players):
-        self.room_id = room_id
+        self.room_id = "lobby_" + room_id
         self.player_channel = player_channel
         self.players = {
                 players[0]: Player(players[0], 'left', CANVAS_WIDTH, CANVAS_HEIGHT),

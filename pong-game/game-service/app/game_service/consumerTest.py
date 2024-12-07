@@ -141,13 +141,12 @@ class GameConsumerTest(TestCase):
 
 
   #      try:
-
-
         print("===Testing consumer game starting notice====")
         # Check for game start notice
         start_response = await creator_communicator.receive_json_from()
         self.assertEqual(start_response['type'], 'notice')
         self.assertEqual(start_response['message'], 'Game is starting')
+        print(json.dumps(start_response, indent=4))
 
         start_response = await joiner_communicator.receive_json_from()
         self.assertEqual(start_response['type'], 'notice')
