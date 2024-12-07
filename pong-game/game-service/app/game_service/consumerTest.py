@@ -175,6 +175,7 @@ class GameConsumerTest(TestCase):
             logger.info("==========================")
             update_message = await asyncio.wait_for(creator_communicator.receive_json_from(),
                                                     timeout=5.0)
+            print(json.dumps(update_message, indent=4))
             update_messages.append(update_message)
             self.assertEqual(update_message['type'], 'game_update')
             self.assertIn('payload', update_message)
