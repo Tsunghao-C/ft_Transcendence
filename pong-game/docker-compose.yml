@@ -218,6 +218,7 @@ services:
        SQL_PORT: ${SQL_PORT}
        SQL_HOST: game_db
        USER_DB_HOST: user_db
+       LDB_UPDATE_TIMER: ${LDB_UPDATE_TIMER}
      depends_on:
        - game_db
        - user_db

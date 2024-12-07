@@ -12,7 +12,10 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import game_service
 import os
+
+import game_service.models
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -52,6 +55,7 @@ SIMPLE_JWT = {
 # Application definition
 
 INSTALLED_APPS = [
+	"django_crontab",
     "chat",
     'django.contrib.admin',
     'django.contrib.auth',
@@ -200,3 +204,8 @@ EMAIL_PORT = 587              # Port SMTP pour TLS
 EMAIL_USE_TLS = True          # Activer TLS
 EMAIL_HOST_USER = '42transcendental@gmail.com'  # Votre adresse e-mail
 EMAIL_HOST_PASSWORD = 'zlywwbcyedhomdet'  # Votre mot de passe ou App Password /!\ CODE A CACHER DANS L'ENV
+
+LDB_UPDATE_TIMER = os.environ.get("LDB_UPDATE_TIMER", 15)
+CRONJOBS = [
+	(f"*/{LDB_UPDATE_TIMER} * * * *", game_service.models.LeaderBoard.objects.updateLeaderBoard())
+]

@@ -20,6 +20,9 @@ echo "Migrating db's..."
 python manage.py makemigrations user_service
 python manage.py migrate
 
+echo "Adding django crontab..."
+python manage.py crontab add || { echo "failed to add crontab"; exit 1; }
+
 # Collect static files
 echo "Collecting static files..."
 python manage.py collectstatic --noinput -v 2 || { echo "static collection failed"; exit 1; }
