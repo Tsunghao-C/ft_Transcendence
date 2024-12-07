@@ -141,8 +141,9 @@ class GameConsumer(AsyncWebsocketConsumer):
                 player_channels = get_channel_layer()
                 game_room = GameRoom(room_name, player_channels, active_lobbies[room_name]["players"])
                 logger.info("GameRoom created")
-                active_game_rooms[room_name] = game_room
+                active_game_rooms[group_name] = game_room
                 game_task = asyncio.create_task(game_room.run())
+                del active_lobbies[room_name]
                 logger.info("GameRoom task added")
                 game_task.add_done_callback(self.handle_game_task_completion) #this is fucking wack, shouldn't the task be passed as parameter?
             except Exception as e:
@@ -154,6 +155,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 
     def handle_game_task_completion(self, task):
         try:
+            logger.info("Game Room complete")
             task.result()
         except asyncio.CancelledError:
             print("Game task was cancelled")
@@ -161,7 +163,7 @@ class GameConsumer(AsyncWebsocketConsumer):
             print(f"Game task encountered error: {e}")
             raise
         finally:
-            room_name = task.get_name()
+            room_name = task.get_name() #shouldn't this be self.get_name() instead??
             if room_name in active_game_rooms:
                 del active_game_rooms[room_name]
 
@@ -172,6 +174,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         ready_players = active_lobbies[room_name].get("ready", [])
         return set(players) == set(ready_players)
 
+    #not implemented ahah
     def cleanup_timed_out_rooms(self): #Potentially could be handled in handle_game_task_completion
         rooms_to_remove = [
                 room_id for room_id, game_room in active_game_rooms.items()
