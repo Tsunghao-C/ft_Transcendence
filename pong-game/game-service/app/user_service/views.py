@@ -280,7 +280,7 @@ class getOpenFriendRequestsView(APIView):
 
 	def get(self, request):
 		user = request.user
-		openRequests = FriendRequest.objects.filter(to_user=user.alias)
+		openRequests = FriendRequest.objects.filter(to_user=user)
 		if not openRequests.exists():
 			return Response({"detail": "No open friend requests."}, status=200)
 		friendRequestsData = [
@@ -301,7 +301,7 @@ class getSentFriendRequestsView(APIView):
 
 	def get(self, request):
 		user = request.user
-		openRequests = FriendRequest.objects.filter(from_user=user.alias)
+		openRequests = FriendRequest.objects.filter(from_user=user)
 		if not openRequests.exists():
 			return Response({"detail": "No open friend requests."}, status=200)
 		friendRequestsData = [
