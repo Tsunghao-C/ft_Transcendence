@@ -1,5 +1,3 @@
-
-# python manage.py test game_service.consumerTest
 import os
 import logging
 from dotenv import load_dotenv
@@ -95,6 +93,19 @@ class GameConsumer(AsyncWebsocketConsumer):
             "message": f"Joined lobby {room_name}"
             }))
 
+    async def group_message(self, event):
+        await self.send(json.dumps({
+            'type': 'notice',
+            'message': event["message"]
+            }))
+
+    async def game_message(self, event):
+        await self.send(json.dumps({
+            'type': event['update_type'],
+            'payload': event['payload'],
+            'message': event['message']
+            }))
+
     async def update_ready_status(self, room_name, player_id):
         if room_name not in active_lobbies:
             await self.send(json.dumps({
@@ -107,22 +118,33 @@ class GameConsumer(AsyncWebsocketConsumer):
         if room_name in active_lobbies:
             if player_id not in active_lobbies[room_name].get("ready", []):
                 active_lobbies[room_name]["ready"].append(player_id)
-                await self.send(json.dumps({
-                    "type": "notice",
-                    "message": "Player has readied up"
-                    }))
+                logger.info(f"Player has readied up, id: {player_id}")
+                group_name = f"lobby_{room_name}"
+                await self.channel_layer.group_send(
+                    group_name,
+                    {
+                        "type": "group_message",
+                        "message": f"Player {player_id} is ready"
+                    })
         if self.all_ready(room_name):
             try:
-                await self.send(json.dumps({
-                    "type": "notice",
-                    "message": "Game is starting"
-                    }))
-                player_channels = active_lobbies[room_name].get("players", [])
-                game_room = GameRoom(room_name, player_channels, self)
+                group_name = f"lobby_{room_name}"
+                await self.channel_layer.group_send(
+                    group_name,
+                    {
+                        "type": "group_message",
+                        "message": "Game is starting"
+                    })
+                logger.info("Player notified of game start")
+                player_channels = get_channel_layer()
+                game_room = GameRoom(room_name, player_channels, active_lobbies[room_name]["players"])
+                logger.info("GameRoom created")
                 active_game_rooms[room_name] = game_room
                 game_task = asyncio.create_task(game_room.run())
+                logger.info("GameRoom task added")
                 game_task.add_done_callback(self.handle_game_task_completion) #this is fucking wack, shouldn't the task be passed as parameter?
             except Exception as e:
+                logger.error(f"Failed to start the gameroom: {str(e)}")
                 await self.send(json.dumps({
                     "type": "error",
                     "error": f"Failed to start game: {str(e)}"

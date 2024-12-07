@@ -2,7 +2,7 @@ import math
 import json
 import asyncio
 import httpx
-from channels.layers import get_channel_layer
+import logging
 from asgiref.sync import async_to_sync
 
 CANVAS_WIDTH = 800
@@ -11,6 +11,7 @@ PADDLE_HEIGHT = 100
 PADDLE_WIDTH = 15
 BALL_RADIUS = 10
 
+logger = logging.getLogger(__name__)
 class Player():
     def __init__(self, player_id, side, canvas_width, canvas_height):
         self.player_id = player_id
@@ -39,13 +40,12 @@ class Ball():
         self.radius = BALL_RADIUS
 
 class GameRoom():
-    def __init__(self, room_id, player_channels, consumer):
+    def __init__(self, room_id, player_channel, players):
         self.room_id = room_id
-        self.channel_layer = consumer.get_channel_layer() #this seems weird
-        self.player_channels = player_channels
+        self.player_channel = player_channel
         self.players = {
-                player_channels[0]: Player(player_channels[0], 'left', CANVAS_WIDTH, CANVAS_HEIGHT),
-                player_channels[1]: Player(player_channels[1], 'right', CANVAS_WIDTH, CANVAS_HEIGHT)
+                players[0]: Player(players[0], 'left', CANVAS_WIDTH, CANVAS_HEIGHT),
+                players[1]: Player(players[1], 'right', CANVAS_WIDTH, CANVAS_HEIGHT)
         }
         self.canvas_width = CANVAS_WIDTH
         self.canvas_height = CANVAS_HEIGHT
@@ -67,7 +67,7 @@ class GameRoom():
                 pass
 
     def update_players(self):
-        for player in self.players:
+        for player_id, player in self.players.items():
             speed = player.get_speed()
             if speed > 0:
                 if player.y + PADDLE_HEIGHT == CANVAS_HEIGHT:
@@ -98,7 +98,7 @@ class GameRoom():
         return d
 
     def handle_player_collisions(self):
-        for player in self.players:
+        for player_id, player in self.players.items():
             collision = self.check_collisions(player)
             if collision['hasCollision']:
                 if (collision['isVertical']):
@@ -119,8 +119,8 @@ class GameRoom():
 
     async def send_report_to_db(self, winner):
         game_report = {
-                "p1ID": self.player_channels[0].player_id,
-                "p2ID": self.player_channels[1].player_id,
+                "p1ID": self.players[0],
+                "p2ID": self.players[1],
                 "matchOutcome": winner
                 }
         backend_url = "http://the-backend-here"
@@ -140,15 +140,15 @@ class GameRoom():
                 'score_right': self.players[1].score,
                 'winner': self.players[winner].player_id
                 }
-
-        for player_channel in self.player_channels:
-            await self.channel_layer.send(
-                    player_channel, {
-                        'type': 'game_over',
-                        'payload': game_report,
-                        'game_state': json.dumps(game_report)
-                        }
-                    )
+        message = json.dumps(game_report)
+        await self.player_channel.group_send(
+                self.room_id,
+                {
+                    'type': 'game_message',
+                    'update_type': 'game_over',
+                    'payload': game_report,
+                    'message': message
+                })
         await self.send_report_to_db(winner) # send json post with "p1ID" and "p2ID" and matchOutcome, set matchOutcome to 0 for p0 victory or 1 for p1 victory
         await asyncio.sleep(10)
 
@@ -188,29 +188,46 @@ class GameRoom():
                     'radius': self.ball.radius
                     }
                 }
-        for player_channel in self.player_channels:
-            await self.channel_layer.send(
-                    player_channel,{
-                        'type': 'game_update',
-                        'payload': game_state,
-                        'game_state': json.dumps(game_state)
-                        }
-                    )
+        message = json.dumps(game_state)
+        await self.player_channel.group_send(
+                self.room_id,
+                {
+                    'type': 'game_message',
+                    'update_type': 'game_update',
+                    'payload': game_state,
+                    'message': message
+                })
 
     async def run(self):
-        for player_channel in self.player_channels:
-                await self.channel_layer.send(
-                        player_channel,{
-                            'type': 'game_start',
-                            'message': 'Game has started'
-                            }
-                        )
+        logger.info('gameRoom starting')
+        logger.info(f"Room_id: {self.room_id}")
+        logger.info(f"Player_channel: {self.player_channel}")
+        try:
+            message = 'Game has started'
+            await self.player_channel.group_send(
+                    self.room_id,
+                    {
+                        'type': 'game_message',
+                        'update_type': 'game_start',
+                        'payload': None,
+                        'message': message
+                    })
+        except Exception as e:
+            logger.error(f"GameRoom initial group send error: {e}")
+            return
+        logger.info('gameRoom started, messages sent')
         while self.running:
             self.update_players()
+            logger.info('gameRoom updated players')
             self.handle_player_collisions()
+            logger.info('gameRoom updated collisions')
             self.update_ball()
+            logger.info('gameRoom updated ball')
             if self.game_over:
+                logger.info('gameRoom preparing gameover')
                 await self.declare_winner(self.winner)
+                logger.info('gameRoom done')
                 return 
             await self.send_update()
+            logger.info('gameRoom sent update to clients')
             await asyncio.sleep(0.016)
