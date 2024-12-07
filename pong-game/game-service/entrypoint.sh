@@ -18,6 +18,7 @@ python manage.py makemigrations || { echo "makemigrations failed"; exit 1; }
 echo "Migrating db's..."
 # python manage.py migrate || { echo "migrations failed"; exit 1; }
 python manage.py makemigrations user_service
+# python manage.py makemigrations game_service
 python manage.py migrate
 
 echo "Adding django crontab..."
@@ -27,6 +28,10 @@ python manage.py crontab add || { echo "failed to add crontab"; exit 1; }
 echo "Collecting static files..."
 python manage.py collectstatic --noinput -v 2 || { echo "static collection failed"; exit 1; }
 echo "Static files directory contents:"
+
+# Start cron service
+echo "Starting cron service..."
+service cron start || { echo "failed to start cron service"; exit 1; }
 
 # Start Gunicorn server
 echo "Starting Gunicorn server..."

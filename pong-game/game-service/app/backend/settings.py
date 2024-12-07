@@ -12,10 +12,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
-import game_service
+from.cron_config import CRONJOBS
 import os
-
-import game_service.models
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -207,5 +205,5 @@ EMAIL_HOST_PASSWORD = 'zlywwbcyedhomdet'  # Votre mot de passe ou App Password /
 
 LDB_UPDATE_TIMER = os.environ.get("LDB_UPDATE_TIMER", 15)
 CRONJOBS = [
-	(f"*/{LDB_UPDATE_TIMER} * * * *", game_service.models.LeaderBoard.objects.updateLeaderBoard())
+	(f"*/{LDB_UPDATE_TIMER} * * * *", "game_service.models.LeaderBoard.objects.updateLeaderBoard")
 ]
