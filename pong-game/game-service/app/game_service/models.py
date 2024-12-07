@@ -27,12 +27,12 @@ class LeaderBoardManager(models.Manager):
 		players = CustomUser.objects.order_by('-mmr', '-wins') # first by mmr and then by wins
 
 		with transaction.atomic(): # blocks all other write operations for db & if this code block fails, rewinds to before function call
-			cls.objects.all().delete()
+			self.model.objects.all().delete()
 			leaderboard_entries = [
-				cls(rank=rank, player=player)
+				self.model(rank=rank, player=player)
 				for rank, player in enumerate(players, start=1)
 			]
-			cls.objects.bulk_create(leaderboard_entries)
+			self.bulk_create(leaderboard_entries)
 
 class LeaderBoard(models.Model):
 	player = models.ForeignKey(
