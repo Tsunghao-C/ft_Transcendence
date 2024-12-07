@@ -3,6 +3,9 @@ from user_service.models import CustomUser
 from django.db.models import F
 from django.utils.timezone import now
 from datetime import timedelta
+import os
+
+LDB_UPDATE_TIMER = int(os.environ.get("LDB_UPDATE_TIMER", 15))
 
 class MatchResults(models.Model):
 	p1 = models.ForeignKey(
@@ -27,7 +30,7 @@ class LeaderBoardManager(models.Manager):
 	def _hasGameOccured(self):
 		try:
 			latestMatch = MatchResults.objects.latest('time')
-			return latestMatch.time >= now() - timedelta(minutes=30)
+			return latestMatch.time >= now() - timedelta(minutes=LDB_UPDATE_TIMER)
 		except MatchResults.DoesNotExist:
 			return False
 
