@@ -5,16 +5,19 @@ import { loadPage } from "./app.js";
 
 export async function setFriendsView(contentContainer) {
     const currentLanguage = localStorage.getItem("language") || "en";
-    let currentPlayer;
     let friendRequest;
     let sentFriendRequest;
+    let friendData;
+    let blockData;
     try {
-        currentPlayer = await fetchWithToken('/api/user/getuser/');
+        friendData = await fetchWithToken('/api/user/get-friends');
+        blockData = await fetchWithToken('/api/user/get-blocks');
+        console.log("friend list is ", friendData);
+        console.log("block list is ", blockData);
         friendRequest = await fetchWithToken('/api/user/get-friend-requests/');
         sentFriendRequest = await fetchWithToken('/api/user/get-sent-friend-requests/');
-        console.log("User data: ", currentPlayer);
-        console.log("friendRequest data: ", friendRequest);
-        console.log("sentFriendRequest data: ", sentFriendRequest);
+        // console.log("friendRequest data: ", friendRequest);
+        // console.log("sentFriendRequest data: ", sentFriendRequest);
    
 
     contentContainer.innerHTML = `
@@ -68,16 +71,22 @@ export async function setFriendsView(contentContainer) {
 
     async function renderFriends() {
         friendsList.innerHTML = "";
-        currentPlayer = await fetchWithToken('/api/user/getuser/');
+        friendData = await fetchWithToken('/api/user/get-friends');
+        blockData = await fetchWithToken('/api/user/get-blocks');
 
-        if (currentPlayer.friendList && currentPlayer.friendList.length > 0) {
-            currentPlayer.friendList.forEach((friend) => {
+        if (friendData && friendData.count > 0) {
+            friendData.requests.forEach((friend) => {
                 const friendItem = document.createElement("li");
                 friendItem.classList.add("list-group-item");
                 friendItem.innerHTML = `
                     <div class="row">
                         <div class="col-md-6">
-                            <a href="#profile/${friend.username}" class="profile-link">${friend.username}</a>
+                            <a href="#profile/${friend.alias}" class="profile-link">${friend.alias}</a>
+                            <p>
+                                MMR: <span class="badge badge-primary">${friend.mmr}</span> | 
+                                Wins: <span class="badge badge-success">${friend.wins}</span> | 
+                                Losses: <span class="badge badge-danger">${friend.losses}</span>
+                            </p>
                         </div>
                         <div class="col-md-4 text-right">
                             <button class="btn btn-info btn-sm">${translations[currentLanguage].sendMessage}</button>
@@ -88,13 +97,13 @@ export async function setFriendsView(contentContainer) {
                 `;
                 friendsList.appendChild(friendItem);
 				const sendMessageButton = friendItem.querySelector("button.btn-info");
-				sendMessageButton.addEventListener("click", () => sendMessage(friend.username));
+				sendMessageButton.addEventListener("click", () => sendMessage(friend.alias));
 		
 				const sendDuelRequestButton = friendItem.querySelector("button.btn-warning");
-				sendDuelRequestButton.addEventListener("click", () => sendDuelRequest(friend.username));
+				sendDuelRequestButton.addEventListener("click", () => sendDuelRequest(friend.alias));
 		
 				const removeFriendButton = friendItem.querySelector("button.btn-danger");
-				removeFriendButton.addEventListener("click", () => confirmRemoveFriend(friend.username));
+				removeFriendButton.addEventListener("click", () => confirmRemoveFriend(friend.alias));
             });
         } else {
             friendsList.innerHTML = `<p>${translations[currentLanguage].noFriends}</p>`;
@@ -105,7 +114,6 @@ export async function setFriendsView(contentContainer) {
         friendRequest = await fetchWithToken('/api/user/get-friend-requests/');
         friendRequestList.innerHTML = "";
         if (friendRequest && friendRequest.count > 0) {
-            console.log("ton pere le cheval ");
             friendRequest.requests.forEach((friendRequesto) => {
                 const requestItem = document.createElement("li");
                 requestItem.classList.add("list-group-item");
@@ -157,19 +165,20 @@ export async function setFriendsView(contentContainer) {
     }
 
     async function renderBlockList() {
-        currentPlayer = await fetchWithToken('/api/user/getuser/');
+        blockData = await fetchWithToken('/api/user/get-blocks');
+
         blockList.innerHTML = "";
-        if (currentPlayer.blockList && currentPlayer.blockList.length > 0) {
-            currentPlayer.blockList.forEach((block) => {
+        if (blockData && blockData.count > 0) {
+            blockData.requests.forEach((block) => {
                 const blockItem = document.createElement("li");
                 blockItem.classList.add("list-group-item");
                 blockItem.innerHTML = `
                     <div class="d-flex justify-content-between align-items-center">
-                        <a href="#profile/${block}" class="profile-link">${block}</a>
+                        <a href="#profile/${block.alias}" class="profile-link">${block.alias}</a>
                         <button class="btn btn-danger btn-sm">${translations[currentLanguage].unblock}</button>
                     </div>
                 `;
-                blockItem.querySelector(".btn-danger").addEventListener("click", () => unblockUser(block));
+                blockItem.querySelector(".btn-danger").addEventListener("click", () => unblockUser(block.alias));
                 blockList.appendChild(blockItem);
             });
         } else {
@@ -185,24 +194,23 @@ export async function setFriendsView(contentContainer) {
 		console.log(`Requesting duel with ${friendUsername}`);
 	}
 	
-	function confirmRemoveFriend(friendUsername) {
+	function confirmRemoveFriend(friendAlias) {
 		const confirmation = confirm(
-			`${translations[currentLanguage].validationRemovalFirst} ${friendUsername} ${translations[currentLanguage].validationRemovalSecond} ?`
+			`${translations[currentLanguage].validationRemovalFirst} ${friendAlias} ${translations[currentLanguage].validationRemovalSecond} ?`
 		);
 		if (confirmation) {
-			removeFriend(friendUsername);
+			removeFriend(friendAlias);
 		}
 	}
 
-    async function removeFriend(friendUsername) {
-		console.log(`removing friend from ${friendUsername}`);
+    async function removeFriend(friendAlias) {
+		console.log(`removing friend from ${friendAlias}`);
         let data;
             try {
                 const body = JSON.stringify({
-                    friendAlias : friendUsername
+                    alias : friendAlias
                   });
                 data = await fetchWithToken('/api/user/delete-friend/', body, 'POST');
-                console.log("User data: ", data);
             } catch (error) {
                 console.log(error);
                 return;
@@ -218,7 +226,6 @@ export async function setFriendsView(contentContainer) {
                     fromAlias: friendUsername,
                   });
                 data = await fetchWithToken('/api/user/accept-friend-request/', body, 'POST');
-                console.log("User data: ", data);
             } catch (error) {
                 console.log(error);
                 return;
@@ -235,7 +242,6 @@ export async function setFriendsView(contentContainer) {
                     fromAlias: notFriendUsername,
                   });
                 data = await fetchWithToken('/api/user/reject-friend-request/', body, 'POST');
-                console.log("User data: ", data);
             } catch (error) {
                 console.log(error);
                 return;
@@ -251,7 +257,6 @@ export async function setFriendsView(contentContainer) {
                     toAlias: friendAlias
                   });
                 data = await fetchWithToken('/api/user/cancel-friend-request/', body, 'POST');
-                console.log("User data: ", data);
             } catch (error) {
                 console.log(error);
                 return;
@@ -267,7 +272,6 @@ export async function setFriendsView(contentContainer) {
                     alias: blockedUser,
                     });
                 data = await fetchWithToken('/api/user/unblock-user/', body, 'POST');
-                console.log("User data: ", data);
             } catch (error) {
                 console.log(error);
                 return;
@@ -282,7 +286,6 @@ export async function setFriendsView(contentContainer) {
             try {
                 const body = JSON.stringify({ alias: newBlockUsername });
                 data = await fetchWithToken('/api/user/block-user/', body, 'POST');
-                console.log("User data: ", data);
             } catch (error) {
                 console.log(error);
                 return;
@@ -296,6 +299,7 @@ export async function setFriendsView(contentContainer) {
             }
         }
 		renderBlockList();
+        renderFriends();
 	});
 
 	//REQUEST
