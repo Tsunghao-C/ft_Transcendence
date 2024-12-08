@@ -1,4 +1,6 @@
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from .views import *
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView, PasswordChangeDoneView
@@ -37,4 +39,5 @@ urlpatterns = [
     path("get-friend-requests/", getOpenFriendRequestsView.as_view(), name="get_friend_requests"),
 	path("get-sent-friend-requests/", getSentFriendRequestsView.as_view(), name="get_sent_frequests"),
 	path("change-language/", changeLanguageView.as_view(), name="change_language"),
-]
+	path("change-avatar/", changeAvatarView.as_view(), name="avatar_change"),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
