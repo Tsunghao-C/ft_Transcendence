@@ -11,13 +11,15 @@ class MatchResults(models.Model):
 	p1 = models.ForeignKey(
 		CustomUser,
 		on_delete=models.CASCADE,
-		related_name="matches_as_p1"
+		related_name="matches_as_p1",
+		db_constraint=False,
 	)
 
 	p2 = models.ForeignKey(
 		CustomUser,
 		on_delete=models.CASCADE,
-		related_name="matches_as_p2"
+		related_name="matches_as_p2",
+		db_constraint=False,
 	)
 
 	matchOutcome = models.IntegerField(choices=[(0, 'Player 2 Wins'), (1, 'Player 1 Wins')])

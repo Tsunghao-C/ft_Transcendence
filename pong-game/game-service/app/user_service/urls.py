@@ -9,7 +9,7 @@ urlpatterns = [
 	
 	path("token/validate/", Validate2FAView.as_view(), name="validate_2fa"),
 	path("token/refresh/", TokenRefreshView.as_view(), name="refresh"),
-    path("updatemmr/", UpdateMMR.as_view(), name="update_mmr"),
+    path("save-match/", SaveMatchResults.as_view(), name="save-match"), # might move this to game_service
 	path("banplayer/", BanPlayer.as_view(), name="banplayer"),
 	path("unbanplayer/", UnbanPlayer.as_view(), name="unbanplayer"),
 

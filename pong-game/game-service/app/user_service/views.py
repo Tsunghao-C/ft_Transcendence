@@ -9,6 +9,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from rest_framework import status
 from rest_framework.permissions import AllowAny
+from game_service.views import recordMatch
 import re
 
 # 2FA
@@ -40,7 +41,7 @@ class updateUsernameView(APIView):
 		return Response(serializer.errors, status=400)
 
 # I'll need to add in some sort of match authentication later
-class UpdateMMR(APIView):
+class SaveMatchResults(APIView):
 	def _get_new_mmr(self, userMMR: int, oppMMR: int, matchOutcome: int):
 		# Calculate the 'expected score'
 		E = 1 / (1 + 10**((oppMMR - userMMR)/400))
@@ -63,6 +64,7 @@ class UpdateMMR(APIView):
 		outcome = request.data.get("matchOutcome")
 		if outcome not in [1, 0]:
 			return Response({"error": "Invalid match input"}, status=400)
+		recordMatch(p1, p2, outcome)
 		p1.mmr = self._get_new_mmr(p1MMR, p2mmr, outcome)
 		self.__updateCounters(p1, outcome);
 		# inverse outcome for p2
