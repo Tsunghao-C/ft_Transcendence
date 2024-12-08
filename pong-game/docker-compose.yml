@@ -200,6 +200,7 @@ services:
        - static_volume:/app/static # Match the path
      expose:
        - 8004
+       - 8001
     #  ports:
     #    - "8004:8004"     # only for development stage, need to close after
      environment:

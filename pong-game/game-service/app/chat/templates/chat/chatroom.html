@@ -1,6 +1,98 @@
 <!--This is a temporary placeholder to demonstrate the back-end-->
 <!DOCTYPE html>
 <html>
+<head>
+    <title>Chat Test</title>
+</head>
+<body>
+    <h1>Chat Rooms</h1>
+    <input id="room-name-input" type="text" placeholder="Enter room name">
+    <button onclick="joinRoom()">Join Room</button>
+
+    <script>
+    function joinRoom() {
+        const roomName = document.getElementById('room-name-input').value;
+        if (roomName) {
+            window.location.pathname = `/chat/${roomName}/`;
+        }
+    }
+    </script>
+</body>
+</html>
+
+<!-- chat/templates/chat/room.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Room: {{ room_name }}</title>
+</head>
+<body>
+    <h1>>Room: {{ room_name }}</h1>
+    <div id="messages" style="height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px;"></div>
+    <input id="message-input" type="text" placeholder="Type your message">
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+    // const roomName = document.querySelector('h1').textContent.split(': ')[1];
+    const roomName = "{{ room_name|safe }}";
+    
+
+    // Log the WebSocket URL we're trying to connect to
+    const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const wsUrl = `${wsScheme}://${window.location.host}/ws/chat/${roomName}/`;
+    console.log('Attempting to connect to:', wsUrl);
+    // Create WebSocket connection
+    let socket;
+    try {
+        socket = new WebSocket(
+            `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws/chat/${roomName}/`
+        );
+
+        socket.onopen = function(e) {
+            addMessage('System', 'Connected to chat room');
+        };
+
+        socket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            addMessage(data.alias, data.message);
+        };
+
+        socket.onclose = function(e) {
+            addMessage('System', 'Disconnected from chat room');
+        };
+    } catch (error) {
+        console.error('Error creating WebSocket:', error);
+        addMessage('System', 'Failed to create WebSocket connection');
+
+    }
+    function addMessage(alias, message) {
+        const messagesDiv = document.getElementById('messages');
+        if (messagesDiv) {
+            const messageElement = document.createElement('p');
+            messageElement.textContent = `${alias}: ${message}`;
+            messagesDiv.appendChild(messageElement);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        } else {
+            console.error('Messages container not found');
+        }
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('message-input');
+        if (input.value) {
+            socket.send(JSON.stringify({
+                'message': input.value,
+                'alias': 'User',
+                'time': new Date().toLocaleTimeString()
+            }));
+            input.value = '';
+        }
+    }
+    </script>
+</body>
+</html>
+<!-- <!DOCTYPE html>
+<html>
 
 <head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
@@ -140,7 +232,6 @@
             {% endif %}
         </div>
         <div class="chat__item__container" id="id_chat_item_container">
-            <!-- Messages will be displayed here with a scrollbar -->
         </div>
         <div class="chat-input-container">
             <input type="text" id="id_message_send_input" placeholder="Type your message..." />
@@ -192,10 +283,9 @@
             </div>`;
             document.querySelector("#id_message_send_input").value = "";
             messageContainer.appendChild(div);
-            // Scroll to the bottom of the chat container
             messageContainer.scrollTop = messageContainer.scrollHeight;
         };
     </script>
 </body>
 
-</html>
+</html> -->
