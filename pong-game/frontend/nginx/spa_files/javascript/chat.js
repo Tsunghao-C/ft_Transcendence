@@ -39,7 +39,7 @@ export class ChatWebSocket {
 
         try {
             const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
-            const wsUrl = `${wsScheme}://${window.location.host}/ws/chat/${this.roomName}/`;
+            const wsUrl = `${wsScheme}://${window.location.host}/ws/chat-server/${this.roomName}/`;
             this.socket = new WebSocket(wsUrl);
 
             // Set up event handlers

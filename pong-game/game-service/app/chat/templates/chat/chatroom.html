@@ -13,7 +13,7 @@
     function joinRoom() {
         const roomName = document.getElementById('room-name-input').value;
         if (roomName) {
-            window.location.pathname = `/chat/${roomName}/`;
+            window.location.pathname = `/api/chat/${roomName}/`;
         }
     }
     </script>
@@ -39,14 +39,12 @@
 
     // Log the WebSocket URL we're trying to connect to
     const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    const wsUrl = `${wsScheme}://${window.location.host}/ws/chat/${roomName}/`;
+    const wsUrl = `${wsScheme}://${window.location.host}/ws/chat-server/${roomName}/`;
     console.log('Attempting to connect to:', wsUrl);
     // Create WebSocket connection
     let socket;
     try {
-        socket = new WebSocket(
-            `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws/chat/${roomName}/`
-        );
+        socket = new WebSocket(wsUrl);
 
         socket.onopen = function(e) {
             addMessage('System', 'Connected to chat room');

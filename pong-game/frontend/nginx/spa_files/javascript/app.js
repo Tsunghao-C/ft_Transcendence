@@ -16,17 +16,62 @@ import { setProfileView } from './profile.js';
 import { setFriendsView } from './friends.js';
 import { playerDatas } from './data_test.js';
 import { setHomePage } from './home.js';
-import { ChatWebSocket } from './chat.js';
-import { setChatView, cleanupChatView } from './chat_view.js';
+// import { ChatWebSocket } from './chat.js';
+// import { setChatView, cleanupChatView } from './chat_view.js';
 
 export function loadPage(page) {
 	//add a checker to check there is no more than one /
 	const contentContainer = document.getElementById("content");
 	const currentLanguage = localStorage.getItem("language") || "en";
 	const isLoggedIn = localStorage.getItem("isLoggedIn") || "false" ;
-	const chatElements = document.querySelectorAll('#chat-container');
-	chatElements.forEach(element => element.remove());
+	// const chatElements = document.querySelectorAll('#chat-container');
+	// chatElements.forEach(element => element.remove());
 	const path = window.location.pathname;
+	const navbar = document.getElementById("mainNavBar");
+	if (navbar) navbar.style.display = isLoggedIn === "true" ? "block" : "none";
+
+	// load user info if user is logged in
+	if (isLoggedIn === "true") {
+		const currentLogin = localStorage.getItem("currentLogin");
+		const userAvatar = document.getElementById("userAvatar");
+		const userDropdown = document.getElementById("userDropdown");
+
+		// Update user dropdown text if element exists
+		if (userDropdown && currentLogin) {
+			userDropdown.textContent = currentLogin;
+		}
+
+		if (userAvatar) {
+			if (playerDatas &&
+				playerDatas.players &&
+				playerDatas.players[currentLogin] &&
+				playerDatas.players[currentLogin].profilePicture) {
+				// Use profile picture if available
+				userAvatar.src = playerDatas.players[currentLogin].profilePicture;
+			} else {
+				// Set a default avatar or placeholder
+				userAvatar.src = "wtf.jpeg";  // Currently NULL, or set a default avatar picture to user who didn't upload picture
+			}
+			userAvatar.style.display = "block";
+		}
+		// userAvatar.src = playerDatas.players[currentLogin].profilePicture;
+		// userDropdown.textContent = currentLogin;
+		// // ici afficher la bonne pp
+		// userAvatar.style.display = "block";
+	}
+	// cleanup only if user is logged in
+	if (isLoggedIn === "true") {
+		if (page !== "game") {closeGameWebSocket();}
+		// if (page !== "chat") {
+		// 	cleanupChatView();
+		// 	const chatContainer = document.getElementById('chat-container');
+		// 	if (chatContainer) {
+		// 		chatContainer.remove();
+		// 	}
+		// }
+		console.log("here");
+	}
+	console.log("page is ", page);
 	// check authentication first
 	if (path !== '/') {
 		set404View(contentContainer);
@@ -40,100 +85,55 @@ export function loadPage(page) {
 		loadPage("home");
 		console.log("logged in, redirect to home");
 		return;
-	}
-	// cleanup only if user is logged in
-	if (isLoggedIn === "true") {
-		if (page !== "game") {closeGameWebSocket();}
-		if (page !== "chat") {
-			cleanupChatView();
-			const chatContainer = document.getElementById('chat-container');
-			if (chatContainer) {
-				chatContainer.remove();
-			}
+	} else {
+		switch (page) {
+			case "home":
+				setHomePage(contentContainer);
+				break;
+			case "about":
+				contentContainer.innerHTML = '<h1 data-i18n="about">About</h1><p>To fill.</p>';
+				break;
+			case "game":
+				setGameMenu(contentContainer);
+				break;
+			case "leaderboard":
+				setLeaderboardView(contentContainer);
+				break;
+			case "profile":
+				const username = localStorage.getItem("currentLogin"); // will not be necessary
+				setProfileView(contentContainer, username);
+				break;
+			case "settings":
+				setSettingsView(contentContainer);
+				break;
+			case "friends":
+				setFriendsView(contentContainer);
+				break;
+			case "login":
+				setLoginView(contentContainer);
+				break;
+			case "register":
+				setRegisterView(contentContainer);
+				break;
+			case "personnal-data":
+				setPersonnalDataView(contentContainer);
+				break;
+			case "chat":
+				if (localStorage.getItem("isLoggedIn") === "true") {
+					setChatView(contentContainer);
+				} else {
+					window.location.hash = "login";
+					loadPage("login");
+				}
+				break;
+			default:
+				if (page.startsWith("profile/")) {
+					const profileUsername = page.split("/")[1] || localStorage.getItem("currentLogin");
+					setProfileView(contentContainer, profileUsername);
+				} else {
+					set404View(contentContainer);
+				}
 		}
-		console.log("here");
-	}
-
-	const navbar = document.getElementById("mainNavBar");
-	if (navbar) navbar.style.display = isLoggedIn === "true" ? "block" : "none";
-
-	// load user info if user is logged in
-	if (isLoggedIn === "true") {
-		const currentLogin = localStorage.getItem("currentLogin");
-		const userAvatar = document.getElementById("userAvatar");
-        const userDropdown = document.getElementById("userDropdown");
-
-        // Update user dropdown text if element exists
-        if (userDropdown && currentLogin) {
-            userDropdown.textContent = currentLogin;
-        }
-
-        if (userAvatar) {
-            if (playerDatas &&
-                playerDatas.players &&
-                playerDatas.players[currentLogin] &&
-                playerDatas.players[currentLogin].profilePicture) {
-                // Use profile picture if available
-                userAvatar.src = playerDatas.players[currentLogin].profilePicture;
-            } else {
-                // Set a default avatar or placeholder
-                userAvatar.src = "wtf.jpeg";  // Currently NULL, or set a default avatar picture to user who didn't upload picture
-            }
-            userAvatar.style.display = "block";
-        }
-		// userAvatar.src = playerDatas.players[currentLogin].profilePicture;
-		// userDropdown.textContent = currentLogin;
-		// // ici afficher la bonne pp
-		// userAvatar.style.display = "block";
-	}
-	console.log("page is ", page);
-	switch (page) {
-		case "home":
-			setHomePage(contentContainer);
-			break;
-		case "about":
-			contentContainer.innerHTML = '<h1 data-i18n="about">About</h1><p>To fill.</p>';
-			break;
-		case "game":
-			setGameMenu(contentContainer);
-			break;
-		case "leaderboard":
-			setLeaderboardView(contentContainer);
-			break;
-		case "profile":
-			const username = localStorage.getItem("currentLogin"); // will not be necessary
-			setProfileView(contentContainer, username);
-			break;
-		case "settings":
-			setSettingsView(contentContainer);
-			break;
-		case "friends":
-			setFriendsView(contentContainer);
-			break;
-		case "login":
-			setLoginView(contentContainer);
-			break;
-		case "register":
-			setRegisterView(contentContainer);
-			break;
-		case "personnal-data":
-			setPersonnalDataView(contentContainer);
-			break;
-		case "chat":
-			if (localStorage.getItem("isLoggedIn") === "true") {
-				setChatView(contentContainer);
-			} else {
-				window.location.hash = "login";
-				loadPage("login");
-			}
-			break;
-		default:
-			if (page.startsWith("profile/")) {
-				const profileUsername = page.split("/")[1] || localStorage.getItem("currentLogin");
-				setProfileView(contentContainer, profileUsername);
-			} else {
-				set404View(contentContainer);
-			}
 	}
 	changeLanguage(currentLanguage);
 }
