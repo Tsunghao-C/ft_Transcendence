@@ -303,6 +303,30 @@ class getOpenFriendRequestsView(APIView):
 			"requests": friendRequestsData
 		}, status=200)
 
+class getProfileView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def post(self, request):
+		profile = get_object_or_404(CustomUser, alias=request.data.get("alias"))
+		user = request.user
+		# Still to be added : match history, rank and a way to manage the button add friend, request sent, request pending but not necessary
+		profileData = {
+				"id": profile.id,
+				"alias": profile.alias,
+				"mmr": profile.mmr,
+				"wins": profile.winCount,
+				"losses": profile.lossCount,
+				"avatar": profile.avatar.url,
+				"isCurrent": user == profile,
+				"isFriend": user.is_friend(profile),
+				"hasBlocked": user.has_blocked(profile),
+				"isSent": user.is_sent(profile),
+				"isPending": user.is_pending(profile)
+			}
+		return Response({
+			"profile": profileData
+		}, status=200)
+
 class getFriendsView(APIView):
 	permission_classes = [IsAuthenticated]
 
@@ -322,6 +346,7 @@ class getFriendsView(APIView):
 			"count": friendList.count(),
 			"requests": friendData
 		}, status=200)
+
 
 
 class getBlocksView(APIView):
