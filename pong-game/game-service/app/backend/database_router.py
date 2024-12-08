@@ -21,3 +21,12 @@ class AppDatabaseRouter:
         if app_label == 'game_service':
             return db == 'game_db'
         return None
+
+    def allow_relation(self, obj1, obj2, **hints):
+        db1 = obj1._state.db
+        db2 = obj2._state.db
+        if db1 == db2:
+            return True
+        if {db1, db2} == {'default', 'game_db'}:
+            return True
+        return None
