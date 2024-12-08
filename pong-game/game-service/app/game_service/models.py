@@ -20,11 +20,11 @@ class MatchResults(models.Model):
 		related_name="matches_as_p2"
 	)
 
-	matchoutcome = models.IntegerField(choices=[(0, 'Player 2 Wins'), (1, 'Player 1 Wins')])
+	matchOutcome = models.IntegerField(choices=[(0, 'Player 2 Wins'), (1, 'Player 1 Wins')])
 	time = models.DateTimeField(auto_now_add=True)
 
 	def __str__(self):
-		return f"{self.player1.alias} vs {self.player2.alias} - Outcome: {self.match_outcome}"
+		return f"{self.p1.alias} vs {self.p2.alias} - Outcome: {self.matchOutcome}"
 
 class LeaderBoardManager(models.Manager):
 	def _hasGameOccured(self):
