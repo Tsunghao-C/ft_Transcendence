@@ -16,10 +16,11 @@ import { getLanguageCookie } from './fetch_request.js';
 export async function setProfileView(contentContainer, usernameInHash) {
 	let response;
 	try {
-		const body = JSON.stringify({
-			alias : usernameInHash
-		  });
-		response = await fetchWithToken('/api/user/get-profile/', body, 'POST');
+		// const body = JSON.stringify({
+		// 	alias : usernameInHash
+		//   });
+		// response = await fetchWithToken(`/api/user/get-profile/?${usernameInHash}`, body, 'POST');
+		response = await fetchWithToken(`/api/user/get-profile/?alias=${usernameInHash}`);
 		console.log(response)
 	}
 	catch (error) {

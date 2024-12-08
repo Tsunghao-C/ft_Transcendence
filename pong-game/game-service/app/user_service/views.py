@@ -268,6 +268,7 @@ class blockUserView(APIView):
 		if user.is_friend(otherUser):
 			otherUser.friendList.remove(user)
 			user.friendList.remove(otherUser)
+		frequest = get_object_or_404(FriendRequest, from_user=from_user, to_user=to_user)
 		user.blockList.add(otherUser)
 		return Response({"detail": "user successfully blocked"}, status=200)
 	
@@ -306,8 +307,8 @@ class getOpenFriendRequestsView(APIView):
 class getProfileView(APIView):
 	permission_classes = [IsAuthenticated]
 
-	def post(self, request):
-		profile = get_object_or_404(CustomUser, alias=request.data.get("alias"))
+	def get(self, request):
+		profile = get_object_or_404(CustomUser, alias=request.query_params.get("alias"))
 		user = request.user
 		# Still to be added : match history, rank and a way to manage the button add friend, request sent, request pending but not necessary
 		profileData = {
