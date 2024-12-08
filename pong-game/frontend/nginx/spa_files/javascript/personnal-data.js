@@ -1,6 +1,8 @@
 import { playerDatas } from "./data_test.js";
+import { fetchWithToken } from "./fetch_request.js";
+import { getLanguageCookie } from './fetch_request.js';
 
-export function setPersonnalDataView(contentContainer) {
+export async function setPersonnalDataView(contentContainer) {
 	const currentLogin = localStorage.getItem("currentLogin");
 	if (!currentLogin || !playerDatas.players[currentLogin]) {
 		contentContainer.innerHTML = `
@@ -9,8 +11,14 @@ export function setPersonnalDataView(contentContainer) {
 		console.log("user doesn't exist");
 		return;
 	}
-
-	const userData = playerDatas.players[currentLogin];
+	let userData;
+	// try {
+	// 	userData = await fetchWithToken('/api/user/getpersonnal/');
+	// 	console.log("User data: ", userData);
+	// } catch (error) {
+	// 	throw new Error(error);
+	// }
+	userData = playerDatas.players[currentLogin];
 
 	contentContainer.innerHTML = `
 		<div class="personal-data-view">

@@ -32,7 +32,6 @@ class CurrentUserView(APIView):
 	permission_classes = [IsAuthenticated]
 
 	def get(self, request):
-		print(request.headers)
 		serializer = UserSerializer(request.user)
 		return Response(serializer.data)
 
@@ -149,7 +148,7 @@ class Generate2FAView(APIView):
 			# print("The 2FA code is : " + )
 			sendOTP(user.email, user.username, user.id, f"otp_{user.id}")
 			return Response({"detail": "A 2FA code has been sent", "user_id": str(user.id)}, status=status.HTTP_200_OK)
-		return Response({"detail": "Invalid credentials"}, status=status.HTTP_200_OK)
+		return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
 # Check and validate/refuse the 2FA code entered by user
 class Validate2FAView(APIView):
@@ -168,7 +167,7 @@ class Validate2FAView(APIView):
 				"access": str(refresh.access_token),
 				"detail": "2FA code validated",
 			}, status=status.HTTP_200_OK)
-		return Response({"detail": "Invalid or expired OTP"}, status=status.HTTP_200_OK)
+		return Response({"detail": "Invalid or expired OTP"}, status=status.HTTP_400_BAD_REQUEST)
 
 class changeEmailView(APIView):
 	permission_classes = [IsAuthenticated]
@@ -177,9 +176,9 @@ class changeEmailView(APIView):
 		user = request.user
 		newEmail = request.data.get("new_email")
 		if not newEmail or not re.match(r"[^@]+@[^@]+\.[^@]+", newEmail):
-			return Response({"error": "invalid email format"}, status=200)
+			return Response({"error": "invalid email format"}, status=400)
 		if CustomUser.objects.filter(email=newEmail).exists():
-			return Response({"error": "email is already in use"}, status=200)
+			return Response({"error": "email is already in use"}, status=400)
 		sendOTP(newEmail, user.username, user.id, f"email_change_{user.id}")
 		return Response({"detail": "otp code sent"}, status=200)
 
@@ -194,7 +193,9 @@ class changeEmailView(APIView):
 			cache.delete(cacheName)
 			return Response({"detail": "email change success"}, status=200)
 		return Response({"error": "invalid or expired otp"}, status=400)
-	
+
+
+
 class sendFriendRequestView(APIView):
 	permission_classes = [IsAuthenticated]
 
@@ -227,11 +228,8 @@ class deleteFriendView(APIView):
 
 	def post(self, request):
 		user = request.user
-		fr_id = request.data.get("fr_id");
-		if not fr_id:
-			return Response({"detail": "fr_id required"}, status=400)
-		fr_user = get_object_or_404(CustomUser, id=fr_id)
-		if fr_user not in user.friendList.all():
+		fr_user = get_object_or_404(CustomUser, alias=request.data.get("alias"))
+		if not user.is_friend(fr_user):
 			return Response({"detail": "this user is not in your friend list"}, status=400)
 		user.friendList.remove(fr_user)
 		fr_user.friendList.remove(user)
@@ -246,6 +244,16 @@ class rejectFriendRequestView(APIView):
 		frequest = get_object_or_404(FriendRequest, from_user=from_user, to_user=to_user)
 		frequest.delete()
 		return Response({"detail": "friend request deleted"}, status=200)
+
+class cancelFriendRequestView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def post(self, request):
+		from_user = request.user
+		to_user = get_object_or_404(CustomUser, alias=request.data.get("toAlias"))
+		frequest = get_object_or_404(FriendRequest, from_user=from_user, to_user=to_user)
+		frequest.delete()
+		return Response({"detail": "friend request deleted"}, status=200)	
 	
 class blockUserView(APIView):
 	permission_classes = [IsAuthenticated]
@@ -260,6 +268,7 @@ class blockUserView(APIView):
 		if user.is_friend(otherUser):
 			otherUser.friendList.remove(user)
 			user.friendList.remove(otherUser)
+		frequest = get_object_or_404(FriendRequest, from_user=from_user, to_user=to_user)
 		user.blockList.add(otherUser)
 		return Response({"detail": "user successfully blocked"}, status=200)
 	
@@ -271,8 +280,6 @@ class unblockUserView(APIView):
 		otherUser = get_object_or_404(CustomUser, alias=request.data.get("alias"))
 		if not user.has_blocked(otherUser):
 			return Response({"detail": "this user is not blocked"}, status=400)
-		if user == otherUser:
-			return Response({"detail": "you cannot block yourself"}, status=400)
 		user.blockList.remove(otherUser)
 		return Response({"detail": "user was successfully unblocked"}, status=200)
 	
@@ -295,6 +302,69 @@ class getOpenFriendRequestsView(APIView):
 		return Response({
 			"count": openRequests.count(),
 			"requests": friendRequestsData
+		}, status=200)
+
+class getProfileView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def get(self, request):
+		profile = get_object_or_404(CustomUser, alias=request.query_params.get("alias"))
+		user = request.user
+		# Still to be added : match history, rank and a way to manage the button add friend, request sent, request pending but not necessary
+		profileData = {
+				"id": profile.id,
+				"alias": profile.alias,
+				"mmr": profile.mmr,
+				"wins": profile.winCount,
+				"losses": profile.lossCount,
+				"avatar": profile.avatar.url,
+				"isCurrent": user == profile,
+				"isFriend": user.is_friend(profile),
+				"hasBlocked": user.has_blocked(profile),
+				"isSent": user.is_sent(profile),
+				"isPending": user.is_pending(profile)
+			}
+		return Response({
+			"profile": profileData
+		}, status=200)
+
+class getFriendsView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def get(self, request):
+		friendList = request.user.friendList.all()
+		friendData = [
+			{
+				"id": friend.id,
+				"alias": friend.alias,
+				"mmr": friend.mmr,
+				"wins": friend.winCount,
+				"losses": friend.lossCount,
+			}
+			for friend in friendList
+		]
+		return Response({
+			"count": friendList.count(),
+			"requests": friendData
+		}, status=200)
+
+
+
+class getBlocksView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def get(self, request):
+		blockList = request.user.blockList.all()
+		blockData = [
+			{
+				"id": block.id,
+				"alias": block.alias,
+			}
+			for block in blockList
+		]
+		return Response({
+			"count": blockList.count(),
+			"requests": blockData
 		}, status=200)
 
 class getSentFriendRequestsView(APIView):

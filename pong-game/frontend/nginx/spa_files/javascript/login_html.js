@@ -1,4 +1,5 @@
 import { translations } from "./language_pack.js";
+import { getLanguageCookie } from './fetch_request.js';
 
 async function loadHtml(url) {
     try {
@@ -66,15 +67,18 @@ export function setRegisterViewHtml(contentContainer) {
 			<h2 data-i18n="registerTitle">Register</h2>
 			<form id="registerForm">
 					<label for="newUsername" class="form-label" data-i18n="newUsername">Login</label>
-					<input type="text" class="form-control" id="newUsername" placeholder="Choose a Login">
+					<input type="text" class="form-control" id="newUsername" placeholder="Choose a Login" required>
 					<label for="newAlias" class="form-label" data-i18n="newAlias">Alias</label>
-					<input type="text" class="form-control" id="newAlias" placeholder="Choose an alias">
+					<input type="text" class="form-control" id="newAlias" placeholder="Choose an alias" required>
 					<label for="newMailInput" class="form-label" data-i18n="newMail">Mail</label>
-					<input type="text" class="form-control" id="newMailInput" placeholder="Enter your mail">
+					<input type="text" class="form-control" id="newMailInput" placeholder="Enter your mail" required>
 					<label for="newPasswordInput" class="form-label" data-i18n="newPassword">Password</label>
-					<input type="password" class="form-control" id="newPasswordInput" placeholder="Choose a password">
+					<input type="password" class="form-control" id="newPasswordInput" placeholder="Choose a password" required>
 					<label for="confirmPasswordInput" class="form-label" data-i18n="confirmPassword">Confirm Password</label>
-					<input type="password" class="form-control" id="confirmPasswordInput" placeholder="Re-enter your password">
+					<input type="password" class="form-control" id="confirmPasswordInput" placeholder="Re-enter your password" required>
+					<label for="profilePictureInput" class="form-label" data-i18n="profilePicture">Profile Picture</label>
+					<input type="file" class="form-control" id="profilePictureInput" accept=".jpg, .jpeg, .png">
+					<small class="form-text text-muted" data-i18n="profilePictureHint">Only .jpg and .png files are allowed.</small>
 				<div>
 					<p id="errorMessage"></p>
 					<p id="successMessage"></p>

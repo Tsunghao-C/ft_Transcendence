@@ -1,4 +1,6 @@
 //// We may fuse this with the search bar of profile view so that we can search for someone in the leaderboard
+import { getLanguageCookie } from './fetch_request.js';
+import { translations } from './language_pack.js';
 
 export function setLeaderboardView(contentContainer) {
 	contentContainer.innerHTML = `

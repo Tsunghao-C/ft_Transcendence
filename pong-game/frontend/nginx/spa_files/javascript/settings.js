@@ -1,8 +1,9 @@
 import { translations } from './language_pack.js';
 import { attachNavigationListeners } from './app.js';
+import { getLanguageCookie } from './fetch_request.js';
 
 export function setSettingsView(contentContainer) {
-	const currentLanguage = localStorage.getItem("language") || "en";
+	const currentLanguage = getLanguageCookie() ||  "en";
 	const currentFontSize = localStorage.getItem("fontSize") || "medium";
 	const currentColor = localStorage.getItem("color") || "light";
 	contentContainer.innerHTML = `

@@ -4,6 +4,7 @@ import { showSuccess } from './login_validations.js';
 import { setCustomValidation } from './login_validations.js';
 import { validatePasswordMatch } from './login_validations.js';
 import { validateProfilePicture } from './login_validations.js';
+import { getLanguageCookie } from './fetch_request.js';
 ///////////////////// UI Helpers /////////////////////
 
 ///////////////////// API Calls /////////////////////
@@ -25,8 +26,8 @@ function setupRegisterFormEventHandler() {
 	setCustomValidation("newMailInput");
 	setCustomValidation("newPasswordInput");
 
+	validateProfilePicture();
 	validatePasswordMatch();
-	// validateProfilePicture();
 	const registerForm = document.getElementById("registerForm");
 	registerForm.addEventListener("submit", async (event) => {
 		event.preventDefault();
@@ -34,13 +35,30 @@ function setupRegisterFormEventHandler() {
 		const alias = document.getElementById('newAlias').value;
 		const email = document.getElementById('newMailInput').value;
 		const password = document.getElementById('newPasswordInput').value;
+		const profilePictureInput = document.getElementById("profilePictureInput");
 		try {
 			const response = await registerUserInBackend(username, password, email, alias);
 			const data = await response.json();
 			if (response.ok) {
 				showSuccess('Success! User profile has been created, you can now log in.');
 			} else {
-				showError(data.error || "Login failed. Please try again.");
+				if (data.username) {
+					showError(data.username);
+				}
+				else if (data.alias) {
+					showError(data.alias);
+				}
+				else if (data.email) {
+					showError(data.email);
+				}
+				else {
+					showError("Register failed, please try again later.")
+				}
+			}
+			const file = fileInput.files[0];
+			if (!file) {
+				console.log('No file selected');
+				return ;
 			}
 		} catch (error) {
 			showError('An error occurred. Please try again later.');
