@@ -32,6 +32,7 @@ urlpatterns = [
 	path("change-email/", changeEmailView.as_view(), name="email_change"),
     path("send-friend-request/", sendFriendRequestView.as_view(), name="add_friend"),
     path("get-friends/", getFriendsView.as_view(), name="get_friends"),
+    path("get-profile/", getProfileView.as_view(), name="get_profile"),
     path("accept-friend-request/", acceptFriendRequestView.as_view(), name="accept_friend"),
     path("reject-friend-request/", rejectFriendRequestView.as_view(), name="reject_friend"),
     path("cancel-friend-request/", cancelFriendRequestView.as_view(), name="cancel_friend"),

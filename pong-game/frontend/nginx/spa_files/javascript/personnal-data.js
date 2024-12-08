@@ -1,5 +1,6 @@
 import { playerDatas } from "./data_test.js";
 import { fetchWithToken } from "./fetch_request.js";
+import { getLanguageCookie } from './fetch_request.js';
 
 export async function setPersonnalDataView(contentContainer) {
 	const currentLogin = localStorage.getItem("currentLogin");

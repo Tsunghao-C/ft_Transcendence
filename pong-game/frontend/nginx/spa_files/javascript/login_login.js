@@ -3,6 +3,7 @@ import { setLoginViewHtml } from './login_html.js';
 import { setCustomValidation } from "./login_validations.js";
 import { showError } from "./login_validations.js";
 import { showSuccess } from "./login_validations.js";
+import { getLanguageCookie } from './fetch_request.js';
 //validations before sending to backend
 
 

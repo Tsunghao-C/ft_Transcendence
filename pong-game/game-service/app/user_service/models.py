@@ -46,13 +46,19 @@ class CustomUser(AbstractUser):
         return self.username
 
     def is_friend(self, user):
-        return user in self.friendList.all()
+        return self.friendList.filter(id=user.id).exists()
 
     def has_blocked(self, user):
-        return user in self.blockList.all()
+        return self.blockList.filter(id=user.id).exists()
+    
+    def is_sent(self, user):
+        return FriendRequest.objects.filter(from_user=self, to_user=user).exists()
+    
+    def is_pending(self, user):
+         return FriendRequest.objects.filter(from_user=user, to_user=self).exists()
 
     def is_blocked_by(self, user):
-        return user in self.is_blocked_by.all()
+        return self.is_blocked_by.filter(id=user.id).exists()
 
 class FriendRequest(models.Model):
     from_user = models.ForeignKey(

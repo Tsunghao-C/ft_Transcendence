@@ -1,4 +1,5 @@
 import { translations } from "./language_pack.js";
+import { getLanguageCookie } from './fetch_request.js';
 
 async function loadHtml(url) {
     try {
@@ -75,6 +76,9 @@ export function setRegisterViewHtml(contentContainer) {
 					<input type="password" class="form-control" id="newPasswordInput" placeholder="Choose a password" required>
 					<label for="confirmPasswordInput" class="form-label" data-i18n="confirmPassword">Confirm Password</label>
 					<input type="password" class="form-control" id="confirmPasswordInput" placeholder="Re-enter your password" required>
+					<label for="profilePictureInput" class="form-label" data-i18n="profilePicture">Profile Picture</label>
+					<input type="file" class="form-control" id="profilePictureInput" accept=".jpg, .jpeg, .png">
+					<small class="form-text text-muted" data-i18n="profilePictureHint">Only .jpg and .png files are allowed.</small>
 				<div>
 					<p id="errorMessage"></p>
 					<p id="successMessage"></p>

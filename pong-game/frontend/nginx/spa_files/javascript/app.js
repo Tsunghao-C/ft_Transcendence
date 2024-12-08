@@ -17,6 +17,8 @@ import { setFriendsView } from './friends.js';
 import { playerDatas } from './data_test.js';
 import { setHomePage } from './home.js';
 import { fetchWithToken } from './fetch_request.js';
+import { setLanguageCookie } from './fetch_request.js';
+import { getLanguageCookie } from './fetch_request.js';
 
 export async function loadPage(page) {
 	//add a checker to check there is no more than one /
@@ -27,13 +29,12 @@ export async function loadPage(page) {
 		data = await fetchWithToken('/api/user/getuser/');
 		console.log("User data: ", data);
 		isLoggedIn = "true";
+		setLanguageCookie(data.language);
 	} catch (error) {
 		isLoggedIn = "false";
 	}
 	const contentContainer = document.getElementById("content");
-	const currentLanguage = localStorage.getItem("language") || "en";
-	//we will need to change using the
-	//localStorage.setItem("language", data.language)
+	const currentLanguage = getLanguageCookie() ||  "en";
 	const path = window.location.pathname;
 
 	if (page !== "game") {
@@ -46,7 +47,7 @@ export async function loadPage(page) {
 		const userDropdown = document.getElementById("userDropdown");
 		userDropdown.textContent = data.alias;
 		const userAvatar = document.getElementById("userAvatar");
-		userAvatar.src = "wtf.jpeg";
+		userAvatar.src = data.avatar;
 		//to change to have the good avatar picture src
 		userAvatar.style.display = "block";
 	}
