@@ -17,6 +17,8 @@ import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 
 
 # Quick-start development settings - unsuitable for production
@@ -179,6 +181,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #	"http://0.0.0.0:8000"
 #]
 #CORS_ALLOWS_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = True
 
 # can replace inmemorychannellayer with redis later
 CHANNEL_LAYERS = {
@@ -190,7 +193,7 @@ CHANNEL_LAYERS = {
     },
 }
 
-LOGIN_REDIRECT_URL = '/chat/'
+# LOGIN_REDIRECT_URL = '/chat/'
 
 # Alex add for Email host setup
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

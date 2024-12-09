@@ -1,4 +1,5 @@
 import { translations } from "./language_pack.js";
+import { getLanguageCookie } from './fetch_request.js';
 
 export function closeGameWebSocket() {
 	console.log("The WebSocket should be closed");

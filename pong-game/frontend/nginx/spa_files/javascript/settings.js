@@ -1,9 +1,10 @@
 import { translations } from './language_pack.js';
 import { attachNavigationListeners } from './app.js';
-import { setContainerHtml } from './app.js'
+import { getLanguageCookie } from './fetch_request.js';
+import { setContainerHtml } from './app.js';
 
-export async function setSettingsView(contentContainer) {
-	const currentLanguage = localStorage.getItem("language") || "en";
+export function setSettingsView(contentContainer) {
+	const currentLanguage = getLanguageCookie() ||  "en";
 	const currentFontSize = localStorage.getItem("fontSize") || "medium";
 	const currentColor = localStorage.getItem("color") || "light";
 	

@@ -9,14 +9,30 @@ class UserSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = CustomUser
 		fields = [
-			"id", "username", "email",
-			"password", "alias", "mmr",
-			"is_banned", 
+			"id",
+			"username",
+			"email",
+			"password", 
+			"alias", 
+			"mmr",
+			"is_banned",
+			"friendList",
+			"blockList",
+			"winCount",
+			"lossCount",
+			"language",
+			"avatar",
 			]
 		extra_kwargs = {
 			"password": {"write_only": True}, # we accept the password as an input but we don't return it
 			"mmr": {"read_only": True}, # used for matchmaking / leaderboards
-			"is_banned": {"read_only": True} # used later when banning people
+			"is_banned": {"read_only": True}, # used later when banning people
+			"winCount": {"read_only": True},
+			"lossCount": {"read_only": True},
+			"blockList": {"read_only": True},
+			"friendList": {"read_only": True},
+			"language": {"required": False},
+			"avatar": {"required": False},
 		}
 
 	def validate_username(self, value):
