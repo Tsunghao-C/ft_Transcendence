@@ -169,8 +169,10 @@ class GameConsumerTest(TestCase):
 
  
         update_messages = []
+        room_name = "lobby_" + room_name
         while True:
             logger.info("====GAME LOOP ITERATION====")
+#            print(f"room_name: {room_name}")
             await joiner_communicator.send_json_to({
                 'type': 'player_input',
                 'game_roomID': room_name,
