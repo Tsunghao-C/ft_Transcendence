@@ -2,7 +2,7 @@
 
 @font-face {
 	font-family: 'Block';
-	src: url('./fonts/block/block.ttf') format('truetype');
+	src: url('./fonts/block/block_merged.ttf') format('truetype');
 	font-weight: normal;
 	font-style: normal;
 }
@@ -131,9 +131,9 @@ body {
 	background-color: #f4f4f9; /* Couleur de fond */
 }
 
-/* Contains the whole content (navbar and box) */
 .content {
 	width: 100%;
+	height: 100%;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
@@ -154,12 +154,13 @@ body {
 	/* border-color: black; */
 	/* border: 4px solid black; */
 	/* box-shadow: 5px 5px 6px rgba(0, 0, 0, 0.1); */
-	box-sizing: border-box;
+	/* box-sizing: border-box; */
 }
 
 /* PONG title */
 #center-box h1 {
 	font-family: 'Block';
+	padding: 10px;
 }
 
 /* Section title */
@@ -173,11 +174,11 @@ body {
 
 /* Sub-Section title */
 #center-box h3 {
-	/* align-self: flex-start; */
-	color: red;
-	font-size: 1rem;
-	/* margin: 0px;
-	padding: 10px; */
+	align-self: flex-start;
+	justify-content: left;
+	align-items: left;
+	margin: 0px;
+	padding: 10px;
 }
 
 #center-box form {
@@ -233,6 +234,12 @@ body {
 	font-size: 0.8rem;
 }
 
+#center-box small {
+	padding: 0 10px 0 10px;
+	align-self: flex-start;
+	font-size: 0.8rem;
+}
+
 #center-box button {
     background-color: #d3d3d3;
     color: #505050;
@@ -246,13 +253,73 @@ body {
 	color: white;
 }
 
+/* #innerContent {
+    margin: 0;
+    padding-top: 200px; 
+    max-height: 700px;
+    overflow-y: auto;
+    box-sizing: border-box; 
+} */
+
 /**************************** Navbar ****************************/
 
 .bg-light {
 	background-color: rgba(255, 255, 255, 0.3) !important; /* Couleur de fond de la box */
 	width: 100% !important;
 	border-radius: 10px 10px 0 0 !important;
+	padding-top: 0;
+	padding-bottom: 0;
+	margin: 0;
+	padding: 0;
 }
+
+.navbar-brand {
+	font-family: "Block";
+	margin: 5px 0 0 10px;
+	font-size: 2.5rem;
+	padding: 0;
+	/* margin:0;
+	padding: 10px;
+	font-size: 2.5rem;
+	padding: 0px 10px 0px 20px; */
+	/* display: none; */
+}
+
+.collapse {
+    justify-content: flex-start; /* Aligne les éléments à gauche */
+	justify-content: left;
+	align-items:flex-start;
+}
+
+/* .navbar-nav {
+    justify-content: flex-start; 
+}
+
+.navbar-nav .nav-item {
+    margin-right: 5px; 
+	padding-top: 0;
+	padding-bottom: 0;
+} */
+
+.navbar-nav {
+    display: flex; /* S'assure que les items sont alignés en ligne */
+    /* background-color: red; */
+	justify-content: flex-start; /* Aligne les items à gauche */
+    align-items: left;
+	gap: 5px; /* Ajoute un espacement uniforme entre les items */
+    padding-left: 0; /* Retire les éventuelles indentations des listes */
+}
+
+.navbar-nav .nav-item {
+    margin: 0; /* Évite les marges inutiles si vous utilisez `gap` */
+}
+
+/* Div containing profile pic and user name on the right*/
+.align-items-center {
+	margin-right: 10px;
+	padding-right: 10px;
+}
+
 
 /**************************** Inner-content ****************************/
 
@@ -266,13 +333,56 @@ body {
 	align-items: center;
 }
 
-/**************************** Leaderboard ****************************/
+/**************************** Register ****************************/
 
-.leaderboard-view {
+.register-view {
 	/* background-color: red; */
+	box-sizing: border-box;
 	width: 80%;
 	margin: 10px;
 }
+
+.register-view select {
+
+	margin: 10px 20px 10px 10px;
+	padding: 10px;
+	width: 95.5%;
+}
+
+/**************************** Login ****************************/
+
+.login-view {
+	/* background-color: red; */
+	box-sizing: border-box;
+	width: 80%;
+	margin: 10px;
+}
+
+.login-view select {
+	margin: 10px 20px 10px 10px;
+	padding: 10px;
+	width: 95.5%;
+	font-size: 0.8rem;
+}
+
+/**************************** Leaderboard ****************************/
+/* 
+.leaderboard-view {
+	width: 80%;
+	margin: 10px;
+} */
+
+.leaderboard-view {
+	padding-top: 10px;
+	padding-bottom: 10px;
+	width: 100%;
+	padding-left: 10%;
+	padding-right: 10%;
+	height: 550px;
+	overflow-y: auto;
+	box-sizing: border-box; 
+}
+
 
 table {
 	/* background-color: red; */
@@ -302,18 +412,60 @@ table {
 
 /**************************** Profile view ****************************/
 
-.profile-view {
-	/* background-color: red; */
+/* .profile-view {
 	width: 80%;
 	margin: 10px;
+} */
+
+.profile-view {
+	padding-top: 10px;
+	padding-bottom: 10px;
+	width: 100%;
+	padding-left: 10%;
+	padding-right: 10%;
+	height: 550px;
+	overflow-y: auto;
+	box-sizing: border-box; 
 }
 
 /**************************** friends-view ****************************/
 
-.friends-view {
-	/* background-color: red; */
+/* .friends-view {
 	width: 80%;
 	margin: 10px;
+} */
+
+.friends-view {
+	padding-top: 10px;
+	padding-bottom: 10px;
+	width: 100%;
+	padding-left: 10%;
+	padding-right: 10%;
+	height: 550px;
+	overflow-y: auto;
+	box-sizing: border-box; 
+}
+
+/* Tab titles */
+.friends-view h3 {
+	font-size: 1rem;
+}
+
+.friends-view .nav-link {
+	font-size: 0.7rem;
+}
+
+/**************************** Personnal data ****************************/
+
+.personnal-data-view {
+	padding-top: 10px;
+	padding-bottom: 10px;
+	width: 100%;
+	padding-left: 10%;
+	padding-right: 10%;
+	height: 550px;
+	overflow-y: auto;
+	box-sizing: border-box; 
 }
 
 /**************************** 404-view ****************************/
