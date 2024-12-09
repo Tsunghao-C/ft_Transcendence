@@ -5,6 +5,7 @@ channels_redis==4.1.0
 psycopg2-binary==2.9.9
 django-cors-headers==4.3.0
 python-dotenv==1.0.0
+# Other dependencies
 asgiref==3.8.1
 djangorestframework==3.15.2
 djangorestframework-simplejwt==5.3.1
@@ -13,7 +14,7 @@ pytz==2024.2
 sqlparse==0.5.2
 wait-for-it==2.3.0
 gunicorn==21.2.0
-# channels==3.0.5
 better_profanity==0.7.0
 pillow==11.0.0
 uuid==1.30
+# channels==3.0.5
