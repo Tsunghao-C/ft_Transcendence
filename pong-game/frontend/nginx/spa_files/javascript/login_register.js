@@ -1,26 +1,21 @@
 import { setRegisterViewHtml } from './login_html.js';
-
+import { showError } from './login_validations.js';
+import { showSuccess } from './login_validations.js';
+import { setCustomValidation } from './login_validations.js';
+import { validatePasswordMatch } from './login_validations.js';
+import { validateProfilePicture } from './login_validations.js';
+import { getLanguageCookie } from './fetch_request.js';
+import { setLanguageCookie } from "./fetch_request.js";
+import { loadPage } from './app.js';
 ///////////////////// UI Helpers /////////////////////
-
-function showError(message) {
-	console.error('Error:', error); // /!\ can be deleted in production
-    const errorMessage = document.getElementById('errorMessage');
-    errorMessage.textContent = message;
-}
-
-function showSuccess(message) {
-	console.log(message) // /!\ can be deleted in production
-    const successMessage = document.getElementById('successMessage');
-    successMessage.textContent = message;
-}
 
 ///////////////////// API Calls /////////////////////
 
-async function registerUserInBackend(username, password, email, alias) {
+async function registerUserInBackend(username, password, email, alias, language) {
     const response = await fetch('/api/user/register/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, email, alias })
+        body: JSON.stringify({ username, password, email, alias, language})
     });
     return response;
 }
@@ -28,27 +23,57 @@ async function registerUserInBackend(username, password, email, alias) {
 ///////////////////// Event Handlers /////////////////////
 
 function setupRegisterFormEventHandler() {
+	setCustomValidation("newUsername");
+	setCustomValidation("newAlias");
+	setCustomValidation("newMailInput");
+	setCustomValidation("newPasswordInput");
+
+	validateProfilePicture();
+	validatePasswordMatch();
 	const registerForm = document.getElementById("registerForm");
-	if (registerForm) {
-		registerForm.addEventListener("submit", async (event) => {
-			event.preventDefault();
-			const username = document.getElementById('newUsername').value;
-			const alias = document.getElementById('newAlias').value;
-			const email = document.getElementById('newMailInput').value;
-			const password = document.getElementById('newPasswordInput').value;
-			try {
-				const response = await registerUserInBackend(username, password, email, alias);
-				const data = await response.json();
-				if (response.ok) {
-					showSuccess('Success! User profile has been created, you can now log in.');
-				} else {
-					showError(data.error || "Login failed. Please try again.");
+	const languageSelect = document.getElementById("languageSelect");
+	const language = getLanguageCookie() || "en";
+	languageSelect.value = language;
+	registerForm.addEventListener("submit", async (event) => {
+		event.preventDefault();
+		const username = document.getElementById('newUsername').value;
+		const alias = document.getElementById('newAlias').value;
+		const email = document.getElementById('newMailInput').value;
+		const password = document.getElementById('newPasswordInput').value;
+		const profilePictureInput = document.getElementById("profilePictureInput");
+		try {
+			const response = await registerUserInBackend(username, password, email, alias, language);
+			const data = await response.json();
+			if (response.ok) {
+				showSuccess('Success! User profile has been created, you can now log in.');
+			} else {
+				if (data.username) {
+					showError(data.username);
 				}
-			} catch (error) {
-                showError('An error occurred. Please try again later.');
+				else if (data.alias) {
+					showError(data.alias);
+				}
+				else if (data.email) {
+					showError(data.email);
+				}
+				else {
+					showError("Register failed, please try again later.")
+				}
 			}
-		});
-	}
+			const file = fileInput.files[0];
+			if (!file) {
+				console.log('No file selected');
+				return ;
+			}
+		} catch (error) {
+			showError('An error occurred. Please try again later.');
+		}
+	});
+	languageSelect.addEventListener("change", async (event) => {
+			const selectedLanguage = event.target.value;
+			setLanguageCookie(selectedLanguage);
+			loadPage("register");
+	});
 }
 
 ///////////////////// Main function /////////////////////
