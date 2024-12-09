@@ -72,7 +72,6 @@ export async function loadPage(page) {
 		// 		chatContainer.remove();
 		// 	}
 		// }
-		console.log("here");
 	}
 	console.log("page is ", page);
 	// check authentication first
@@ -126,6 +125,15 @@ export async function loadPage(page) {
 					if (page.startsWith("profile/")) {
 						const profileUsername = page.split("/")[1] || data.alias;
 						setProfileView(contentContainer, profileUsername);
+					// } else if (page.startsWith("friends/")) {
+					// 	console.log('ausidjaziefjaiezjfaizjefiajzefijazijefija');
+					// 	const activeTab = page.split("/")[1] || "friends";
+					// 	console.log(activeTab);
+					// 	if (!['friends', 'friend-requests', 'sent-requests', 'block'].includes(activeTab)) {
+					// 		set404View(contentContainer);
+						// } else {
+						// 	setFriendsView(contentContainer, activeTab);
+						// } this could be implemented to make the perosn be able to load one tab for friends, and to have history on it
 					} else {
 						set404View(contentContainer);
 					}
@@ -144,15 +152,14 @@ function handleNavigation(event) {
 	if (event.target.hasAttribute("data-bs-toggle") && event.target.getAttribute("data-bs-toggle") === "tab") {
 		return;
 	}
+
 	const newPage = event.target.getAttribute("href")?.substring(1);
+
 	if (newPage) {
 		window.history.pushState({ page: newPage }, newPage, '/#' + newPage);
 		loadPage(newPage);
-		updateActiveLink();
 	}
 }
-
-
 
 export function attachNavigationListeners() {
 	const links = document.querySelectorAll("a[href^='#']");
@@ -162,19 +169,10 @@ export function attachNavigationListeners() {
 	});
 }
 
-function updateActiveLink() {
-	const links = document.querySelectorAll('.nav-link');
-
-	links.forEach(link => {
-		link.classList.remove('active');
-	});
-
-	const currentLink = document.querySelector(`a[href="${window.location.hash}"]`);
-	if (currentLink) {
-		currentLink.classList.add('active');
-	}
-}
-
+window.addEventListener("hashchange", () => {
+	const newPage = window.location.hash.substring(1);
+	loadPage(newPage);
+});
 
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -191,14 +189,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
 	const currentPage = window.location.hash.substring(1) || "home";
 	loadPage(currentPage);
-	updateActiveLink();
 
 	attachNavigationListeners();
 
 	window.addEventListener("popstate", function (event) {
 		const page = event.state ? event.state.page : "home";
 		loadPage(page);
-		updateActiveLink();
 	});
 
 	const logoutButton = document.getElementById("logoutButton");
