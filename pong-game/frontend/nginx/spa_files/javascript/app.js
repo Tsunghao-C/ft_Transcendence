@@ -25,8 +25,10 @@ export async function loadPage(page) {
 	//if invalid token, the server explodes
 	let isLoggedIn;
 	let data;
+	let response;
 	try {
-		data = await fetchWithToken('/api/user/getuser/');
+		response = await fetchWithToken('/api/user/getuser/');
+		data = await response.json();
 		console.log("User data: ", data);
 		isLoggedIn = "true";
 		setLanguageCookie(data.language);

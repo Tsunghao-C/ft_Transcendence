@@ -19,13 +19,8 @@ export async function setFriendsView(contentContainer) {
     let sentFriendRequest;
     let friendData;
     let blockData;
+    let response;
     try {
-        friendData = await fetchWithToken('/api/user/get-friends');
-        blockData = await fetchWithToken('/api/user/get-blocks');
-        console.log("friend list is ", friendData);
-        console.log("block list is ", blockData);
-        friendRequest = await fetchWithToken('/api/user/get-friend-requests/');
-        sentFriendRequest = await fetchWithToken('/api/user/get-sent-friend-requests/');
         // console.log("friendRequest data: ", friendRequest);
         // console.log("sentFriendRequest data: ", sentFriendRequest);
    
@@ -81,8 +76,8 @@ export async function setFriendsView(contentContainer) {
 
     async function renderFriends() {
         friendsList.innerHTML = "";
-        friendData = await fetchWithToken('/api/user/get-friends');
-        blockData = await fetchWithToken('/api/user/get-blocks');
+        response = await fetchWithToken('/api/user/get-friends');
+        friendData = await response.json()
 
         if (friendData && friendData.count > 0) {
             friendData.requests.forEach((friend) => {
@@ -114,8 +109,15 @@ export async function setFriendsView(contentContainer) {
 		
 				const removeFriendButton = friendItem.querySelector("button.btn-danger");
 				removeFriendButton.addEventListener("click", () => {
-                    confirmRemoveFriend(friend.alias);
-                    renderFriends();
+                    try {
+                        confirmRemoveFriend(friend.alias);
+                        renderFriends();
+                    } catch(error) {
+                        console.log(error);
+                        window.location.hash = "login";
+                        loadPage("login");
+                        return;
+                    }
                 });
 
             });
@@ -125,8 +127,9 @@ export async function setFriendsView(contentContainer) {
     }
 
     async function renderFriendRequests() {
-        friendRequest = await fetchWithToken('/api/user/get-friend-requests/');
         friendRequestList.innerHTML = "";
+        response = await fetchWithToken('/api/user/get-friend-requests/');
+        friendRequest = await response.json()
         if (friendRequest && friendRequest.count > 0) {
             friendRequest.requests.forEach((friendRequesto) => {
                 const requestItem = document.createElement("li");
@@ -159,8 +162,9 @@ export async function setFriendsView(contentContainer) {
     }
 
     async function renderSentRequests() {
-        sentFriendRequest = await fetchWithToken('/api/user/get-sent-friend-requests/');
         sentFriendRequestList.innerHTML = "";
+        response = await fetchWithToken('/api/user/get-sent-friend-requests/');
+        sentFriendRequest = await response.json();
         if (sentFriendRequest && sentFriendRequest.count > 0) {
             sentFriendRequest.requests.forEach((sentRequest) => {
                 const sentItem = document.createElement("li");
@@ -177,8 +181,15 @@ export async function setFriendsView(contentContainer) {
                     </div>
                 `;
                 sentItem.querySelector(".btn-danger").addEventListener("click", async () => {
-                    await cancelFriendRequest(sentRequest.to_user);
-                    renderSentRequests();
+                    try {
+                        await cancelFriendRequest(sentRequest.to_user);
+                        renderSentRequests();
+                    } catch(error) {
+                        console.log(error);
+                        window.location.hash = "login";
+                        loadPage("login");
+                        return;
+                    }
                 });
                 sentFriendRequestList.appendChild(sentItem);
             });
@@ -188,9 +199,10 @@ export async function setFriendsView(contentContainer) {
     }
 
     async function renderBlockList() {
-        blockData = await fetchWithToken('/api/user/get-blocks');
-
         blockList.innerHTML = "";
+
+        response = await fetchWithToken('/api/user/get-blocks');
+        blockData = await response.json();
         if (blockData && blockData.count > 0) {
             blockData.requests.forEach((block) => {
                 const blockItem = document.createElement("li");
@@ -202,8 +214,15 @@ export async function setFriendsView(contentContainer) {
                     </div>
                 `;
                 blockItem.querySelector(".btn-danger").addEventListener("click", async() => {
-                    await unblockUser(block.alias);
-                    renderBlockList();
+                    try {
+                        await unblockUser(block.alias);
+                        renderBlockList();
+                    } catch(error) {
+                        console.log(error);
+                        window.location.hash = "login";
+                        loadPage("login");
+                        return;
+                    }
                 });
                 blockList.appendChild(blockItem);
             });
@@ -215,7 +234,14 @@ export async function setFriendsView(contentContainer) {
 	addBlockButton.addEventListener("click", async () => {
 		const newBlockUsername = prompt(`${translations[currentLanguage].prompAddBLock}:`);
 		if (newBlockUsername) {
-            await blockUser(newBlockUsername);
+            try {
+                await blockUser(newBlockUsername);
+            } catch(error) {
+                console.log(error);
+                window.location.hash = "login";
+                loadPage("login");
+                return;
+            }
         }
 		renderBlockList();
         renderSentRequests();
@@ -227,7 +253,14 @@ export async function setFriendsView(contentContainer) {
 	addFriendButton.addEventListener("click", async () => {
 		const newfriend = prompt(`${translations[currentLanguage].promptAddFriend}:`);
 		if (newfriend) {
-			await addFriend(newfriend);
+            try {
+                await addFriend(newfriend);
+            } catch(error) {
+                console.log(error);
+                window.location.hash = "login";
+                loadPage("login");
+                return;
+            }
 		}
         renderSentRequests();
 	});

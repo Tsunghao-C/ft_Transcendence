@@ -47,6 +47,7 @@ function setupRegisterFormEventHandler() {
 			if (response.ok) {
 				showSuccess('Success! User profile has been created, you can now log in.');
 			} else {
+				//translations to be made
 				if (data.username) {
 					showError(data.username);
 				}
@@ -59,11 +60,6 @@ function setupRegisterFormEventHandler() {
 				else {
 					showError("Register failed, please try again later.")
 				}
-			}
-			const file = fileInput.files[0];
-			if (!file) {
-				console.log('No file selected');
-				return ;
 			}
 		} catch (error) {
 			showError('An error occurred. Please try again later.');
