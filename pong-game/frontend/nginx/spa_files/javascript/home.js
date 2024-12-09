@@ -3,7 +3,7 @@ import { getLanguageCookie } from './fetch_request.js';
 
 async function testGetUser() {
 	try {
-		const data = await fetchWithToken('/api/user/getuser/');
+		const data = (await fetchWithToken('/api/user/getuser/')).json();
 		console.log("User data:", data);
 	} catch (error) {
 		console.error("Error fetching user data:", error);
@@ -22,7 +22,7 @@ async function uploadAvatar(fileInput) {
     formData.append('avatar', file);
 
 	try {
-		const response = await fetchWithToken("api/user/change-avatar/", formData, 'POST', false);
+		const response = (await fetchWithToken("api/user/change-avatar/", formData, 'POST', false)).json();
 		console.log(response);
 	}
 	catch (error) {

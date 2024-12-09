@@ -11,20 +11,24 @@ import { rejectFriendRequest } from "./manage_social.js";
 import { cancelFriendRequest } from "./manage_social.js";
 import { unblockUser } from "./manage_social.js";
 import { blockUser } from "./manage_social.js";
+import { loadPage } from "./app.js";
 import { getLanguageCookie } from './fetch_request.js';
 
 export async function setProfileView(contentContainer, usernameInHash) {
 	let response;
+	let data;
 	try {
 		// const body = JSON.stringify({
 		// 	alias : usernameInHash
 		//   });
 		// response = await fetchWithToken(`/api/user/get-profile/?${usernameInHash}`, body, 'POST');
 		response = await fetchWithToken(`/api/user/get-profile/?alias=${usernameInHash}`);
-		console.log(response)
-	}
-	catch (error) {
+		data = await response.json();
+	} catch(error) {
 		console.log(error);
+		window.location.hash = "login";
+		loadPage("login");
+		return;
 	}
 	contentContainer.innerHTML = `
 		<div class="profile-view">
@@ -40,35 +44,23 @@ export async function setProfileView(contentContainer, usernameInHash) {
 	const searchButton = document.getElementById("searchButton");
 	const profileResult = document.getElementById("profileResult");
 
-	if (response.detail && response.detail === "No CustomUser matches the given query.") {
+	if (!response.ok && data.detail === "No CustomUser matches the given query.") {
 		profileResult.innerHTML = `<p data-i18n="userNotFound">User not found.</p>`;
 	} else {
-		displayProfile(response.profile);
+		displayProfile(data.profile);
 	}
 
 	searchButton.addEventListener("click", () => {
 		const searchQuery = searchInput.value.trim();
-		//2 possibilities, the button can do nothing if the field is empty or trigger a warning (warning is commented)
+		console.log("Searching for:", searchQuery);
 		if (!searchQuery) {
-			// searchInput.classList.add("is-invalid");
-			// const errorMessage = document.createElement("div");
-			// errorMessage.className = "invalid-feedback";
-			// errorMessage.textContent = "This field is required.";
-			// if (!searchInput.nextElementSibling) {
-			// 	searchInput.parentNode.appendChild(errorMessage);
-			// }
 			return;
-		// } else {
-		// 	searchInput.classList.remove("is-invalid");
-		// 	if (searchInput.nextElementSibling) {
-		// 		searchInput.nextElementSibling.remove();
-		// 	}
 		}
-		window.history.pushState(
-			{ page: `profile/${searchQuery}` },
-			`Profile of ${searchQuery}`,
-			`#profile/${searchQuery}`
-		);
+	
+		window.location.hash = `profile/${searchQuery}`;
+	
+		loadPage(`profile/${searchQuery}`);
+		console.log("Redirecting to profile", searchQuery);
 	});
 
 	function displayProfile(profile) {
