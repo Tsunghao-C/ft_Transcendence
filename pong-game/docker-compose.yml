@@ -101,6 +101,7 @@ services:
       - static_volume:/app/static:ro
       - ./frontend/nginx/logs:/var/log/nginx:rw
       - ./frontend/nginx/modsec:/var/log/modsec:rw
+      - ./game-service/app/media:/app/media
     ports:
       - "8443:443"
       - "8080:80"
@@ -204,6 +205,7 @@ services:
     pull_policy: never
     volumes:
       - static_volume:/app/static # Match the path
+      - ./game-service/app/media:/app/media
     expose:
       - 8004
       - 8001
