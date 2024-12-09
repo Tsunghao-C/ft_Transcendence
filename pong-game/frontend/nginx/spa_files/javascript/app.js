@@ -19,6 +19,8 @@ import { setHomePage } from './home.js';
 import { fetchWithToken } from './fetch_request.js';
 import { setLanguageCookie } from './fetch_request.js';
 import { getLanguageCookie } from './fetch_request.js';
+// import { ChatWebSocket } from './chat.js';
+// import { setChatView, cleanupChatView } from './chat_view.js';
 
 export async function loadPage(page) {
 	//add a checker to check there is no more than one /
@@ -38,13 +40,10 @@ export async function loadPage(page) {
 	const contentContainer = document.getElementById("content");
 	const currentLanguage = getLanguageCookie() ||  "en";
 	const path = window.location.pathname;
-
-	if (page !== "game") {
-		closeGameWebSocket();
-	}
 	const navbar = document.getElementById("mainNavBar");
 	navbar.style.display = isLoggedIn === "true" ? "block" : "none";
 
+	// load user info if user is logged in
 	if (isLoggedIn === "true") {
 		const userDropdown = document.getElementById("userDropdown");
 		userDropdown.textContent = data.alias;
@@ -53,15 +52,31 @@ export async function loadPage(page) {
 		//to change to have the good avatar picture src
 		userAvatar.style.display = "block";
 	}
+	// cleanup only if user is logged in
+	if (isLoggedIn === "true") {
+		if (page !== "game") {closeGameWebSocket();}
+		// if (page !== "chat") {
+		// 	cleanupChatView();
+		// 	const chatContainer = document.getElementById('chat-container');
+		// 	if (chatContainer) {
+		// 		chatContainer.remove();
+		// 	}
+		// }
+		console.log("here");
+	}
 	console.log("page is ", page);
+	// check authentication first
 	if (path !== '/') {
 		set404View(contentContainer);
+		return;
 	} else if (isLoggedIn != "true" && page !== "login" && page !== "register") {
 		window.location.hash = "login";
 		loadPage("login");
 	} else if (isLoggedIn === "true" && (page === "login" || page === "register")) {
 		window.location.hash = "home";
 		loadPage("home");
+		console.log("logged in, redirect to home");
+		return;
 	} else {
 		try {
 			// Handle different page views
