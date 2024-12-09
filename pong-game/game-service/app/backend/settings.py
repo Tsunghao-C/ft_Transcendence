@@ -186,7 +186,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 CHANNEL_LAYERS = {
 #    "default": { "BACKEND": "channels_redis.core.RedisChannelLayer",
 #        "CONFIG": {
-#            "hosts": [("127.0.0.1", 6379)]
+#            "hosts": [('redis', 6379)]
 #        },
 #    },
     "default": {
@@ -195,32 +195,29 @@ CHANNEL_LAYERS = {
 }
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
+        'version': 1,
+        'disable_existing_loggers': False,
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+            },
         },
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': 'DEBUG',  # Set to DEBUG for detailed logs
-    },
-    'loggers': {
-        'django': {
+        'root': {
             'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
+            'level': 'DEBUG',  # Set to DEBUG for detailed logs
         },
-        'django.channels': {
-            'handlers': ['console'],
-            'level': 'DEBUG',  # Log WebSocket-related events
-            'propagate': False,
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [('redis', 6379)]
-        },
-    },
+        'loggers': {
+            'django': {
+                'handlers': ['console'],
+                'level': 'DEBUG',
+                'propagate': False,
+            },
+            'django.channels': {
+                'handlers': ['console'],
+                'level': 'DEBUG',  # Log WebSocket-related events
+                'propagate': False,
+            },
+        }
 }
 
 LOGIN_REDIRECT_URL = '/chat/'
