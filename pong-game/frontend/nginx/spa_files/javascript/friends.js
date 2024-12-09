@@ -42,23 +42,19 @@ export async function setFriendsView(contentContainer) {
             </li>
         </ul>
         <div class="tab-content">
-            <!-- Contenu de Friends List -->
             <div class="tab-pane fade show active" id="friends" role="tabpanel" aria-labelledby="friends-tab">
                 <h2>${translations[currentLanguage].friendList}</h2>
                 <button id="addFriendButton" class="btn btn-success mb-3">${translations[currentLanguage].addNewFriend}</button>
                 <ul id="friendsList" class="list-group"></ul>
             </div>
-            <!-- Contenu de Friend Requests -->
             <div class="tab-pane fade" id="friend-requests" role="tabpanel" aria-labelledby="friend-requests-tab">
                 <h2>${translations[currentLanguage].friendRequests}</h2>
                 <ul id="friendRequestList" class="list-group"></ul>
             </div>
-            <!-- Contenu de Sent Requests -->
             <div class="tab-pane fade" id="sent-requests" role="tabpanel" aria-labelledby="sent-requests-tab">
                 <h2>${translations[currentLanguage].sentRequests}</h2>
                 <ul id="sentFriendRequestList" class="list-group"></ul>
             </div>
-            <!-- Contenu de Block List -->
             <div class="tab-pane fade" id="block" role="tabpanel" aria-labelledby="block-tab">
                 <h2>${translations[currentLanguage].blockList}</h2>
                 <button id="addBlockButton" class="btn btn-success mb-3">${translations[currentLanguage].addBlock}</button>
@@ -66,6 +62,23 @@ export async function setFriendsView(contentContainer) {
             </div>
         </div>
     `;
+
+    function switchTab(tabToShowId) {
+        const tabs = ['friends', 'friend-requests', 'sent-requests', 'block'];
+    
+        tabs.forEach(tabId => {
+            const tabElement = document.getElementById(tabId);
+    
+            if (tabElement) {
+                if (tabId === tabToShowId) {
+                    tabElement.classList.add('show', 'active');
+                } else {
+                    tabElement.classList.remove('show', 'active');
+                }
+            }
+        });
+    }
+    
 
     const friendsList = document.getElementById("friendsList");
     const friendRequestList = document.getElementById("friendRequestList");
@@ -281,31 +294,19 @@ export async function setFriendsView(contentContainer) {
 
 
 	friendsTab.addEventListener("shown.bs.tab", function () {
-		document.getElementById('friends').classList.add('show', 'active');
-		document.getElementById('friend-requests').classList.remove('show', 'active');
-		document.getElementById('sent-requests').classList.remove('show', 'active');
-		document.getElementById('block').classList.remove('show', 'active');
+        switchTab('friends');
 	});
 
 	friendRequestsTab.addEventListener("shown.bs.tab", function () {
-		document.getElementById('friend-requests').classList.add('show', 'active');
-		document.getElementById('friends').classList.remove('show', 'active');
-		document.getElementById('sent-requests').classList.remove('show', 'active');
-		document.getElementById('block').classList.remove('show', 'active');
+        switchTab('friend-requests');
 	});
 
 	sentRequestsTab.addEventListener("shown.bs.tab", function () {
-		document.getElementById('sent-requests').classList.add('show', 'active');
-		document.getElementById('friends').classList.remove('show', 'active');
-		document.getElementById('friend-requests').classList.remove('show', 'active');
-		document.getElementById('block').classList.remove('show', 'active');
+        switchTab('sent-requests');
 	});
 
 	blockTab.addEventListener("shown.bs.tab", function () {
-		document.getElementById('block').classList.add('show', 'active');
-		document.getElementById('friends').classList.remove('show', 'active');
-		document.getElementById('friend-requests').classList.remove('show', 'active');
-		document.getElementById('sent-requests').classList.remove('show', 'active');
+        switchTab('block');
 	});
     } catch (error) {
         window.location.hash = "login";

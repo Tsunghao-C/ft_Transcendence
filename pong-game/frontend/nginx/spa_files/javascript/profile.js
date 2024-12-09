@@ -11,6 +11,7 @@ import { rejectFriendRequest } from "./manage_social.js";
 import { cancelFriendRequest } from "./manage_social.js";
 import { unblockUser } from "./manage_social.js";
 import { blockUser } from "./manage_social.js";
+import { loadPage } from "./app.js";
 import { getLanguageCookie } from './fetch_request.js';
 
 export async function setProfileView(contentContainer, usernameInHash) {
@@ -51,27 +52,15 @@ export async function setProfileView(contentContainer, usernameInHash) {
 
 	searchButton.addEventListener("click", () => {
 		const searchQuery = searchInput.value.trim();
-		//2 possibilities, the button can do nothing if the field is empty or trigger a warning (warning is commented)
+		console.log("Searching for:", searchQuery);
 		if (!searchQuery) {
-			// searchInput.classList.add("is-invalid");
-			// const errorMessage = document.createElement("div");
-			// errorMessage.className = "invalid-feedback";
-			// errorMessage.textContent = "This field is required.";
-			// if (!searchInput.nextElementSibling) {
-			// 	searchInput.parentNode.appendChild(errorMessage);
-			// }
 			return;
-		// } else {
-		// 	searchInput.classList.remove("is-invalid");
-		// 	if (searchInput.nextElementSibling) {
-		// 		searchInput.nextElementSibling.remove();
-		// 	}
 		}
-		window.history.pushState(
-			{ page: `profile/${searchQuery}` },
-			`Profile of ${searchQuery}`,
-			`#profile/${searchQuery}`
-		);
+	
+		window.location.hash = `profile/${searchQuery}`;
+	
+		loadPage(`profile/${searchQuery}`);
+		console.log("Redirecting to profile", searchQuery);
 	});
 
 	function displayProfile(profile) {
