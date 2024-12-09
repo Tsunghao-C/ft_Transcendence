@@ -113,15 +113,16 @@ services:
       SECRET_KEY: ${SECRET_KEY}
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
       SQL_ENGINE: ${SQL_ENGINE}
-      SQL_USER: ${SQL_USER}
-      SQL_PASSWORD: ${SQL_PASSWORD}
-      SQL_PORT: ${SQL_PORT}
+      # SQL_USER: ${SQL_USER}
+      # SQL_PASSWORD: ${SQL_PASSWORD}
+      # SQL_PORT: ${SQL_PORT}
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
     depends_on:
+      - game_service
       - kibana
     healthcheck:
       test: ["CMD", "curl", "-k", "https://localhost:443/health" ]
@@ -183,74 +184,104 @@ services:
     command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
-    ports:
-      - "6380:6379"     # only for development stage, need to close after
+    # ports:
+    #   - "6380:6379"     # only for development stage, need to close after
     networks:
       - backend_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 30s
+      retries: 5
     restart: unless-stopped
 
   game_service:
-     container_name: game_service
-     build:
-       context: ./game-service
-       dockerfile: Dockerfile
-     image: game_service
-     pull_policy: never
-     volumes:
-       - static_volume:/app/static # Match the path
-     expose:
-       - 8004
+    container_name: game_service
+    build:
+      context: ./game-service
+      dockerfile: Dockerfile
+    image: game_service
+    pull_policy: never
+    volumes:
+      - static_volume:/app/static # Match the path
+    expose:
+      - 8004
+      - 8001
     #  ports:
     #    - "8004:8004"     # only for development stage, need to close after
-     environment:
+    environment:
        # - DATABASE_URL=postgresql://postgres:${GAME_DB_PASSWORD}@game_db:5434/gamedb
        # - MATCH_DB_URL=postgresql://postgres:${MATCH_DB_PASSWORD}@match_db:5432/matchdb
        # - VAULT_ADDR=http://vault:8200
        # - VAULT_TOKEN=${VAULT_DEV_ROOT_TOKEN}
-       DEBUG: ${DEBUG}
-       SECRET_KEY: ${SECRET_KEY}
-       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
-       SQL_ENGINE: ${SQL_ENGINE}
-       GAME_DB_DATABASE: ${GAME_DB_DATABASE}
-       USER_DB_DATABASE: ${USER_DB_DATABASE}
-       SQL_USER: ${SQL_USER}
-       SQL_PASSWORD: ${SQL_PASSWORD}
-       SQL_PORT: ${SQL_PORT}
-       SQL_HOST: game_db
-       USER_DB_HOST: user_db
-     depends_on:
-       - game_db
-       - user_db
-     networks:
-       - backend_net
-     restart: unless-stopped
+      DEBUG: ${DEBUG}
+      SECRET_KEY: ${SECRET_KEY}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
+      SQL_ENGINE: ${SQL_ENGINE}
+      GAME_DB_DATABASE: ${GAME_DB_DATABASE}
+      USER_DB_DATABASE: ${USER_DB_DATABASE}
+      # SQL_USER: ${SQL_USER}
+      USER_DB_USER: ${USER_DB_USER}
+      GAME_DB_USER: ${GAME_DB_USER}
+      # SQL_PASSWORD: ${SQL_PASSWORD}
+      GAME_DB_PASSWORD: ${GAME_DB_PASSWORD}
+      USER_DB_PASSWORD: ${USER_DB_PASSWORD}
+      # SQL_PORT: ${SQL_PORT}
+      USER_DB_PORT: ${USER_DB_PORT}
+      GAME_DB_PORT: ${GAME_DB_PORT}
+      SQL_HOST: game_db
+      USER_DB_HOST: user_db
+    depends_on:
+      game_db:
+        condition: service_healthy
+      user_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - backend_net
+    restart: unless-stopped
 
   game_db:
-     container_name: game_db
-     image: postgres:14-alpine
-     environment:
-       - POSTGRES_DB=game_db
-       - POSTGRES_USER=${SQL_USER}
-       - POSTGRES_PASSWORD=${SQL_PASSWORD}
-     volumes:
-       - game_data:/var/lib/postgresql/data
-     networks:
-       - backend_net
-     restart: unless-stopped
+    container_name: game_db
+    image: postgres:14-alpine
+    environment:
+      - POSTGRES_DB=game_db
+      - POSTGRES_USER=${GAME_DB_USER}
+      - POSTGRES_PASSWORD=${GAME_DB_PASSWORD}
+      - POSTGRES_PORT=5434
+    expose:
+      - 5434
+    command: postgres -p 5434
+    volumes:
+      - game_data:/var/lib/postgresql/data
+    networks:
+      - backend_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${GAME_DB_USER} -d game_db -p 5434"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
   user_db:
-     container_name: user_db
-     image: postgres:14-alpine
-     environment:
-       - POSTGRES_DB=user_db
-       - POSTGRES_USER=${SQL_USER}
-       - POSTGRES_PASSWORD=${SQL_PASSWORD}
-     volumes:
-       - user_data:/var/lib/postgresql/data
-       - static_volume:/app/static
-     networks:
-       - backend_net
-     restart: unless-stopped
+    container_name: user_db
+    image: postgres:14-alpine
+    environment:
+      - POSTGRES_DB=user_db
+      - POSTGRES_USER=${USER_DB_USER}
+      - POSTGRES_PASSWORD=${USER_DB_PASSWORD}
+    volumes:
+      - user_data:/var/lib/postgresql/data
+      - static_volume:/app/static
+    networks:
+      - backend_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${USER_DB_USER} -d user_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5  
+    restart: unless-stopped
 
   # match_db:
   #   container_name: match_db
