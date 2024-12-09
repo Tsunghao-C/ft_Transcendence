@@ -79,6 +79,8 @@ function setupRegisterFormEventHandler() {
 ///////////////////// Main function /////////////////////
 
 export function setRegisterView(contentContainer) {
+	const navbar = document.getElementById("mainNavBar");
+	navbar.style.display = "none";
 	setRegisterViewHtml(contentContainer);
 	setupRegisterFormEventHandler();
 }
