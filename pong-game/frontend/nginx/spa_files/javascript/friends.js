@@ -218,6 +218,8 @@ export async function setFriendsView(contentContainer) {
             await blockUser(newBlockUsername);
         }
 		renderBlockList();
+        renderSentRequests();
+        renderFriendRequests();
         renderFriends();
 	});
 

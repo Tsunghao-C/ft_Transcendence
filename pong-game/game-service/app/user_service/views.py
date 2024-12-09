@@ -194,7 +194,33 @@ class changeEmailView(APIView):
 			return Response({"detail": "email change success"}, status=200)
 		return Response({"error": "invalid or expired otp"}, status=400)
 
+class changeAliasView(APIView):
+	permission_classes = [IsAuthenticated]
 
+	def post(self, request):
+		user = request.user
+		newAlias = request.data.get("alias")
+		if CustomUser.objects.filter(alias=newAlias).exists():
+			return Response({"error": "alias is already in use"}, status=400)
+		user.alias = newAlias
+		user.save()
+		return Response({"detail": "alias successfully changed"}, status=200)
+
+class changePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        old_password = request.data.get('old_password')
+        new_password = request.data.get('new_password')
+
+        if not user.check_password(old_password):
+            return Response({'error': 'Incorrect old password'}, status=400)
+        
+        user.set_password(new_password)
+        user.save()
+        
+        return Response({'detail': 'Password changed successfully'})
 
 class sendFriendRequestView(APIView):
 	permission_classes = [IsAuthenticated]
@@ -206,8 +232,18 @@ class sendFriendRequestView(APIView):
 			return Response({"detail": "you cannot befriend yourself"}, status=400)
 		if from_user.is_friend(to_user):
 			return Response({"detail": "you are already friends with this user"}, status=400)
+		if from_user.has_blocked(to_user):
+			return Response({"detail": "you are blocking this user"}, status=400)
+		if to_user.has_blocked(from_user):
+			return Response({"detail": "this user is blocking you"}, status=400)
 		if FriendRequest.objects.filter(from_user=from_user, to_user=to_user).exists():
 			return Response({"detail": "Friend request was already sent."}, status=400)
+		pendingRequest = FriendRequest.objects.filter(from_user=to_user, to_user=from_user).first()
+		if pendingRequest:
+			to_user.friendList.add(from_user)
+			from_user.friendList.add(to_user)
+			frequest.delete()
+			return Response({"detail": "friend request accepted"}, status=200)
 		FriendRequest.objects.create(from_user=from_user, to_user=to_user)
 		return Response({"detail": "friend request sent"}, status=200)
 
@@ -268,7 +304,12 @@ class blockUserView(APIView):
 		if user.is_friend(otherUser):
 			otherUser.friendList.remove(user)
 			user.friendList.remove(otherUser)
-		frequest = get_object_or_404(FriendRequest, from_user=from_user, to_user=to_user)
+		sentFriendRequest = FriendRequest.objects.filter(from_user=user, to_user=otherUser).first()
+		if (sentFriendRequest):
+			sentFriendRequest.delete()
+		receiveFriendRequest = FriendRequest.objects.filter(from_user=otherUser, to_user=user).first()
+		if (receiveFriendRequest):
+			receiveFriendRequest.delete()
 		user.blockList.add(otherUser)
 		return Response({"detail": "user successfully blocked"}, status=200)
 	
@@ -395,8 +436,8 @@ class changeLanguageView(APIView):
 		user = request.user
 		currLang = user.language
 		newLang = request.data.get("newLang")
-		if not newLang or newLang not in ("fr", "en"):
-			return Response({"error": "newLang must be supplied as fr or en"}, status=400)
+		if not newLang or newLang not in ("fr", "en", "pt"):
+			return Response({"error": "newLang must be supplied as fr, en or pt"}, status=400)
 		if newLang == currLang:
 			return Response({"error": f"current language is already set to {currLang}"}, status=400)
 		user.language = newLang

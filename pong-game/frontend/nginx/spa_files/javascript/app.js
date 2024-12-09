@@ -95,9 +95,6 @@ export async function loadPage(page) {
 					// will not be necessary, maybe it will
 					setProfileView(contentContainer, data.alias);
 					break;
-				case "settings":
-					setSettingsView(contentContainer);
-					break;
 				case "friends":
 					setFriendsView(contentContainer);
 					break;

@@ -4,6 +4,7 @@ import { setCustomValidation } from "./login_validations.js";
 import { showError } from "./login_validations.js";
 import { showSuccess } from "./login_validations.js";
 import { getLanguageCookie } from './fetch_request.js';
+import { setLanguageCookie } from "./fetch_request.js";
 //validations before sending to backend
 
 
@@ -78,6 +79,8 @@ async function verify2FAInBackend(user_id, otpCode) {
 //TO bipass 2fa error
 function setupLoginFormEventHandler() {
 	const loginForm = document.getElementById("loginForm");
+	const languageSelect = document.getElementById("languageSelect");
+	languageSelect.value = getLanguageCookie() || "en";
 	setCustomValidation("usernameInput");
 	setCustomValidation("passwordInput");
 	loginForm.addEventListener("submit", async (event) => {
@@ -109,7 +112,12 @@ function setupLoginFormEventHandler() {
 		} catch (error) {
 			showError('Login failed. Please try again.');
 		}
-	})
+	});
+	languageSelect.addEventListener("change", async (event) => {
+		const selectedLanguage = event.target.value;
+		setLanguageCookie(selectedLanguage);
+		loadPage("login");
+});
 }
 
 

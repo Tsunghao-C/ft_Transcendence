@@ -15,6 +15,7 @@ class CustomUser(AbstractUser):
     class Language(models.TextChoices):
         FR = "fr", "French"
         EN = "en", "English"
+        PT = "pt", "Portuguese"
 
     alias = models.CharField(max_length=20, blank=False, unique=True)
     mmr = models.FloatField(default=1000)
@@ -56,9 +57,6 @@ class CustomUser(AbstractUser):
     
     def is_pending(self, user):
          return FriendRequest.objects.filter(from_user=user, to_user=self).exists()
-
-    def is_blocked_by(self, user):
-        return self.is_blocked_by.filter(id=user.id).exists()
 
 class FriendRequest(models.Model):
     from_user = models.ForeignKey(
