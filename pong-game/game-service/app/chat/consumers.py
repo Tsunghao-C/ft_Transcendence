@@ -54,6 +54,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 #             "time": time,
 #         }))
 
+# Temparay testing on lobby.html, jsut to check WS is working
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_group_name = 'test'

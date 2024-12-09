@@ -109,18 +109,18 @@ DATABASES = {
     "default": {
         "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
         "NAME": os.environ.get("USER_DB_DATABASE", BASE_DIR / "db.sqlite3"),
-        "USER": os.environ.get("SQL_USER", "user"),
-        "PASSWORD": os.environ.get("SQL_PASSWORD", "password"),
+        "USER": os.environ.get("USER_DB_USER", "user_db_user"),
+        "PASSWORD": os.environ.get("USER_DB_PASSWORD", "user_password"),
         "HOST": "user_db",
-        "PORT": os.environ.get("SQL_PORT", "5432"),
+        "PORT": os.environ.get("USER_DB_PORT", "5432"),
     },
 	"game_db": {
         "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
         "NAME": os.environ.get("GAME_DB_DATABASE", BASE_DIR / "db.sqlite3"),
-        "USER": os.environ.get("SQL_USER", "user"),
-        "PASSWORD": os.environ.get("SQL_PASSWORD", "password"),
+        "USER": os.environ.get("GAME_DB_USER", "game_db_user"),
+        "PASSWORD": os.environ.get("GAME_DB_PASSWORD", "game_password"),
         "HOST": "game_db",
-        "PORT": os.environ.get("SQL_PORT", "5432"),
+        "PORT": os.environ.get("GAME_DB_PORT", "5434"),
     }
 }
 

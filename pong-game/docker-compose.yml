@@ -113,9 +113,9 @@ services:
       SECRET_KEY: ${SECRET_KEY}
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
       SQL_ENGINE: ${SQL_ENGINE}
-      SQL_USER: ${SQL_USER}
-      SQL_PASSWORD: ${SQL_PASSWORD}
-      SQL_PORT: ${SQL_PORT}
+      # SQL_USER: ${SQL_USER}
+      # SQL_PASSWORD: ${SQL_PASSWORD}
+      # SQL_PORT: ${SQL_PORT}
     logging:
       driver: "json-file"
       options:
@@ -219,9 +219,15 @@ services:
       SQL_ENGINE: ${SQL_ENGINE}
       GAME_DB_DATABASE: ${GAME_DB_DATABASE}
       USER_DB_DATABASE: ${USER_DB_DATABASE}
-      SQL_USER: ${SQL_USER}
-      SQL_PASSWORD: ${SQL_PASSWORD}
-      SQL_PORT: ${SQL_PORT}
+      # SQL_USER: ${SQL_USER}
+      USER_DB_USER: ${USER_DB_USER}
+      GAME_DB_USER: ${GAME_DB_USER}
+      # SQL_PASSWORD: ${SQL_PASSWORD}
+      GAME_DB_PASSWORD: ${GAME_DB_PASSWORD}
+      USER_DB_PASSWORD: ${USER_DB_PASSWORD}
+      # SQL_PORT: ${SQL_PORT}
+      USER_DB_PORT: ${USER_DB_PORT}
+      GAME_DB_PORT: ${GAME_DB_PORT}
       SQL_HOST: game_db
       USER_DB_HOST: user_db
     depends_on:
@@ -240,14 +246,18 @@ services:
     image: postgres:14-alpine
     environment:
       - POSTGRES_DB=game_db
-      - POSTGRES_USER=${SQL_USER}
-      - POSTGRES_PASSWORD=${SQL_PASSWORD}
+      - POSTGRES_USER=${GAME_DB_USER}
+      - POSTGRES_PASSWORD=${GAME_DB_PASSWORD}
+      - POSTGRES_PORT=5434
+    expose:
+      - 5434
+    command: postgres -p 5434
     volumes:
       - game_data:/var/lib/postgresql/data
     networks:
       - backend_net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${SQL_USER} -d game_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${GAME_DB_USER} -d game_db -p 5434"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -258,15 +268,15 @@ services:
     image: postgres:14-alpine
     environment:
       - POSTGRES_DB=user_db
-      - POSTGRES_USER=${SQL_USER}
-      - POSTGRES_PASSWORD=${SQL_PASSWORD}
+      - POSTGRES_USER=${USER_DB_USER}
+      - POSTGRES_PASSWORD=${USER_DB_PASSWORD}
     volumes:
       - user_data:/var/lib/postgresql/data
       - static_volume:/app/static
     networks:
       - backend_net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${SQL_USER} -d user_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${USER_DB_USER} -d user_db"]
       interval: 5s
       timeout: 5s
       retries: 5  
