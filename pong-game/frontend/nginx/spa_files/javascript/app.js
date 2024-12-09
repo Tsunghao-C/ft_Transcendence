@@ -19,8 +19,8 @@ import { setHomePage } from './home.js';
 import { fetchWithToken } from './fetch_request.js';
 import { setLanguageCookie } from './fetch_request.js';
 import { getLanguageCookie } from './fetch_request.js';
-// import { ChatWebSocket } from './chat.js';
-// import { setChatView, cleanupChatView } from './chat_view.js';
+import { ChatWebSocket } from './chat.js';{}
+import { setChatView, cleanupChatView } from './chat_view.js';
 
 export async function loadPage(page) {
 	//add a checker to check there is no more than one /
@@ -38,7 +38,10 @@ export async function loadPage(page) {
 		isLoggedIn = "false";
 	}
 	const contentContainer = document.getElementById("content");
-	const currentLanguage = getLanguageCookie() ||  "en";
+	const currentLanguage = getLanguageCookie();
+	if (!currentLanguage || !['pt', 'fr', 'en'].includes(currentLanguage)) {
+		setLanguageCookie("en");
+	}
 	const path = window.location.pathname;
 	const navbar = document.getElementById("mainNavBar");
 	navbar.style.display = isLoggedIn === "true" ? "block" : "none";
@@ -51,6 +54,13 @@ export async function loadPage(page) {
 		userAvatar.src = data.avatar;
 		//to change to have the good avatar picture src
 		userAvatar.style.display = "block";
+	}
+	//removing the chat
+	if (page !== "chat") {
+		const existingChat = document.getElementById('chat-container');
+		if (existingChat) {
+			existingChat.remove();
+		}    
 	}
 	// cleanup only if user is logged in
 	if (isLoggedIn === "true") {
@@ -108,6 +118,9 @@ export async function loadPage(page) {
 					break;
 				case "personnal-data":
 					setPersonnalDataView(contentContainer);
+					break;
+				case "chat":
+					setChatView(contentContainer);
 					break;
 				default:
 					if (page.startsWith("profile/")) {
