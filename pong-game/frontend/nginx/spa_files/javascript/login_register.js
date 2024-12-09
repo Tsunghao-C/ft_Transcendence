@@ -5,6 +5,8 @@ import { setCustomValidation } from './login_validations.js';
 import { validatePasswordMatch } from './login_validations.js';
 import { validateProfilePicture } from './login_validations.js';
 import { getLanguageCookie } from './fetch_request.js';
+import { setLanguageCookie } from "./fetch_request.js";
+import { loadPage } from './app.js';
 ///////////////////// UI Helpers /////////////////////
 
 ///////////////////// API Calls /////////////////////
@@ -29,6 +31,8 @@ function setupRegisterFormEventHandler() {
 	validateProfilePicture();
 	validatePasswordMatch();
 	const registerForm = document.getElementById("registerForm");
+	const languageSelect = document.getElementById("languageSelect");
+	languageSelect.value = getLanguageCookie() || "en";
 	registerForm.addEventListener("submit", async (event) => {
 		event.preventDefault();
 		const username = document.getElementById('newUsername').value;
@@ -63,6 +67,11 @@ function setupRegisterFormEventHandler() {
 		} catch (error) {
 			showError('An error occurred. Please try again later.');
 		}
+	});
+	languageSelect.addEventListener("change", async (event) => {
+			const selectedLanguage = event.target.value;
+			setLanguageCookie(selectedLanguage);
+			loadPage("register");
 	});
 }
 

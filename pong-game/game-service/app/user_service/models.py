@@ -57,9 +57,6 @@ class CustomUser(AbstractUser):
     def is_pending(self, user):
          return FriendRequest.objects.filter(from_user=user, to_user=self).exists()
 
-    def is_blocked_by(self, user):
-        return self.is_blocked_by.filter(id=user.id).exists()
-
 class FriendRequest(models.Model):
     from_user = models.ForeignKey(
         CustomUser, related_name="from_user", on_delete=models.CASCADE
