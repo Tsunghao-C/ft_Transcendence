@@ -108,23 +108,23 @@ ASGI_APPLICATION = 'backend.asgi.application'
 DATABASES = {
     "default": {
         "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
-        "NAME": os.environ.get("USER_DB_DATABASE", BASE_DIR / "db.sqlite3"),
-        "USER": os.environ.get("SQL_USER", "user"),
-        "PASSWORD": os.environ.get("SQL_PASSWORD", "password"),
-        "HOST": "user_db",
-        "PORT": os.environ.get("SQL_PORT", "5432"),
-    },
-	"game_db": {
-        "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
         "NAME": os.environ.get("GAME_DB_DATABASE", BASE_DIR / "db.sqlite3"),
         "USER": os.environ.get("SQL_USER", "user"),
         "PASSWORD": os.environ.get("SQL_PASSWORD", "password"),
         "HOST": "game_db",
         "PORT": os.environ.get("SQL_PORT", "5432"),
-    }
+    },
+	# "game_db": {
+    #     "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
+    #     "NAME": os.environ.get("GAME_DB_DATABASE", BASE_DIR / "db.sqlite3"),
+    #     "USER": os.environ.get("SQL_USER", "user"),
+    #     "PASSWORD": os.environ.get("SQL_PASSWORD", "password"),
+    #     "HOST": "game_db",
+    #     "PORT": os.environ.get("SQL_PORT", "5432"),
+    # }
 }
 
-DATABASE_ROUTERS = ['backend.database_router.AppDatabaseRouter']
+# DATABASE_ROUTERS = ['backend.database_router.AppDatabaseRouter']
 
 
 # Password validation

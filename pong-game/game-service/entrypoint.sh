@@ -10,7 +10,7 @@ chmod -R 755 /app/static
 echo "Waiting for database to be ready..."
 echo "SQL_PORT: ${SQL_PORT}"
 wait-for-it --service game_db:${SQL_PORT} -- echo "Game Database is ready!"
-wait-for-it --service user_db:${SQL_PORT} -- echo "User Database is ready!"
+# wait-for-it --service user_db:${SQL_PORT} -- echo "User Database is ready!"
 
 # echo "Making migrations..."
 # python manage.py makemigrations || { echo "makemigrations failed"; exit 1; }
@@ -19,10 +19,10 @@ echo "Migrating db's..."
 # python manage.py migrate || { echo "migrations failed"; exit 1; }
 python manage.py makemigrations user_service
 python manage.py makemigrations game_service
-python manage.py migrate user_service --database=default
-python manage.py migrate game_service --database=game_db
-python manage.py migrate user_service --database=default
-python manage.py migrate game_service --database=game_db
+python manage.py migrate user_service
+python manage.py migrate game_service
+# python manage.py migrate user_service --database=default
+# python manage.py migrate game_service --database=game_db
 
 
 echo "Adding django crontab..."
