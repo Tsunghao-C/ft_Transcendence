@@ -35,7 +35,7 @@ async function loadHtml(url) {
 // }
 
 export function setLoginViewHtml(contentContainer) {
-	const currentLanguage = localStorage.getItem("language");
+	const currentLanguage = getLanguageCookie() || "en";
 	contentContainer.innerHTML = `
 			<h2 data-i18n="loginTitle">Login</h2>
 			<form id="loginForm">
@@ -59,6 +59,11 @@ export function setLoginViewHtml(contentContainer) {
 			<p>${translations[currentLanguage].noAccount}
 				<a href="#register" id="registerLink">${translations[currentLanguage].registerLink}</a>
 			</p>
+			<select id="languageSelect" class="form-select mt-2">
+				<option value="en" data-i18n="english">English</option>
+				<option value="fr" data-i18n="francais">Français</option>
+				<option value="pt" data-i18n="Português">Português</option>
+			</select>
 	`;
 }
 
@@ -84,7 +89,12 @@ export function setRegisterViewHtml(contentContainer) {
 					<p id="successMessage"></p>
 				</div>
 				<button type="submit" class="btn btn-primary" data-i18n="registerButton">Register</button>
-				<a href="#login" class="btn btn-primary" >Back to log in</button a>
-			</form>
+				<a href="#login" class="btn btn-primary">Back to log in</a>
+				</form>
+				<select id="languageSelect" class="form-select mt-2">
+					<option value="en" data-i18n="english">English</option>
+					<option value="fr" data-i18n="francais">Français</option>
+					<option value="pt" data-i18n="Português">Português</option>
+				</select>
 	`;
 }

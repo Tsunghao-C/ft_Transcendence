@@ -1,4 +1,5 @@
 import { translations } from "./language_pack.js";
+import { getLanguageCookie } from "./fetch_request.js";
 
 export function set404View(contentContainer) {
 	const currentLanguage = getLanguageCookie() ||  "en";

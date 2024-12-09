@@ -22,14 +22,16 @@ urlpatterns = [
 	# user profile
 	path("getuser/", CurrentUserView.as_view(), name="get_user"),
 	path("update-username/", updateUsernameView.as_view(), name="update_user"),
-	path("change-password/", 
-	  PasswordChangeView.as_view(
-		  template_name="user_service/change_password.html",
-		  success_url="/api/user/change-password-done/" 
-	  ), 
-	  name="update_password"),
-	path("change-password-done/", PasswordChangeDoneView.as_view(), name="update_password_success"),
+	# path("change-password/", 
+	#   PasswordChangeView.as_view(
+	# 	  template_name="user_service/change_password.html",
+	# 	  success_url="/api/user/change-password-done/" 
+	#   ), 
+	#   name="update_password"),
+	# path("change-password-done/", PasswordChangeDoneView.as_view(), name="update_password_success"),
 	path("change-email/", changeEmailView.as_view(), name="email_change"),
+	path("change-password/", changePasswordView.as_view(), name="password_change"),
+	path("change-alias/", changeAliasView.as_view(), name="change_alias"),
     path("send-friend-request/", sendFriendRequestView.as_view(), name="add_friend"),
     path("get-friends/", getFriendsView.as_view(), name="get_friends"),
     path("get-profile/", getProfileView.as_view(), name="get_profile"),

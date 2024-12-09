@@ -108,7 +108,10 @@ export const translations = {
 		requestDuel: "Send Duel Request",
 		accept: "Accept",
 		cancel: "Cancel",
-		block: "Block"
+		block: "Block",
+		friendRequestSent: "Friend request sent",
+		blockedByUser: "is blocking you",
+		blockingUser: "you are blocking",
 	},
 	fr: {
 		confirm: "",

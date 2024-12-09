@@ -11,6 +11,7 @@ export function sendDuelRequest(friendUsername) {
 }
 
 export function confirmRemoveFriend(friendAlias) {
+    const currentLanguage = getLanguageCookie() ||  "en";
     const confirmation = confirm(
         `${translations[currentLanguage].validationRemovalFirst} ${friendAlias} ${translations[currentLanguage].validationRemovalSecond} ?`
     );
@@ -96,43 +97,49 @@ export async function unblockUser(blockedUser) {
 }
 
 export async function blockUser(newBlockUsername) {
-        let data;
-        console.log("going here");
-        try {
-            const body = JSON.stringify({ alias: newBlockUsername });
-            data = await fetchWithToken('/api/user/block-user/', body, 'POST');
-        } catch (error) {
-            console.log(error);
-            return;
-        }
-        if (data.detail === 'this user is already blocked') {
-            alert(`${newBlockUsername} ${translations[currentLanguage].alreadyBlock}.`);
-        } else if (data.detail === 'No CustomUser matches the given query.' ) {
-            alert(`${translations[currentLanguage].user} ${newBlockUsername} ${translations[currentLanguage].notFound}.`);
-        } else if (data.detail === 'you cannot befriend yourself' ) {
-            alert(`${translations[currentLanguage].okSasuke}`);
-        }
-    }
-    // renderBlockList();
-    // renderFriends();
+    const currentLanguage = getLanguageCookie() ||  "en";
 
-//REQUEST
-export async function addFriend(newfriend) {
-        let data;
-        try {
-            const body = JSON.stringify({ toAlias: newfriend });
-            data = await fetchWithToken('/api/user/send-friend-request/', body, 'POST');
-            // console.log("User data: ", data);
-        } catch (error) {
-            console.log(error);
-            return;
-        }
-        if (data.detail === 'Friend request was already sent.') {
-                    alert(`${newfriend} ${translations[currentLanguage].alreadyFriend}.`);
-        } else if (data.detail === 'No CustomUser matches the given query.' ) {
-            alert(`${translations[currentLanguage].user} ${newfriend} ${translations[currentLanguage].notFound}.`);
-        } else if (data.detail === 'you cannot befriend yourself' ) {
-            alert(`${translations[currentLanguage].lonelyTest}`);
-        }
+    let data;
+    console.log("going here");
+    try {
+        const body = JSON.stringify({ alias: newBlockUsername });
+        data = await fetchWithToken('/api/user/block-user/', body, 'POST');
+    } catch (error) {
+        console.log(error);
+        return;
     }
-    // renderSentRequests();
+    if (data.detail === 'this user is already blocked') {
+        alert(`${newBlockUsername} ${translations[currentLanguage].alreadyBlock}.`);
+    } else if (data.detail === 'No CustomUser matches the given query.' ) {
+        alert(`${translations[currentLanguage].user} ${newBlockUsername} ${translations[currentLanguage].notFound}.`);
+    } else if (data.detail === 'you cannot befriend yourself' ) {
+        alert(`${translations[currentLanguage].okSasuke}`);
+    }
+}
+
+export async function addFriend(newfriend) {
+    const currentLanguage = getLanguageCookie() ||  "en";
+
+    let data;
+    try {
+        const body = JSON.stringify({ toAlias: newfriend });
+        data = await fetchWithToken('/api/user/send-friend-request/', body, 'POST');
+        // console.log("User data: ", data);
+    } catch (error) {
+        console.log(error);
+        return;
+    }
+    if (data.detail === 'Friend request was already sent.') {
+        alert(`${newfriend} ${translations[currentLanguage].alreadyFriend}.`);
+    } else if (data.detail === 'No CustomUser matches the given query.' ) {
+        alert(`${translations[currentLanguage].user} ${newfriend} ${translations[currentLanguage].notFound}.`);
+    } else if (data.detail === 'you cannot befriend yourself' ) {
+        alert(`${translations[currentLanguage].lonelyTest}`);
+    } else if (data.detail === 'you are blocking this user' ) {
+        alert(`${newfriend} ${translations[currentLanguage].blockedByUser}`);
+    } else if (data.detail === 'this user is blocking you' ) {
+        alert(`${translations[currentLanguage].blockingUser} ${newfriend}`);
+    } else {
+        alert(`${translations[currentLanguage].friendRequestSent}`);
+    }
+}

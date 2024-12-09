@@ -31,7 +31,7 @@ class UserSerializer(serializers.ModelSerializer):
 			"lossCount": {"read_only": True},
 			"blockList": {"read_only": True},
 			"friendList": {"read_only": True},
-			"language": {"read_only": True},
+			"language": {"required": False},
 			"avatar": {"required": False},
 		}
 
