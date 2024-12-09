@@ -2,6 +2,26 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>Chat Test</title>
+</head>
+<body>
+    <h1>Chat Rooms</h1>
+    <input id="room-name-input" type="text" placeholder="Enter room name">
+    <button onclick="joinRoom()">Join Room</button>
+
+    <script>
+    function joinRoom() {
+        const roomName = document.getElementById('room-name-input').value;
+        if (roomName) {
+            window.location.pathname = `/api/chat/${roomName}/`;
+        }
+    }
+    </script>
+</body>
+</html>
+<!-- <!DOCTYPE html>
+<html>
+<head>
     <meta charset="utf-8"/>
     <title>Chat Rooms</title>
 </head>
@@ -20,8 +40,8 @@
 
         document.querySelector('#room-name-submit').onclick = function(e) {
             var roomName = document.querySelector('#room-name-input').value;
-            window.location.pathname = '/chat/' + roomName + '/';
+            window.location.pathname = '/api/chat/' + roomName + '/';
         };
     </script>
 </body>
-</html>
+</html> -->

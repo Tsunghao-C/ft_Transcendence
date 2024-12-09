@@ -3,18 +3,24 @@ from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
 from channels.security.websocket import AllowedHostsOriginValidator
+import chat.routing
 
 from .routing import websocket_urlpatterns
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
-application = get_asgi_application()
 
 application = ProtocolTypeRouter( #add redirection 
+
+application = ProtocolTypeRouter(
     {
-        "http": application,
+        "http": get_asgi_application(),
         "websocket": AllowedHostsOriginValidator(
             AuthMiddlewareStack(
                 URLRouter(websocket_urlpatterns))
+                URLRouter(
+                    chat.routing.websocket_urlpatterns
+                )
+            )
         ),
     }
 )

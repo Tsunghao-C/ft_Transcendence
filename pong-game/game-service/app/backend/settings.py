@@ -54,20 +54,19 @@ SIMPLE_JWT = {
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
     "chat",
+    # "channels",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    "daphne",
     'django.contrib.staticfiles',
 	"user_service",
 	"game_service",
 	"rest_framework",
 	"corsheaders",
-    "channels",
-#    "sessionMiddleWareStack",
 ]
 
 MIDDLEWARE = [
@@ -112,18 +111,18 @@ DATABASES = {
     "default": {
         "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
         "NAME": os.environ.get("USER_DB_DATABASE", BASE_DIR / "db.sqlite3"),
-        "USER": os.environ.get("SQL_USER", "user"),
-        "PASSWORD": os.environ.get("SQL_PASSWORD", "password"),
+        "USER": os.environ.get("USER_DB_USER", "user_db_user"),
+        "PASSWORD": os.environ.get("USER_DB_PASSWORD", "user_password"),
         "HOST": "user_db",
-        "PORT": os.environ.get("SQL_PORT", "5432"),
+        "PORT": os.environ.get("USER_DB_PORT", "5432"),
     },
 	"game_db": {
         "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
         "NAME": os.environ.get("GAME_DB_DATABASE", BASE_DIR / "db.sqlite3"),
-        "USER": os.environ.get("SQL_USER", "user"),
-        "PASSWORD": os.environ.get("SQL_PASSWORD", "password"),
+        "USER": os.environ.get("GAME_DB_USER", "game_db_user"),
+        "PASSWORD": os.environ.get("GAME_DB_PASSWORD", "game_password"),
         "HOST": "game_db",
-        "PORT": os.environ.get("SQL_PORT", "5432"),
+        "PORT": os.environ.get("GAME_DB_PORT", "5434"),
     }
 }
 
@@ -217,6 +216,9 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'DEBUG',  # Log WebSocket-related events
             'propagate': False,
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [('redis', 6379)]
         },
     },
 }
