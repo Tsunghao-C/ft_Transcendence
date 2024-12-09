@@ -15,6 +15,7 @@ class CustomUser(AbstractUser):
     class Language(models.TextChoices):
         FR = "fr", "French"
         EN = "en", "English"
+        PT = "pt", "Portuguese"
 
     alias = models.CharField(max_length=20, blank=False, unique=True)
     mmr = models.FloatField(default=1000)

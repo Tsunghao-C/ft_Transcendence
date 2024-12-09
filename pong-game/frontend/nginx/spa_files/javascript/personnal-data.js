@@ -131,6 +131,7 @@ export async function setPersonnalDataView(contentContainer) {
         try {
             await fetchWithToken('/api/user/change-alias/', JSON.stringify({ alias: newAlias }), 'POST');
             alert('Alias updated successfully!');
+            loadPage("personnal-data")
         } catch (error) {
             console.error(error);
             alert('Failed to update alias.');
@@ -142,6 +143,7 @@ export async function setPersonnalDataView(contentContainer) {
         try {
             await fetchWithToken('/api/user/change-email/', JSON.stringify({ email: newEmail }), 'POST');
             alert('Email updated successfully!');
+            loadPage("personnal-data")
         } catch (error) {
             console.error(error);
             alert('Failed to update email.');

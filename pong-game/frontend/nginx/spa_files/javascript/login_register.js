@@ -11,11 +11,11 @@ import { loadPage } from './app.js';
 
 ///////////////////// API Calls /////////////////////
 
-async function registerUserInBackend(username, password, email, alias) {
+async function registerUserInBackend(username, password, email, alias, language) {
     const response = await fetch('/api/user/register/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, email, alias })
+        body: JSON.stringify({ username, password, email, alias, language})
     });
     return response;
 }
@@ -32,7 +32,8 @@ function setupRegisterFormEventHandler() {
 	validatePasswordMatch();
 	const registerForm = document.getElementById("registerForm");
 	const languageSelect = document.getElementById("languageSelect");
-	languageSelect.value = getLanguageCookie() || "en";
+	const language = getLanguageCookie() || "en";
+	languageSelect.value = language;
 	registerForm.addEventListener("submit", async (event) => {
 		event.preventDefault();
 		const username = document.getElementById('newUsername').value;
@@ -41,7 +42,7 @@ function setupRegisterFormEventHandler() {
 		const password = document.getElementById('newPasswordInput').value;
 		const profilePictureInput = document.getElementById("profilePictureInput");
 		try {
-			const response = await registerUserInBackend(username, password, email, alias);
+			const response = await registerUserInBackend(username, password, email, alias, language);
 			const data = await response.json();
 			if (response.ok) {
 				showSuccess('Success! User profile has been created, you can now log in.');
