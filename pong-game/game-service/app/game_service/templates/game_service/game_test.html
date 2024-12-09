@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Game WebSocket Test</title>
+</head>
+<body>
+    <h1>Game ID: {{ game_id }}</h1>
+    <div id="game-log" style="height: 300px; overflow-y: scroll; border: 1px solid #ccc;"></div>
+    <input id="game-message" type="text">
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        const wsUrl = `${wsScheme}://${window.location.host}/ws/game-server/{{ game_id }}/`;
+        const gameSocket = new WebSocket(wsUrl);
+
+        gameSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            const log = document.getElementById('game-log');
+            log.innerHTML += `<p>${data.message}</p>`;
+            log.scrollTop = log.scrollHeight;
+        };
+
+        function sendMessage() {
+            const messageInput = document.getElementById('game-message');
+            gameSocket.send(JSON.stringify({
+                'message': messageInput.value
+            }));
+            messageInput.value = '';
+        }
+    </script>
+</body>
+</html>
