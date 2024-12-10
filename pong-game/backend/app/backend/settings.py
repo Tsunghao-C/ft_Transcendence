@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
-from.cron_config import CRONJOBS
 import os
 
 
@@ -197,5 +196,5 @@ EMAIL_HOST_PASSWORD = 'zlywwbcyedhomdet'  # Votre mot de passe ou App Password /
 
 LDB_UPDATE_TIMER = os.environ.get("LDB_UPDATE_TIMER", 15)
 CRONJOBS = [
-	(f"*/{LDB_UPDATE_TIMER} * * * *", "game_service.models.LeaderBoard.objects.updateLeaderBoard")
+    (f'*/{LDB_UPDATE_TIMER} * * * *', 'game_service.tasks.update_leaderboard')
 ]

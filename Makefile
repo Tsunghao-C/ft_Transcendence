@@ -8,8 +8,8 @@ build:
 	- mkdir -p pong-game/security/vault_debian/volumes/file
 	- mkdir -p pong-game/security/vault_debian/volumes/shared_data
 	- mkdir -p pong-game/backend/app/media/profile_images
-	chmod -R 755 pong-game/frontend/nginx/logs
-	chmod -R 755 pong-game/backend/app/media/profile_images
+	# chmod -R 755 pong-game/frontend/nginx/logs
+	# chmod -R 755 pong-game/backend/app/media/profile_images
 	docker compose -f pong-game/docker-compose.yml build
 
 run:

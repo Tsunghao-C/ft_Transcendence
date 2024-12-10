@@ -24,12 +24,9 @@ python manage.py makemigrations game_service
 python manage.py migrate user_service
 python manage.py migrate game_service
 
-# Start cron service
-echo "Starting cron service..."
-service cron start || { echo "failed to start cron service"; exit 1; }
-
 echo "Adding django crontab..."
 python manage.py crontab add || { echo "failed to add crontab"; exit 1; }
+python manage.py crontab show || { echo "failed to show crontab"; exit 1; }
 
 # Collect static files
 echo "Collecting static files..."
