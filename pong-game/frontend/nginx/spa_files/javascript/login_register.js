@@ -41,30 +41,59 @@ function setupRegisterFormEventHandler() {
 		const email = document.getElementById('newMailInput').value;
 		const password = document.getElementById('newPasswordInput').value;
 		const profilePictureInput = document.getElementById("profilePictureInput");
+
+		const formData = new FormData(); // Utilisez FormData pour inclure un fichier.
+		formData.append("username", username);
+		formData.append("alias", alias);
+		formData.append("email", email);
+		formData.append("password", password);
+		if (profilePictureInput.files.length > 0) {
+			formData.append("avatar", profilePictureInput.files[0]);
+		}
+
 		try {
-			const response = await registerUserInBackend(username, password, email, alias, language);
+			const response = await fetch("/api/register/", { // Remplacez par votre URL backend.
+				method: "POST",
+				body: formData,
+			});
+
 			const data = await response.json();
 			if (response.ok) {
 				showSuccess('Success! User profile has been created, you can now log in.');
 			} else {
-				//translations to be made
-				if (data.username) {
-					showError(data.username);
-				}
-				else if (data.alias) {
-					showError(data.alias);
-				}
-				else if (data.email) {
-					showError(data.email);
-				}
-				else {
-					showError("Register failed, please try again later.")
-				}
+				if (data.username) showError(data.username);
+				else if (data.alias) showError(data.alias);
+				else if (data.email) showError(data.email);
+				else showError("Register failed, please try again later.");
 			}
 		} catch (error) {
 			showError('An error occurred. Please try again later.');
 		}
 	});
+	// 	try {
+	// 		const response = await registerUserInBackend(username, password, email, alias, language);
+	// 		const data = await response.json();
+	// 		if (response.ok) {
+	// 			showSuccess('Success! User profile has been created, you can now log in.');
+	// 		} else {
+	// 			//translations to be made
+	// 			if (data.username) {
+	// 				showError(data.username);
+	// 			}
+	// 			else if (data.alias) {
+	// 				showError(data.alias);
+	// 			}
+	// 			else if (data.email) {
+	// 				showError(data.email);
+	// 			}
+	// 			else {
+	// 				showError("Register failed, please try again later.")
+	// 			}
+	// 		}
+	// 	} catch (error) {
+	// 		showError('An error occurred. Please try again later.');
+	// 	}
+	// });
 	languageSelect.addEventListener("change", async (event) => {
 			const selectedLanguage = event.target.value;
 			setLanguageCookie(selectedLanguage);
