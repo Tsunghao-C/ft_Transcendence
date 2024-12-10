@@ -3,13 +3,12 @@ from django.db import models
 from uuid import uuid4
 import os
 
-def user_dir_path(instance, filename):
-    return 'user_{0}/{1}'.format(instance.user.id, filename)
-
 def pfpUploadPath(instance, fname):
     ext = fname.split('.')[-1]
     fname = f"{uuid4().hex}.{ext}" # 1 / 1bn chance of getting a duplicate
-    return os.path.join('profile_images', fname)
+    full_path = os.path.join('profile_images', fname)
+    print(full_path)
+    return full_path
 
 class CustomUser(AbstractUser):
     class Language(models.TextChoices):
