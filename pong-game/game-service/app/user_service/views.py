@@ -13,7 +13,7 @@ from django.contrib.auth.decorators import login_required
 from django.dispatch import receiver
 from django.db.models.signals import pre_save
 from .forms import UploadAvatarForm
-from .serializers import UserSerializer
+from .serializers import UserSerializer, nameNotClean
 from .models import CustomUser
 import re, os
 import uuid
@@ -52,7 +52,7 @@ class UpdateMMR(APIView):
 		# Calculate the 'expected score'
 		E = 1 / (1 + 10**((oppMMR - userMMR)/400))
 		return int(userMMR + 30 * (matchOutcome - E))
-	
+
 	def __updateCounters(self, user, matchOutcome):
 		if matchOutcome:
 			user.winCount += 1
@@ -200,6 +200,8 @@ class changeAliasView(APIView):
 	def post(self, request):
 		user = request.user
 		newAlias = request.data.get("alias")
+		if nameNotClean(newAlias):
+			return Response({"error": "this alias contains bad language"}, status=400)
 		if CustomUser.objects.filter(alias=newAlias).exists():
 			return Response({"error": "alias is already in use"}, status=400)
 		user.alias = newAlias
@@ -216,10 +218,10 @@ class changePasswordView(APIView):
 
         if not user.check_password(old_password):
             return Response({'error': 'Incorrect old password'}, status=400)
-        
+
         user.set_password(new_password)
         user.save()
-        
+
         return Response({'detail': 'Password changed successfully'})
 
 class sendFriendRequestView(APIView):
@@ -270,7 +272,7 @@ class deleteFriendView(APIView):
 		user.friendList.remove(fr_user)
 		fr_user.friendList.remove(user)
 		return Response({"detail": "successfully deleted friend."}, status=200)
-	
+
 class rejectFriendRequestView(APIView):
 	permission_classes = [IsAuthenticated]
 
@@ -289,8 +291,8 @@ class cancelFriendRequestView(APIView):
 		to_user = get_object_or_404(CustomUser, alias=request.data.get("toAlias"))
 		frequest = get_object_or_404(FriendRequest, from_user=from_user, to_user=to_user)
 		frequest.delete()
-		return Response({"detail": "friend request deleted"}, status=200)	
-	
+		return Response({"detail": "friend request deleted"}, status=200)
+
 class blockUserView(APIView):
 	permission_classes = [IsAuthenticated]
 
@@ -312,7 +314,7 @@ class blockUserView(APIView):
 			receiveFriendRequest.delete()
 		user.blockList.add(otherUser)
 		return Response({"detail": "user successfully blocked"}, status=200)
-	
+
 class unblockUserView(APIView):
 	permission_classes = [IsAuthenticated]
 
@@ -323,7 +325,7 @@ class unblockUserView(APIView):
 			return Response({"detail": "this user is not blocked"}, status=400)
 		user.blockList.remove(otherUser)
 		return Response({"detail": "user was successfully unblocked"}, status=200)
-	
+
 class getOpenFriendRequestsView(APIView):
 	permission_classes = [IsAuthenticated]
 
@@ -378,6 +380,7 @@ class getFriendsView(APIView):
 			{
 				"id": friend.id,
 				"alias": friend.alias,
+				"avatar": friend.avatar.url,
 				"mmr": friend.mmr,
 				"wins": friend.winCount,
 				"losses": friend.lossCount,
