@@ -15,101 +15,134 @@ import { setPersonnalDataView } from './personnal-data.js';
 import { setProfileView } from './profile.js';
 import { setFriendsView } from './friends.js';
 import { playerDatas } from './data_test.js';
+import { setHomePage } from './home.js';
+import { fetchWithToken } from './fetch_request.js';
+import { setLanguageCookie } from './fetch_request.js';
+import { getLanguageCookie } from './fetch_request.js';
+import { ChatWebSocket } from './chat.js';{}
+import { setChatView, cleanupChatView } from './chat_view.js';
 
-export function loadPage(page) {
+export async function loadPage(page) {
 	//add a checker to check there is no more than one /
-	const contentContainer = document.getElementById("content");
-	const currentLanguage = localStorage.getItem("language") || "en";
-	const isLoggedIn = localStorage.getItem("isLoggedIn") || "false" ;
-	const path = window.location.pathname;
-
-	if (page !== "game") {
-		closeGameWebSocket();
+	//if invalid token, the server explodes
+	let isLoggedIn;
+	let data;
+	let response;
+	try {
+		response = await fetchWithToken('/api/user/getuser/');
+		data = await response.json();
+		console.log("User data: ", data);
+		isLoggedIn = "true";
+		setLanguageCookie(data.language);
+	} catch (error) {
+		isLoggedIn = "false";
 	}
+	const contentContainer = document.getElementById("content");
+	const currentLanguage = getLanguageCookie();
+	if (!currentLanguage || !['pt', 'fr', 'en'].includes(currentLanguage)) {
+		setLanguageCookie("en");
+	}
+	const path = window.location.pathname;
 	const navbar = document.getElementById("mainNavBar");
-	if (navbar) navbar.style.display = isLoggedIn === "true" ? "block" : "none";
+	navbar.style.display = isLoggedIn === "true" ? "block" : "none";
 
+	// load user info if user is logged in
 	if (isLoggedIn === "true") {
-		const currentLogin = localStorage.getItem("currentLogin");
+		const userDropdown = document.getElementById("userDropdown");
+		userDropdown.textContent = data.alias;
 		const userAvatar = document.getElementById("userAvatar");
-        const userDropdown = document.getElementById("userDropdown");
-        
-        // Update user dropdown text if element exists
-        if (userDropdown && currentLogin) {
-            userDropdown.textContent = currentLogin;
-        }
-
-        if (userAvatar) {
-            if (playerDatas && 
-                playerDatas.players && 
-                playerDatas.players[currentLogin] && 
-                playerDatas.players[currentLogin].profilePicture) {
-                // Use profile picture if available
-                userAvatar.src = playerDatas.players[currentLogin].profilePicture;
-            } else {
-                // Set a default avatar or placeholder
-                userAvatar.src = "wtf.jpeg";  // Currently NULL, or set a default avatar picture to user who didn't upload picture
-            }
-            userAvatar.style.display = "block";
-        }
-		// userAvatar.src = playerDatas.players[currentLogin].profilePicture;
-		// userDropdown.textContent = currentLogin;
-		// // ici afficher la bonne pp
-		// userAvatar.style.display = "block";
+		userAvatar.src = data.avatar;
+		//to change to have the good avatar picture src
+		userAvatar.style.display = "block";
+	}
+	//removing the chat
+	if (page !== "chat") {
+		const existingChat = document.getElementById('chat-container');
+		if (existingChat) {
+			existingChat.remove();
+		}    
+	}
+	// cleanup only if user is logged in
+	if (isLoggedIn === "true") {
+		if (page !== "game") {closeGameWebSocket();}
+		// if (page !== "chat") {
+		// 	cleanupChatView();
+		// 	const chatContainer = document.getElementById('chat-container');
+		// 	if (chatContainer) {
+		// 		chatContainer.remove();
+		// 	}
+		// }
 	}
 	console.log("page is ", page);
+	// check authentication first
 	if (path !== '/') {
 		set404View(contentContainer);
+		return;
 	} else if (isLoggedIn != "true" && page !== "login" && page !== "register") {
 		window.location.hash = "login";
-		loadPage("login")
+		loadPage("login");
 	} else if (isLoggedIn === "true" && (page === "login" || page === "register")) {
 		window.location.hash = "home";
 		loadPage("home");
+		console.log("logged in, redirect to home");
+		return;
 	} else {
-		// Handle different page views
-        switch (page) {
-            case "home":
-                contentContainer.innerHTML = '<h1 data-i18n="home">Home</h1><p>Welcome!</p>';
-                break;
-            case "about":
-                contentContainer.innerHTML = '<h1 data-i18n="about">About</h1><p>To fill.</p>';
-                break;
-            case "game":
-                setGameMenu(contentContainer);
-                break;
-            case "leaderboard":
-                setLeaderboardView(contentContainer);
-                break;
-            case "profile":
-                const username = localStorage.getItem("currentLogin");
-                setProfileView(contentContainer, username);
-                break;
-            case "settings":
-                setSettingsView(contentContainer);
-                break;
-            case "friends":
-                setFriendsView(contentContainer);
-                break;
-            case "login":
-                setLoginView(contentContainer);
-                break;
-            case "register":
-                setRegisterView(contentContainer);
-                break;
-            case "personnal-data":
-                setPersonnalDataView(contentContainer);
-                break;
-            default:
-                if (page.startsWith("profile/")) {
-                    const profileUsername = page.split("/")[1] || localStorage.getItem("currentLogin");
-                    setProfileView(contentContainer, profileUsername);
-                } else {
-                    set404View(contentContainer);
-                }
-        }
-	}
+		try {
+			// Handle different page views
+			switch (page) {
+				case "home":
+					setHomePage(contentContainer);
+					break;
+				case "about":
+					contentContainer.innerHTML = '<h1 data-i18n="about">About</h1><p>To fill.</p>';
+					break;
+				case "game":
+					setGameMenu(contentContainer);
+					break;
+				case "leaderboard":
+					setLeaderboardView(contentContainer);
+					break;
+				case "profile":
+					// will not be necessary, maybe it will
+					setProfileView(contentContainer, data.alias);
+					break;
+				case "friends":
+					setFriendsView(contentContainer);
+					break;
+				case "login":
+					setLoginView(contentContainer);
+					break;
+				case "register":
+					setRegisterView(contentContainer);
+					break;
+				case "personnal-data":
+					setPersonnalDataView(contentContainer);
+					break;
+				case "chat":
+					setChatView(contentContainer);
+					break;
+				default:
+					if (page.startsWith("profile/")) {
+						const profileUsername = page.split("/")[1] || data.alias;
+						setProfileView(contentContainer, profileUsername);
+					// } else if (page.startsWith("friends/")) {
+					// 	console.log('ausidjaziefjaiezjfaizjefiajzefijazijefija');
+					// 	const activeTab = page.split("/")[1] || "friends";
+					// 	console.log(activeTab);
+					// 	if (!['friends', 'friend-requests', 'sent-requests', 'block'].includes(activeTab)) {
+					// 		set404View(contentContainer);
+						// } else {
+						// 	setFriendsView(contentContainer, activeTab);
+						// } this could be implemented to make the perosn be able to load one tab for friends, and to have history on it
+					} else {
+						set404View(contentContainer);
+					}
+				}
+		} catch (error) {
+			console.log("Error in setView:", error);
+		}
 	changeLanguage(currentLanguage);
+	}
 }
 
 
@@ -119,15 +152,14 @@ function handleNavigation(event) {
 	if (event.target.hasAttribute("data-bs-toggle") && event.target.getAttribute("data-bs-toggle") === "tab") {
 		return;
 	}
+
 	const newPage = event.target.getAttribute("href")?.substring(1);
+
 	if (newPage) {
 		window.history.pushState({ page: newPage }, newPage, '/#' + newPage);
 		loadPage(newPage);
-		updateActiveLink();
 	}
 }
-
-
 
 export function attachNavigationListeners() {
 	const links = document.querySelectorAll("a[href^='#']");
@@ -137,27 +169,15 @@ export function attachNavigationListeners() {
 	});
 }
 
-function updateActiveLink() {
-	const links = document.querySelectorAll('.nav-link');
-
-	links.forEach(link => {
-		link.classList.remove('active');
-	});
-
-	const currentLink = document.querySelector(`a[href="${window.location.hash}"]`);
-	if (currentLink) {
-		currentLink.classList.add('active');
-	}
-}
-
+window.addEventListener("hashchange", () => {
+	const newPage = window.location.hash.substring(1);
+	loadPage(newPage);
+});
 
 
 document.addEventListener("DOMContentLoaded", function () {
 
 	// Clear any stale login state on fresh page load
-	if (!localStorage.getItem("currentLogin")) {
-		localStorage.setItem("isLoggedIn", "false");
-	}
 	const savedFontSize = localStorage.getItem("fontSize") || "medium";
 	changeFontSize(savedFontSize);
 
@@ -169,14 +189,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
 	const currentPage = window.location.hash.substring(1) || "home";
 	loadPage(currentPage);
-	updateActiveLink();
 
 	attachNavigationListeners();
 
 	window.addEventListener("popstate", function (event) {
 		const page = event.state ? event.state.page : "home";
 		loadPage(page);
-		updateActiveLink();
 	});
 
 	const logoutButton = document.getElementById("logoutButton");
@@ -184,8 +202,8 @@ document.addEventListener("DOMContentLoaded", function () {
 		logoutButton.addEventListener("click", function (event) {
 			event.preventDefault();
 			console.log("Logout clicked!");
-			localStorage.setItem("isLoggedIn", "false");
-			localStorage.setItem("isLoggedIn", "falutfava");
+			document.cookie = `accessToken=whocares; path=/; secure; SameSite=Strict`;
+			document.cookie = `refreshToken=whocares; path=/; secure; SameSite=Strict`;
 			loadPage("login");
 		});
 	}

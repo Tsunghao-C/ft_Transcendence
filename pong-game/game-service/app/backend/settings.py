@@ -18,6 +18,8 @@ import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = 'https://localhost:8443/media/'
 
 
 # Quick-start development settings - unsuitable for production
@@ -60,13 +62,11 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    "daphne",
     'django.contrib.staticfiles',
 	"user_service",
 	"game_service",
 	"rest_framework",
 	"corsheaders",
-    "channels",
 ]
 
 MIDDLEWARE = [
@@ -109,8 +109,8 @@ DATABASES = {
     "default": {
         "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
         "NAME": os.environ.get("GAME_DB_DATABASE", BASE_DIR / "db.sqlite3"),
-        "USER": os.environ.get("SQL_USER", "user"),
-        "PASSWORD": os.environ.get("SQL_PASSWORD", "password"),
+        "USER": os.environ.get("GAME_DB_USER", "game_db_user"),
+        "PASSWORD": os.environ.get("GAME_DB_PASSWORD", "game_password"),
         "HOST": "game_db",
         "PORT": os.environ.get("SQL_PORT", "5432"),
     },
@@ -188,7 +188,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)]
+            "hosts": [('redis', 6379)]
         },
     },
 }

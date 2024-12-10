@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from .models import CustomUser, FriendRequest
 from rest_framework import generics
-from .serializers import UserSerializer
+
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -9,6 +9,14 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from rest_framework import status
 from rest_framework.permissions import AllowAny
+from django.contrib.auth.decorators import login_required
+from django.dispatch import receiver
+from django.db.models.signals import pre_save
+from .forms import UploadAvatarForm
+from .serializers import UserSerializer
+from .models import CustomUser
+import re, os
+import uuid
 from game_service.views import recordMatch
 import re
 
@@ -164,7 +172,6 @@ class Validate2FAView(APIView):
 			}, status=status.HTTP_200_OK)
 		return Response({"detail": "Invalid or expired OTP"}, status=status.HTTP_400_BAD_REQUEST)
 
-
 class changeEmailView(APIView):
 	permission_classes = [IsAuthenticated]
 
@@ -189,7 +196,35 @@ class changeEmailView(APIView):
 			cache.delete(cacheName)
 			return Response({"detail": "email change success"}, status=200)
 		return Response({"error": "invalid or expired otp"}, status=400)
-	
+
+class changeAliasView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def post(self, request):
+		user = request.user
+		newAlias = request.data.get("alias")
+		if CustomUser.objects.filter(alias=newAlias).exists():
+			return Response({"error": "alias is already in use"}, status=400)
+		user.alias = newAlias
+		user.save()
+		return Response({"detail": "alias successfully changed"}, status=200)
+
+class changePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        old_password = request.data.get('old_password')
+        new_password = request.data.get('new_password')
+
+        if not user.check_password(old_password):
+            return Response({'error': 'Incorrect old password'}, status=400)
+        
+        user.set_password(new_password)
+        user.save()
+        
+        return Response({'detail': 'Password changed successfully'})
+
 class sendFriendRequestView(APIView):
 	permission_classes = [IsAuthenticated]
 
@@ -200,8 +235,18 @@ class sendFriendRequestView(APIView):
 			return Response({"detail": "you cannot befriend yourself"}, status=400)
 		if from_user.is_friend(to_user):
 			return Response({"detail": "you are already friends with this user"}, status=400)
+		if from_user.has_blocked(to_user):
+			return Response({"detail": "you are blocking this user"}, status=400)
+		if to_user.has_blocked(from_user):
+			return Response({"detail": "this user is blocking you"}, status=400)
 		if FriendRequest.objects.filter(from_user=from_user, to_user=to_user).exists():
 			return Response({"detail": "Friend request was already sent."}, status=400)
+		pendingRequest = FriendRequest.objects.filter(from_user=to_user, to_user=from_user).first()
+		if pendingRequest:
+			to_user.friendList.add(from_user)
+			from_user.friendList.add(to_user)
+			pendingRequest.delete()
+			return Response({"detail": "friend request accepted"}, status=200)
 		FriendRequest.objects.create(from_user=from_user, to_user=to_user)
 		return Response({"detail": "friend request sent"}, status=200)
 
@@ -222,11 +267,8 @@ class deleteFriendView(APIView):
 
 	def post(self, request):
 		user = request.user
-		fr_id = request.data.get("fr_id");
-		if not fr_id:
-			return Response({"detail": "fr_id required"}, status=400)
-		fr_user = get_object_or_404(CustomUser, id=fr_id)
-		if fr_user not in user.friendList.all():
+		fr_user = get_object_or_404(CustomUser, alias=request.data.get("alias"))
+		if not user.is_friend(fr_user):
 			return Response({"detail": "this user is not in your friend list"}, status=400)
 		user.friendList.remove(fr_user)
 		fr_user.friendList.remove(user)
@@ -241,6 +283,16 @@ class rejectFriendRequestView(APIView):
 		frequest = get_object_or_404(FriendRequest, from_user=from_user, to_user=to_user)
 		frequest.delete()
 		return Response({"detail": "friend request deleted"}, status=200)
+
+class cancelFriendRequestView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def post(self, request):
+		from_user = request.user
+		to_user = get_object_or_404(CustomUser, alias=request.data.get("toAlias"))
+		frequest = get_object_or_404(FriendRequest, from_user=from_user, to_user=to_user)
+		frequest.delete()
+		return Response({"detail": "friend request deleted"}, status=200)	
 	
 class blockUserView(APIView):
 	permission_classes = [IsAuthenticated]
@@ -255,6 +307,12 @@ class blockUserView(APIView):
 		if user.is_friend(otherUser):
 			otherUser.friendList.remove(user)
 			user.friendList.remove(otherUser)
+		sentFriendRequest = FriendRequest.objects.filter(from_user=user, to_user=otherUser).first()
+		if (sentFriendRequest):
+			sentFriendRequest.delete()
+		receiveFriendRequest = FriendRequest.objects.filter(from_user=otherUser, to_user=user).first()
+		if (receiveFriendRequest):
+			receiveFriendRequest.delete()
 		user.blockList.add(otherUser)
 		return Response({"detail": "user successfully blocked"}, status=200)
 	
@@ -266,8 +324,6 @@ class unblockUserView(APIView):
 		otherUser = get_object_or_404(CustomUser, alias=request.data.get("alias"))
 		if not user.has_blocked(otherUser):
 			return Response({"detail": "this user is not blocked"}, status=400)
-		if user == otherUser:
-			return Response({"detail": "you cannot block yourself"}, status=400)
 		user.blockList.remove(otherUser)
 		return Response({"detail": "user was successfully unblocked"}, status=200)
 	
@@ -290,6 +346,69 @@ class getOpenFriendRequestsView(APIView):
 		return Response({
 			"count": openRequests.count(),
 			"requests": friendRequestsData
+		}, status=200)
+
+class getProfileView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def get(self, request):
+		profile = get_object_or_404(CustomUser, alias=request.query_params.get("alias"))
+		user = request.user
+		# Still to be added : match history, rank and a way to manage the button add friend, request sent, request pending but not necessary
+		profileData = {
+				"id": profile.id,
+				"alias": profile.alias,
+				"mmr": profile.mmr,
+				"wins": profile.winCount,
+				"losses": profile.lossCount,
+				"avatar": profile.avatar.url,
+				"isCurrent": user == profile,
+				"isFriend": user.is_friend(profile),
+				"hasBlocked": user.has_blocked(profile),
+				"isSent": user.is_sent(profile),
+				"isPending": user.is_pending(profile)
+			}
+		return Response({
+			"profile": profileData
+		}, status=200)
+
+class getFriendsView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def get(self, request):
+		friendList = request.user.friendList.all()
+		friendData = [
+			{
+				"id": friend.id,
+				"alias": friend.alias,
+				"mmr": friend.mmr,
+				"wins": friend.winCount,
+				"losses": friend.lossCount,
+			}
+			for friend in friendList
+		]
+		return Response({
+			"count": friendList.count(),
+			"requests": friendData
+		}, status=200)
+
+
+
+class getBlocksView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def get(self, request):
+		blockList = request.user.blockList.all()
+		blockData = [
+			{
+				"id": block.id,
+				"alias": block.alias,
+			}
+			for block in blockList
+		]
+		return Response({
+			"count": blockList.count(),
+			"requests": blockData
 		}, status=200)
 
 class getSentFriendRequestsView(APIView):
@@ -320,10 +439,34 @@ class changeLanguageView(APIView):
 		user = request.user
 		currLang = user.language
 		newLang = request.data.get("newLang")
-		if not newLang or newLang not in ("fr", "en"):
-			return Response({"error": "newLang must be supplied as fr or en"}, status=400)
+		if not newLang or newLang not in ("fr", "en", "pt"):
+			return Response({"error": "newLang must be supplied as fr, en or pt"}, status=400)
 		if newLang == currLang:
 			return Response({"error": f"current language is already set to {currLang}"}, status=400)
 		user.language = newLang
 		user.save()
 		return Response({"detail": f"successfully changed language to {newLang}"}, status=200)
+
+
+class changeAvatarView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def post(self, request):
+		user = request.user
+		form = UploadAvatarForm(request.POST, request.FILES, instance=user)
+		if form.is_valid():
+			form.save()
+			return Response({"detail": "Avatar uploaded successfully"}, status=200)
+		return Response({"errors": form.errors}, status=400)
+
+@receiver(pre_save, sender=CustomUser) # gets called before CustomUser changes are saved
+def deleteOldAvatar(sender, instance, **kwargs):
+	if not instance.pk:
+		return #new user, no old avatar
+	try:
+		oldAvatar = sender.objects.get(pk=instance.pk).avatar
+	except sender.DoesNotExist:
+		return # user doesn't exist yet, nothing to delete
+	if oldAvatar and oldAvatar != instance.avatar:
+		if os.path.isfile(oldAvatar.path) and oldAvatar.name != 'default.jpg':
+			os.remove(oldAvatar.path)
