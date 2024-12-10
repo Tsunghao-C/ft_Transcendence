@@ -1,9 +1,10 @@
 from django.shortcuts import render
-from .models import MatchResults
+from .models import MatchResults, LeaderBoard
 from user_service.models import CustomUser
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from .serializers import LeaderBoardSerializer
 
 # Create your views here.
 def recordMatch(p1, p2, matchOutcome):
@@ -23,7 +24,6 @@ class getMatchHistoryView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        user = request.user
         matches = MatchResults.objects.all()
         if not matches.exists():
             return Response({"detail":"no match record."}, status=200)
@@ -39,3 +39,13 @@ class getMatchHistoryView(APIView):
             "count": matches.count(),
             "matchData": matchData
         }, status=200)
+
+class getLeaderBoardView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        leaderboard = LeaderBoard.objects.all()
+        if not leaderboard.exists():
+            return Response({"detail":"no leaderboard exists."}, status=200)
+        serializer = LeaderBoardSerializer(leaderboard, many=True)
+        return Response(serializer.data, status=200)
