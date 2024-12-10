@@ -70,8 +70,8 @@ make clean #It will delete the .env
 - Access service at http://localhost:8002
 
 ### Game Team
-- Work in `game-service/` directory
-- Database migrations in `game-service/src/migrations/`
+- Work in `backend/` directory
+- Database migrations in `backend/src/migrations/`
 - Access service at http://localhost:8004
 
 ### Frontend Team

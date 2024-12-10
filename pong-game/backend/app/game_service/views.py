@@ -9,6 +9,7 @@ def recordMatch(p1, p2, matchOutcome):
         matchOutcome=matchOutcome
     )
     return match
+
 def game_test(request, game_id):
     return render(request, 'game_service/game_test.html', {
         'game_id': game_id

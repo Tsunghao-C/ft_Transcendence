@@ -5,5 +5,5 @@ from datetime import timedelta
 LDB_UPDATE_TIMER = int(os.environ.get("LDB_UPDATE_TIMER", 15))
 
 CRONJOBS = [
-    (f"*/{LDB_UPDATE_TIMER} * * * *", "game_service.cron.update_leaderboard")
+    (f"*/{LDB_UPDATE_TIMER} * * * *", "'game_service.models.LeaderBoard.objects.updateLeaderBoard'")
 ]
