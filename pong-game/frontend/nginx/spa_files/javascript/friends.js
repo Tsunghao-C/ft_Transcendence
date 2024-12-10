@@ -12,6 +12,7 @@ import { cancelFriendRequest } from "./manage_social.js";
 import { unblockUser } from "./manage_social.js";
 import { blockUser } from "./manage_social.js";
 import { getLanguageCookie } from './fetch_request.js';
+import { setContainerHtml } from './app.js';
 
 export async function setFriendsView(contentContainer) {
     const currentLanguage = getLanguageCookie() ||  "en";
@@ -27,38 +28,44 @@ export async function setFriendsView(contentContainer) {
 
     contentContainer.innerHTML = `
         <!-- Onglets Bootstrap -->
-        <ul class="nav nav-tabs" id="friendsBlockTabs" role="tablist">
-            <li class="nav-item">
-                <a class="nav-link active" id="friends-tab" data-bs-toggle="tab" href="#friends" role="tab" aria-controls="friends" aria-selected="true">${translations[currentLanguage].friendList}</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" id="friend-requests-tab" data-bs-toggle="tab" href="#friend-requests" role="tab" aria-controls="friend-requests" aria-selected="false">${translations[currentLanguage].friendRequests}</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" id="sent-requests-tab" data-bs-toggle="tab" href="#sent-requests" role="tab" aria-controls="sent-requests" aria-selected="false">${translations[currentLanguage].sentRequests}</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" id="block-tab" data-bs-toggle="tab" href="#block" role="tab" aria-controls="block" aria-selected="false">${translations[currentLanguage].blockList}</a>
-            </li>
-        </ul>
-        <div class="tab-content">
-            <div class="tab-pane fade show active" id="friends" role="tabpanel" aria-labelledby="friends-tab">
-                <h2>${translations[currentLanguage].friendList}</h2>
-                <button id="addFriendButton" class="btn btn-success mb-3">${translations[currentLanguage].addNewFriend}</button>
-                <ul id="friendsList" class="list-group"></ul>
-            </div>
-            <div class="tab-pane fade" id="friend-requests" role="tabpanel" aria-labelledby="friend-requests-tab">
-                <h2>${translations[currentLanguage].friendRequests}</h2>
-                <ul id="friendRequestList" class="list-group"></ul>
-            </div>
-            <div class="tab-pane fade" id="sent-requests" role="tabpanel" aria-labelledby="sent-requests-tab">
-                <h2>${translations[currentLanguage].sentRequests}</h2>
-                <ul id="sentFriendRequestList" class="list-group"></ul>
-            </div>
-            <div class="tab-pane fade" id="block" role="tabpanel" aria-labelledby="block-tab">
-                <h2>${translations[currentLanguage].blockList}</h2>
-                <button id="addBlockButton" class="btn btn-success mb-3">${translations[currentLanguage].addBlock}</button>
-                <ul id="blockList" class="list-group"></ul>
+        <div class="friends-view">
+            <ul class="nav nav-tabs" id="friendsBlockTabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="friends-tab" data-bs-toggle="tab" href="#friends" role="tab" aria-controls="friends" aria-selected="true">${translations[currentLanguage].friendList}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="friend-requests-tab" data-bs-toggle="tab" href="#friend-requests" role="tab" aria-controls="friend-requests" aria-selected="false">${translations[currentLanguage].friendRequests}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="sent-requests-tab" data-bs-toggle="tab" href="#sent-requests" role="tab" aria-controls="sent-requests" aria-selected="false">${translations[currentLanguage].sentRequests}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="block-tab" data-bs-toggle="tab" href="#block" role="tab" aria-controls="block" aria-selected="false">${translations[currentLanguage].blockList}</a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <!-- Contenu de Friends List -->
+                <div class="tab-pane fade show active" id="friends" role="tabpanel" aria-labelledby="friends-tab">
+                    <h3>${translations[currentLanguage].friendList}</h3>
+                    <button id="addFriendButton" class="btn btn-success mb-3">${translations[currentLanguage].addNewFriend}</button>
+                    <ul id="friendsList" class="list-group"></ul>
+                </div>
+                <!-- Contenu de Friend Requests -->
+                <div class="tab-pane fade" id="friend-requests" role="tabpanel" aria-labelledby="friend-requests-tab">
+                    <h3>${translations[currentLanguage].friendRequests}</h3>
+                    <ul id="friendRequestList" class="list-group"></ul>
+                </div>
+                <!-- Contenu de Sent Requests -->
+                <div class="tab-pane fade" id="sent-requests" role="tabpanel" aria-labelledby="sent-requests-tab">
+                    <h3>${translations[currentLanguage].sentRequests}</h3>
+                    <ul id="sentFriendRequestList" class="list-group"></ul>
+                </div>
+                <!-- Contenu de Block List -->
+                <div class="tab-pane fade" id="block" role="tabpanel" aria-labelledby="block-tab">
+                    <h3>${translations[currentLanguage].blockList}</h3>
+                    <button id="addBlockButton" class="btn btn-success mb-3">${translations[currentLanguage].addBlock}</button>
+                    <ul id="blockList" class="list-group"></ul>
+                </div>
             </div>
         </div>
     `;

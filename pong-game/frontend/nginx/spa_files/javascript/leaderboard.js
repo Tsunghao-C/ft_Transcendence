@@ -2,10 +2,13 @@
 import { getLanguageCookie } from './fetch_request.js';
 import { translations } from './language_pack.js';
 
-export function setLeaderboardView(contentContainer) {
+import { setContainerHtml } from './app.js'
+
+export async function setLeaderboardView(contentContainer) {
+	// await setContainerHtml(contentContainer, "./html/leaderboard.html");
 	contentContainer.innerHTML = `
 		<div class="leaderboard-view">
-			<h1 data-i18n="leaderboard">Leaderboard</h1>
+			<h2 data-i18n="leaderboard">Leaderboard</h2>
 			<table class="table">
 				<thead>
 					<tr>
@@ -19,7 +22,6 @@ export function setLeaderboardView(contentContainer) {
 			</table>
 		</div>
 	`;
-
 	fetchLeaderboardData();
 }
 
