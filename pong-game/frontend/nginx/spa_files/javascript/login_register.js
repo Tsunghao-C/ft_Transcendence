@@ -11,13 +11,12 @@ import { loadPage } from './app.js';
 
 ///////////////////// API Calls /////////////////////
 
-async function registerUserInBackend(username, password, email, alias, language) {
-    const response = await fetch('/api/user/register/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, email, alias, language})
-    });
-    return response;
+async function registerUserInBackend(formData) {
+	const response = await fetch("/api/user/register/", {
+		method: "POST",
+		body: formData,
+	});
+	return response;
 }
 
 ///////////////////// Event Handlers /////////////////////
@@ -41,8 +40,16 @@ function setupRegisterFormEventHandler() {
 		const email = document.getElementById('newMailInput').value;
 		const password = document.getElementById('newPasswordInput').value;
 		const profilePictureInput = document.getElementById("profilePictureInput");
+		const formData = new FormData();
+		formData.append("username", username);
+		formData.append("alias", alias);
+		formData.append("email", email);
+		formData.append("password", password);
+		if (profilePictureInput.files.length > 0) {
+			formData.append("avatar", profilePictureInput.files[0]);
+		}
 		try {
-			const response = await registerUserInBackend(username, password, email, alias, language);
+			const response = await registerUserInBackend(formData);
 			const data = await response.json();
 			if (response.ok) {
 				showSuccess('Success! User profile has been created, you can now log in.');
