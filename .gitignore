@@ -15,7 +15,9 @@ pong-game/.env
 
 # Django stuff
 *.log
-/pong-game/game-service/app/media/profile_images
+/pong-game/backend/app/media/profile_images
+/pong-game/backend/app/venv
+/pong-game/backend/app/backend/__pycache__/
 
 # C extensions
 *.so

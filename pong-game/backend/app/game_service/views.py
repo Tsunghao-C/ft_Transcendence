@@ -19,7 +19,7 @@ def game_test(request, game_id):
         'game_id': game_id
     })
 
-class getLeaderboardView(APIView):
+class getMatchHistoryView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
