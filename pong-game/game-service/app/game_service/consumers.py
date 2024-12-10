@@ -35,32 +35,49 @@ class GameConsumer(AsyncWebsocketConsumer):
         if hasattr(self, 'current_group'):
             await self.channel_layer.group_discard(self.current_group, self.channel_name)
 
-    async def receive(self, text_data=None, bytes_data=None):
-        if text_data is None:
-            return
+    # Used testing receive to test WS connection
+    async def receive(self, text_data):
         data = json.loads(text_data)
-        action = data.get("action")
-        player_id = data.get("id")
+        await self.channel_layer.group_send(
+            self.game_group_name,
+            {
+                'type': 'game_message',
+                'message': data['message']
+            }
+        )
 
-        if action == "join_private_match":
-            await self.join_lobby(data["room_name"], player_id)
-        elif action == "create_private_match":
-            room_name = str(uuid.uuid4())
-            await self.create_private_lobby(room_name, player_id)
-        elif action == "ready_up":
-            await self.update_ready_status(data["room_name"], data["player_id"])
-        elif data['type'] == "player_input":
-            roomID = data['game_roomID']
-            if roomID in active_game_rooms:
-                game_room = active_game_rooms[roomID]
-                logger.info("Consumer: Received player input")
-                await game_room.receive_player_input(data['player_id'], data['input'])
-                logger.info("Consumer: Forwarded player input")
-            else:
-                await self.send(json.dumps({
-                       "type": "error",
-                       "message": f"Game room {data['game_roomID']} not found"
-                       }))
+    async def game_message(self, event):
+        await self.send(text_data=json.dumps({
+            'message': event['message']
+        }))
+
+
+    # async def receive(self, text_data=None, bytes_data=None):
+    #     if text_data is None:
+    #         return
+    #     data = json.loads(text_data)
+    #     action = data.get("action")
+    #     player_id = data.get("id")
+
+    #     if action == "join_private_match":
+    #         await self.join_lobby(data["room_name"], player_id)
+    #     elif action == "create_private_match":
+    #         room_name = str(uuid.uuid4())
+    #         await self.create_private_lobby(room_name, player_id)
+    #     elif action == "ready_up":
+    #         await self.update_ready_status(data["room_name"], data["player_id"])
+    #     elif data['type'] == "player_input":
+    #         roomID = data['game_roomID']
+    #         if roomID in active_game_rooms:
+    #             game_room = active_game_rooms[roomID]
+    #             logger.info("Consumer: Received player input")
+    #             await game_room.receive_player_input(data['player_id'], data['input'])
+    #             logger.info("Consumer: Forwarded player input")
+    #         else:
+    #             await self.send(json.dumps({
+    #                    "type": "error",
+    #                    "message": f"Game room {data['game_roomID']} not found"
+    #                    }))
 
     async def create_private_lobby(self, room_name, player_id):
         active_lobbies[room_name] = {"players": [player_id]}
