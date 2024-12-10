@@ -27,10 +27,11 @@ python manage.py migrate game_service
 echo "Adding django crontab..."
 python manage.py crontab add || { echo "failed to add crontab"; exit 1; }
 python manage.py crontab show || { echo "failed to show crontab"; exit 1; }
+service cron start
 
 # Collect static files
 echo "Collecting static files..."
-python manage.py collectstatic --noinput -v 2 || { echo "static collection failed"; exit 1; }
+python manage.py collectstatic --noinput || { echo "static collection failed"; exit 1; }
 echo "Static files directory contents:"
 
 # Start Gunicorn server
