@@ -20,7 +20,7 @@ import { fetchWithToken } from './fetch_request.js';
 import { setLanguageCookie } from './fetch_request.js';
 import { getLanguageCookie } from './fetch_request.js';
 import { setAboutPage } from './about.js';
-import { setChatPage } from './chat.js';
+// import { setChatPage } from './chat.js';
 import { ChatWebSocket } from './chat.js';
 import { setChatView, cleanupChatView } from './chat_view.js';
 
@@ -166,7 +166,7 @@ export async function loadPage(page) {
 					setFriendsView(innerContent);
 					break;
 				case "chat":
-					setChatPage(innerContent);
+					setChatView(innerContent);
 					break;
 				case "about":
 					setAboutPage(innerContent);
