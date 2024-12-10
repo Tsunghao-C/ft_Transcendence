@@ -31,7 +31,8 @@ class getMatchHistoryView(APIView):
             {
                 "p1Alias": match.p1.alias,
                 "p2Alias": match.p2.alias,
-                "outcome": match.matchOutcome
+                "outcome": match.matchOutcome,
+                "time": match.time
             }
             for match in matches
         ]

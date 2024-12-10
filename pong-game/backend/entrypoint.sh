@@ -25,6 +25,7 @@ python manage.py migrate user_service
 python manage.py migrate game_service
 
 echo "Adding django crontab..."
+python manage.py crontab remove
 python manage.py crontab add || { echo "failed to add crontab"; exit 1; }
 python manage.py crontab show || { echo "failed to show crontab"; exit 1; }
 service cron start

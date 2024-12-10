@@ -108,9 +108,9 @@ DATABASES = {
     "default": {
         "ENGINE": os.environ.get("POSTGRES_ENGINE", "django.db.backends.sqlite3"),
         "NAME": os.environ.get("POSTGRES_DB", BASE_DIR / "db.sqlite3"),
-        "USER": os.environ.get("POSTGRES_USER", "pg_user"),
-        "PASSWORD": os.environ.get("POSTGRES_PASS", "pg_pass"),
-        "HOST": os.environ.get("POSTGRES_HOST", "pg_host"),
+        "USER": os.environ.get("POSTGRES_USER", "transc_user"),
+        "PASSWORD": os.environ.get("POSTGRES_PASS", "transc_pass"),
+        "HOST": os.environ.get("POSTGRES_HOST", "transc_host"),
         "PORT": os.environ.get("POSTGRES_PORT", "5432"),
     },
 }
