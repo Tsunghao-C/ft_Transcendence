@@ -60,11 +60,6 @@ function setupRegisterFormEventHandler() {
 					showError("Register failed, please try again later.")
 				}
 			}
-			const file = fileInput.files[0];
-			if (!file) {
-				console.log('No file selected');
-				return ;
-			}
 		} catch (error) {
 			showError('An error occurred. Please try again later.');
 		}
