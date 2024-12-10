@@ -30,7 +30,7 @@ def api_status(request):
 
 
 # # Create your views here.
-# def game_test(request, game_id):
-#     return render(request, 'game_service/game_test.html', {
-#         'game_id': game_id
-#     })
+def game_test(request, game_id):
+    return render(request, 'game_service/game_test.html', {
+        'game_id': game_id
+    })

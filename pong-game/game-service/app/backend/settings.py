@@ -165,6 +165,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = '/app/static'
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -183,14 +186,15 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 # can replace inmemorychannellayer with redis later
 CHANNEL_LAYERS = {
-#    "default": { "BACKEND": "channels_redis.core.RedisChannelLayer",
-#        "CONFIG": {
-#            "hosts": [('redis', 6379)]
-#        },
-#    },
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer"
-    },
+   "default": {
+       "BACKEND": "channels_redis.core.RedisChannelLayer",
+       "CONFIG": {
+           "hosts": [('redis', 6379)]
+       },
+   },
+    # "default": {
+    #     "BACKEND": "channels.layers.InMemoryChannelLayer"
+    # },
 }
 
 LOGGING = {
@@ -218,8 +222,6 @@ LOGGING = {
             },
         }
 }
-
-LOGIN_REDIRECT_URL = '/chat/'
 
 # Alex add for Email host setup
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
