@@ -36,6 +36,8 @@ async function loadHtml(url) {
 
 export function setLoginViewHtml(contentContainer) {
 	const currentLanguage = getLanguageCookie() || "en";
+	console.log(currentLanguage);
+	console.log(translations[currentLanguage].noAccount);
 	contentContainer.innerHTML = `
 			<h2 data-i18n="loginTitle">Login</h2>
 			<form id="loginForm">

@@ -1,9 +1,4 @@
 import json
-# from channels.generic.websocket import WebsocketConsumer
-# from asgiref.sync import async_to_sync
-
-# import json
-
 from channels.generic.websocket import AsyncWebsocketConsumer
 
 # You need to run this when using dev server: docker run --rm -p 6379:6379 redis:7 
