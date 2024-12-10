@@ -89,12 +89,13 @@ export async function fetchWithToken(url, body = null, method = 'GET', needForCo
             }
         }
 
-        if (!response.ok) {
-            console.error("Fetch error:", await response.text());
-            throw new Error(`Fetch failed with status ${response.status}`);
-        }
+        // if (!response.ok) {
+        //     console.error("Fetch error:", await response.text());
+        //     throw new Error(`Fetch failed with status ${response.status}`);
+        // }
 
-        return response.json();
+        // return response.json();
+        return response;
     };
 
     return fetchWithAccessToken(token);

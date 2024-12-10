@@ -47,6 +47,7 @@ function setupRegisterFormEventHandler() {
 			if (response.ok) {
 				showSuccess('Success! User profile has been created, you can now log in.');
 			} else {
+				//translations to be made
 				if (data.username) {
 					showError(data.username);
 				}

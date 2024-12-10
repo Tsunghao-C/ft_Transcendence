@@ -242,7 +242,7 @@ class sendFriendRequestView(APIView):
 		if pendingRequest:
 			to_user.friendList.add(from_user)
 			from_user.friendList.add(to_user)
-			frequest.delete()
+			pendingRequest.delete()
 			return Response({"detail": "friend request accepted"}, status=200)
 		FriendRequest.objects.create(from_user=from_user, to_user=to_user)
 		return Response({"detail": "friend request sent"}, status=200)

@@ -8,9 +8,11 @@ mkdir -p /app/static #&& \
 chmod -R 755 /app/static
 
 echo "Waiting for database to be ready..."
-echo "SQL_PORT: ${SQL_PORT}"
-wait-for-it --service game_db:${SQL_PORT} -- echo "Game Database is ready!"
-wait-for-it --service user_db:${SQL_PORT} -- echo "User Database is ready!"
+# echo "SQL_PORT: ${SQL_PORT}"
+echo "GAME_DB_PORT: ${GAME_DB_PORT}"
+wait-for-it --service game_db:${GAME_DB_PORT} -- echo "Game Database is ready!"
+echo "USER_DB_PORT: ${USER_DB_PORT}"
+wait-for-it --service user_db:${USER_DB_PORT} -- echo "User Database is ready!"
 
 echo "Making migrations..."
 python manage.py makemigrations || { echo "makemigrations failed"; exit 1; }
@@ -25,6 +27,9 @@ echo "Collecting static files..."
 python manage.py collectstatic --noinput -v 2 || { echo "static collection failed"; exit 1; }
 echo "Static files directory contents:"
 
+# echo "Starting Daphne and Gunicorn servers..."
+
+daphne -b 0.0.0.0 -p 8001 backend.asgi:application &
 # Start Gunicorn server
 echo "Starting Gunicorn server..."
 exec gunicorn backend.wsgi:application --bind 0.0.0.0:8004 --workers 3 || { echo "Gunicorn failed"; exit 1; }
