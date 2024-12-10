@@ -19,6 +19,8 @@ import { setHomePage } from './home.js';
 import { fetchWithToken } from './fetch_request.js';
 import { setLanguageCookie } from './fetch_request.js';
 import { getLanguageCookie } from './fetch_request.js';
+import { setAboutPage } from './about.js';
+import { setChatPage } from './chat.js';
 
 export async function setContainerHtml(container, url) {
     try {
@@ -36,7 +38,7 @@ export async function setContainerHtml(container, url) {
 
 function setNavbarHtml(container) {
 	container.innerHTML = `
-		<a class="navbar-brand" href="#home">D</a>
+		<a class="navbar-brand" href="#home">Q</a>
 		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
 			<span class="navbar-toggler-icon"></span>
 		</button>
@@ -75,9 +77,6 @@ function setNavbarHtml(container) {
 	`
 }
 
-
-
-
 export async function loadPage(page) {
 	//add a checker to check there is no more than one /
 	//if invalid token, the server explodes
@@ -101,10 +100,10 @@ export async function loadPage(page) {
 	if (page !== "game") {
 		closeGameWebSocket();
 	}
-	if (isLoggedIn === "true")
-			setNavbarHtml(navbar);
-
+	
 	if (isLoggedIn === "true") {
+		setNavbarHtml(navbar);
+		navbar.style.display = "flex";
 		const userDropdown = document.getElementById("userDropdown");
 		userDropdown.textContent = data.alias;
 		const userAvatar = document.getElementById("userAvatar");
@@ -128,9 +127,6 @@ export async function loadPage(page) {
 				case "home":
 					setHomePage(innerContent);
 					break;
-				case "about":
-					innerContent.innerHTML = '<h1 data-i18n="about">About</h1><p>To fill.</p>';
-					break;
 				case "game":
 					setGameMenu(innerContent);
 					break;
@@ -143,6 +139,12 @@ export async function loadPage(page) {
 					break;
 				case "friends":
 					setFriendsView(innerContent);
+					break;
+				case "chat":
+					setChatPage(innerContent);
+					break;
+				case "about":
+					setAboutPage(innerContent);
 					break;
 				case "login":
 					setLoginView(innerContent);
