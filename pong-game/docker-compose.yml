@@ -205,7 +205,7 @@ services:
     pull_policy: never
     volumes:
       - static_volume:/app/static # Match the path
-      - ./media:/app/media
+      - ./game-service/app/media:/app/media
     expose:
       - 8004
       - 8001
@@ -256,7 +256,7 @@ services:
       - 5434
     command: postgres -p 5434
     volumes:
-      - ./media:/app/media
+      - ./game-service/app/media:/app/media
     networks:
       - backend_net
     healthcheck:
