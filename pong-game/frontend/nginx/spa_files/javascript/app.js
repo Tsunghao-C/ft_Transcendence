@@ -85,6 +85,7 @@ function setNavbarHtml(container) {
 			document.cookie = `accessToken=whocares; path=/; secure; SameSite=Strict`;
 			document.cookie = `refreshToken=whocares; path=/; secure; SameSite=Strict`;
 			container.innerHTML = '';
+			window.location.hash = "login";
 			loadPage("login");
 		});
 	}
@@ -130,7 +131,7 @@ export async function loadPage(page) {
 		const existingChat = document.getElementById('chat-container');
 		if (existingChat) {
 			existingChat.remove();
-		}    
+		}
 	}
 	// cleanup only if user is logged in
 	if (isLoggedIn === "true") {
@@ -270,5 +271,5 @@ document.addEventListener("DOMContentLoaded", function () {
 		loadPage(page);
 	});
 
-	
+
 });

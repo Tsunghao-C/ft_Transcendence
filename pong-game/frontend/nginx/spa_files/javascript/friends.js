@@ -24,7 +24,7 @@ export async function setFriendsView(contentContainer) {
     try {
         // console.log("friendRequest data: ", friendRequest);
         // console.log("sentFriendRequest data: ", sentFriendRequest);
-   
+
 
     contentContainer.innerHTML = `
         <!-- Onglets Bootstrap -->
@@ -44,23 +44,19 @@ export async function setFriendsView(contentContainer) {
                 </li>
             </ul>
             <div class="tab-content">
-                <!-- Contenu de Friends List -->
                 <div class="tab-pane fade show active" id="friends" role="tabpanel" aria-labelledby="friends-tab">
                     <h3>${translations[currentLanguage].friendList}</h3>
                     <button id="addFriendButton" class="btn btn-success mb-3">${translations[currentLanguage].addNewFriend}</button>
                     <ul id="friendsList" class="list-group"></ul>
                 </div>
-                <!-- Contenu de Friend Requests -->
                 <div class="tab-pane fade" id="friend-requests" role="tabpanel" aria-labelledby="friend-requests-tab">
                     <h3>${translations[currentLanguage].friendRequests}</h3>
                     <ul id="friendRequestList" class="list-group"></ul>
                 </div>
-                <!-- Contenu de Sent Requests -->
                 <div class="tab-pane fade" id="sent-requests" role="tabpanel" aria-labelledby="sent-requests-tab">
                     <h3>${translations[currentLanguage].sentRequests}</h3>
                     <ul id="sentFriendRequestList" class="list-group"></ul>
                 </div>
-                <!-- Contenu de Block List -->
                 <div class="tab-pane fade" id="block" role="tabpanel" aria-labelledby="block-tab">
                     <h3>${translations[currentLanguage].blockList}</h3>
                     <button id="addBlockButton" class="btn btn-success mb-3">${translations[currentLanguage].addBlock}</button>
@@ -72,10 +68,10 @@ export async function setFriendsView(contentContainer) {
 
     function switchTab(tabToShowId) {
         const tabs = ['friends', 'friend-requests', 'sent-requests', 'block'];
-    
+
         tabs.forEach(tabId => {
             const tabElement = document.getElementById(tabId);
-    
+
             if (tabElement) {
                 if (tabId === tabToShowId) {
                     tabElement.classList.add('show', 'active');
@@ -85,7 +81,7 @@ export async function setFriendsView(contentContainer) {
             }
         });
     }
-    
+
 
     const friendsList = document.getElementById("friendsList");
     const friendRequestList = document.getElementById("friendRequestList");
@@ -104,29 +100,36 @@ export async function setFriendsView(contentContainer) {
                 const friendItem = document.createElement("li");
                 friendItem.classList.add("list-group-item");
                 friendItem.innerHTML = `
-                    <div class="row">
-                        <div class="col-md-6">
-                            <a href="#profile/${friend.alias}" class="profile-link">${friend.alias}</a>
-                            <p>
-                                MMR: <span class="badge badge-primary">${friend.mmr}</span> | 
-                                Wins: <span class="badge badge-success">${friend.wins}</span> | 
-                                Losses: <span class="badge badge-danger">${friend.losses}</span>
-                            </p>
-                        </div>
-                        <div class="col-md-4 text-right">
-                            <button class="btn btn-info btn-sm">${translations[currentLanguage].sendMessage}</button>
-                            <button class="btn btn-warning btn-sm">${translations[currentLanguage].requestDuel}</button>
-                            <button class="btn btn-danger btn-sm">${translations[currentLanguage].removeFriend}</button>
-                        </div>
-                    </div>
+					<div class="row align-items-center">
+						<div class="col-md-2 text-center">
+							<img
+								src="${friend.avatar || '/media/default.jpg'}"
+								alt="${friend.alias}'s avatar"
+								class="img-fluid rounded-circle"
+								style="width: 50px; height: 50px; object-fit: cover;">
+						</div>
+						<div class="col-md-4">
+							<a href="#profile/${friend.alias}" class="profile-link">${friend.alias}</a>
+							<p>
+								MMR: <span class="badge badge-primary">${friend.mmr}</span> |
+								Wins: <span class="badge badge-success">${friend.wins}</span> |
+								Losses: <span class="badge badge-danger">${friend.losses}</span>
+							</p>
+						</div>
+						<div class="col-md-4 text-right">
+							<button class="btn btn-info btn-sm">${translations[currentLanguage].sendMessage}</button>
+							<button class="btn btn-warning btn-sm">${translations[currentLanguage].requestDuel}</button>
+							<button class="btn btn-danger btn-sm">${translations[currentLanguage].removeFriend}</button>
+						</div>
+					</div>
                 `;
                 friendsList.appendChild(friendItem);
 				const sendMessageButton = friendItem.querySelector("button.btn-info");
 				sendMessageButton.addEventListener("click", () => sendMessage(friend.alias));
-		
+
 				const sendDuelRequestButton = friendItem.querySelector("button.btn-warning");
 				sendDuelRequestButton.addEventListener("click", () => sendDuelRequest(friend.alias));
-		
+
 				const removeFriendButton = friendItem.querySelector("button.btn-danger");
 				removeFriendButton.addEventListener("click", () => {
                     try {
