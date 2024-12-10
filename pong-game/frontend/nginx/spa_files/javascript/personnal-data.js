@@ -21,18 +21,18 @@ export async function setPersonnalDataView(contentContainer) {
             <h2 data-i18n="personalDataTitle">Personnal Information</h2>
             <div class="d-flex align-items-center mb-4">
                 <div>
-                    <img 
-                        src="${personnal.profilePicture}" 
-                        alt="Profile Picture" 
-                        class="img-thumbnail" 
+                    <img
+                        src="${personnal.avatar}"
+                        alt="Profile Picture"
+                        class="img-thumbnail"
                         id="profilePicturePreview"
                         style="max-width: 150px; cursor: pointer;"
                         title="Click to change"
                     >
-                    <input 
-                        type="file" 
-                        id="profilePictureInput" 
-                        accept=".jpg, .jpeg, .png" 
+                    <input
+                        type="file"
+                        id="profilePictureInput"
+                        accept=".jpg, .jpeg, .png"
                         style="display: none;"
                     >
                 </div>
@@ -97,27 +97,25 @@ export async function setPersonnalDataView(contentContainer) {
 
 	profilePictureInput.addEventListener("change", async (event) => {
 		const file = event.target.files[0];
-	
+
 		if (file) {
 			if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
 				alert(`${translations[currentLanguage].invalidFormat}`);
 				return;
 			}
-	
+
 			const reader = new FileReader();
-			reader.onload = (e) => {
-				profilePicturePreview.src = e.target.result;
-			};
 			reader.readAsDataURL(file);
-	
+
 			const formData = new FormData();
 			formData.append('avatar', file);
-	
+
 			try {
 				const response = await fetchWithToken("api/user/change-avatar/", formData, 'POST', false);
 				if (response.ok) {
 					console.log("Avatar uploaded successfully:", response);
 					alert("message for successs");
+					loadPage("personnal-data");
 				} else {
 					console.log("Error uploading avatar:", response);
 					alert("soemerror");
