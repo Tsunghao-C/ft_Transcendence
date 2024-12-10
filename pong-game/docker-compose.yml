@@ -233,6 +233,7 @@ services:
       - 5434
     command: postgres -p 5434
     volumes:
+      - game_data:/var/lib/postgresql/data
       - ./game-service/app/media:/app/media
     networks:
       - backend_net
