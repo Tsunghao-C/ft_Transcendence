@@ -39,7 +39,7 @@
 
     // Log the WebSocket URL we're trying to connect to
     const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    const wsUrl = `${wsScheme}://${window.location.host}/ws/chat-server/${roomName}/`;
+    const wsUrl = `${wsScheme}://${window.location.host}/ws/chat-server/{{ room_name }}/`;
     console.log('Attempting to connect to:', wsUrl);
     // Create WebSocket connection
     let socket;
