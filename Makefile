@@ -61,6 +61,7 @@ clean:
 	rm -f pong-game/frontend/nginx/logs/*.log
 	- rm -f pong-game/frontend/nginx/modsec/*.log
 	- rm -rf pong-game/security/vault_debian/volumes/*
+	- rm -rf pong-game/game-service/app/media/profile_images
 	rm pong-game/.env
 
 re: clean all

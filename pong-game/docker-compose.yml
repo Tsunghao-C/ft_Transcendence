@@ -182,7 +182,7 @@ services:
     pull_policy: never
     volumes:
       - static_volume:/app/static # Match the path
-      - ./game-service/app/media:/app/media
+      - ./game-service/app/media:/home/app/pong-game/media
     expose:
       - 8004
       - 8001
