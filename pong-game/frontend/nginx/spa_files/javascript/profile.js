@@ -13,6 +13,7 @@ import { unblockUser } from "./manage_social.js";
 import { blockUser } from "./manage_social.js";
 import { loadPage } from "./app.js";
 import { getLanguageCookie } from './fetch_request.js';
+import { setContainerHtml } from './app.js';
 
 export async function setProfileView(contentContainer, usernameInHash) {
 	let response;
@@ -32,7 +33,7 @@ export async function setProfileView(contentContainer, usernameInHash) {
 	}
 	contentContainer.innerHTML = `
 		<div class="profile-view">
-			<h1 data-i18n="profileTitle">Search Profile</h1>
+			<h2 data-i18n="profileTitle">Search Profile</h2>
 			<div class="search-bar mb-3">
 				<input type="text" id="searchInput" class="form-control" placeholder="Enter a username..." />
 				<button id="searchButton" class="btn btn-primary mt-2" data-i18n="searchButton">Search</button>
@@ -40,6 +41,7 @@ export async function setProfileView(contentContainer, usernameInHash) {
 			<div id="profileResult"></div>
 		</div>
 	`;
+
 	const searchInput = document.getElementById("searchInput");
 	const searchButton = document.getElementById("searchButton");
 	const profileResult = document.getElementById("profileResult");

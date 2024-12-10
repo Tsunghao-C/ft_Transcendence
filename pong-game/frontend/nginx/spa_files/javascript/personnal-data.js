@@ -17,8 +17,8 @@ export async function setPersonnalDataView(contentContainer) {
     }
 
     contentContainer.innerHTML = `
-        <div class="personal-data-view">
-            <h1 data-i18n="personalDataTitle">Personal Information</h1>
+        <div class="personnal-data-view">
+            <h2 data-i18n="personalDataTitle">Personnal Information</h2>
             <div class="d-flex align-items-center mb-4">
                 <div>
                     <img 
