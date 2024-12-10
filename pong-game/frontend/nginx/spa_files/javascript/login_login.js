@@ -140,9 +140,9 @@ function setup2FAFormEventHandler() {
 					document.cookie = `accessToken=${data.access}; path=/; secure; SameSite=Strict`;
 					document.cookie = `refreshToken=${data.refresh}; path=/; secure; SameSite=Strict`;
 					// here we should store that JWT token in a cookie it is safer i think
-					showSuccess("Logged in!");
 					loadPage("home");
-					showSuccess("logged to home!");
+					window.history.pushState({ page: "home" }, "home", "#home");
+					console.log("logged to home!");
 				} else {
 					showError('2FA verification failed.');
 				}

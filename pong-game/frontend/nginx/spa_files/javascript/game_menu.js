@@ -6,16 +6,21 @@ export function closeGameWebSocket() {
 }
 
 export function setGameMenu(contentContainer) {
-	contentContainer.innerHTML = ""; // Clear the container
+	// contentContainer.innerHTML = ""; // Clear the container
+	contentContainer.innerHTML = `
+		<div id="game-view">
+		</div>
+	`;
+	const gameView = document.getElementById("game-view");
 	const currentLanguage = localStorage.getItem("language");
 	const canvas = document.createElement("canvas");
 	canvas.id = "game";
-	canvas.width = 800;
-	canvas.height = 600;
+	canvas.width = 600;
+	canvas.height = 450;
 	canvas.style.backgroundColor = "black";
 	canvas.style.display = "block";
 	canvas.style.margin = "0 auto";
-	contentContainer.appendChild(canvas);
+	gameView.appendChild(canvas);
 	console.log(`${translations[currentLanguage].solo}`);
 
 	const ctx = canvas.getContext("2d");
