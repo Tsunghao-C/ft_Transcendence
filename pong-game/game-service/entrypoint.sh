@@ -17,10 +17,10 @@ wait-for-it --service game_db:${SQL_PORT} -- echo "Game Database is ready!"
 
 echo "Migrating db's..."
 # python manage.py migrate || { echo "migrations failed"; exit 1; }
-python manage.py makemigrations user_service
-python manage.py makemigrations game_service
-python manage.py migrate user_service
-python manage.py migrate game_service
+python manage.py makemigrations #user_service
+# python manage.py makemigrations game_service
+# python manage.py migrate user_service
+python manage.py migrate #game_service
 # python manage.py migrate user_service --database=default
 # python manage.py migrate game_service --database=game_db
 
