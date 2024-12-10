@@ -4,7 +4,7 @@ Developing a web game Pong from scratch
 
 # Pong Game Project
 
-![Alt text](image/monolithic_diagram.png)
+![Alt text](image/monolithic_diagram2.png)
 
 ## Quick Start 
 
