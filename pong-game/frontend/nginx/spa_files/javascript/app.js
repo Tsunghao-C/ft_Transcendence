@@ -76,7 +76,18 @@ function setNavbarHtml(container) {
 				</li>
 			</ul>
 		</div>
-	`
+	`;
+	const logoutButton = document.getElementById("logoutButton");
+	if (logoutButton) {
+		logoutButton.addEventListener("click", function (event) {
+			event.preventDefault();
+			console.log("Logout clicked!");
+			document.cookie = `accessToken=whocares; path=/; secure; SameSite=Strict`;
+			document.cookie = `refreshToken=whocares; path=/; secure; SameSite=Strict`;
+			container.innerHTML = '';
+			loadPage("login");
+		});
+	}
 }
 
 export async function loadPage(page) {
@@ -259,14 +270,5 @@ document.addEventListener("DOMContentLoaded", function () {
 		loadPage(page);
 	});
 
-	const logoutButton = document.getElementById("logoutButton");
-	if (logoutButton) {
-		logoutButton.addEventListener("click", function (event) {
-			event.preventDefault();
-			console.log("Logout clicked!");
-			document.cookie = `accessToken=whocares; path=/; secure; SameSite=Strict`;
-			document.cookie = `refreshToken=whocares; path=/; secure; SameSite=Strict`;
-			loadPage("login");
-		});
-	}
+	
 });
