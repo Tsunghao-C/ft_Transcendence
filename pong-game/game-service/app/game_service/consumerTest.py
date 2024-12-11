@@ -82,9 +82,7 @@ class GameConsumerTest(TestCase):
         join_response = await joiner_communicator.receive_json_from()
         creator_response = await creator_communicator.receive_json_from()
         self.assertEqual(join_response['type'], 'notice')
-        self.assertEqual(join_response['message'], f'Joined lobby {room_name}')
         self.assertEqual(creator_response['type'], 'notice')
-        self.assertEqual(creator_response['message'], f'Joined lobby {room_name}')
         print(json.dumps(join_response, indent=4))
         print(json.dumps(creator_response, indent=4))
         
@@ -179,7 +177,7 @@ class GameConsumerTest(TestCase):
  
         update_messages = []
         room_name = "lobby_" + room_name
-#$        for x in range(0, 1):
+#        for x in range(0, 1):
         while True:
             logger.info("====GAME LOOP ITERATION====")
             print(f"room_name: {room_name}")

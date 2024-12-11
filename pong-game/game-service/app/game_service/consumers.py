@@ -103,7 +103,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         for connection in active_lobbies[room_name]["connections"]:
             await connection.send(json.dumps({
                 "type": "notice",
-                "message": f"Player: {player_id} joined lobby {room_name}"
+                "message": f"{player_id} joined lobby {room_name}"
                 }))
 
     async def group_message(self, event):
