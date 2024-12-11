@@ -55,6 +55,7 @@ SIMPLE_JWT = {
 
 INSTALLED_APPS = [
 	"django_crontab",
+    "daphne",
     "chat",
     'django.contrib.admin',
     'django.contrib.auth',
