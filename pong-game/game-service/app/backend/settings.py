@@ -183,10 +183,14 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 # can replace inmemorychannellayer with redis later
 CHANNEL_LAYERS = {
-    "default": { "BACKEND": "channels_redis.core.RedisChannelLayer",
+    "default": { "BACKEND": "channels_redis.pubsub.RedisPubSubChannelLayer",
         "CONFIG": {
             "hosts": [('redis', 6379)],
             "capacity": 1000,
+            "channel_capacity": {
+                'default': 100,
+                'game_update': 200
+            },
        },
    },
 #   "default": {

@@ -159,7 +159,8 @@ services:
   redis:
     container_name: redis
     image: redis:alpine
-    command: redis-server --appendonly yes
+    # --appendonly yes
+    command: ["redis-server", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru"]
     volumes:
       - redis_data:/data
     # ports:

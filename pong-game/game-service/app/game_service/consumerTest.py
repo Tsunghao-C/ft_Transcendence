@@ -172,45 +172,46 @@ class GameConsumerTest(TestCase):
         print(json.dumps(start_response, indent=4))
 
  
-#        update_messages = []
-#        room_name = "lobby_" + room_name
-#        for x in range(0, 1):
-#        while True:
-#            logger.info("====GAME LOOP ITERATION====")
-#            print(f"room_name: {room_name}")
-#            await joiner_communicator.send_json_to({
-    #                'type': 'player_input',
-    #                'game_roomID': room_name,
-    #                'player_id': 'player2',
-    #                'input': 'move_down',
-    #                })
-#            await creator_communicator.send_json_to({
-    #                'type': 'player_input',
-    #                'game_roomID': room_name,
-    #                'player_id': 'player1',
-    #                'input': 'move_up',
-    #                })
-#            update_message = await asyncio.wait_for(creator_communicator.receive_json_from(),
-                                                     #                                                    timeout=4)
-#            print(json.dumps(update_message, indent=4))
-#            if update_message['type'] == 'game_over':
-#                break
-#            update_messages.append(update_message)
-#            self.assertEqual(update_message['type'], 'game_update')
-#            self.assertIn('payload', update_message)
-#            payload = update_message['payload']
-#            self.assertIn('players', payload)
-#            self.assertIn('ball', payload)
-#
-#            for player_id, player_data in payload['players'].items():
-#                self.assertIn('x', player_data)
-#                self.assertIn('y', player_data)
-#                self.assertIn('score', player_data)
-#            self.assertIn('x', payload['ball'])
-#            self.assertIn('y', payload['ball'])
-#            self.assertIn('radius', payload['ball'])
-  #      except Exception as e:
-  #          logger.error(f"GameRoom consumer test failed: {e}")
+        update_messages = []
+        room_name = "lobby_" + room_name
+#$        for x in range(0, 1):
+        while True:
+            logger.info("====GAME LOOP ITERATION====")
+            print(f"room_name: {room_name}")
+            await joiner_communicator.send_json_to({
+                    'type': 'player_input',
+                    'game_roomID': room_name,
+                    'player_id': 'player2',
+                    'input': 'move_down',
+                    })
+            await creator_communicator.send_json_to({
+                    'type': 'player_input',
+                    'game_roomID': room_name,
+                    'player_id': 'player1',
+                    'input': 'move_up',
+                    })
+            update_message = await asyncio.wait_for(creator_communicator.receive_json_from(), timeout=4)
+            print(json.dumps(update_message, indent=4))
+            update_message = await asyncio.wait_for(joiner_communicator.receive_json_from(), timeout=4)
+            print(json.dumps(update_message, indent=4))
+            if update_message['type'] == 'game_over':
+                break
+            update_messages.append(update_message)
+            self.assertEqual(update_message['type'], 'game_update')
+            self.assertIn('payload', update_message)
+            payload = update_message['payload']
+            self.assertIn('players', payload)
+            self.assertIn('ball', payload)
+
+            for player_id, player_data in payload['players'].items():
+                self.assertIn('x', player_data)
+                self.assertIn('y', player_data)
+                self.assertIn('score', player_data)
+            self.assertIn('x', payload['ball'])
+            self.assertIn('y', payload['ball'])
+            self.assertIn('radius', payload['ball'])
+#        except Exception as e:
+#       logger.error(f"GameRoom consumer test failed: {e}")
         await creator_communicator.disconnect()
         await joiner_communicator.disconnect()
 

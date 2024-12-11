@@ -94,10 +94,13 @@ class GameConsumer(AsyncWebsocketConsumer):
             return
         active_lobbies[room_name]["players"].append(player_id)
         await self.channel_layer.group_add(self.current_group, self.channel_name)
-        await self.send(json.dumps({
-            "type": "notice",
+        group_name = f"lobby_{room_name}"
+        await self.channel_layer.group_send(
+            group_name,
+            {
+            "type": "group_message",
             "message": f"Joined lobby {room_name}"
-            }))
+            })
 
     async def group_message(self, event):
         await self.send(json.dumps({

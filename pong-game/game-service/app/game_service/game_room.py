@@ -59,6 +59,7 @@ class GameRoom():
 
     async def receive_player_input(self, player_id, input):
         logger.info("GameRoom: Received player input")
+        print(f"Input: {input}, player_id: {player_id}")
         if player_id in self.players:
             player = self.players[player_id]
             if input == "move_up":
@@ -236,6 +237,7 @@ class GameRoom():
                 await self.send_update()
                 logger.info('gameRoom sent update to clients')
                 await asyncio.sleep(0.016)
+#               await asyncio.sleep(0.032)
         except Exception as e:
             logger.error(f"GameRoom initial group send error: {e}")
             return
