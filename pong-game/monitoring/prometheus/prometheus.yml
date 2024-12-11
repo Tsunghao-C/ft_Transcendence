@@ -26,6 +26,6 @@ scrape_configs:
     static_configs:
       - targets: ['user_service:8002']
 
-  - job_name: 'game-service'
+  - job_name: 'backend'
     static_configs:
       - targets: ['game_service:8004']

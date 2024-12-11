@@ -92,7 +92,7 @@ services:
       - static_volume:/app/static:ro
       - ./frontend/nginx/logs:/var/log/nginx:rw
       - ./frontend/nginx/modsec:/var/log/modsec:rw
-      - ./game-service/app/media:/app/media
+      - ./backend/app/media:/app/media
     ports:
       - "8443:443"
       - "8080:80"
@@ -104,7 +104,7 @@ services:
       DEBUG: ${DEBUG}
       SECRET_KEY: ${SECRET_KEY}
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
-      SQL_ENGINE: ${SQL_ENGINE}
+      SQL_ENGINE: ${POSTGRES_ENGINE}
       # SQL_USER: ${SQL_USER}
       # SQL_PASSWORD: ${SQL_PASSWORD}
       # SQL_PORT: ${SQL_PORT}
@@ -114,7 +114,7 @@ services:
         max-size: "10m"
         max-file: "3"
     depends_on:
-      - game_service
+      - django
       - kibana
     healthcheck:
       test: ["CMD", "curl", "-k", "https://localhost:443/health" ]
@@ -173,110 +173,52 @@ services:
       retries: 5
     restart: unless-stopped
 
-  game_service:
-    container_name: game_service
+  django:
+    container_name: django
     build:
-      context: ./game-service
+      context: ./backend
       dockerfile: Dockerfile
-    image: game_service
+    image: django
     pull_policy: never
     volumes:
-      - static_volume:/app/static # Match the path
-      - ./game-service/app/media:/home/app/pong-game/media
+      - static_volume:/app/static
+      - ./backend/app/media:/home/app/pong-game/media
     expose:
       - 8004
       - 8001
-    #  ports:
-    #    - "8004:8004"     # only for development stage, need to close after
-    environment:
-       # - DATABASE_URL=postgresql://postgres:${GAME_DB_PASSWORD}@game_db:5434/gamedb
-       # - MATCH_DB_URL=postgresql://postgres:${MATCH_DB_PASSWORD}@match_db:5432/matchdb
-       # - VAULT_ADDR=http://vault:8200
-       # - VAULT_TOKEN=${VAULT_DEV_ROOT_TOKEN}
-      DEBUG: ${DEBUG}
-      SECRET_KEY: ${SECRET_KEY}
-      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
-      SQL_ENGINE: ${SQL_ENGINE}
-      GAME_DB_DATABASE: ${GAME_DB_DATABASE}
-      USER_DB_DATABASE: ${USER_DB_DATABASE}
-      # SQL_USER: ${SQL_USER}
-      USER_DB_USER: ${USER_DB_USER}
-      GAME_DB_USER: ${GAME_DB_USER}
-      # SQL_PASSWORD: ${SQL_PASSWORD}
-      GAME_DB_PASSWORD: ${GAME_DB_PASSWORD}
-      USER_DB_PASSWORD: ${USER_DB_PASSWORD}
-      # SQL_PORT: ${SQL_PORT}
-      USER_DB_PORT: ${USER_DB_PORT}
-      GAME_DB_PORT: ${GAME_DB_PORT}
-      SQL_HOST: game_db
-      USER_DB_HOST: user_db
     depends_on:
-      game_db:
-        condition: service_healthy
-      user_db:
+      postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     networks:
       - backend_net
+    env_file:
+      - .env
     restart: unless-stopped
 
-  game_db:
-    container_name: game_db
+  postgres:
+    container_name: postgres
     image: postgres:14-alpine
     environment:
-      - POSTGRES_DB=game_db
-      - POSTGRES_USER=${GAME_DB_USER}
-      - POSTGRES_PASSWORD=${GAME_DB_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASS}
       - POSTGRES_PORT=5434
-    expose:
-      - 5434
+    ports:
+      - "5434:5434"  # Map the container port to the host
     command: postgres -p 5434
     volumes:
       - game_data:/var/lib/postgresql/data
-      - ./game-service/app/media:/app/media
+      - ./backend/app/media:/app/media
     networks:
       - backend_net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${GAME_DB_USER} -d game_db -p 5434"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} -h localhost -p 5434 || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 5
     restart: unless-stopped
-
-  user_db:
-    container_name: user_db
-    image: postgres:14-alpine
-    environment:
-      - POSTGRES_DB=user_db
-      - POSTGRES_USER=${USER_DB_USER}
-      - POSTGRES_PASSWORD=${USER_DB_PASSWORD}
-    volumes:
-      - user_data:/var/lib/postgresql/data
-      - static_volume:/app/static
-    networks:
-      - backend_net
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${USER_DB_USER} -d user_db"]
-      interval: 5s
-      timeout: 5s
-      retries: 5  
-    restart: unless-stopped
-
-  # match_db:
-  #   container_name: match_db
-  #   image: postgres:14-alpine
-  #   environment:
-  #     - POSTGRES_DB=matchdb
-  #     - POSTGRES_PASSWORD=${MATCH_DB_PASSWORD}
-  #   volumes:
-  #     - match_data:/var/lib/postgresql/data
-  #   ports:
-  #     - "5435:5432"     # only for development stage, need to close after
-  #   user: "999:999"
-  #   networks:
-  #     - backend_net
-  #   restart: unless-stopped
 
   # Monitoring Stack
   # prometheus:
