@@ -27,7 +27,7 @@ function setupRegisterFormEventHandler() {
 	setCustomValidation("newMailInput");
 	setCustomValidation("newPasswordInput");
 
-	validateProfilePicture();
+	// validateProfilePicture();
 	validatePasswordMatch();
 	const registerForm = document.getElementById("registerForm");
 	const languageSelect = document.getElementById("languageSelect");
@@ -39,15 +39,15 @@ function setupRegisterFormEventHandler() {
 		const alias = document.getElementById('newAlias').value;
 		const email = document.getElementById('newMailInput').value;
 		const password = document.getElementById('newPasswordInput').value;
-		const profilePictureInput = document.getElementById("profilePictureInput");
+		// const profilePictureInput = document.getElementById("profilePictureInput");
 		const formData = new FormData();
 		formData.append("username", username);
 		formData.append("alias", alias);
 		formData.append("email", email);
 		formData.append("password", password);
-		if (profilePictureInput.files.length > 0) {
-			formData.append("avatar", profilePictureInput.files[0]);
-		}
+		// if (profilePictureInput.files.length > 0) {
+		// 	formData.append("avatar", profilePictureInput.files[0]);
+		// }
 		try {
 			const response = await registerUserInBackend(formData);
 			const data = await response.json();
