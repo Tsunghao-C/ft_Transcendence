@@ -1,5 +1,6 @@
 //// We may fuse this with the search bar of profile view so that we can search for someone in the leaderboard
 import { fetchWithToken, getLanguageCookie } from './fetch_request.js';
+import { loadPage } from './app.js';
 import { translations } from './language_pack.js';
 
 import { setContainerHtml } from './app.js'
