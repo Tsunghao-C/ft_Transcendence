@@ -6,9 +6,7 @@ import uuid
 import asyncio
 import redis
 from channels.generic.websocket import AsyncWebsocketConsumer
-from channels.sessions import SessionMiddlewareStack
 from channels.layers import get_channel_layer
-from channels.testing import WebsocketCommunicator
 from .game_room import GameRoom
 
 load_dotenv()
@@ -105,19 +103,6 @@ class GameConsumer(AsyncWebsocketConsumer):
                 "type": "notice",
                 "message": f"{player_id} joined lobby {room_name}"
                 }))
-
-    async def group_message(self, event):
-        await self.send(json.dumps({
-            'type': 'notice',
-            'message': event["message"]
-            }))
-
-    async def game_message(self, event):
-        await self.send(json.dumps({
-            'type': event['update_type'],
-            'payload': event['payload'],
-            'message': event['message']
-            }))
 
     async def launch_game_room(self, room_name):
         try:
