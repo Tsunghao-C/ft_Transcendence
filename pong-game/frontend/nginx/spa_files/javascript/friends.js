@@ -12,6 +12,7 @@ import { cancelFriendRequest } from "./manage_social.js";
 import { unblockUser } from "./manage_social.js";
 import { blockUser } from "./manage_social.js";
 import { getLanguageCookie } from './fetch_request.js';
+import { setContainerHtml } from './app.js';
 
 export async function setFriendsView(contentContainer) {
     const currentLanguage = getLanguageCookie() ||  "en";
@@ -23,52 +24,54 @@ export async function setFriendsView(contentContainer) {
     try {
         // console.log("friendRequest data: ", friendRequest);
         // console.log("sentFriendRequest data: ", sentFriendRequest);
-   
+
 
     contentContainer.innerHTML = `
         <!-- Onglets Bootstrap -->
-        <ul class="nav nav-tabs" id="friendsBlockTabs" role="tablist">
-            <li class="nav-item">
-                <a class="nav-link active" id="friends-tab" data-bs-toggle="tab" href="#friends" role="tab" aria-controls="friends" aria-selected="true">${translations[currentLanguage].friendList}</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" id="friend-requests-tab" data-bs-toggle="tab" href="#friend-requests" role="tab" aria-controls="friend-requests" aria-selected="false">${translations[currentLanguage].friendRequests}</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" id="sent-requests-tab" data-bs-toggle="tab" href="#sent-requests" role="tab" aria-controls="sent-requests" aria-selected="false">${translations[currentLanguage].sentRequests}</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" id="block-tab" data-bs-toggle="tab" href="#block" role="tab" aria-controls="block" aria-selected="false">${translations[currentLanguage].blockList}</a>
-            </li>
-        </ul>
-        <div class="tab-content">
-            <div class="tab-pane fade show active" id="friends" role="tabpanel" aria-labelledby="friends-tab">
-                <h2>${translations[currentLanguage].friendList}</h2>
-                <button id="addFriendButton" class="btn btn-success mb-3">${translations[currentLanguage].addNewFriend}</button>
-                <ul id="friendsList" class="list-group"></ul>
-            </div>
-            <div class="tab-pane fade" id="friend-requests" role="tabpanel" aria-labelledby="friend-requests-tab">
-                <h2>${translations[currentLanguage].friendRequests}</h2>
-                <ul id="friendRequestList" class="list-group"></ul>
-            </div>
-            <div class="tab-pane fade" id="sent-requests" role="tabpanel" aria-labelledby="sent-requests-tab">
-                <h2>${translations[currentLanguage].sentRequests}</h2>
-                <ul id="sentFriendRequestList" class="list-group"></ul>
-            </div>
-            <div class="tab-pane fade" id="block" role="tabpanel" aria-labelledby="block-tab">
-                <h2>${translations[currentLanguage].blockList}</h2>
-                <button id="addBlockButton" class="btn btn-success mb-3">${translations[currentLanguage].addBlock}</button>
-                <ul id="blockList" class="list-group"></ul>
+        <div class="friends-view">
+            <ul class="nav nav-tabs" id="friendsBlockTabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="friends-tab" data-bs-toggle="tab" href="#friends" role="tab" aria-controls="friends" aria-selected="true">${translations[currentLanguage].friendList}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="friend-requests-tab" data-bs-toggle="tab" href="#friend-requests" role="tab" aria-controls="friend-requests" aria-selected="false">${translations[currentLanguage].friendRequests}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="sent-requests-tab" data-bs-toggle="tab" href="#sent-requests" role="tab" aria-controls="sent-requests" aria-selected="false">${translations[currentLanguage].sentRequests}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="block-tab" data-bs-toggle="tab" href="#block" role="tab" aria-controls="block" aria-selected="false">${translations[currentLanguage].blockList}</a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="friends" role="tabpanel" aria-labelledby="friends-tab">
+                    <h3>${translations[currentLanguage].friendList}</h3>
+                    <button id="addFriendButton" class="btn btn-success mb-3">${translations[currentLanguage].addNewFriend}</button>
+                    <ul id="friendsList" class="list-group"></ul>
+                </div>
+                <div class="tab-pane fade" id="friend-requests" role="tabpanel" aria-labelledby="friend-requests-tab">
+                    <h3>${translations[currentLanguage].friendRequests}</h3>
+                    <ul id="friendRequestList" class="list-group"></ul>
+                </div>
+                <div class="tab-pane fade" id="sent-requests" role="tabpanel" aria-labelledby="sent-requests-tab">
+                    <h3>${translations[currentLanguage].sentRequests}</h3>
+                    <ul id="sentFriendRequestList" class="list-group"></ul>
+                </div>
+                <div class="tab-pane fade" id="block" role="tabpanel" aria-labelledby="block-tab">
+                    <h3>${translations[currentLanguage].blockList}</h3>
+                    <button id="addBlockButton" class="btn btn-success mb-3">${translations[currentLanguage].addBlock}</button>
+                    <ul id="blockList" class="list-group"></ul>
+                </div>
             </div>
         </div>
     `;
 
     function switchTab(tabToShowId) {
         const tabs = ['friends', 'friend-requests', 'sent-requests', 'block'];
-    
+
         tabs.forEach(tabId => {
             const tabElement = document.getElementById(tabId);
-    
+
             if (tabElement) {
                 if (tabId === tabToShowId) {
                     tabElement.classList.add('show', 'active');
@@ -78,7 +81,7 @@ export async function setFriendsView(contentContainer) {
             }
         });
     }
-    
+
 
     const friendsList = document.getElementById("friendsList");
     const friendRequestList = document.getElementById("friendRequestList");
@@ -97,29 +100,36 @@ export async function setFriendsView(contentContainer) {
                 const friendItem = document.createElement("li");
                 friendItem.classList.add("list-group-item");
                 friendItem.innerHTML = `
-                    <div class="row">
-                        <div class="col-md-6">
-                            <a href="#profile/${friend.alias}" class="profile-link">${friend.alias}</a>
-                            <p>
-                                MMR: <span class="badge badge-primary">${friend.mmr}</span> | 
-                                Wins: <span class="badge badge-success">${friend.wins}</span> | 
-                                Losses: <span class="badge badge-danger">${friend.losses}</span>
-                            </p>
-                        </div>
-                        <div class="col-md-4 text-right">
-                            <button class="btn btn-info btn-sm">${translations[currentLanguage].sendMessage}</button>
-                            <button class="btn btn-warning btn-sm">${translations[currentLanguage].requestDuel}</button>
-                            <button class="btn btn-danger btn-sm">${translations[currentLanguage].removeFriend}</button>
-                        </div>
-                    </div>
+					<div class="row align-items-center">
+						<div class="col-md-2 text-center">
+							<img
+								src="${friend.avatar || '/media/default.jpg'}"
+								alt="${friend.alias}'s avatar"
+								class="img-fluid rounded-circle"
+								style="width: 50px; height: 50px; object-fit: cover;">
+						</div>
+						<div class="col-md-4">
+							<a href="#profile/${friend.alias}" class="profile-link">${friend.alias}</a>
+							<p>
+								MMR: <span class="badge badge-primary">${friend.mmr}</span> |
+								Wins: <span class="badge badge-success">${friend.wins}</span> |
+								Losses: <span class="badge badge-danger">${friend.losses}</span>
+							</p>
+						</div>
+						<div class="col-md-4 text-right">
+							<button class="btn btn-info btn-sm">${translations[currentLanguage].sendMessage}</button>
+							<button class="btn btn-warning btn-sm">${translations[currentLanguage].requestDuel}</button>
+							<button class="btn btn-danger btn-sm">${translations[currentLanguage].removeFriend}</button>
+						</div>
+					</div>
                 `;
                 friendsList.appendChild(friendItem);
 				const sendMessageButton = friendItem.querySelector("button.btn-info");
 				sendMessageButton.addEventListener("click", () => sendMessage(friend.alias));
-		
+
 				const sendDuelRequestButton = friendItem.querySelector("button.btn-warning");
 				sendDuelRequestButton.addEventListener("click", () => sendDuelRequest(friend.alias));
-		
+
 				const removeFriendButton = friendItem.querySelector("button.btn-danger");
 				removeFriendButton.addEventListener("click", () => {
                     try {
