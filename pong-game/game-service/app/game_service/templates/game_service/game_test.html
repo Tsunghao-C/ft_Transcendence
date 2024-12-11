@@ -1,6 +1,152 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>Pong Game Test</title>
+    <style>
+        canvas {
+            border: 2px solid black;
+            margin: 20px auto;
+            display: block;
+        }
+        #game-info {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        #controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-info">Loading...</div>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="controls">
+        <p>Player 1: W (up) / S (donw)</p>
+        <p>Player 2: ArrowUp (up) / ArrowDown (down)</p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const gameInfo = document.getElementById('game-info');
+        let playerId = null;
+
+        // Use a fixed game ID for testing
+        const gameId = 'test_game';
+        // Create WebSocket connection
+        // const gameId = new Date().getTime(); // Simple unique ID by time for testing
+        const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        const wsUrl = `${wsScheme}://${window.location.host}/ws/game-server/${gameId}/`;
+        const ws = new WebSocket(wsUrl)
+
+        // Track pressed keys
+        const keys = {
+            'w': false,
+            's': false,
+            'ArrowUp': false,
+            'ArrowDown': false
+        };
+
+        ws.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+
+            if (data.type === 'player_assignment') {
+                playerId = data.player_id;
+                gameInfo.textContent = `You are Player ${playerId}`;
+            }
+            else if (data.type === 'game_start') {
+                gameInfo.textContent += ' - Game Started!';
+            }
+            else if (data.type === 'game_state_update') {
+                drawGame(data.game_state);
+            }
+            else if (data.type === 'game_end') {
+                gameInfo.textContent = 'Game Ended: ' + data.message;
+            }
+            else if (data.type === 'error') {
+                gameInfo.textContent = 'Error: ' + data.message;
+            }
+        };
+
+        function drawGame(gameState) {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw paddles
+            ctx.fillStyle = 'black';
+            for (let [pid, paddle] of Object.entries(gameState.paddles)) {
+                ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
+            }
+
+            // Draw ball
+            const ball = gameState.ball;
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw score
+            ctx.font = '48px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(gameState.score.p1, canvas.width * 0.25, 50);
+            ctx.fillText(gameState.score.p2, canvas.width * 0.75, 50);
+
+        }
+
+        // Keyborad controls
+        document.addEventListener('keydown', function(e) {
+            const key = e.key.toLowerCase();
+            if (keys.hasOwnProperty(key)) {
+                keys[key] = true;
+                handleMovement();
+            }
+        });
+
+        document.addEventListener('keyup', function(e) {
+            const key = e.key.toLocaleLowerCase();
+            if (keys.hasOwnProperty(key)) {
+                keys[key] = false;
+            }
+        });
+
+        function handleMovement() {
+            if (!playerId) return;
+
+            if (playerId === 'p1') {
+                if (keys['w']) {
+                    ws.send(JSON.stringify({ type: 'paddle_move', direction: 'up'}));
+                }
+                if (keys['s']) {
+                    ws.send(JSON.stringify({ type: 'paddle_move', direction: 'down'}))
+                }
+            } else if (playerId === 'p2') {
+                if (keys['arrowup']) {
+                    ws.send(JSON.stringify({ type: 'paddle_move', direction: 'up'}));
+                }
+                if (keys['arrowdown']) {
+                    ws.send(JSON.stringify({ type: 'paddle_move', direction: 'down'}))
+                }
+            }
+        }
+
+        // Set up continuous movement while keys are held
+        setInterval(handleMovement, 16); // approximately 60 FPS
+
+        ws.onclose = function(e) {
+            gameInfo.textContent = 'Connection closed';
+        };
+
+        ws.onerror = function(e) {
+            gameInfo.textContent = 'Connection error';
+        };
+    </script>
+</body>
+</html>
+
+<!-- <!DOCTYPE html>
+<html>
+<head>
     <title>Game WebSocket Test</title>
 </head>
 <body>
@@ -30,4 +176,4 @@
         }
     </script>
 </body>
-</html>
+</html> -->
