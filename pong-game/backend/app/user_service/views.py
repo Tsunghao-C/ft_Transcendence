@@ -18,6 +18,7 @@ from .models import CustomUser
 import re, os
 import uuid
 from game_service.views import recordMatch
+from game_service.models import LeaderBoard, MatchResults
 import re
 
 # 2FA
@@ -366,7 +367,9 @@ class getProfileView(APIView):
 				"isFriend": user.is_friend(profile),
 				"hasBlocked": user.has_blocked(profile),
 				"isSent": user.is_sent(profile),
-				"isPending": user.is_pending(profile)
+				"isPending": user.is_pending(profile),
+				"rank": LeaderBoard.getPlayerRank(profile),
+				"matchHistory": MatchResults.getPlayerGames(profile)
 			}
 		return Response({
 			"profile": profileData
