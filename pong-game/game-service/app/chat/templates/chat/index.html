@@ -15,7 +15,16 @@
         if (roomName) {
             window.location.pathname = `/api/chat/${roomName}/`;
         }
-    }
+		const apiUrl = `/api/rooms/${roomName}/messages/`;
+
+		fetch(apiUrl)
+			.then(response => response.json())
+			.then(data => {
+				console.log(data);
+			})
+			.catch(err => console.error('Error loading messages:', err));
+
+			}
     </script>
 </body>
 </html>

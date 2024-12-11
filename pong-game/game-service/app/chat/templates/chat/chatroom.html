@@ -15,6 +15,15 @@
         if (roomName) {
             window.location.pathname = `/api/chat/${roomName}/`;
         }
+		const apiUrl = `/api/rooms/${roomName}/messages/`;
+
+		fetch(apiUrl)
+			.then(response => response.json())
+			.then(data => {
+				console.log(data);
+			})
+			.catch(err => console.error('Error loading messages:', err));
+
     }
     </script>
 </body>
@@ -35,7 +44,7 @@
     <script>
     // const roomName = document.querySelector('h1').textContent.split(': ')[1];
     const roomName = "{{ room_name|safe }}";
-    
+
 
     // Log the WebSocket URL we're trying to connect to
     const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
