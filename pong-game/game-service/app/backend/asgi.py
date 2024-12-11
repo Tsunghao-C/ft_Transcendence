@@ -3,7 +3,8 @@ from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
 from channels.security.websocket import AllowedHostsOriginValidator
-import chat.routing
+from chat import routing as chat_routing
+from game_service import routing as game_routing
 
 from .routing import websocket_urlpatterns
 
@@ -18,7 +19,8 @@ application = ProtocolTypeRouter(
             AuthMiddlewareStack(
                 URLRouter(websocket_urlpatterns))
                 URLRouter(
-                    chat.routing.websocket_urlpatterns
+                    chat_routing.websocket_urlpatterns +
+                    game_routing.websocket_urlpatterns
                 )
             )
         ),

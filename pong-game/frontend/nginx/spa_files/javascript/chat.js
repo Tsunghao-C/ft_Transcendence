@@ -12,13 +12,15 @@ export class ChatWebSocket {
         }
 
         return `
-            <div id="chat-container">
-                <div id="chat-messages"></div>
-                <form id="chat-form">
-                    <input type="text" id="alias-input" placeholder="Your name" value="Anonymous">
-                    <input type="text" id="message-input" placeholder="Type a message...">
-                    <button type="submit">Send</button>
-                </form>
+            <div class="chat-view">
+                <div id="chat-container">
+                    <div id="chat-messages"></div>
+                    <form id="chat-form">
+                        <input type="text" id="alias-input" placeholder="Your name" value="Anonymous">
+                        <input type="text" id="message-input" placeholder="Type a message...">
+                        <button type="submit">Send</button>
+                    </form>
+                </div>
             </div>
         `;
     }

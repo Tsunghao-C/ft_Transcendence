@@ -4,7 +4,7 @@ Developing a web game Pong from scratch
 
 # Pong Game Project
 
-![Alt text](image/image2.png)
+![Alt text](image/monolithic_diagram2.png)
 
 ## Quick Start 
 
@@ -43,14 +43,19 @@ make clean #It will delete the .env
 
 ## Development Access Points
 
-- Frontend (SPA): http://localhost
-- Auth Service: http://localhost:8001
-- User Service: http://localhost:8002
-- Game Service: http://localhost:8004
-- Vault UI: http://localhost:8200
-- Grafana: http://localhost:3001
-- Kibana: http://localhost:5601
-- Prometheus: http://localhost:9090
+#### External
+- Frontend (Nginx + WFA + SPA): http://localhost:8443
+#### Internal access port
+- Backend Service: 8004
+- game_db: 5434
+- user_db: 5432
+- redis: 6379
+- Vault UI: 8200
+- Elasticsearch: 9200
+- Logstash: 5044
+- Kibana: 5601
+- Prometheus: 9090
+- Grafana: 3001
 
 ## Team Development Guidelines
 

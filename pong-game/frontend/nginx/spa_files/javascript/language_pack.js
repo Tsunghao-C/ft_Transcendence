@@ -112,6 +112,7 @@ export const translations = {
 		friendRequestSent: "Friend request sent",
 		blockedByUser: "is blocking you",
 		blockingUser: "you are blocking",
+		alreadySent: "Friend request was already sent."
 	},
 	fr: {
 		confirm: "",

@@ -5,31 +5,34 @@ import { getLanguageCookie } from './fetch_request.js';
 
 export async function setPersonnalDataView(contentContainer) {
     let personnal;
+    let response;
     try {
-        personnal = await fetchWithToken('/api/user/getuser/');
+        response = await fetchWithToken('/api/user/getuser/');
+        personnal = await response.json();
         console.log("User data: ", personnal);
-    } catch (error) {
+    } catch(error) {
         console.log(error);
-        return;
+        window.location.hash = "login";
+		loadPage("login");
     }
 
     contentContainer.innerHTML = `
-        <div class="personal-data-view">
-            <h1 data-i18n="personalDataTitle">Personal Information</h1>
+        <div class="personnal-data-view">
+            <h2 data-i18n="personalDataTitle">Personnal Information</h2>
             <div class="d-flex align-items-center mb-4">
                 <div>
-                    <img 
-                        src="${personnal.profilePicture}" 
-                        alt="Profile Picture" 
-                        class="img-thumbnail" 
+                    <img
+                        src="${personnal.avatar}"
+                        alt="Profile Picture"
+                        class="img-thumbnail"
                         id="profilePicturePreview"
                         style="max-width: 150px; cursor: pointer;"
                         title="Click to change"
                     >
-                    <input 
-                        type="file" 
-                        id="profilePictureInput" 
-                        accept=".jpg, .jpeg, .png" 
+                    <input
+                        type="file"
+                        id="profilePictureInput"
+                        accept=".jpg, .jpeg, .png"
                         style="display: none;"
                     >
                 </div>
@@ -94,47 +97,53 @@ export async function setPersonnalDataView(contentContainer) {
 
 	profilePictureInput.addEventListener("change", async (event) => {
 		const file = event.target.files[0];
-	
+
 		if (file) {
 			if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
 				alert(`${translations[currentLanguage].invalidFormat}`);
 				return;
 			}
-	
+
 			const reader = new FileReader();
-			reader.onload = (e) => {
-				profilePicturePreview.src = e.target.result;
-			};
 			reader.readAsDataURL(file);
-	
+
 			const formData = new FormData();
 			formData.append('avatar', file);
-	
+
 			try {
 				const response = await fetchWithToken("api/user/change-avatar/", formData, 'POST', false);
 				if (response.ok) {
 					console.log("Avatar uploaded successfully:", response);
 					alert("message for successs");
+					loadPage("personnal-data");
 				} else {
 					console.log("Error uploading avatar:", response);
 					alert("soemerror");
 				}
-			} catch (error) {
-				console.error("Error uploading avatar:", error);
-				alert("someother erro");
-			}
+            } catch(error) {
+                console.log(error);
+                window.location.hash = "login";
+                loadPage("login");
+            }
 		}
 	});
 
     document.getElementById("aliasChangeButton").addEventListener("click", async () => {
         const newAlias = document.getElementById("aliasInput").value;
+        let response;
         try {
-            await fetchWithToken('/api/user/change-alias/', JSON.stringify({ alias: newAlias }), 'POST');
-            alert('Alias updated successfully!');
-            loadPage("personnal-data")
-        } catch (error) {
-            console.error(error);
-            alert('Failed to update alias.');
+            response = await fetchWithToken('/api/user/change-alias/', JSON.stringify({ alias: newAlias }), 'POST');
+            if (!response.ok) {
+                alert(`${response.detail}`);
+            }
+            else {
+                alert('Alias updated successfully!');
+                loadPage("personnal-data")
+            }
+        } catch(error) {
+            console.log(error);
+            window.location.hash = "login";
+            loadPage("login");
         }
     });
 
@@ -144,9 +153,10 @@ export async function setPersonnalDataView(contentContainer) {
             await fetchWithToken('/api/user/change-email/', JSON.stringify({ email: newEmail }), 'POST');
             alert('Email updated successfully!');
             loadPage("personnal-data")
-        } catch (error) {
-            console.error(error);
-            alert('Failed to update email.');
+        } catch(error) {
+            console.log(error);
+            window.location.hash = "login";
+            loadPage("login");
         }
     });
 
@@ -168,9 +178,10 @@ export async function setPersonnalDataView(contentContainer) {
         try {
             await fetchWithToken('/api/user/change-password/', JSON.stringify({ old_password: oldPassword, new_password: newPassword }), 'POST');
             alert('Password changed successfully!');
-        } catch (error) {
-            console.error(error);
-            alert('Failed to change password.');
+        } catch(error) {
+            console.log(error);
+            window.location.hash = "login";
+            loadPage("login");
         }
     });
 
@@ -181,9 +192,10 @@ export async function setPersonnalDataView(contentContainer) {
             await fetchWithToken('/api/user/change-language/', JSON.stringify({ newLang: selectedLanguage }), 'POST');
             alert('language changed successfully!');
 			loadPage("personnal-data");
-        } catch (error) {
-            console.error(error);
-            alert('Failed to change language.');
+        } catch(error) {
+            console.log(error);
+            window.location.hash = "login";
+            loadPage("login");
         }
     });
 }

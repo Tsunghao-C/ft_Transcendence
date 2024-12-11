@@ -27,3 +27,8 @@ def api_status(request):
     """
     return JsonResponse({"success": True, "message": "Game API is active"})
 
+# Create your views here.
+def game_test(request, game_id):
+    return render(request, 'game_service/game_test.html', {
+        'game_id': game_id
+    })
