@@ -43,6 +43,7 @@ export async function setLeaderboardView(contentContainer) {
 function populateLeaderboardTable(data) {
 	const tableBody = document.getElementById("leaderboardTableBody");
 	tableBody.innerHTML = "";
+	console.log(data.length);
 	data.forEach((user) => {
 		const row = `
 			<tr>

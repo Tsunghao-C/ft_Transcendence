@@ -50,11 +50,21 @@ class getMatchHistoryView(APIView):
 
 
 class getLeaderBoardView(APIView):
-    permission_classes = [IsAuthenticated]
+	permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        leaderboard = LeaderBoard.objects.all()
-        if not leaderboard.exists():
-            return Response({"detail":"no leaderboard exists."}, status=200)
-        serializer = LeaderBoardSerializer(leaderboard, many=True)
-        return Response(serializer.data, status=200)
+	def get(self, request):
+		leaderboard = LeaderBoard.objects.all()
+		if not leaderboard.exists():
+			return Response({"detail":"no leaderboard exists."}, status=200)
+		leaderboardData = [
+			{
+				"rank": gamer.rank,
+				"alias": gamer.player.alias,
+				"mmr": gamer.player.mmr,
+				"avatar": gamer.player.avatar.url,
+				"wins": gamer.player.winCount,
+			}
+			for gamer in leaderboard
+		]
+		serializer = LeaderBoardSerializer(leaderboard, many=True)
+		return Response(leaderboardData, status=200)
