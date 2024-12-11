@@ -4,6 +4,7 @@ from channels.db import database_sync_to_async
 from asgiref.sync import sync_to_async
 import asyncio
 import random
+import math
 
 class GameConsumer(AsyncWebsocketConsumer):
     # Class variable to store all active games
@@ -18,27 +19,31 @@ class GameConsumer(AsyncWebsocketConsumer):
     @classmethod
     def get_or_create_game(cls, game_id):
         if game_id not in cls.active_games:
+            # Initialize with random ball direction
+            initial_dx = random.choice([-5, 5])
+            initial_dy = random.uniform(-3, 3)
+
             cls.active_games[game_id] = {
                 'status': 'waiting',
                 'players': {},
                 'ball': {
                     'x': 400,
                     'y': 300,
-                    'dx': 5,
-                    'dy': 5,
+                    'dx': initial_dx,
+                    'dy': initial_dy,
                     'radius': 10
                 },
                 'paddles': {
                     'p1': {
-                        'y': 300,
+                        'y': 250,
                         'x': 50,
                         'height': 100,
                         'width': 10,
                         'speed': 10
                     },
                     'p2': {
-                        'y': 300,
-                        'x': 750,
+                        'y': 250,
+                        'x': 740,
                         'height': 100,
                         'width': 10,
                         'speed': 10
@@ -49,6 +54,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         return cls.active_games[game_id]
     
     async def connect(self):
+        print("New connection attemp")
         self.game_id = self.scope['url_route']['kwargs']['game_id']
         self.room_group_name = f'game_{self.game_id}'
         self.game_state = self.get_or_create_game(self.game_id)
@@ -62,9 +68,12 @@ class GameConsumer(AsyncWebsocketConsumer):
 
         # Add player to game
         player_count = len(self.game_state['players'])
+        print(f"Current player count: {player_count}")
+
         if player_count < 2:
             player_id = 'p1' if 'p1' not in self.game_state['players'].values() else 'p2'
             self.game_state['players'][self.channel_name] = player_id
+            print(f"Assigned player ID: {player_id}")
 
             await self.send(json.dumps({
                 'type': 'player_assignment',
@@ -72,11 +81,22 @@ class GameConsumer(AsyncWebsocketConsumer):
                 'game_id': self.game_id
             }))
 
+            # Immediately send current game state
+            await self.send(json.dumps({
+                'type': 'game_state_update',
+                'game_state': self.game_state
+            }))
+
             if len(self.game_state['players']) == 2:
                 self.game_state['status'] = 'playing'
+                # Reset ball to center with random direction
+                self.reset_ball()
+
                 # Only start game loop for the first player
                 if player_id == 'p1':
+                    print("Starting game loop")
                     self.game_loop_task = asyncio.create_task(self.game_loop())
+    
                 await self.channel_layer.group_send(
                     self.room_group_name,
                     {
@@ -120,21 +140,28 @@ class GameConsumer(AsyncWebsocketConsumer):
         )
 
     async def receive(self, text_data):
-        data = json.loads(text_data)
-        if data['type'] == 'paddle_move':
-            player_id = self.game_state['players'][self.channel_name]
-            direction = data['direction']
-            paddle = self.game_state['paddles'][player_id]
+        try:            
+            data = json.loads(text_data)
+            print(f"Received data: {data}")
 
-            if direction == 'up':
-                paddle['y'] = max(0, paddle['y'] - paddle['speed'])
-            elif direction == 'down':
-                paddle['y'] = min(500, paddle['y'] + paddle['speed'])
+            if data['type'] == 'paddle_move':
+                player_id = self.game_state['players'].get(self.channel_name)
+                if not player_id:
+                    print(f"No player_id found for {self.channel_name}")
+                    return
+                
+                direction = data['direction']
+                paddle = self.game_state['paddles'][player_id]
+                old_y = paddle['y'] # Store old position for debugging
+
+                if direction == 'up':
+                    paddle['y'] = max(0, paddle['y'] - paddle['speed'])
+                elif direction == 'down':
+                    paddle['y'] = min(500, paddle['y'] + paddle['speed'])
     
-    async def game_loop(self):
-        try:
-            while self.game_state['status'] == 'playing':
-                self.update_game_status()
+                print(f"Moved {player_id} paddle from y={old_y} to y={paddle['y']}")
+
+                # Send immediate update for responsive controls
                 await self.channel_layer.group_send(
                     self.room_group_name,
                     {
@@ -142,11 +169,29 @@ class GameConsumer(AsyncWebsocketConsumer):
                         'game_state': self.game_state
                     }
                 )
-                await asyncio.sleep(1/60) # FPS 60
-        except asyncio.CancelledError:
-            pass
+        except Exception as e:
+            print(f"Error in receive: {e}")
     
+    def reset_ball(self):
+        # Set random direction but with fixed speed
+        speed = 5
+        angle = random.uniform(-math.pi/4, math.pi/4)
+        if random.choice([True, False]):
+            angle += math.pi # Reverse direction
+        
+        self.game_state['ball'].update({
+            'x': 400,
+            'y': 300,
+            'dx': speed * math.cos(angle),
+            'dy': speed * math.sin(angle),
+            'radius': 10
+        })
+        print(f"Ball reset with dx={self.game_state['ball']['dx']}, dy={self.game_state['ball']['dy']}")
+        
     def update_game_state(self):
+        if self.game_state['status'] != 'playing':
+            return
+
         ball = self.game_state['ball']
         paddles = self.game_state['paddles']
 
@@ -168,13 +213,16 @@ class GameConsumer(AsyncWebsocketConsumer):
                 ball['dx'] *= -1.1 # Increase speed slightly
                 # Add some randomness to y direction
                 ball['dy'] = random.uniform(-7, 7)
+                print(f"Ball hit {player_id}'s paddle, new dx={ball['dx']}, dy={ball['dy']}")
 
         # Score points
         if ball['x'] <= 0:
             self.game_state['score']['p2'] += 1
+            print("Player 2 scored!")
             self.reset_ball()
         elif ball['x'] >= 800:
             self.game_state['score']['p1'] += 1
+            print("Player 1 scored!")
             self.reset_ball()
 
         # Check win condition
@@ -189,6 +237,24 @@ class GameConsumer(AsyncWebsocketConsumer):
             'dy': random.uniform(-3, 3)
         })
     
+    async def game_loop(self):
+        try:
+            print("Game loop started")
+            while self.game_state['status'] == 'playing':
+                self.update_game_status()
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        'type': 'game_state_update',
+                        'game_state': self.game_state
+                    }
+                )
+                await asyncio.sleep(1/60) # FPS 60
+        except asyncio.CancelledError:
+            print("Game loop cancelled")
+        except Exception as e:
+            print(f"Error in game loop: {e}")
+
     async def game_state_update(self, event):
         await self.send(text_data=json.dumps(event))
 
