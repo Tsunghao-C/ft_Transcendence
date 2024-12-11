@@ -6,17 +6,6 @@ import { setContainerHtml } from './app.js'
 
 export async function setLeaderboardView(contentContainer) {
 	// await setContainerHtml(contentContainer, "./html/leaderboard.html");
-	let response;
-	try {
-		const response = await fetchWithToken('/api/game/leaderboard/');
-		const leaderboardData = await response.json();
-		console.leaderboardData;
-		populateLeaderboardTable(leaderboardData);
-	} catch (error) {
-		console.error("Failed to fetch leaderboard data:", error);
-		const tableBody = document.getElementById("leaderboardTableBody");
-		tableBody.innerHTML = '<tr><td colspan="3">Error loading leaderboard</td></tr>';
-	}
 
 	contentContainer.innerHTML = `
 		<div class="leaderboard-view">
@@ -34,7 +23,18 @@ export async function setLeaderboardView(contentContainer) {
 			</table>
 		</div>
 	`;
-	fetchLeaderboardData();
+	let response;
+	try {
+		const response = await fetchWithToken('/api/game/leaderboard/');
+		const leaderboardData = await response.json();
+		console.log(leaderboardData);
+		populateLeaderboardTable(leaderboardData);
+	} catch (error) {
+		window.location.hash = "login";
+		console.log(error);
+		loadPage("login");
+		return;
+	}
 }
 
 
@@ -42,14 +42,11 @@ export async function setLeaderboardView(contentContainer) {
 function populateLeaderboardTable(data) {
 	const tableBody = document.getElementById("leaderboardTableBody");
 	tableBody.innerHTML = "";
-
-	data.sort((a, b) => b.mmr - a.mmr); // we will deal with that in the backend i guess
-
-	data.forEach((user, index) => {
+	data.forEach((user) => {
 		const row = `
 			<tr>
-				<td>${index + 1}</td>
-				<td><a href="#profile/${user.username}" class="profile-link">${user.username}</a></td>
+				<td>${user.rank}</td>
+				<td><a href="#profile/${user.alias}" class="profile-link">${user.alias}</a></td>
 				<td>${user.mmr}</td>
 			</tr>
 		`;
