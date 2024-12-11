@@ -3,6 +3,7 @@ from user_service.models import CustomUser
 from django.db.models import F
 from django.utils.timezone import now
 from datetime import timedelta
+from django.db.models import Q
 import os
 
 LDB_UPDATE_TIMER = int(os.environ.get("LDB_UPDATE_TIMER", 15))
@@ -11,15 +12,13 @@ class MatchResults(models.Model):
 	p1 = models.ForeignKey(
 		CustomUser,
 		on_delete=models.CASCADE,
-		related_name="matches_as_p1",
-		db_constraint=False,
+		related_name="matches_as_p1"
 	)
 
 	p2 = models.ForeignKey(
 		CustomUser,
 		on_delete=models.CASCADE,
-		related_name="matches_as_p2",
-		db_constraint=False,
+		related_name="matches_as_p2"
 	)
 
 	matchOutcome = models.IntegerField(choices=[(0, 'Player 2 Wins'), (1, 'Player 1 Wins')])
@@ -27,6 +26,26 @@ class MatchResults(models.Model):
 
 	def __str__(self):
 		return f"{self.p1.alias} vs {self.p2.alias} - Outcome: {self.matchOutcome}"
+
+	class Meta:
+		indexes = [
+			models.Index(fields=["p1", "p2"])
+		]
+
+	@classmethod
+	def getPlayerGames(cls, player):
+		matches = cls.objects.filter(Q(p1=player) | Q(p2=player))
+
+		return [
+			{
+				"p1": match.p1.alias,
+				"p2": match.p2.alias,
+				"matchOutcome": match.get_matchOutcome_display(),  # Friendly display of match outcome
+				"time": match.time.isoformat(),
+			}
+			for match in matches
+		]
+
 
 class LeaderBoardManager(models.Manager):
 	def _hasGameOccured(self):
@@ -53,7 +72,8 @@ class LeaderBoard(models.Model):
 	player = models.ForeignKey(
 		CustomUser,
 		on_delete=models.CASCADE,
-		related_name="player_rank"
+		related_name="player_rank",
+		db_index=True
 	)
 	rank = models.PositiveIntegerField()
 
@@ -61,3 +81,8 @@ class LeaderBoard(models.Model):
 
 	class Meta:
 		ordering = ['rank']
+
+	@classmethod
+	def getPlayerRank(cls, player):
+		rank_obj = cls.objects.filter(player=player).first()
+		return rank_obj.rank if rank_obj else None
