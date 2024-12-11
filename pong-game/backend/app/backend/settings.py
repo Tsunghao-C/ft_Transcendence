@@ -54,6 +54,7 @@ SIMPLE_JWT = {
 # Application definition
 
 INSTALLED_APPS = [
+	"django_crontab",
     "daphne",
     "chat",
     'django.contrib.admin',
@@ -106,24 +107,16 @@ ASGI_APPLICATION = 'backend.asgi.application'
 
 DATABASES = {
     "default": {
-        "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
-        "NAME": os.environ.get("USER_DB_DATABASE", BASE_DIR / "db.sqlite3"),
-        "USER": os.environ.get("USER_DB_USER", "user_db_user"),
-        "PASSWORD": os.environ.get("USER_DB_PASSWORD", "user_password"),
-        "HOST": "user_db",
-        "PORT": os.environ.get("USER_DB_PORT", "5432"),
+        "ENGINE": os.environ.get("POSTGRES_ENGINE", "django.db.backends.sqlite3"),
+        "NAME": os.environ.get("POSTGRES_DB", BASE_DIR / "db.sqlite3"),
+        "USER": os.environ.get("POSTGRES_USER", "transc_user"),
+        "PASSWORD": os.environ.get("POSTGRES_PASS", "transc_pass"),
+        "HOST": os.environ.get("POSTGRES_HOST", "transc_host"),
+        "PORT": os.environ.get("POSTGRES_PORT", "5432"),
     },
-	"game_db": {
-        "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
-        "NAME": os.environ.get("GAME_DB_DATABASE", BASE_DIR / "db.sqlite3"),
-        "USER": os.environ.get("GAME_DB_USER", "game_db_user"),
-        "PASSWORD": os.environ.get("GAME_DB_PASSWORD", "game_password"),
-        "HOST": "game_db",
-        "PORT": os.environ.get("GAME_DB_PORT", "5434"),
-    }
 }
 
-DATABASE_ROUTERS = ['backend.database_router.AppDatabaseRouter']
+# DATABASE_ROUTERS = ['backend.database_router.AppDatabaseRouter']
 
 
 # Password validation
@@ -201,3 +194,10 @@ EMAIL_PORT = 587              # Port SMTP pour TLS
 EMAIL_USE_TLS = True          # Activer TLS
 EMAIL_HOST_USER = '42transcendental@gmail.com'  # Votre adresse e-mail
 EMAIL_HOST_PASSWORD = 'zlywwbcyedhomdet'  # Votre mot de passe ou App Password /!\ CODE A CACHER DANS L'ENV
+
+LDB_UPDATE_TIMER = os.environ.get("LDB_UPDATE_TIMER", 15)
+CRONJOBS = [
+    (f'*/{LDB_UPDATE_TIMER} * * * *', 'game_service.tasks.update_leaderboard')
+]
+
+DATETIME_FORMAT = 'd-m-Y H:i:s'

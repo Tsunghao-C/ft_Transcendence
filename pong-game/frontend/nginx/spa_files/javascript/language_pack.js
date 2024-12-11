@@ -54,6 +54,7 @@ export const translations = {
 		matchHistory: "Match History",
 		noMatchHistory: "No match history found.",
 		win: "Win",
+		loss: "Loss",
 		w: "W",
 		l: "L",
 		loss: "Loss",
