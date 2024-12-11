@@ -220,18 +220,22 @@ class GameRoom():
             logger.error(f"GameRoom initial group send error: {e}")
             return
         logger.info('gameRoom started, messages sent')
-        while self.running:
-            self.update_players()
-            logger.info('gameRoom updated players')
-            self.handle_player_collisions()
-            logger.info('gameRoom updated collisions')
-            self.update_ball()
-            logger.info('gameRoom updated ball')
-            if self.game_over:
-                logger.info('gameRoom preparing gameover')
-                await self.declare_winner(self.winner)
-                logger.info('gameRoom done')
-                return 
-            await self.send_update()
-            logger.info('gameRoom sent update to clients')
-            await asyncio.sleep(0.016)
+        try:
+            while self.running:
+                self.update_players()
+                logger.info('gameRoom updated players')
+                self.handle_player_collisions()
+                logger.info('gameRoom updated collisions')
+                self.update_ball()
+                logger.info('gameRoom updated ball')
+                if self.game_over:
+                    logger.info('gameRoom preparing gameover')
+                    await self.declare_winner(self.winner)
+                    logger.info('gameRoom done')
+                    return 
+                await self.send_update()
+                logger.info('gameRoom sent update to clients')
+                await asyncio.sleep(0.016)
+        except Exception as e:
+            logger.error(f"GameRoom initial group send error: {e}")
+            return

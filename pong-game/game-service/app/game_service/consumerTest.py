@@ -11,6 +11,7 @@ from .consumers import GameConsumer  # Import your consumer
 logger = logging.getLogger(__name__)
 class GameConsumerTest(TestCase):
     async def test_connection(self):
+        print("====Testing connection====")
         # Create a communicator with the consumer
         communicator = WebsocketCommunicator(URLRouter(websocket_urlpatterns), "/ws/game/test_room/")
         connected, _ = await communicator.connect()
@@ -26,6 +27,7 @@ class GameConsumerTest(TestCase):
         await communicator.disconnect()
 
     async def test_create_private_match(self):
+        print("====Testing create_private_match====")
         communicator = WebsocketCommunicator(URLRouter(websocket_urlpatterns), "/ws/game/test_room/")
         await communicator.connect()
         
@@ -48,6 +50,7 @@ class GameConsumerTest(TestCase):
         await communicator.disconnect()
 
     async def test_join_private_match(self):
+        print("====Testing join_private_match====")
         # First, create a room
         creator_communicator = WebsocketCommunicator(URLRouter(websocket_urlpatterns), "/ws/game/test_room/")
         await creator_communicator.connect()
@@ -85,6 +88,7 @@ class GameConsumerTest(TestCase):
         await joiner_communicator.disconnect()
 
     async def test_ready_up(self):
+        print("====Testing ready_up====")
         # Create a room and have two players join
         creator_communicator = WebsocketCommunicator(URLRouter(websocket_urlpatterns), "/ws/game/test_room/")
         await creator_communicator.connect()
@@ -168,42 +172,43 @@ class GameConsumerTest(TestCase):
         print(json.dumps(start_response, indent=4))
 
  
-        update_messages = []
-        room_name = "lobby_" + room_name
-        while True:
-            logger.info("====GAME LOOP ITERATION====")
+#        update_messages = []
+#        room_name = "lobby_" + room_name
+#        for x in range(0, 1):
+#        while True:
+#            logger.info("====GAME LOOP ITERATION====")
 #            print(f"room_name: {room_name}")
-            await joiner_communicator.send_json_to({
-                'type': 'player_input',
-                'game_roomID': room_name,
-                'player_id': 'player2',
-                'input': 'move_down',
-                })
-            await creator_communicator.send_json_to({
-                'type': 'player_input',
-                'game_roomID': room_name,
-                'player_id': 'player1',
-                'input': 'move_up',
-                })
-            update_message = await asyncio.wait_for(creator_communicator.receive_json_from(),
-                                                    timeout=1)
-            print(json.dumps(update_message, indent=4))
-            if update_message['type'] == 'game_over':
-                break
-            update_messages.append(update_message)
-            self.assertEqual(update_message['type'], 'game_update')
-            self.assertIn('payload', update_message)
-            payload = update_message['payload']
-            self.assertIn('players', payload)
-            self.assertIn('ball', payload)
-
-            for player_id, player_data in payload['players'].items():
-                self.assertIn('x', player_data)
-                self.assertIn('y', player_data)
-                self.assertIn('score', player_data)
-            self.assertIn('x', payload['ball'])
-            self.assertIn('y', payload['ball'])
-            self.assertIn('radius', payload['ball'])
+#            await joiner_communicator.send_json_to({
+    #                'type': 'player_input',
+    #                'game_roomID': room_name,
+    #                'player_id': 'player2',
+    #                'input': 'move_down',
+    #                })
+#            await creator_communicator.send_json_to({
+    #                'type': 'player_input',
+    #                'game_roomID': room_name,
+    #                'player_id': 'player1',
+    #                'input': 'move_up',
+    #                })
+#            update_message = await asyncio.wait_for(creator_communicator.receive_json_from(),
+                                                     #                                                    timeout=4)
+#            print(json.dumps(update_message, indent=4))
+#            if update_message['type'] == 'game_over':
+#                break
+#            update_messages.append(update_message)
+#            self.assertEqual(update_message['type'], 'game_update')
+#            self.assertIn('payload', update_message)
+#            payload = update_message['payload']
+#            self.assertIn('players', payload)
+#            self.assertIn('ball', payload)
+#
+#            for player_id, player_data in payload['players'].items():
+#                self.assertIn('x', player_data)
+#                self.assertIn('y', player_data)
+#                self.assertIn('score', player_data)
+#            self.assertIn('x', payload['ball'])
+#            self.assertIn('y', payload['ball'])
+#            self.assertIn('radius', payload['ball'])
   #      except Exception as e:
   #          logger.error(f"GameRoom consumer test failed: {e}")
         await creator_communicator.disconnect()

@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import json
 import uuid
 import asyncio
+import redis
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.sessions import SessionMiddlewareStack
 from channels.layers import get_channel_layer
@@ -12,8 +13,11 @@ from .game_room import GameRoom
 
 load_dotenv()
 active_game_rooms = {}
-active_lobbies = {} #This has no methods cleaning it up yet. Need to clean when gamerooms terminate or if players leave a lobby
+active_lobbies = {}
 logger = logging.getLogger(__name__)
+pool = redis.ConnectionPool(host='redis', port=6379, db=0)
+redis_client = redis.Redis(connection_pool=pool)
+redis_client.set('key', 'value')
 
 class GameConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
@@ -108,6 +112,31 @@ class GameConsumer(AsyncWebsocketConsumer):
             'message': event['message']
             }))
 
+    async def launch_game_room(self, room_name):
+        try:
+            group_name = f"lobby_{room_name}"
+            await self.channel_layer.group_send(
+                    group_name,
+                    {
+                        "type": "group_message",
+                        "message": "Game is starting"
+                    })
+            logger.info(f"Starting game id: lobby_{room_name}")
+            player_channels = get_channel_layer()
+            game_room = GameRoom(room_name, player_channels, active_lobbies[room_name]["players"])
+            logger.info("GameRoom created")
+            active_game_rooms[group_name] = game_room
+            game_task = asyncio.create_task(game_room.run())
+            del active_lobbies[room_name]
+            logger.info("GameRoom task added")
+            game_task.add_done_callback(self.handle_game_task_completion) #this is fucking wack, shouldn't the task be passed as parameter?
+        except Exception as e:
+            logger.error(f"Failed to start the gameroom: {str(e)}")
+            await self.send(json.dumps({
+                "type": "error",
+                "error": f"Failed to start game: {str(e)}"
+                }))
+
     async def update_ready_status(self, room_name, player_id):
         if room_name not in active_lobbies:
             await self.send(json.dumps({
@@ -129,29 +158,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                         "message": f"Player {player_id} is ready"
                     })
         if self.all_ready(room_name):
-            try:
-                group_name = f"lobby_{room_name}"
-                await self.channel_layer.group_send(
-                    group_name,
-                    {
-                        "type": "group_message",
-                        "message": "Game is starting"
-                    })
-                logger.info(f"Starting game id: lobby_{room_name}")
-                player_channels = get_channel_layer()
-                game_room = GameRoom(room_name, player_channels, active_lobbies[room_name]["players"])
-                logger.info("GameRoom created")
-                active_game_rooms[group_name] = game_room
-                game_task = asyncio.create_task(game_room.run())
-                del active_lobbies[room_name]
-                logger.info("GameRoom task added")
-                game_task.add_done_callback(self.handle_game_task_completion) #this is fucking wack, shouldn't the task be passed as parameter?
-            except Exception as e:
-                logger.error(f"Failed to start the gameroom: {str(e)}")
-                await self.send(json.dumps({
-                    "type": "error",
-                    "error": f"Failed to start game: {str(e)}"
-                    }))
+            await self.launch_game_room(room_name)
 
     def handle_game_task_completion(self, task):
         try:

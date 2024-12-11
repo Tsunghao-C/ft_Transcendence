@@ -184,14 +184,15 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 # can replace inmemorychannellayer with redis later
 CHANNEL_LAYERS = {
-#    "default": { "BACKEND": "channels_redis.core.RedisChannelLayer",
-#        "CONFIG": {
-#            "hosts": [('redis', 6379)]
-#        },
-#    },
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer"
-    },
+    "default": { "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [('redis', 6379)],
+            "capacity": 1000,
+       },
+   },
+#   "default": {
+#      "BACKEND": "channels.layers.InMemoryChannelLayer"
+# },
 }
 
 LOGGING = {
