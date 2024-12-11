@@ -73,6 +73,7 @@ export function setLoginViewHtml(contentContainer) {
 }
 
 export function setRegisterViewHtml(contentContainer) {
+	const currentLanguage = getLanguageCookie() || "en";
 	contentContainer.innerHTML = `
 			<div class="register-view">
 				<h1>pQnGx</h1>
@@ -96,8 +97,10 @@ export function setRegisterViewHtml(contentContainer) {
 						<p id="successMessage"></p>
 					</div>
 					<button type="submit" class="btn btn-primary" data-i18n="registerButton">Register</button>
-					<a href="#login" class="btn btn-primary">Back to log in</a>
 				</form>
+				<p>${translations[currentLanguage].alreadyAccount}
+					<a href="#login" id="loginLink">${translations[currentLanguage].loginLink}</a>
+				</p>
 				<select id="languageSelect" class="form-select mt-2">
 					<option value="en" data-i18n="english">English</option>
 					<option value="fr" data-i18n="francais">Français</option>

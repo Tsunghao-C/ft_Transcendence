@@ -336,6 +336,18 @@ body {
 	width: 95.5%;
 }
 
+#successMessage {
+	margin-top: 10px;
+	color: rgb(77, 150, 77);
+	/* color: rgb(97, 172, 97); */
+}
+
+#errorMessage {
+	margin-top: 10px;
+	color: rgb(175, 52, 52);
+}
+
+
 /**************************** Login ****************************/
 
 .login-view {

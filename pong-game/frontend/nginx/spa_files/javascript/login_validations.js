@@ -65,8 +65,8 @@ export function showError(message) {
 }
 
 export function showSuccess(message) {
-	const successMessage = document.getElementById('successMessage');
-	successMessage.textContent = message;
 	const errorMessage = document.getElementById('errorMessage');
 	errorMessage.textContent = "";
+	const successMessage = document.getElementById('successMessage');
+	successMessage.textContent = message;
 }
