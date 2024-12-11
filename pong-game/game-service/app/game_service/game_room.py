@@ -40,9 +40,10 @@ class Ball():
         self.radius = BALL_RADIUS
 
 class GameRoom():
-    def __init__(self, room_id, player_channel, players):
+    def __init__(self, room_id, player_channel, players, sockets):
         self.room_id = "lobby_" + room_id
         self.player_channel = player_channel
+        self.connections = sockets
         self.players = {
                 0: Player(players[0], 'left', CANVAS_WIDTH, CANVAS_HEIGHT),
                 1: Player(players[1], 'right', CANVAS_WIDTH, CANVAS_HEIGHT)
@@ -145,15 +146,11 @@ class GameRoom():
                 'score_right': self.players[1].score,
                 'winner': self.players[winner].player_id
                 }
-        message = json.dumps(game_report)
-        await self.player_channel.group_send(
-                self.room_id,
-                {
-                    'type': 'game_message',
-                    'update_type': 'game_over',
-                    'payload': game_report,
-                    'message': message
-                })
+        for connection in self.connections:
+            await connection.send(json.dumps({
+                'type': 'game_over',
+                'payload': game_report
+                }))
 #        await self.send_report_to_db(winner) # send json post with "p1ID" and "p2ID" and matchOutcome, set matchOutcome to 0 for p0 victory or 1 for p1 victory
 #        await asyncio.sleep(1)
 
@@ -193,30 +190,22 @@ class GameRoom():
                     'radius': self.ball.radius
                     }
                 }
-        message = json.dumps(game_state)
-        await self.player_channel.group_send(
-                self.room_id,
-                {
-                    'type': 'game_message',
-                    'update_type': 'game_update',
-                    'payload': game_state,
-                    'message': message
-                })
+        for connection in self.connections:
+            await connection.send(json.dumps({
+                'type': 'game_update',
+                'payload': game_state
+                }))
 
     async def run(self):
         logger.info('gameRoom starting')
         logger.info(f"Room_id: {self.room_id}")
         logger.info(f"Player_channel: {self.player_channel}")
         try:
-            message = 'Game has started'
-            await self.player_channel.group_send(
-                    self.room_id,
-                    {
-                        'type': 'game_message',
-                        'update_type': 'game_start',
-                        'payload': None,
-                        'message': message
-                    })
+            for connection in self.connections:
+                await connection.send(json.dumps({
+                    'type': 'game_start',
+                    'message':'Game has started'
+                    }))
         except Exception as e:
             logger.error(f"GameRoom initial group send error: {e}")
             return

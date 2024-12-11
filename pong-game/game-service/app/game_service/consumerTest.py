@@ -80,9 +80,13 @@ class GameConsumerTest(TestCase):
         })
         
         join_response = await joiner_communicator.receive_json_from()
-        print(json.dumps(join_response, indent=4))
+        creator_response = await creator_communicator.receive_json_from()
         self.assertEqual(join_response['type'], 'notice')
         self.assertEqual(join_response['message'], f'Joined lobby {room_name}')
+        self.assertEqual(creator_response['type'], 'notice')
+        self.assertEqual(creator_response['message'], f'Joined lobby {room_name}')
+        print(json.dumps(join_response, indent=4))
+        print(json.dumps(creator_response, indent=4))
         
         await creator_communicator.disconnect()
         await joiner_communicator.disconnect()
@@ -116,6 +120,7 @@ class GameConsumerTest(TestCase):
             "room_name": room_name,
             "id": "player2"
         })
+        await creator_communicator.receive_json_from()
         await joiner_communicator.receive_json_from()
         
         # Ready up both players

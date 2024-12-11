@@ -19,6 +19,8 @@ pool = redis.ConnectionPool(host='redis', port=6379, db=0)
 redis_client = redis.Redis(connection_pool=pool)
 redis_client.set('key', 'value')
 
+#When trying to reconnect a player to its match, search first for player_id in the active_game_room dict THEN swap the previous self instance in connection field with the new one, otherwise we break
+
 class GameConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -67,7 +69,10 @@ class GameConsumer(AsyncWebsocketConsumer):
                        }))
 
     async def create_private_lobby(self, room_name, player_id):
-        active_lobbies[room_name] = {"players": [player_id]}
+        active_lobbies[room_name] = {
+                "players": [player_id],
+                "connections": [self]
+        }
         self.current_group = f"lobby_{room_name}"
         await self.channel_layer.group_add(self.current_group, self.channel_name)
         await self.send(json.dumps({
@@ -93,14 +98,13 @@ class GameConsumer(AsyncWebsocketConsumer):
             await self.send(json.dumps({"error": f"lobby {room_name} is full"}))
             return
         active_lobbies[room_name]["players"].append(player_id)
+        active_lobbies[room_name]["connections"].append(self)
         await self.channel_layer.group_add(self.current_group, self.channel_name)
-        group_name = f"lobby_{room_name}"
-        await self.channel_layer.group_send(
-            group_name,
-            {
-            "type": "group_message",
-            "message": f"Joined lobby {room_name}"
-            })
+        for connection in active_lobbies[room_name]["connections"]:
+            await connection.send(json.dumps({
+                "type": "notice",
+                "message": f"Player: {player_id} joined lobby {room_name}"
+                }))
 
     async def group_message(self, event):
         await self.send(json.dumps({
@@ -118,15 +122,14 @@ class GameConsumer(AsyncWebsocketConsumer):
     async def launch_game_room(self, room_name):
         try:
             group_name = f"lobby_{room_name}"
-            await self.channel_layer.group_send(
-                    group_name,
-                    {
-                        "type": "group_message",
+            for connection in active_lobbies[room_name]["connections"]:
+                await connection.send(json.dumps({
+                        "type": "notice",
                         "message": "Game is starting"
-                    })
+                    }))
             logger.info(f"Starting game id: lobby_{room_name}")
             player_channels = get_channel_layer()
-            game_room = GameRoom(room_name, player_channels, active_lobbies[room_name]["players"])
+            game_room = GameRoom(room_name, player_channels, active_lobbies[room_name]["players"], active_lobbies[room_name]["connections"])
             logger.info("GameRoom created")
             active_game_rooms[group_name] = game_room
             game_task = asyncio.create_task(game_room.run())
@@ -153,13 +156,12 @@ class GameConsumer(AsyncWebsocketConsumer):
             if player_id not in active_lobbies[room_name].get("ready", []):
                 active_lobbies[room_name]["ready"].append(player_id)
                 logger.info(f"Player has readied up, id: {player_id}")
-                group_name = f"lobby_{room_name}"
-                await self.channel_layer.group_send(
-                    group_name,
-                    {
-                        "type": "group_message",
-                        "message": f"Player {player_id} is ready"
-                    })
+                for connection in active_lobbies[room_name]["connections"]:
+                    await connection.send(json.dumps(
+                        {
+                            "type": "notice",
+                            "message": f"Player {player_id} is ready"
+                        }))
         if self.all_ready(room_name):
             await self.launch_game_room(room_name)
 
