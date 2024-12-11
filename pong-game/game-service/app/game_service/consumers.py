@@ -1,7 +1,5 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
-from channels.db import database_sync_to_async
-from asgiref.sync import sync_to_async
 import asyncio
 import random
 import math
@@ -20,17 +18,17 @@ class GameConsumer(AsyncWebsocketConsumer):
     def get_or_create_game(cls, game_id):
         if game_id not in cls.active_games:
             # Initialize with random ball direction
-            initial_dx = random.choice([-5, 5])
-            initial_dy = random.uniform(-3, 3)
+            speed = 5.0 # Set initial ball speed
+            angle = random.uniform(-math.pi/4, math.pi/4)
 
             cls.active_games[game_id] = {
                 'status': 'waiting',
                 'players': {},
                 'ball': {
-                    'x': 400,
-                    'y': 300,
-                    'dx': initial_dx,
-                    'dy': initial_dy,
+                    'x': 400.0,
+                    'y': 300.0,
+                    'dx': speed * math.cos(angle),
+                    'dy': speed * math.sin(angle),
                     'radius': 10
                 },
                 'paddles': {
@@ -81,13 +79,14 @@ class GameConsumer(AsyncWebsocketConsumer):
                 'game_id': self.game_id
             }))
 
-            # Immediately send current game state
-            await self.send(json.dumps({
-                'type': 'game_state_update',
-                'game_state': self.game_state
-            }))
+            # # Immediately send current game state
+            # await self.send(json.dumps({
+            #     'type': 'game_state_update',
+            #     'game_state': self.game_state
+            # }))
 
             if len(self.game_state['players']) == 2:
+                print("Two players connected, starting game")
                 self.game_state['status'] = 'playing'
                 # Reset ball to center with random direction
                 self.reset_ball()
@@ -174,19 +173,19 @@ class GameConsumer(AsyncWebsocketConsumer):
     
     def reset_ball(self):
         # Set random direction but with fixed speed
-        speed = 5
+        speed = 5.0
         angle = random.uniform(-math.pi/4, math.pi/4)
         if random.choice([True, False]):
             angle += math.pi # Reverse direction
         
         self.game_state['ball'].update({
-            'x': 400,
-            'y': 300,
+            'x': 400.0,
+            'y': 300.0,
             'dx': speed * math.cos(angle),
-            'dy': speed * math.sin(angle),
-            'radius': 10
+            'dy': speed * math.sin(angle)
         })
-        print(f"Ball reset with dx={self.game_state['ball']['dx']}, dy={self.game_state['ball']['dy']}")
+        print(f"Ball reset - pos: ({self.game_state['ball']['x']}, {self.game_state['ball']['y']}), "
+            f"velocity: ({self.game_state['ball']['dx']}, {self.game_state['ball']['dy']})")
         
     def update_game_state(self):
         if self.game_state['status'] != 'playing':
@@ -195,13 +194,14 @@ class GameConsumer(AsyncWebsocketConsumer):
         ball = self.game_state['ball']
         paddles = self.game_state['paddles']
 
-        # Update ball position
-        ball['x'] += ball['dx']
-        ball['y'] += ball['dy']
+        # Update ball position with explicit float conversion
+        ball['x'] = float(ball['x'] + ball['dx'])
+        ball['y'] = float(ball['y'] + ball['dy'])
 
         # Ball collision with top and bottom
         if ball['y'] - ball['radius'] <=0 or ball['y'] + ball['radius'] >= 600:
             ball['dy'] *= -1
+            print("Ball bounced off top/bottom wall")
 
         # Ball collision with paddles
         for player_id, paddle in paddles.items():
@@ -213,7 +213,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                 ball['dx'] *= -1.1 # Increase speed slightly
                 # Add some randomness to y direction
                 ball['dy'] = random.uniform(-7, 7)
-                print(f"Ball hit {player_id}'s paddle, new dx={ball['dx']}, dy={ball['dy']}")
+                print(f"Ball hit {player_id}'s paddle")
 
         # Score points
         if ball['x'] <= 0:
