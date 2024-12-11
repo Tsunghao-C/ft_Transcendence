@@ -17,6 +17,9 @@ from .serializers import UserSerializer, nameNotClean
 from .models import CustomUser
 import re, os
 import uuid
+from game_service.views import recordMatch
+from game_service.models import LeaderBoard, MatchResults
+import re
 
 # 2FA
 import random
@@ -47,7 +50,7 @@ class updateUsernameView(APIView):
 		return Response(serializer.errors, status=400)
 
 # I'll need to add in some sort of match authentication later
-class UpdateMMR(APIView):
+class SaveMatchResults(APIView):
 	def _get_new_mmr(self, userMMR: int, oppMMR: int, matchOutcome: int):
 		# Calculate the 'expected score'
 		E = 1 / (1 + 10**((oppMMR - userMMR)/400))
@@ -70,6 +73,7 @@ class UpdateMMR(APIView):
 		outcome = request.data.get("matchOutcome")
 		if outcome not in [1, 0]:
 			return Response({"error": "Invalid match input"}, status=400)
+		recordMatch(p1, p2, outcome)
 		p1.mmr = self._get_new_mmr(p1MMR, p2mmr, outcome)
 		self.__updateCounters(p1, outcome);
 		# inverse outcome for p2
@@ -365,7 +369,9 @@ class getProfileView(APIView):
 				"isFriend": user.is_friend(profile),
 				"hasBlocked": user.has_blocked(profile),
 				"isSent": user.is_sent(profile),
-				"isPending": user.is_pending(profile)
+				"isPending": user.is_pending(profile),
+				"rank": LeaderBoard.getPlayerRank(profile),
+				"matchHistory": MatchResults.getPlayerGames(profile)
 			}
 		return Response({
 			"profile": profileData

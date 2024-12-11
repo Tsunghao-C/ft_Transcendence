@@ -1,4 +1,6 @@
 from django.contrib.auth.models import AbstractUser
+# from game_service.models import MatchResults, LeaderBoard
+from django.apps import apps
 from django.db import models
 from uuid import uuid4
 import os
@@ -16,7 +18,7 @@ class CustomUser(AbstractUser):
         EN = "en", "English"
         PT = "pt", "Portuguese"
 
-    alias = models.CharField(max_length=20, blank=False, unique=True)
+    alias = models.CharField(max_length=20, blank=False, unique=True, db_index=True)
     mmr = models.FloatField(default=1000)
     is_banned = models.BooleanField(default=False)
     avatar = models.ImageField(default='default.jpg', upload_to=pfpUploadPath)
@@ -55,7 +57,16 @@ class CustomUser(AbstractUser):
         return FriendRequest.objects.filter(from_user=self, to_user=user).exists()
     
     def is_pending(self, user):
-         return FriendRequest.objects.filter(from_user=user, to_user=self).exists()
+        return FriendRequest.objects.filter(from_user=user, to_user=self).exists()
+
+    # def player_match_history(self, user):
+    #     MatchResults = apps.get_model("game_service","MatchResults")
+    #     return MatchResults.objects.filter(Q(p1=user) | Q(p2=user))
+
+    # def player_rank(self, user):
+    #     LeaderBoard = apps.get_model("game_service", "Leaderboard")
+    #     return Leaderboard.objects.filter(player=user)
+
 
 class FriendRequest(models.Model):
     from_user = models.ForeignKey(
@@ -68,3 +79,9 @@ class FriendRequest(models.Model):
 
     def __str__(self):
         return "From {}, to {}".format(self.from_user.alias, self.to_user.alias)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["from_user"]),
+            models.Index(fields=["to_user"]),
+        ]
