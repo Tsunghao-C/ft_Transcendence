@@ -46,7 +46,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         elif action == "create_private_match":
             room_name = str(uuid.uuid4())
             await self.create_private_lobby(room_name, player_id)
-        elif action == "ready_up":
+        elif action == "player_ready":
             await self.update_ready_status(data["room_name"], data["player_id"])
         elif data['type'] == "player_input":
             roomID = data['game_roomID']
@@ -96,7 +96,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         for connection in active_lobbies[room_name]["connection"]:
             await connection.send(json.dumps({
                 "type": "notice",
-                "message": f"Joined lobby {room_name}"
+                "message": f"Player {player_id} joined lobby {room_name}"
                 }))
 
 
@@ -124,7 +124,6 @@ class GameConsumer(AsyncWebsocketConsumer):
             except:
                 logger.error(f"Exception caught when launching game room: {room_name}")
                 raise
-
 
     async def launch_game(self, room_name):
         try:

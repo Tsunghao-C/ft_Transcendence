@@ -66,6 +66,8 @@
         let lastGameState = null;
         let ws = null;
         let wsReconnectTimer = null;
+		let pendingGameUpdate = null;
+		let pendingGameOver = null;
 
 		class Player {
 			constructor (id, color) {
@@ -123,13 +125,46 @@
 						clearTimeout(wsReconnectTimer);
 						wsReconnectTimer = null;
 					}
-				};
-				ws.onerror = function (error) {
-					console.error('Websocker error', error);
-					reject (new Error('Failed to connect Websocket'));
+					data.socket.onmessage = function (event) {
+						console.log('Ws message received', event);
+						console.log('Ws readyState:', data.socket.readyState);
+						try {
+							const response = JSON.parse(event.data);
+							if (response.type == 'notice') {
+								console.log('Server notice: ' + response.message);
+							}
+							else if (response.type == 'room_creation') {
+								data.roomUID = response.room_name;
+								console.log('Room creation notice received');
+								console.log('Room name: ' + data.roomUID);
+							}
+							else if (response.type == 'game_start') {
+								console.log(response.message);
+								startGame();
+							}
+							else if (response.type == 'error') {
+								console.error('Error received:', response.message);
+							}
+							else if (response.type == 'game_update') {
+								if (pendingGameUpdate) pendingGameUpdate(response.payload);
+							}
+							else if (response.type == 'game_over') {
+								if (pendingGameOver) pendingGameOver(response.payload);
+							}
+							else if (response.error)
+								console.error(response.error);
+						}
+						catch (error) {
+							console.error('Error processing server response:', error);
+						}
+					}
+					};
+					ws.onerror = function (error) {
+						console.error('Websocker error', error);
+						reject (new Error('Failed to connect Websocket'));
 
-				};
-			});
+					};
+				});
 		}
 
  
@@ -223,24 +258,9 @@
 		async function getGameState(socket)
 		{
 			return new Promise((resolve, reject) => {
-				socket.onmessage = (event) => {
-					try {
-						const data = JSON.parse(event.data);
-						if (data.type == 'game_update') {
-							resolve(data.payload);
-						}
-						if (data.type == 'game_over')
-						resolve (data.paylord);
-					} catch (error) {
-						console.error('Error parsing socker message in getElements: ', error);
-					return(error);
-					}
-				};
-				socket.onerror = (error) => {
-					console.error('Websocket error: ', error);
-					reject(error);
-				}
-			})
+				pendingGameUpdate = resolve;
+				pendingGameOver = resolve;
+				});
 		}
 
 		async function gameLoop(ctx, socket, playerData) {
@@ -254,28 +274,7 @@
 			requestAnimationFrame(gameLoop);
 		}
 
-		data.socket.onmessage = function (event) {
-			try {
-				const response = JSON.parse(event.data);
-				if (response.type == 'notice') {
-					console.log('Server notice: ' + response.message);
-				}
-				else if (response.type == 'room_creation') {
-					data.roomUID = response.room_name;
-					console.log('Room creation notice received');
-					console.log('Room name: ' + data.roomUID);
-				}
-				else if (response.type == 'game_start') {
-					console.log(response.message);
-					startGame();
-			}
-				else if (response.error)
-					console.error(response.error);
-			}
-			catch (error) {
-				console.error('Error processing server response:', error);
-			}
-		}
+
 
 		async function joinRoom() {
 			// Create a container for the input field and button
@@ -325,7 +324,7 @@
 					return;
 				}
 
-				data.roomUID  = roomUID;
+				data.roomUID = roomUID;
 				// Send the join room request to the server
 				try {
 						await data.socket.send(JSON.stringify({
@@ -373,6 +372,7 @@
 					// Send the ready status to the server
 					data.socket.send(JSON.stringify({
 						action: 'player_ready',
+						room_name: data.roomUID,
 						player_id: data.playerId
 					}));
 
@@ -384,27 +384,6 @@
 					alert('Failed to send ready signal. Please try again.');
 				}
 			})};
-
-		async function waitForReady(socket) {
-			const readyButton = document.getElementById('ready-button');
-			readyButton.addEventListener('click', async () => {
-				try {
-					readyButton.disabled = true; //change this to switch state rather than disable
-					readyButton.textContent = 'Waiting for game start...';
-					socket.send(JSON.stringify({
-						type: 'player_ready',
-						player_id: data.playerId
-					}));
-					readyButton.classList.add('ready');
-				} catch (error) {
-					console.error('Could not set up lobby: ', error);
-					throw error;
-					// or just reenable the button and print an error for the user?
-					// readyButton.disabled = false;
-					// readyButton.textContent = 'Ready Up';
-				}
-			});
-		}
 
 		async function startGame() {
 			try {
@@ -470,8 +449,9 @@
 			try {
 				data.playerId = 'player_2'
 				await joinRoom();
-				showReadyButton();
-				await waitForReady();
+				console.log("Room UID after joining: " + data.roomUID);
+				await showReadyButton();
+				await startGame()
 			} catch (error) {
 				console.error('Exception caught in joinMatch.js', error)
 			}
@@ -481,8 +461,9 @@
 			try {
 				data.playerId = 'player_1'
 				await requestRoom();
-				showReadyButton()
-				await waitForReady();
+				console.log("Room UID after request: " + data.roomUID);
+				await showReadyButton()
+				await startGame()
 			} catch (error){
 				console.error('Exception caught in privateMatch.js', error);
 			}
