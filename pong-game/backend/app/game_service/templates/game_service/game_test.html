@@ -69,6 +69,13 @@
 		let pendingGameUpdate = null;
 		let pendingGameOver = null;
 
+		class Paddle {
+			constructor (id, color) {
+				this.id = id;
+				this.color = color;
+			}
+		}
+
 		class Player {
 			constructor (id, color) {
 				this.id = id;
@@ -126,8 +133,8 @@
 						wsReconnectTimer = null;
 					}
 					data.socket.onmessage = function (event) {
-						console.log('Ws message received', event);
-						console.log('Ws readyState:', data.socket.readyState);
+					//	console.log('Ws message received', event);
+					//	console.log('Ws readyState:', data.socket.readyState);
 						try {
 							const response = JSON.parse(event.data);
 							if (response.type == 'notice') {
@@ -228,16 +235,16 @@
 			}
 		}
 
-		function drawElements(ball, Player1, Player2, ctx) {
+		function drawElements(ball, players) {
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
 			ctx.font = '48px serif';
 			ctx.textBaseline = 'hanging';
 			ctx.fillStyle = 'white';
-			ctx.fillText(Player1.score + " : " + Player2.score, canvas.width * 0.45, canvas.height * 0.10);
-			ctx.fillStyle = Player1.color;
-			ctx.fillRect(Player1.Paddle.x, Player1.Paddle.y, PADDLE_WIDTH, PADDLE_HEIGHT);
-			ctx.fillStyle = Player2.color;
-			ctx.fillRect(Player2.Paddle.x, Player2.Paddle.y, PADDLE_WIDTH, PADDLE_HEIGHT);
+			ctx.fillText(players[0].score + " : " + players[1].score, canvas.width * 0.45, canvas.height * 0.10);
+			ctx.fillStyle = players[0].color;
+			ctx.fillRect(players[0].x, players[0].y, PADDLE_WIDTH, PADDLE_HEIGHT);
+			ctx.fillStyle = players[1].color;
+			ctx.fillRect(players[1].x, players[1].y, PADDLE_WIDTH, PADDLE_HEIGHT);
 			ctx.beginPath();
 			ctx.arc(ball.x, ball.y, ball.radius, 0, 2 * Math.PI);
 			ctx.fillStyle = ball.color;
@@ -263,18 +270,17 @@
 				});
 		}
 
-		async function gameLoop(ctx, socket, playerData) {
+		async function gameLoop(socket, playerData) {
 			gameState = await getGameState(socket);
+			console.log("gameState: ", gameState);
 			if (gameState.type == 'game_over'){
 				drawGameOverScreen(gameState);
 				return; // end the loop ig???
 			}
-			drawElements(gameState.ball, gameState.player1, gameState.player2, ctx);
-			sendEvents(socket, playerData, roomUID);
+			drawElements(gameState.ball, gameState.players);
+			sendEvents(socket, playerData, data.roomUID);
 			requestAnimationFrame(gameLoop);
 		}
-
-
 
 		async function joinRoom() {
 			// Create a container for the input field and button
@@ -387,11 +393,12 @@
 
 		async function startGame() {
 			try {
+				console.log("Game has started");
 				if (canvas.getContext) {
-					const ctx = canvas.getContext('2d');
-					gameLoop(ctx, data.socket, data);
+					gameLoop(data.socket, data);
 				}
 				else
+					console.log("Game error:" + error);
 					throw error;
 			} catch {
 				console.error('Exception caught in startGame');
@@ -434,12 +441,7 @@
 
 		async function startGame() {
 			try {
-				if (canvas.getContext) {
-					const ctx = canvas.getContext('2d');
-					gameLoop(ctx, data.socket, data);
-				}
-				else
-					throw error;
+				gameLoop(data.socket, data);
 			} catch {
 				console.error('Exception caught in startGame', error);
 			}
@@ -450,6 +452,7 @@
 				data.playerId = 'player_2'
 				await joinRoom();
 				console.log("Room UID after joining: " + data.roomUID);
+				console.log("Player_id: " + data.playerId);
 				await showReadyButton();
 				await startGame()
 			} catch (error) {
@@ -470,9 +473,10 @@
 		}
 
 		async function init(){
+			gameState.player1 = new Player('0', 'green');
+			gameState.player2 = new Player('1', 'red');
 			await connectWebSocket();
 		}
-
 		init();
 	</script>
 </body>

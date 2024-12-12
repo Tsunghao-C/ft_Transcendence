@@ -127,7 +127,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 
     async def launch_game(self, room_name):
         try:
-            group_name = f"lobby_{room_name}"
+            group_name = room_name
             for connection in active_lobbies[room_name]["connection"]:
                 await connection.send(json.dumps({
                     "type": "notice",
