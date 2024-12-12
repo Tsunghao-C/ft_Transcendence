@@ -115,7 +115,7 @@ services:
         max-file: "3"
     depends_on:
       - django
-      # - kibana
+      - kibana
     healthcheck:
       test: ["CMD", "curl", "-k", "https://localhost:443/health" ]
       interval: 2s
@@ -262,126 +262,126 @@ services:
   #     - monitoring_net
   #   restart: unless-stopped
 
-  # elasticsearch:
-  #   container_name: elasticsearch
-  #   image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
-  #   environment:
-  #     # Cluster configuration
-  #     - node.name=es01
-  #     - cluster.name=pong-game-logs
-  #     - discovery.type=single-node
-  #     - network.host=0.0.0.0
-  #     # Basic settings
-  #     - bootstrap.memory_lock=false
-  #     - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-  #     # Disk allocation setting
-  #     - "cluster.routing.allocation.disk.threshold_enabled=true"
-  #     - "cluster.routing.allocation.disk.watermark.low=85%"
-  #     - "cluster.routing.allocation.disk.watermark.high=90%"
-  #     - "cluster.routing.allocation.disk.watermark.flood_stage=95%"
-  #     # Security settings (for development)
-  #     - xpack.security.enabled=false
-  #     - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-  #   volumes:
-  #     - es_data:/usr/share/elasticsearch/data
-  #     - ./monitoring/elk/elasticsearch/setup:/setup
-  #   entrypoint: >
-  #     sh -c '
-  #       /usr/local/bin/docker-entrypoint.sh &
-  #       ELASTIC_PID=$!
-  #       sleep 10 &&
-  #       /setup/init.sh &
-  #       wait $ELASTIC_PID'
-  #   deploy:
-  #     resources:
-  #       limits:
-  #         memory: 2G
-  #       reservations:
-  #         memory: 1G
-  #   networks:
-  #     - monitoring_net
-  #   # healthcheck:
-  #   #   test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -vq '\"status\":\"red\"'"]
-  #   #   interval: 5s
-  #   #   timeout: 10s
-  #   #   retries: 1
-  #   restart: unless-stopped
+  elasticsearch:
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    environment:
+      # Cluster configuration
+      - node.name=es01
+      - cluster.name=pong-game-logs
+      - discovery.type=single-node
+      - network.host=0.0.0.0
+      # Basic settings
+      - bootstrap.memory_lock=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      # Disk allocation setting
+      - "cluster.routing.allocation.disk.threshold_enabled=true"
+      - "cluster.routing.allocation.disk.watermark.low=85%"
+      - "cluster.routing.allocation.disk.watermark.high=90%"
+      - "cluster.routing.allocation.disk.watermark.flood_stage=95%"
+      # Security settings (for development)
+      - xpack.security.enabled=false
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+      - ./monitoring/elk/elasticsearch/setup:/setup
+    entrypoint: >
+      sh -c '
+        /usr/local/bin/docker-entrypoint.sh &
+        ELASTIC_PID=$!
+        sleep 10 &&
+        /setup/init.sh &
+        wait $ELASTIC_PID'
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+    networks:
+      - monitoring_net
+    # healthcheck:
+    #   test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -vq '\"status\":\"red\"'"]
+    #   interval: 5s
+    #   timeout: 10s
+    #   retries: 1
+    restart: unless-stopped
 
-  # logstash:
-  #   container_name: logstash
-  #   image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
-  #   volumes:
-  #     - ./monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
-  #   environment:
-  #     LS_JAVA_OPTS: "-Xmx256m -Xms256m"
-  #     # ELASTIC_HOST: elasticsearch
-  #   networks:
-  #     - monitoring_net
-  #   depends_on:
-  #     - elasticsearch
-  #   # healthcheck:
-  #   #   test: ["CMD", "bin/logstash", "-t"]
-  #   #   interval: 3s
-  #   #   timeout: 3s
-  #   #   retries: 1
-  #   restart: unless-stopped
+  logstash:
+    container_name: logstash
+    image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
+    volumes:
+      - ./monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+      # ELASTIC_HOST: elasticsearch
+    networks:
+      - monitoring_net
+    depends_on:
+      - elasticsearch
+    # healthcheck:
+    #   test: ["CMD", "bin/logstash", "-t"]
+    #   interval: 3s
+    #   timeout: 3s
+    #   retries: 1
+    restart: unless-stopped
 
-  # kibana:
-  #   container_name: kibana
-  #   image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
-  #   volumes:
-  #     - ./monitoring/elk/kibana/dashboards:/usr/share/kibana/dashboards
-  #     - ./monitoring/elk/kibana/setup:/usr/share/kibana/setup
-  #   environment:
-  #     # Elasticsearch connection
-  #     - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-  #     - ELASTICSEARCH_USERNAME=${ELASTIC_USERNAME}
-  #     - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}
-  #     # Server settings
-  #     - SERVER_HOST=0.0.0.0
-  #     - SERVER_NAME=kibana
-  #     - SERVER_BASEPATH=/kibana
-  #     - SERVER_REWRITEBASEPATH=true
-  #     # Security settings
-  #     - XPACK_SECURITY_ENABLED=false
-  #     - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}
-  #     # Performance settings
-  #     - ELASTICSEARCH_REQUESTTIMEOUT=90000  # Added timeout
-  #     - OPTIMIZATION_PROFILING=false
-  #     # Other settings
-  #     - TELEMETRY_ENABLED=false
-  #     - ELASTIC_APM_ACTIVE=false
-  #   networks:
-  #     - monitoring_net
-  #   depends_on:
-  #     - elasticsearch
-  #   # healthcheck:
-  #   #   test: ["CMD-SHELL", "curl -s http://localhost:5601/api/status | grep -q '200 OK'"]
-  #   #   interval: 20s
-  #   #   timeout: 10s
-  #   #   retries: 3
-  #   entrypoint: >
-  #     sh -c '
-  #       /usr/share/kibana/setup/import-dashboards.sh &
-  #       /usr/local/bin/kibana-docker'
-  #   restart: unless-stopped
+  kibana:
+    container_name: kibana
+    image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
+    volumes:
+      - ./monitoring/elk/kibana/dashboards:/usr/share/kibana/dashboards
+      - ./monitoring/elk/kibana/setup:/usr/share/kibana/setup
+    environment:
+      # Elasticsearch connection
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=${ELASTIC_USERNAME}
+      - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}
+      # Server settings
+      - SERVER_HOST=0.0.0.0
+      - SERVER_NAME=kibana
+      - SERVER_BASEPATH=/kibana
+      - SERVER_REWRITEBASEPATH=true
+      # Security settings
+      - XPACK_SECURITY_ENABLED=false
+      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}
+      # Performance settings
+      - ELASTICSEARCH_REQUESTTIMEOUT=90000  # Added timeout
+      - OPTIMIZATION_PROFILING=false
+      # Other settings
+      - TELEMETRY_ENABLED=false
+      - ELASTIC_APM_ACTIVE=false
+    networks:
+      - monitoring_net
+    depends_on:
+      - elasticsearch
+    # healthcheck:
+    #   test: ["CMD-SHELL", "curl -s http://localhost:5601/api/status | grep -q '200 OK'"]
+    #   interval: 20s
+    #   timeout: 10s
+    #   retries: 3
+    entrypoint: >
+      sh -c '
+        /usr/share/kibana/setup/import-dashboards.sh &
+        /usr/local/bin/kibana-docker'
+    restart: unless-stopped
 
-  # filebeat:
-  #   container_name: filebeat
-  #   image: docker.elastic.co/beats/filebeat:${STACK_VERSION}
-  #   user: root  # Required to read logs
-  #   volumes:
-  #     - ./monitoring/elk/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
-  #     # Mount all log directories
-  #     - ./frontend/nginx/logs:/var/log/nginx:ro
-  #     - ./frontend/nginx/modsec:/var/log/modsec:ro
-  #     - filebeat_registry:/usr/share/filebeat/data
-  #     # - ./auth-service/logs:/var/log/auth:ro
-  #   entrypoint: >
-  #     sh -c '
-  #     chmod go-w /usr/share/filebeat/filebeat.yml &&
-  #     filebeat -e --strict.perms=false'
-  #   networks:
-  #     - monitoring_net
-  #   depends_on:
-  #     - logstash
+  filebeat:
+    container_name: filebeat
+    image: docker.elastic.co/beats/filebeat:${STACK_VERSION}
+    user: root  # Required to read logs
+    volumes:
+      - ./monitoring/elk/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      # Mount all log directories
+      - ./frontend/nginx/logs:/var/log/nginx:ro
+      - ./frontend/nginx/modsec:/var/log/modsec:ro
+      - filebeat_registry:/usr/share/filebeat/data
+      # - ./auth-service/logs:/var/log/auth:ro
+    entrypoint: >
+      sh -c '
+      chmod go-w /usr/share/filebeat/filebeat.yml &&
+      filebeat -e --strict.perms=false'
+    networks:
+      - monitoring_net
+    depends_on:
+      - logstash
