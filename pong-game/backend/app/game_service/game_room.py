@@ -40,14 +40,15 @@ class Ball():
         self.radius = BALL_RADIUS
 
 class GameRoom():
-    def __init__(self, room_id, player_channel, room_data):
+    def __init__(self, room_id, player_channel, user_data, consumer_data):
         self.room_id = "lobby_" + room_id
         self.player_channel = player_channel
         self.user = []
         self.connections = []
-        for player_id, connection in room_data:
+        for player_id in user_data:
             self.user.append(player_id)
-            self.connections.append(connection)
+        for consumer in consumer_data:
+            self.connections.append(consumer)
         self.players = {
                 0: Player(self.user[0], 'left', CANVAS_WIDTH, CANVAS_HEIGHT),
                 1: Player(self.user[1], 'right', CANVAS_WIDTH, CANVAS_HEIGHT)

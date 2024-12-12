@@ -135,7 +135,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                     }))
             logger.info(f"Starting game id: lobby_{room_name}")
             player_channels = get_channel_layer()
-            game_room = GameRoom(room_name, player_channels, active_lobbies[room_name])
+            game_room = GameRoom(room_name, player_channels, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"])
             logger.info("GameRoom created")
             active_game_rooms[group_name] = game_room
             game_task = asyncio.create_task(game_room.run())
