@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from .models import CustomUser, FriendRequest
+from .models import CustomUser, FriendRequest, OnlineUserActivity
 from rest_framework import generics
 
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -477,3 +477,15 @@ def deleteOldAvatar(sender, instance, **kwargs):
 	if oldAvatar and oldAvatar != instance.avatar:
 		if os.path.isfile(oldAvatar.path) and oldAvatar.name != 'default.jpg':
 			os.remove(oldAvatar.path)
+
+# temporary for dev
+class getAccessLogsView(APIView):
+	def get(self, request):
+		accessLogs = OnlineUserActivity.objects.all()
+		logs = [
+			{
+				"alias": log.user.alias,
+				"time": log.user.last_activity
+			} for log in accessLogs
+		]
+		return logs

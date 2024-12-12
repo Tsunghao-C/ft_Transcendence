@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.apps import apps
 from django.db import models
 from datetime import timedelta
-from django.utils.timezone import now
+from django.utils import timezone
 from uuid import uuid4
 import os
 
@@ -90,20 +90,27 @@ class FriendRequest(models.Model):
 
 class OnlineUserActivity(models.Model):
     user = models.ForeignKey(
-        CustomUser, related_name="user", on_delete=models.CASCADE, db_index=True
+        CustomUser, 
+        related_name="online_activity", 
+        on_delete=models.CASCADE, 
+        db_index=True
     )
     last_activity = models.DateTimeField(auto_now=True)
 
-    @staticmethod
-    def update_user_activity(user):
+    @classmethod
+    def update_user_activity(cls, user):
+        print("static method called...")
         OnlineUserActivity.objects.update_or_create(user=user)
 
-    @staticmethod
-    def get_user_status(user):
+    @classmethod
+    def get_user_status(cls, user):
         try:
             user_record = OnlineUserActivity.objects.get(user=user)
-            if user_record.last_activity >= now() - timedelta(minutes=15):
+            if user_record.last_activity >= timezone.now() - timedelta(minutes=15):
                 return "online"
         except OnlineUserActivity.DoesNotExist:
             pass
         return "offline"
+    
+    def __str__(self):
+        return f"{self.user.alias} - Last Activity: {self.last_activity}"
