@@ -6,6 +6,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .serializers import LeaderBoardSerializer, matchResultsSerializer
 from datetime import datetime
+from django.core.paginator import Paginator
+from rest_framework.exceptions import ValidationError
 
 # Create your views here.
 def recordMatch(p1, p2, matchOutcome):
@@ -53,9 +55,22 @@ class getLeaderBoardView(APIView):
 	permission_classes = [IsAuthenticated]
 
 	def get(self, request):
+		search_query = request.query_params.get("search", "").strip()
+		page = int(request.query_params.get("page", 1))
+
 		leaderboard = LeaderBoard.objects.all()
+		if search_query:
+			leaderboard = leaderboard.filter(player__alias__icontains=search_query)
+
 		if not leaderboard.exists():
-			return Response({"detail":"no leaderboard exists."}, status=200)
+			return Response({"detail": "no leaderboard exists."}, status=200)
+		# to change to have 10 player, this is just a test
+		paginator = Paginator(leaderboard, 2)
+		try:
+			current_page = paginator.page(page)
+		except Exception:
+			raise ValidationError({"detail": "Invalid page number."})
+
 		leaderboardData = [
 			{
 				"rank": gamer.rank,
@@ -64,7 +79,14 @@ class getLeaderBoardView(APIView):
 				"avatar": gamer.player.avatar.url,
 				"wins": gamer.player.winCount,
 			}
-			for gamer in leaderboard
+			for gamer in current_page
 		]
-		serializer = LeaderBoardSerializer(leaderboard, many=True)
-		return Response(leaderboardData, status=200)
+
+		response_data = {
+			"leaderboard": leaderboardData,
+			"totalPages": paginator.num_pages,
+		}
+
+		return Response(response_data, status=200)
+
+
