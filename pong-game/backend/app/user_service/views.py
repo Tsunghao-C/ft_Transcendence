@@ -14,7 +14,7 @@ from django.dispatch import receiver
 from django.db.models.signals import pre_save
 from .forms import UploadAvatarForm
 from .serializers import UserSerializer, nameNotClean
-from .models import CustomUser
+from .models import CustomUser, OnlineUserActivity
 import re, os
 import uuid
 from game_service.views import recordMatch
@@ -371,7 +371,8 @@ class getProfileView(APIView):
 				"isSent": user.is_sent(profile),
 				"isPending": user.is_pending(profile),
 				"rank": LeaderBoard.getPlayerRank(profile),
-				"matchHistory": MatchResults.getPlayerGames(profile)
+				"matchHistory": MatchResults.getPlayerGames(profile),
+				"onlineStatus": OnlineUserActivity.get_user_status(profile),
 			}
 		return Response({
 			"profile": profileData

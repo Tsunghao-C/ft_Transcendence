@@ -2,6 +2,8 @@ from django.contrib.auth.models import AbstractUser
 # from game_service.models import MatchResults, LeaderBoard
 from django.apps import apps
 from django.db import models
+from datetime import timedelta
+from django.utils.timezone import now
 from uuid import uuid4
 import os
 
@@ -85,3 +87,23 @@ class FriendRequest(models.Model):
             models.Index(fields=["from_user"]),
             models.Index(fields=["to_user"]),
         ]
+
+class OnlineUserActivity(models.Model):
+    user = models.ForeignKey(
+        CustomUser, related_name="user", on_delete=models.CASCADE, db_index=True
+    )
+    last_activity = models.DateTimeField(auto_now=True)
+
+    @staticmethod
+    def update_user_activity(user):
+        OnlineUserActivity.objects.update_or_create(user=user)
+
+    @staticmethod
+    def get_user_status(user):
+        try:
+            user_record = OnlineUserActivity.objects.get(user=user)
+            if user_record.last_activity >= now() - timedelta(minutes=15):
+                return "online"
+        except OnlineUserActivity.DoesNotExist:
+            pass
+        return "offline"
