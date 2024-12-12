@@ -68,4 +68,25 @@ clean:
 
 re: clean all
 
-.PHONY: all build check run clean go start stop down status re
+# To clear out all the caches in the ~/.docker/buildx
+kill:
+	- docker stop $$(docker ps -qa)
+	- docker rm $$(docker ps -qa)
+	- docker rmi -f $$(docker images -qa)
+	- docker volume rm $$(docker volume ls -q)
+	- docker network rm $$(docker network ls -q) 2>/dev/null
+	- docker buildx stop
+	- rm -rf ~/.docker/buildx
+	- docker buildx create --use
+
+in:
+	@if [ -z "$(filter-out $@,$(MAKECMDGOALS))" ]; then \
+		echo "Usage: make in <service-name>"; \
+	else \
+		docker compose -f pong-game/docker-compose.yml exec $(filter-out $@,$(MAKECMDGOALS)) bash; \
+	fi
+
+%:
+	@:
+
+.PHONY: all build check run clean go start stop down status re kill in
