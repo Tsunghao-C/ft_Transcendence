@@ -59,8 +59,12 @@ class GameConsumer(AsyncWebsocketConsumer):
                     "type": "error",
                     "message": f"Game room {data['game_roomID']} not found"
                     }))
+
     async def create_private_lobby(self, room_name, player_id):
-        active_lobbies[room_name] = {"players": [player_id]}
+        active_lobbies[room_name] = {
+                "players": [player_id],
+                "connection": [self]
+                }
         self.current_group = f"lobby_{room_name}"
         await self.channel_layer.group_add(self.current_group, self.channel_name)
         await self.send(json.dumps({
@@ -86,11 +90,13 @@ class GameConsumer(AsyncWebsocketConsumer):
             await self.send(json.dumps({"error": f"lobby {room_name} is full"}))
             return
         active_lobbies[room_name]["players"].append(player_id)
+        active_lobbies[room_name]["connection"].append(self)
         await self.channel_layer.group_add(self.current_group, self.channel_name)
-        await self.send(json.dumps({
-            "type": "notice",
-            "message": f"Joined lobby {room_name}"
-            }))
+        for connection in active_lobbies[room_name]["connection"]:
+            await connection.send(json.dumps({
+                "type": "notice",
+                "message": f"Joined lobby {room_name}"
+                }))
 
 
     async def update_ready_status(self, room_name, player_id):
@@ -106,37 +112,42 @@ class GameConsumer(AsyncWebsocketConsumer):
             if player_id not in active_lobbies[room_name].get("ready", []):
                 active_lobbies[room_name]["ready"].append(player_id)
                 logger.info(f"Player has readied up, id: {player_id}")
-                group_name = f"lobby_{room_name}"
-                await self.channel_layer.group_send(
-                        group_name,
-                        {
-                            "type": "group_message",
-                            "message": f"Player {player_id} is ready"
-                            })
+                for connection in active_lobbies[room_name]["connection"]:
+                    await connection.send(json.dumps({
+                        "type": "notice",
+                        "message": f"Player {player_id} is ready"
+                        }))
         if self.all_ready(room_name):
             try:
-                group_name = f"lobby_{room_name}"
-                await self.channel_layer.group_send(
-                        group_name,
-                        {
-                            "type": "group_message",
-                            "message": "Game is starting"
-                            })
-                logger.info(f"Starting game id: lobby_{room_name}")
-                player_channels = get_channel_layer()
-                game_room = GameRoom(room_name, player_channels, active_lobbies[room_name]["players"])
-                logger.info("GameRoom created")
-                active_game_rooms[group_name] = game_room
-                game_task = asyncio.create_task(game_room.run())
-                del active_lobbies[room_name]
-                logger.info("GameRoom task added")
-                game_task.add_done_callback(self.handle_game_task_completion) #this is fucking wack, shouldn't the task be passed as parameter?
-            except Exception as e:
-                logger.error(f"Failed to start the gameroom: {str(e)}")
-                await self.send(json.dumps({
-                    "type": "error",
-                    "error": f"Failed to start game: {str(e)}"
+                await self.launch_game(room_name)
+            except:
+                logger.error(f"Exception caught when launching game room: {room_name}")
+                raise
+
+
+    async def launch_game(self, room_name):
+        try:
+            group_name = f"lobby_{room_name}"
+            for connection in active_lobbies[room_name]["connection"]:
+                await connection.send(json.dumps({
+                    "type": "notice",
+                    "message": "Game is starting"
                     }))
+            logger.info(f"Starting game id: lobby_{room_name}")
+            player_channels = get_channel_layer()
+            game_room = GameRoom(room_name, player_channels, active_lobbies[room_name])
+            logger.info("GameRoom created")
+            active_game_rooms[group_name] = game_room
+            game_task = asyncio.create_task(game_room.run())
+            del active_lobbies[room_name]
+            logger.info("GameRoom task added")
+            game_task.add_done_callback(self.handle_game_task_completion) #this is fucking wack, shouldn't the task be passed as parameter?
+        except Exception as e:
+            logger.error(f"Failed to start the gameroom: {str(e)}")
+            await self.send(json.dumps({
+                "type": "error",
+                "error": f"Failed to start game: {str(e)}"
+                }))
 
     def handle_game_task_completion(self, task):
         try:
