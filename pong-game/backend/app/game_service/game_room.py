@@ -65,6 +65,10 @@ class GameRoom():
 
     async def receive_player_input(self, player_id, input):
         logger.info("GameRoom: Received player input")
+        if player_id == 'player_1':
+            player_id = 0
+        elif player_id == 'player_2':
+            player_id = 1
         if player_id in self.players:
             player = self.players[player_id]
             if input == "move_up":

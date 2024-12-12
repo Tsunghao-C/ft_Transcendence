@@ -215,22 +215,22 @@
 			}
 		});
 
-		function sendEvents(socket, playerData) {
+		async function sendEvents(socket) {
 			if (playerEvent.pending == true) {
-				socket.send(JSON.stringify({
+				await data.socket.send(JSON.stringify({
 					type: 'player_input',
-					player_id: playerData.playerId,
+					player_id: data.playerId,
 					input: playerEvent.type,
-					game_roomID: playerData.roomUID
+					game_roomID: data.roomUID
 				}));	
 				playerEvent.pending = false;
 			}
 			else {
-				socket.send(JSON.stringify({
+				await data.socket.send(JSON.stringify({
 					type: 'player_input',
-					player_id: playerData.playerId,
+					player_id: data.playerId,
 					input: 'idle',
-					game_roomID: playerData.roomUID
+					game_roomID: data.roomUID
 				}));
 			}
 		}
@@ -272,13 +272,13 @@
 
 		async function gameLoop(socket, playerData) {
 			gameState = await getGameState(socket);
-			console.log("gameState: ", gameState);
+//			console.log("gameState: ", gameState);
 			if (gameState.type == 'game_over'){
 				drawGameOverScreen(gameState);
 				return; // end the loop ig???
 			}
 			drawElements(gameState.ball, gameState.players);
-			sendEvents(socket, playerData, data.roomUID);
+			await sendEvents(socket, data.roomUID);
 			requestAnimationFrame(gameLoop);
 		}
 
@@ -465,6 +465,7 @@
 				data.playerId = 'player_1'
 				await requestRoom();
 				console.log("Room UID after request: " + data.roomUID);
+				console.log("Player_id: " + data.playerId);
 				await showReadyButton()
 				await startGame()
 			} catch (error){
