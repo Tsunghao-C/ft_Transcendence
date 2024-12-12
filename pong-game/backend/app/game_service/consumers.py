@@ -23,8 +23,10 @@ class GameConsumer(AsyncWebsocketConsumer):
             angle = random.uniform(-math.pi/4, math.pi/4)
 
             cls.active_games[game_id] = {
-                'status': 'waiting',
+                'status': 'waiting',  # states: waiting, ready, playing, finished
                 'players': {},
+                'ready_players': set(),
+                'last_update': time.time(),
                 'ball': {
                     'x': 400.0,
                     'y': 300.0,
@@ -52,6 +54,15 @@ class GameConsumer(AsyncWebsocketConsumer):
             }
         return cls.active_games[game_id]
     
+    async def send_game_state(self):
+        """Helper method to send game state after converting non-serializable types"""
+        game_state = self.game_state.copy()  # Make a copy to modify
+        game_state['ready_players'] = list(self.game_state['ready_players'])  # Convert set to list
+        await self.send(json.dumps({
+            'type': 'game_state_update',
+            'game_state': game_state
+        }))
+
     async def connect(self):
         print("\n=== New Connection ===")
         print(f"Active games: {list(self.active_games.keys())}")
@@ -83,66 +94,77 @@ class GameConsumer(AsyncWebsocketConsumer):
                 'game_id': self.game_id
             }))
 
-            # Immediately send current game state
-            await self.send(json.dumps({
-                'type': 'game_state_update',
-                'game_state': self.game_state
-            }))
+            await self.send_game_state()
 
-            if len(self.game_state['players']) == 2:
-                print("\n=== STARTING GAME ===")
-                print(f"Player count: {len(self.game_state['players'])}")
-                print(f"Current player: {player_id}")
+            # Notify all players
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'player_status',
+                    'count': len(self.game_state['players']),
+                    'message': f'Player {player_id} joined'
+                }
+            )
+            # # Immediately send current game state
+            # await self.send(json.dumps({
+            #     'type': 'game_state_update',
+            #     'game_state': self.game_state
+            # }))
 
-                self.game_state['status'] = 'playing'
-                self.reset_ball()
+            # # Notify new player joining
+            # await self.channel_layer.group_send(
+            #     self.room_group_name,
+            #     {
+            #         'type': 'player_status',
+            #         'count': len(self.game_state['players']),
+            #         'message': f'Player {player_id} joined the game',
+            #     }
+            # )
 
-                # Only start game loop for the first player
-                # if player_id == 'p1':
-                #     print("Starting game loop")
-                #     # Ensure game loop starts by sending initial state
-                #     await self.channel_layer.group_send(
-                #         self.room_group_name,
-                #         {
-                #             'type': 'game_state_update',
-                #             'game_state': self.game_state
-                #         }
-                #     )
-                #     self.game_loop_task = asyncio.create_task(self.game_loop())
+            # if len(self.game_state['players']) == 2:
+            #     print("\n=== STARTING GAME ===")
+            #     print(f"Player count: {len(self.game_state['players'])}")
+            #     print(f"Current player: {player_id}")
+
+            #     self.game_state['status'] = 'playing'
+            #     self.reset_ball()
     
-                p1_channel = None
-                for channel, pid in self.game_state['players'].items():
-                    if pid == 'p1':
-                        p1_channel = channel
-                        break
+            #     p1_channel = None
+            #     for channel, pid in self.game_state['players'].items():
+            #         if pid == 'p1':
+            #             p1_channel = channel
+            #             break
                 
-                if p1_channel == self.channel_name:
-                    print("I am player 1, starting game loop...")
-                    try:
-                        self.game_loop_task = asyncio.create_task(self.game_loop())
-                        print("Game loop task created successfully")
-                    except Exception as e:
-                        print(f"Error creating game loop task: {str(e)}")
-                        import traceback
-                        traceback.print_exc()
-                else:
-                    print(f"I am player {player_id}, wating for player 1 to start game loop")
+            #     if p1_channel == self.channel_name:
+            #         print("I am player 1, starting game loop...")
+            #         try:
+            #             self.game_loop_task = asyncio.create_task(self.game_loop())
+            #             print("Game loop task created successfully")
+            #         except Exception as e:
+            #             print(f"Error creating game loop task: {str(e)}")
+            #             import traceback
+            #             traceback.print_exc()
+            #     else:
+            #         print(f"I am player {player_id}, wating for player 1 to start game loop")
                 
-                print("===================\n")
+            #     print("===================\n")
 
-                await self.channel_layer.group_send(
-                    self.room_group_name,
-                    {
-                        'type': 'game_start',
-                        'message': 'Game is starting!'
-                    }
-                )
+            #     await self.channel_layer.group_send(
+            #         self.room_group_name,
+            #         {
+            #             'type': 'game_start',
+            #             'message': 'Game is starting!'
+            #         }
+            #     )
         else:
             await self.send(json.dumps({
                 'type': 'error',
                 'message': 'Game is full'
             }))
             await self.close()
+
+    async def player_status(self, event):
+        await self.send(text_data=json.dumps(event))
             
     async def disconnect(self, close_code):
         if self.game_loop_task:
@@ -194,16 +216,63 @@ class GameConsumer(AsyncWebsocketConsumer):
     
                 print(f"Moved {player_id} paddle from y={old_y} to y={paddle['y']}")
 
-                # Send immediate update for responsive controls
+                # Send immediate update
                 await self.channel_layer.group_send(
                     self.room_group_name,
                     {
                         'type': 'game_state_update',
-                        'game_state': self.game_state
+                        'game_state': {
+                            **self.game_state,
+                            'ready_players': list(self.game_state['ready_players'])
+                        }
                     }
                 )
+
+            elif data['type'] == 'player_ready':
+                # Handle player ready state
+                player_id = self.game_state['players'].get(self.channel_name)
+                if player_id and player_id not in self.game_state['ready_players']:
+                    self.game_state['ready_players'].add(player_id)
+                    print(f"Player {player_id} is ready. Ready players: {self.game_state['ready_players']}")
+
+                    # Notify all players about ready status
+                    await self.channel_layer.group_send(
+                        self.room_group_name,
+                        {
+                            'type': 'player_ready_status',
+                            'ready_players': list(self.game_state['ready_players'])
+                        }
+                    )
+
+                    # If all players are ready, start the game
+                    if len(self.game_state['ready_players']) == 2:
+                        print("All players ready, starting game!")
+                        self.game_state['status'] = 'playing'
+                        self.reset_ball()
+
+                        # Start game loop
+                        if not self.game_loop_task or self.game_loop_task.done():
+                            self.game_loop_task = asyncio.create_task(self.game_loop())
+                            print("Game loop started")
+                        # Send immediate update for responsive controls
+                        await self.channel_layer.group_send(
+                            self.room_group_name,
+                            {
+                                'type': 'game_state_update',
+                                'game_state': self.game_state
+                            }
+                        )
+            # await self.channel_layer.group_send(
+            #     self.room_group_name,
+            #     {
+            #         'type': 'game_state_update',
+            #         'game_state': self.game_state
+            #     }
+            # )
         except Exception as e:
             print(f"Error in receive: {e}")
+            import traceback
+            traceback.print_exc()
     
     def reset_ball(self):
         # Set random direction but with fixed speed
@@ -295,13 +364,14 @@ class GameConsumer(AsyncWebsocketConsumer):
                     last_time = current_time
                 
                 self.update_game_state()
-                await self.channel_layer.group_send(
-                    self.room_group_name,
-                    {
-                        'type': 'game_state_update',
-                        'game_state': self.game_state
-                    }
-                )
+                await self.send_game_state()
+                # await self.channel_layer.group_send(
+                #     self.room_group_name,
+                #     {
+                #         'type': 'game_state_update',
+                #         'game_state': self.game_state
+                #     }
+                # )
                 await asyncio.sleep(1/60) # FPS 60
         except asyncio.CancelledError:
             print("Game loop cancelled")
@@ -317,6 +387,9 @@ class GameConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps(event))
     
     async def game_end(self, event):
+        await self.send(text_data=json.dumps(event))
+    
+    async def player_ready_status(self, event):
         await self.send(text_data=json.dumps(event))
     
     def dump_game_state(self):
