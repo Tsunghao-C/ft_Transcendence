@@ -3,6 +3,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 import asyncio
 import random
 import math
+import time
 
 class GameConsumer(AsyncWebsocketConsumer):
     # Class variable to store all active games
@@ -52,7 +53,10 @@ class GameConsumer(AsyncWebsocketConsumer):
         return cls.active_games[game_id]
     
     async def connect(self):
-        print("New connection attemp")
+        print("\n=== New Connection ===")
+        print(f"Active games: {list(self.active_games.keys())}")
+        print(f"Current game states: {[game['status'] for game in self.active_games.values()]}")
+        print("=====================\n")
         self.game_id = self.scope['url_route']['kwargs']['game_id']
         self.room_group_name = f'game_{self.game_id}'
         self.game_state = self.get_or_create_game(self.game_id)
@@ -79,23 +83,53 @@ class GameConsumer(AsyncWebsocketConsumer):
                 'game_id': self.game_id
             }))
 
-            # # Immediately send current game state
-            # await self.send(json.dumps({
-            #     'type': 'game_state_update',
-            #     'game_state': self.game_state
-            # }))
+            # Immediately send current game state
+            await self.send(json.dumps({
+                'type': 'game_state_update',
+                'game_state': self.game_state
+            }))
 
             if len(self.game_state['players']) == 2:
-                print("Two players connected, starting game")
+                print("\n=== STARTING GAME ===")
+                print(f"Player count: {len(self.game_state['players'])}")
+                print(f"Current player: {player_id}")
+
                 self.game_state['status'] = 'playing'
-                # Reset ball to center with random direction
                 self.reset_ball()
 
                 # Only start game loop for the first player
-                if player_id == 'p1':
-                    print("Starting game loop")
-                    self.game_loop_task = asyncio.create_task(self.game_loop())
+                # if player_id == 'p1':
+                #     print("Starting game loop")
+                #     # Ensure game loop starts by sending initial state
+                #     await self.channel_layer.group_send(
+                #         self.room_group_name,
+                #         {
+                #             'type': 'game_state_update',
+                #             'game_state': self.game_state
+                #         }
+                #     )
+                #     self.game_loop_task = asyncio.create_task(self.game_loop())
     
+                p1_channel = None
+                for channel, pid in self.game_state['players'].items():
+                    if pid == 'p1':
+                        p1_channel = channel
+                        break
+                
+                if p1_channel == self.channel_name:
+                    print("I am player 1, starting game loop...")
+                    try:
+                        self.game_loop_task = asyncio.create_task(self.game_loop())
+                        print("Game loop task created successfully")
+                    except Exception as e:
+                        print(f"Error creating game loop task: {str(e)}")
+                        import traceback
+                        traceback.print_exc()
+                else:
+                    print(f"I am player {player_id}, wating for player 1 to start game loop")
+                
+                print("===================\n")
+
                 await self.channel_layer.group_send(
                     self.room_group_name,
                     {
@@ -186,17 +220,24 @@ class GameConsumer(AsyncWebsocketConsumer):
         })
         print(f"Ball reset - pos: ({self.game_state['ball']['x']}, {self.game_state['ball']['y']}), "
             f"velocity: ({self.game_state['ball']['dx']}, {self.game_state['ball']['dy']})")
-        
+
     def update_game_state(self):
         if self.game_state['status'] != 'playing':
+            print("Game not in playing state")
+            self.dump_game_state()
             return
 
         ball = self.game_state['ball']
+        old_x = ball['x']
+        old_y = ball['y']
         paddles = self.game_state['paddles']
 
+        print(f"Before update - Ball pos: ({old_x}, {old_y}), velocity: ({ball['dx']}, {ball['dy']})")
         # Update ball position with explicit float conversion
         ball['x'] = float(ball['x'] + ball['dx'])
         ball['y'] = float(ball['y'] + ball['dy'])
+
+        print(f"After update - Ball pos: ({ball['x']}, {ball['y']})")
 
         # Ball collision with top and bottom
         if ball['y'] - ball['radius'] <=0 or ball['y'] + ball['radius'] >= 600:
@@ -226,22 +267,34 @@ class GameConsumer(AsyncWebsocketConsumer):
             self.reset_ball()
 
         # Check win condition
-        if self.game_state['score']['p1'] >= 5 or self.game_state['score']['p1'] >= 5:
+        if self.game_state['score']['p1'] >= 5 or self.game_state['score']['p2'] >= 5:
             self.game_state['status'] = 'finished'
-    
-    def reset_ball(self):
-        self.game_state['ball'].update({
-            'x': 400,
-            'y': 300,
-            'dy': random.choice([-5, 5]),
-            'dy': random.uniform(-3, 3)
-        })
     
     async def game_loop(self):
         try:
-            print("Game loop started")
+            print("\n=== GAME LOOP STARTING ===")
+            iteration = 0
+            last_time = time.time()
+
+            # Immediately verify game state
+            print(f"Initial game status: {self.game_state['status']}")
+            print(f"Initial ball position: ({self.game_state['ball']['x']}, {self.game_state['ball']['y']})")
+            print("==========================\n")
+            
             while self.game_state['status'] == 'playing':
-                self.update_game_status()
+                iteration += 1
+                current_time = time.time()
+                
+                # Print debug info every second
+                if current_time - last_time >= 1:
+                    print(f"\nLoop iteration {iteration}")
+                    print(f"Game status: {self.game_state['status']}")
+                    print(f"Ball position: ({self.game_state['ball']['x']}, {self.game_state['ball']['y']})")
+                    print(f"Ball velocity: ({self.game_state['ball']['dx']}, {self.game_state['ball']['dy']})")
+                    print("------------------------\n")
+                    last_time = current_time
+                
+                self.update_game_state()
                 await self.channel_layer.group_send(
                     self.room_group_name,
                     {
@@ -254,6 +307,8 @@ class GameConsumer(AsyncWebsocketConsumer):
             print("Game loop cancelled")
         except Exception as e:
             print(f"Error in game loop: {e}")
+            import traceback
+            traceback.print_exc()
 
     async def game_state_update(self, event):
         await self.send(text_data=json.dumps(event))
@@ -263,6 +318,15 @@ class GameConsumer(AsyncWebsocketConsumer):
     
     async def game_end(self, event):
         await self.send(text_data=json.dumps(event))
+    
+    def dump_game_state(self):
+        ball = self.game_state['ball']
+        print("\n=== Game State Dump ===")
+        print(f"Status: {self.game_state['status']}")
+        print(f"Ball - pos: ({ball['x']}, {ball['y']}), vel: ({ball['dx']}, {ball['dy']})")
+        print(f"Players: {self.game_state['players']}")
+        print(f"Score: {self.game_state['score']}")
+        print("=====================\n")
 
 
 # import os

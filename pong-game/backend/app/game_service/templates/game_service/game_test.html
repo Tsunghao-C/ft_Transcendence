@@ -83,6 +83,14 @@
         };
 
         function drawGame(gameState) {
+            // debug
+            console.log('Drawing game state:', {
+                ballX: gameState.ball.x,
+                ballY: gameState.ball.y,
+                ballDx: gameState.ball.dx,
+                ballDy: gameState.ball.dy,
+                status: gameState.status
+            });
             // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
