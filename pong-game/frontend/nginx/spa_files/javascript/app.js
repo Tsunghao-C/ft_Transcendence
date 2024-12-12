@@ -15,6 +15,7 @@ import { setPersonnalDataView } from './personnal-data.js';
 import { setProfileView } from './profile.js';
 import { setFriendsView } from './friends.js';
 import { playerDatas } from './data_test.js';
+import { setGameTestView } from  './game_test.js';
 import { setHomePage } from './home.js';
 import { fetchWithToken } from './fetch_request.js';
 import { setLanguageCookie } from './fetch_request.js';
@@ -92,6 +93,7 @@ function setNavbarHtml(container) {
 }
 
 export async function loadPage(page) {
+	localStorage.setItem("isLoggedIn", "true");
 	//add a checker to check there is no more than one /
 	//if invalid token, the server explodes
 	let isLoggedIn;

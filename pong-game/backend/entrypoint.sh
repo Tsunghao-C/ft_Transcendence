@@ -37,6 +37,9 @@ echo "Collecting static files..."
 python manage.py collectstatic --noinput || { echo "static collection failed"; exit 1; }
 echo "Static files directory contents:"
 
+# Start Daphne server in the back (WS)
+daphne -b 0.0.0.0 -p 8001 backend.asgi:application &
+
 # Start Gunicorn server
 echo "Starting Gunicorn server..."
 exec gunicorn backend.wsgi:application --bind 0.0.0.0:8004 --workers 3 || { echo "Gunicorn failed"; exit 1; }
