@@ -19,8 +19,7 @@ import { setHomePage } from './home.js';
 import { fetchWithToken } from './fetch_request.js';
 import { setLanguageCookie } from './fetch_request.js';
 import { getLanguageCookie } from './fetch_request.js';
-import { ChatWebSocket } from './chat.js';{}
-import { setChatView, cleanupChatView } from './chat_view.js';
+import { setChatView } from './chat_view.js';
 
 export async function loadPage(page) {
 	//add a checker to check there is no more than one /
@@ -60,7 +59,7 @@ export async function loadPage(page) {
 		const existingChat = document.getElementById('chat-container');
 		if (existingChat) {
 			existingChat.remove();
-		}    
+		}
 	}
 	// cleanup only if user is logged in
 	if (isLoggedIn === "true") {
