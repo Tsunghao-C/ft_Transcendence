@@ -38,6 +38,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         if text_data is None:
             return
         data = json.loads(text_data)
+        logger.info(f"Message received: {text_data}")
         action = data.get("action")
         player_id = data.get("id")
         if action == "join_private_match":

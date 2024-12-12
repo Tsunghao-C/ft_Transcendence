@@ -1,52 +1,62 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Pong Game Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Lobby</title>
     <style>
-        canvas {
-            border: 2px solid black;
-            margin: 20px auto;
-            display: block;
-            background-color: #f0f0f0;
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #282c34;
+            color: white;
         }
-        #game-info {
-            text-align: center;
-            font-size: 24px;
+
+        h1 {
             margin-bottom: 20px;
         }
-        #controls {
-            text-align: center;
-            margin-top: 20px;
+
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #61dafb;
+            color: #282c34;
+            transition: background-color 0.3s;
         }
-        #debug {
-            margin: 20px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            font-family: monospace;
+
+        button:hover {
+            background-color: #21a1f1;
         }
-        .status {
-            margin: 10px 0;
-            font-weight: bold;
-        }
-        .player-status {
-            color: #666;
-            font-size: 0.9em;
+
+        button:active {
+            background-color: #0e86d4;
         }
     </style>
 </head>
 <body>
-    <div id="game-info">Loading...</div>
-    <div id="player-status" class="player-status"></div>
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
-    <div id="controls">
-        <button id="readyButton" style="display: none;">Ready to Play</button>
-        <p>Player 1: W (up) / S (donw)</p>
-        <p>Player 2: ArrowUp (up) / ArrowDown (down)</p>
+    <h1>Game Lobby</h1>
+    <p>Select an option below to get started:</p>
+    <div>
+        <button onclick="create_private_match()">Create Private Match</button>
+        <button onclick="join_match()">Join Match</button>
+	<div id="game-info">Loading...</div>
+   	<div id="player-status" class="player-status"></div>
+	<canvas id="game" width="800" height="600"></canvas>
     </div>
-    <div id="debug"></div>
-
-    <script>
-        const canvas = document.getElementById('gameCanvas');
+	<script>
+		const canvas = document.getElementById('game');
+		const token = localStorage.getItem('token'); //Is this stored there or in cookies!!!!
+		const PADDLE_HEIGHT = 100;
+		const PADDLE_WIDTH = 15;
         const ctx = canvas.getContext('2d');
         const gameInfo = document.getElementById('game-info');
         const debugDiv = document.getElementById('debug');
@@ -57,275 +67,433 @@
         let ws = null;
         let wsReconnectTimer = null;
 
-        function connectWebSocket() {
+		class Player {
+			constructor (id, color) {
+				this.id = id;
+				this.color = color;
+				this.Paddle = new Paddle(id, color);
+				this.score = 0;
+			}
+		}
+
+		let	ball = {
+			x:canvas.width/2,
+			y:canvas.height/2,
+			color:'white',
+			speedX:6,
+			speedY:6,
+			radius:10
+		};
+
+		let gameState = {
+			ball: ball,
+			player1: Player,
+			player2: Player
+		};
+
+		let playerEvent = {
+			pending: false,
+			type: -1,
+		}
+
+		var data = {
+			playerId: -1,
+			socket: -1,
+			roomUID: -1
+		};
+
+		function connectWebSocket() {
             if (ws && ws.readyState === WebSocket.CONNECTING) {
                 console.log('Connection already in progress...');
-                return;
+                return Promise.resolve();
             }
-            const gameId = 'test_game';
-            const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
-            const wsUrl = `${wsScheme}://${window.location.host}/ws/game-server/${gameId}/`;
-            
-            console.log('Connecting to WebSocket...')
-            ws = new WebSocket(wsUrl);
-            
-            ws.onopen = function() {
-                console.log('WebSocket connected');
-                gameInfo.textContent = 'Connected to game server...';
-                if (wsReconnectTimer) {
-                    clearTimeout(wsReconnectTimer);
-                    wsReconnectTimer = null;
-                }
-            };
+				return new Promise((resolve, reject) => {
+				const gameId = 'test_game';
+				const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+				const wsUrl = `${wsScheme}://${window.location.host}/ws/game-server/${gameId}/`;
+				
+				console.log('Connecting to WebSocket...')
+				ws = new WebSocket(wsUrl);
+				data.socket = ws
 
-            ws.onclose = function(e) {
-                console.log('WebSocket closed:', e);
-                if (e.code === 1011) {
-                    gameInfo.textContent = 'Game is full';
-                    return;
-                }
-                gameInfo.textContent = 'Connection closed. Reconnecting...';
-                // Try to reconnect
-                if (!wsReconnectTimer) {
-                    wsReconnectTimer = setTimeout(connectWebSocket, 3000);
-                }
-            };
+				ws.onopen = function() {
+					console.log('WebSocket connected');
+					gameInfo.textContent = 'Connected to game server...';
+					if (wsReconnectTimer) {
+						clearTimeout(wsReconnectTimer);
+						wsReconnectTimer = null;
+					}
+				};
+				ws.onerror = function (error) {
+					console.error('Websocker error', error);
+					reject (new Error('Failed to connect Websocket'));
 
-            ws.onerror = function(e) {
-                console.error('WebSocket error:', e);
-                gameInfo.textContent = 'Connection error';
-            };
+				};
+			});
+		}
 
-            ws.onmessage = handleMessage;
-        }
+ 
+//		function createSocket() {
+//			try {
+//				//await getPlayerInfo(); hardcode player info for tests
+//				const roomName = "42";
+//				const socketUrl = `wss://localhost:8443/ws/game/${roomName}/`;
+//				console.log(socketUrl);
+//				data.socket = new WebSocket(socketUrl);
+//				data.socket.onopen() = () => {
+//					console.log('Websocket connection established');
+//				};
+//				data.socket.onerror() = (error) => {
+//					console.error('Websocket error: ', error);
+//				throw error;
+//				};
+//				data.socket = socket;
+//			} catch (error) {
+//				throw error;
+//				}
+//			};
 
-        function handleMessage(e) {
-            const data = JSON.parse(e.data);
-            console.log('Received message:', data);
 
-            switch(data.type) {
-                case 'player_assignment':
-                    playerId = data.player_id;
-                    gameInfo.textContent = `You are Player ${playerId} - Waiting for opponent!`;
-                    readyButton.style.display = 'block';
-                    readyButton.disabled = true;
-                    break;
-                
-                case 'player_status':
-                    const playerCount = data.count;
-                    playerStatus.textContent = `Players: ${playerCount}/2`;
-                    if (playerCount === 2) {
-                        readyButton.disabled = false;
-                        gameInfo.textContent = `You are Player ${playerId} - Get Ready!`;
-                    }
-                    break;
+		document.addEventListener('keydown', function(event) {
+			if (event.code == 'ArrowUp') {
+				playerEvent.pending = true;
+				playerEvent.type = 'move_up';
+			}
+			else if (event.code == 'ArrowDown') {
+				playerEvent.pending = true;
+				playerEvent.type = 'move_down';
+			}
+		});
 
-                case 'player_joined':
-                    playerStatus.textContent = `Players: ${data.player_count}/2`;
-                    break;
+		document.addEventListener('keyup', function(event) {
+			if (event.code == 'ArrowDown' || event.code == 'ArrowUp')
+			{
+				playerEvent.pending = true;
+				playerEvent.type = 'move_stop'
+			}
+		});
 
-                case 'player_ready_status':
-                    const readyPlayers = data.ready_players;
-                    playerStatus.textContent = `Ready Players: ${readyPlayers.join(', ')}`;
-                    if (readyPlayers.includes(playerId)) {
-                        readyButton.disabled = true;
-                        readyButton.textContent = 'Waiting for other player...';
-                    }
-                    break;
+		function sendEvents(socket, playerData) {
+			if (playerEvent.pending == true) {
+				socket.send(JSON.stringify({
+					type: 'player_input',
+					player_id: playerData.playerId,
+					input: playerEvent.type,
+					game_roomID: playerData.roomUID
+				}));	
+				playerEvent.pending = false;
+			}
+			else {
+				socket.send(JSON.stringify({
+					type: 'player_input',
+					player_id: playerData.playerId,
+					input: 'idle',
+					game_roomID: playerData.roomUID
+				}));
+			}
+		}
 
-                case 'game_start':
-                    gameInfo.textContent = 'Game Started!';
-                    readyButton.style.display = 'none';
-                    break;
+		function drawElements(ball, Player1, Player2, ctx) {
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			ctx.font = '48px serif';
+			ctx.textBaseline = 'hanging';
+			ctx.fillStyle = 'white';
+			ctx.fillText(Player1.score + " : " + Player2.score, canvas.width * 0.45, canvas.height * 0.10);
+			ctx.fillStyle = Player1.color;
+			ctx.fillRect(Player1.Paddle.x, Player1.Paddle.y, PADDLE_WIDTH, PADDLE_HEIGHT);
+			ctx.fillStyle = Player2.color;
+			ctx.fillRect(Player2.Paddle.x, Player2.Paddle.y, PADDLE_WIDTH, PADDLE_HEIGHT);
+			ctx.beginPath();
+			ctx.arc(ball.x, ball.y, ball.radius, 0, 2 * Math.PI);
+			ctx.fillStyle = ball.color;
+			ctx.fill();
+			ctx.closePath();
+		}
 
-                case 'game_state_update':
-                    lastGameState = data.game_state;
-                    drawGame(data.game_state);
-                    break;
+		function drawGameOverScreen(gameState) {
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			ctx.font = '48px serif';
+			ctx.textBaseline = 'hanging';
+			ctx.fillStyle = 'white';
+			ctx.fillText("Game Over", canvas.width * 0.5, canvas.height * 0.30);
+			ctx.fillText(gameState.score_left, canvas.width * 0.25, canvas.height * 0.50);
+			ctx.fillText(gameState.score_right, canvas.width * 0.75, canvas.height * 0.50);
+		}
 
-                case 'game_end':
-                    gameInfo.textContent = 'Game Ended: ' + data.message;
-                    readyButton.style.display = 'block';
-                    readyButton.disabled = false;
-                    readyButton.textContent = 'Ready to Play';
-                    break;
+		async function getGameState(socket)
+		{
+			return new Promise((resolve, reject) => {
+				socket.onmessage = (event) => {
+					try {
+						const data = JSON.parse(event.data);
+						if (data.type == 'game_update') {
+							resolve(data.payload);
+						}
+						if (data.type == 'game_over')
+						resolve (data.paylord);
+					} catch (error) {
+						console.error('Error parsing socker message in getElements: ', error);
+					return(error);
+					}
+				};
+				socket.onerror = (error) => {
+					console.error('Websocket error: ', error);
+					reject(error);
+				}
+			})
+		}
 
-                case 'error':
-                    gameInfo.textContent = 'Error: ' + data.message;
-                    break;
-            }
+		async function gameLoop(ctx, socket, playerData) {
+			gameState = await getGameState(socket);
+			if (gameState.type == 'game_over'){
+				drawGameOverScreen(gameState);
+				return; // end the loop ig???
+			}
+			drawElements(gameState.ball, gameState.player1, gameState.player2, ctx);
+			sendEvents(socket, playerData, roomUID);
+			requestAnimationFrame(gameLoop);
+		}
 
-            debugDiv.textContent = 'Last message: ' + JSON.stringify(data, null, 2);
-        }
+		data.socket.onmessage = function (event) {
+			try {
+				const response = JSON.parse(event.data);
+				if (response.type == 'notice') {
+					console.log('Server notice: ' + response.message);
+				}
+				else if (response.type == 'room_creation') {
+					data.roomUID = response.room_name;
+					console.log('Room creation notice received');
+					console.log('Room name: ' + data.roomUID);
+				}
+				else if (response.type == 'game_start') {
+					console.log(response.message);
+					startGame();
+			}
+				else if (response.error)
+					console.error(response.error);
+			}
+			catch (error) {
+				console.error('Error processing server response:', error);
+			}
+		}
 
-        // Track pressed keys
-        const keys = {
-            'w': false,
-            's': false,
-            'ArrowUp': false,
-            'ArrowDown': false
-        };
+		async function joinRoom() {
+			// Create a container for the input field and button
+			const container = document.createElement('div');
+			container.style.position = 'fixed';
+			container.style.top = '50%';
+			container.style.left = '50%';
+			container.style.transform = 'translate(-50%, -50%)';
+			container.style.padding = '20px';
+			container.style.border = '1px solid #ccc';
+			container.style.borderRadius = '10px';
+			container.style.backgroundColor = '#f9f9f9';
+			container.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.1)';
+			container.style.textAlign = 'center';
 
-        readyButton.addEventListener('click', function() {
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ type: 'player_ready' }));
-                this.disabled = true;
-                this.textContent = 'Waiting for other player...';
-            }
-        });
+			// Create the input field for the room UID
+			const inputField = document.createElement('input');
+			inputField.type = 'text';
+			inputField.placeholder = 'Enter Room UID';
+			inputField.style.marginBottom = '10px';
+			inputField.style.padding = '10px';
+			inputField.style.width = 'calc(100% - 20px)';
+			inputField.style.boxSizing = 'border-box';
+			inputField.style.fontSize = '16px';
 
-        function drawGame(gameState) {
-            // debug
-            console.log('Drawing game state:', {
-                ballX: gameState.ball.x,
-                ballY: gameState.ball.y,
-                ballDx: gameState.ball.dx,
-                ballDy: gameState.ball.dy,
-                status: gameState.status
-            });
-            // Clear canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+			// Create the submit button
+			const submitButton = document.createElement('button');
+			submitButton.textContent = 'Join Room';
+			submitButton.style.padding = '10px 20px';
+			submitButton.style.fontSize = '16px';
+			submitButton.style.cursor = 'pointer';
 
-            // Draw paddles
-            ctx.fillStyle = '#000000';
-            Object.entries(gameState.paddles).forEach(([pid, paddle]) => {
-                ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
-                // Debug paddle position
-                ctx.fillStyle = '#ff0000';
-                ctx.font = '12px Arial';
-                ctx.fillText(`${pid}: ${Math.round(paddle.x)},${Math.round(paddle.y)}`, paddle.x, paddle.y - 5);
-                ctx.fillStyle = '#000000';
-            });
+			// Append the input and button to the container
+			container.appendChild(inputField);
+			container.appendChild(document.createElement('br')); // Line break
+			container.appendChild(submitButton);
 
-            // Draw ball
-            const ball = gameState.ball;
-            ctx.beginPath();
-            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-            ctx.fill();
-            // Debug ball position
-            ctx.fillStyle = '#ff0000';
-            ctx.font = '12px Arial';
-            ctx.fillText(`ball: ${Math.round(ball.x)},${Math.round(ball.y)}`, ball.x + 15, ball.y);
+			// Append the container to the body
+			document.body.appendChild(container);
 
-            // Draw score
-            ctx.fillStyle = '#000000';
-            ctx.font = '48px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(gameState.score.p1, canvas.width * 0.25, 50);
-            ctx.fillText(gameState.score.p2, canvas.width * 0.75, 50);
+			// Handle button click
+			submitButton.addEventListener('click', async () => {
+				const roomUID = inputField.value.trim();
 
-            // Draw center line
-            ctx.setLineDash([5, 15]);
-            ctx.beginPath();
-            ctx.moveTo(canvas.width / 2, 0);
-            ctx.lineTo(canvas.width / 2, canvas.height);
-            ctx.stroke();
-            ctx.setLineDash([]);
-        }
+				if (!roomUID) {
+					alert('Please enter a valid Room UID.');
+					return;
+				}
 
-        function handleMovement() {
-            if (!playerId || !ws || ws.readyState !== WebSocket.OPEN) return;
+				data.roomUID  = roomUID;
+				// Send the join room request to the server
+				try {
+						await data.socket.send(JSON.stringify({
+						action: 'join_private_match',
+						room_name: roomUID,
+						id: data.playerId
+					}));
+					console.log(`Request to join room ${roomUID} sent.`);
+				} catch (error) {
+					console.error('Error joining room:', error);
+					alert('Failed to join room. Please try again.');
+				} finally {
+					// Remove the input container after submission
+					document.body.removeChild(container);
+				}
+			});
+		}
 
-            let shouldMove = false;
-            let direction = null;
+		function showReadyButton() {
+			// Check if the button already exists to prevent duplicates
+			if (document.getElementById('ready-button')) return;
 
-            if (playerId === 'p1') {
-                if (keys['w']) {
-                    direction = 'up';
-                    shouldMove = true;
-                }
-                if (keys['s']) {
-                    direction = 'down';
-                    shouldMove = true;
-                }
-            } else if (playerId === 'p2') {
-                if (keys['ArrowUp']) {
-                    direction = 'up';
-                    shouldMove = true;
-                }
-                if (keys['ArrowDown']) {
-                    direction = 'down';
-                    shouldMove = true;
-                }
-            }
-            if (shouldMove && direction) {
-                console.log(`Sending move command: ${playerId} moving ${direction}`);
-                ws.send(JSON.stringify({ type: 'paddle_move', direction: direction }))
-            }
-        }
+			// Create the ready button
+			const readyButton = document.createElement('button');
+			readyButton.id = 'ready-button';
+			readyButton.textContent = 'Ready Up';
+			readyButton.style.position = 'fixed';
+			readyButton.style.bottom = '20px';
+			readyButton.style.left = '50%';
+			readyButton.style.transform = 'translateX(-50%)';
+			readyButton.style.padding = '10px 20px';
+			readyButton.style.fontSize = '16px';
+			readyButton.style.cursor = 'pointer';
 
-        // Keyborad controls
-        document.addEventListener('keydown', function(e) {
-            console.log('Key pressed:', e.key);
-            // const key = e.key.toLowerCase();
-            if (e.key in keys) {
-                keys[e.key] = true;
-                handleMovement();
-                e.preventDefault();
-            }
-        });
+			// Append the button to the body
+			document.body.appendChild(readyButton);
 
-        document.addEventListener('keyup', function(e) {
-            // const key = e.key.toLocaleLowerCase();
-            if (e.key in keys) {
-                keys[e.key] = false;
-                e.preventDefault();
-            }
-        });
+			// Attach the event listener for the ready logic
+			readyButton.addEventListener('click', async () => {
+				try {
+					// Change button state to indicate readiness
+					readyButton.textContent = 'Waiting for game start...';
+					readyButton.disabled = true;
 
-        // Set up continuous movement while keys are held
-        setInterval(handleMovement, 16); // approximately 60 FPS
+					// Send the ready status to the server
+					data.socket.send(JSON.stringify({
+						action: 'player_ready',
+						player_id: data.playerId
+					}));
 
-        // Start connection
-        connectWebSocket();
+					console.log('Ready signal sent.');
+				} catch (error) {
+					console.error('Error sending ready signal:', error);
+					readyButton.disabled = false;
+					readyButton.textContent = 'Ready Up'; // Revert state on error
+					alert('Failed to send ready signal. Please try again.');
+				}
+			})};
 
-        // // Debug rendering
-        // function checkRendering() {
-        //     if (lastGameState) {
-        //         console.log('Current game state:', lastGameState);
-        //         const positions = {
-        //             ball: lastGameState.ball ? `(${Math.round(lastGameState.ball.x)}, ${Math.round(lastGameState.ball.y)})` : 'missing',
-        //             p1: lastGameState.paddles.p1 ? `(${Math.round(lastGameState.paddles.p1.x)}, ${Math.round(lastGameState.paddles.p1.y)})` : 'missing',
-        //             p2: lastGameState.paddles.p2 ? `(${Math.round(lastGameState.paddles.p2.x)}, ${Math.round(lastGameState.paddles.p2.y)})` : 'missing'
-        //         };
-        //         debugDiv.textContent = 'Positions: ' + JSON.stringify(positions, null, 2);
-        //     }
-        // }
-        // setInterval(checkRendering, 1000); //check every second
-    </script>
+		async function waitForReady(socket) {
+			const readyButton = document.getElementById('ready-button');
+			readyButton.addEventListener('click', async () => {
+				try {
+					readyButton.disabled = true; //change this to switch state rather than disable
+					readyButton.textContent = 'Waiting for game start...';
+					socket.send(JSON.stringify({
+						type: 'player_ready',
+						player_id: data.playerId
+					}));
+					readyButton.classList.add('ready');
+				} catch (error) {
+					console.error('Could not set up lobby: ', error);
+					throw error;
+					// or just reenable the button and print an error for the user?
+					// readyButton.disabled = false;
+					// readyButton.textContent = 'Ready Up';
+				}
+			});
+		}
+
+		async function startGame() {
+			try {
+				if (canvas.getContext) {
+					const ctx = canvas.getContext('2d');
+					gameLoop(ctx, data.socket, data);
+				}
+				else
+					throw error;
+			} catch {
+				console.error('Exception caught in startGame');
+			}
+		}
+
+		//const token = document.cookie('token'); //need to tokenize it manually ???
+		async function getPlayerInfo() {
+			try {
+				const dbQuery = await fetch('http://django/api/user/getuser/', {
+					method: 'GET',
+					headers: {
+						'Authorization' : `Bearer ${token}`,
+						'Content-Type': 'application/json'
+					}
+				});
+				if (!dbQuery.ok) {
+					throw new Error('Failed to fetch player info');
+					}
+				const playerInfo = await dbQuery.json();
+				return playerInfo;
+			} catch (error) {
+				console.error('Error fetching player info: ', error);
+				throw error;
+			}
+		}
+
+		async function requestRoom() {
+			try {
+				console.log("Requesting room")
+				await data.socket.send(JSON.stringify({
+					action: 'create_private_match',
+					id: data.playerId
+				}));
+				console.log("Room requested")
+			} catch (error) {
+				console.error('Error sending room creation request: ', error);
+			}
+		}
+
+		async function startGame() {
+			try {
+				if (canvas.getContext) {
+					const ctx = canvas.getContext('2d');
+					gameLoop(ctx, data.socket, data);
+				}
+				else
+					throw error;
+			} catch {
+				console.error('Exception caught in startGame', error);
+			}
+		}
+	
+		async function join_match() {
+			try {
+				data.playerId = 'player_2'
+				await joinRoom();
+				showReadyButton();
+				await waitForReady();
+			} catch (error) {
+				console.error('Exception caught in joinMatch.js', error)
+			}
+		}
+	
+		async function create_private_match() {
+			try {
+				data.playerId = 'player_1'
+				await requestRoom();
+				showReadyButton()
+				await waitForReady();
+			} catch (error){
+				console.error('Exception caught in privateMatch.js', error);
+			}
+		}
+
+		async function init(){
+			await connectWebSocket();
+		}
+
+		init();
+	</script>
 </body>
 </html>
 
-<!-- <!DOCTYPE html>
-<html>
-<head>
-    <title>Game WebSocket Test</title>
-</head>
-<body>
-    <h1>Game ID: {{ game_id }}</h1>
-    <div id="game-log" style="height: 300px; overflow-y: scroll; border: 1px solid #ccc;"></div>
-    <input id="game-message" type="text">
-    <button onclick="sendMessage()">Send</button>
-
-    <script>
-        const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
-        const wsUrl = `${wsScheme}://${window.location.host}/ws/game-server/{{ game_id }}/`;
-        const gameSocket = new WebSocket(wsUrl);
-
-        gameSocket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-            const log = document.getElementById('game-log');
-            log.innerHTML += `<p>${data.message}</p>`;
-            log.scrollTop = log.scrollHeight;
-        };
-
-        function sendMessage() {
-            const messageInput = document.getElementById('game-message');
-            gameSocket.send(JSON.stringify({
-                'message': messageInput.value
-            }));
-            messageInput.value = '';
-        }
-    </script>
-</body>
-</html> -->
