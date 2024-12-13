@@ -54,7 +54,9 @@ check:
 	done
 	@echo "All containers are running without restart issues."
 
-	# Create and run WebSocket health check script
+	# wait another 10 seconds for backend sevices to be ready
+	sleep 10
+	# Run WebSocket health check script
 	@echo "Checking WebSocket endpoints..."
 	@chmod +x pong-game/tests/websocket_check.sh
 	@./pong-game/tests/websocket_check.sh localhost || { echo "WebSocket health checks failed!"; exit 1; }

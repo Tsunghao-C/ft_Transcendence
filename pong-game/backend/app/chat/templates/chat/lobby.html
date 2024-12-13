@@ -13,7 +13,7 @@
     <div id="messages"></div>
 
     <script type="text/javascript">
-        const roomId = 'test_chat'
+        const roomId = 'test'
         const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
         const wsUrl = `${wsScheme}://${window.location.host}/ws/chat-server/${roomId}/`;
         console.log('Attempting to connect to:', wsUrl);

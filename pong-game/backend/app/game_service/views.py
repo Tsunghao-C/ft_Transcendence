@@ -86,7 +86,7 @@ def game_test_ssr(request):
 	context = {
 		'initial_state': initial_state,
 		'initial_state_json': mark_safe(json.dumps(initial_state)),
-		'game_id': 'test_game'
+		'game_id': 'test_game_ssr'
     }
 	return render(request, 'game_service/game_test_ssr.html', context)
 
