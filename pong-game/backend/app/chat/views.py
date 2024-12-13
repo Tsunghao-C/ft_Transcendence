@@ -31,28 +31,6 @@ class ChatRoomMessages(APIView):
 		serializer = MessageSerializer(messages, many=True)
 		return Response(serializer.data)
 
-	def post(self, request, room_name):
-		try:
-			room = ChatRoom.objects.get(name=room_name)
-		except ChatRoom.DoesNotExist:
-			return Response({"detail": "Room not found."}, status=status.HTTP_404_NOT_FOUND)
-
-		if request.user not in room.members.all():
-			return Response({"detail": "You are not a member of this room."}, status=status.HTTP_403_FORBIDDEN)
-
-		message = request.data.get("message", "")
-		if message == "":
-			return Response({"detail": "Message content cannot be empty."}, status=status.HTTP_400_BAD_REQUEST)
-
-		new_message = Message.objects.create(
-			room=room,
-			sender=request.user,
-			content=message,
-		)
-
-		serializer = MessageSerializer(new_message)
-		return Response(serializer.data, status=status.HTTP_201_CREATED)
-
 class CreateChatRoom(APIView):
 	permission_classes = [IsAuthenticated]
 
