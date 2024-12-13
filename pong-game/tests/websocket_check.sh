@@ -23,19 +23,15 @@ check_websocket() {
 import sys
 import platform
 
-# Check Python version and install appropriate websockets version
-python_version = tuple(map(int, platform.python_version().split('.')))
-print(f"Python version: {platform.python_version()}")
-
+# Just use the existing websockets package
 try:
     import websockets
 except ImportError:
-    import subprocess
-    if python_version >= (3, 11):
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "websockets>=11.0"])
-    else:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "websockets==10.4"])
-    import websockets
+    print("Error: websockets package is not available in the environment")
+    print("This is unexpected as websockets should be installed for the chat and game services")
+    sys.exit(1)
+
+print(f"Using Python {platform.python_version()} with websockets {websockets.__version__}")
 
 import asyncio
 import ssl
@@ -50,20 +46,14 @@ async def test_websocket(uri, timeout_val, socket_type):
 
         print(f"Attempting to connect to: {uri}")
 
-        kwargs = {
-            "ssl": ssl_context,
-            "max_size": None,
-            "ping_timeout": None,
-            "origin": "https://localhost:8443"
-        }
-        
-        # Remove ping_timeout for Python < 3.11 as it is not supported
-        if python_version < (3, 11):
-            kwargs.pop("ping_timeout", None)
-        
-        async with websockets.connect(uri, **kwargs) as ws:
+        # Use minimal connection parameters
+        async with websockets.connect(
+            uri,
+            ssl=ssl_context,
+            origin="https://localhost:8443"
+        ) as ws:
             print("WebSocket connection established, waiting for response message...")
-            
+
             try:
                 response = await asyncio.wait_for(ws.recv(), timeout=timeout_val)
                 print(f"Received message: {response}")

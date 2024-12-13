@@ -16,12 +16,12 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.10'
 
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install websockets>=11.0
+          pip install -r pong-game/backend/requirements.txt
 
       - name: Install Docker Compose
         run: sudo apt-get update && sudo apt-get install -y docker-compose
