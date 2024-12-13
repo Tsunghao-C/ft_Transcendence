@@ -17,9 +17,9 @@ export async function setPersonnalDataView(contentContainer) {
     }
 
     contentContainer.innerHTML = `
-        <div class="personnal-data-view">
-            <h2 data-i18n="personalDataTitle">Personnal Information</h2>
-            <div class="d-flex align-items-center mb-4">
+        <div class="personal-data-view">
+            <h2 data-i18n="personalDataTitle">Personal Information</h2>
+            <div class="pp-and-login">
                 <div>
                     <img
                         src="${personnal.avatar}"
@@ -41,8 +41,8 @@ export async function setPersonnalDataView(contentContainer) {
                     <input type="text" class="form-control" value="${personnal.username}" readonly>
                 </div>
             </div>
-
             <form id="personalDataForm">
+                <hr>
                 <div class="mb-3">
                     <label for="aliasInput" class="form-label" data-i18n="alias">Alias</label>
                     <div class="input-group">
@@ -50,7 +50,7 @@ export async function setPersonnalDataView(contentContainer) {
                         <button class="btn btn-success" type="button" id="aliasChangeButton" data-i18n="confirm">Confirm</button>
                     </div>
                 </div>
-
+                <hr>
                 <div class="mb-3">
                     <label for="mailInput" class="form-label" data-i18n="email">Email</label>
                     <div class="input-group">
@@ -58,8 +58,9 @@ export async function setPersonnalDataView(contentContainer) {
                         <button class="btn btn-success" type="button" id="emailChangeButton" data-i18n="confirm">Confirm</button>
                     </div>
                 </div>
-
+                <hr>
                 <div class="mb-3">
+                    <label for="aliasInput" class="form-label" data-i18n="password">Password</label>
                     <button type="button" class="btn btn-warning" id="changePasswordButton" data-i18n="changePassword">Change Password</button>
                 </div>
 
@@ -78,7 +79,9 @@ export async function setPersonnalDataView(contentContainer) {
                     </div>
                     <button type="button" class="btn btn-success" id="confirmPasswordChangeButton" data-i18n="confirmChange">Confirm Change</button>
                 </div>
-				<select id="languageSelect" class="form-select mt-2">
+                <hr>
+                <label for="aliasInput" class="form-label" data-i18n="language">Language</label>
+                <select id="languageSelect">
 					<option value="en" data-i18n="english">English</option>
 					<option value="fr" data-i18n="francais">Français</option>
 					<option value="pt" data-i18n="Português">Português</option>
