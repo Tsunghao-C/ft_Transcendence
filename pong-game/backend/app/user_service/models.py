@@ -99,17 +99,19 @@ class OnlineUserActivity(models.Model):
 
     @classmethod
     def update_user_activity(cls, user):
-        print("static method called...")
         OnlineUserActivity.objects.update_or_create(user=user)
 
     @classmethod
     def get_user_status(cls, user):
         try:
-            user_record = OnlineUserActivity.objects.get(user=user)
+            user_record = OnlineUserActivity.objects.get(
+                user=user
+            )
+            print(f"last time: {user_record.last_activity}\ntime now: {timezone.now()}")
             if user_record.last_activity >= timezone.now() - timedelta(minutes=15):
                 return "online"
-        except OnlineUserActivity.DoesNotExist:
-            pass
+        except Exception as e:
+            print(f"exception: {e}")
         return "offline"
     
     def __str__(self):

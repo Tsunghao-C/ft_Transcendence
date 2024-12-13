@@ -485,7 +485,7 @@ class getAccessLogsView(APIView):
 		logs = [
 			{
 				"alias": log.user.alias,
-				"time": log.user.last_activity
+				"time": log.last_activity
 			} for log in accessLogs
 		]
-		return logs
+		return Response(logs, status=200)
