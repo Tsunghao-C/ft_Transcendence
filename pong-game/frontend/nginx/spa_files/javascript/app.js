@@ -23,7 +23,11 @@ import { getLanguageCookie } from './fetch_request.js';
 import { setAboutPage } from './about.js';
 // import { setChatPage } from './chat.js';
 import { ChatWebSocket } from './chat.js';
-import { setChatView, cleanupChatView } from './chat_view.js';
+import { setChatView } from './chat_view.js';
+
+export const state = {
+	chatSocket: null,
+	};
 
 export async function setContainerHtml(container, url) {
     try {
@@ -128,7 +132,6 @@ export async function loadPage(page) {
 		//to change to have the good avatar picture src
 		userAvatar.style.display = "block";
 	}
-	//removing the chat
 	if (page !== "chat") {
 		const existingChat = document.getElementById('chat-container');
 		if (existingChat) {
@@ -137,6 +140,10 @@ export async function loadPage(page) {
 	}
 	// cleanup only if user is logged in
 	if (isLoggedIn === "true") {
+		if (state.chatSocket) {
+			state.chatSocket.close();
+			state.chatSocket = null;
+		}
 		if (page !== "game") {closeGameWebSocket();}
 		// if (page !== "chat") {
 		// 	cleanupChatView();
