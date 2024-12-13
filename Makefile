@@ -71,6 +71,7 @@ clean:
 	- rm -f pong-game/frontend/nginx/modsec/*.log
 	- rm -rf pong-game/security/vault_debian/volumes/*
 	- rm -rf --no-preserve-root pong-game/backend/app/media/profile_images
+	- rm -rf pong-game/tests/lib
 	rm pong-game/.env
 
 re: clean all
