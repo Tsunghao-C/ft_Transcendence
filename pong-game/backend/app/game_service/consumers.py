@@ -18,6 +18,8 @@ class GameConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.channel_layer = get_channel_layer()
+        assigned_room = -1
+        assigned_player_id = -1
 
     async def connect(self):
         logger.info(f"WebSocket connection attempt: {self.scope['path']}")
@@ -31,6 +33,10 @@ class GameConsumer(AsyncWebsocketConsumer):
             }))
 
     async def disconnect(self, code): #beef it up with socket closing and such
+        logger.info("Websocket connection closed")
+        if self in active_lobbies[self.assigned_room]:
+            active_lobbies[self.assigned_room]["connections"].pop(self)
+            active_lobbies[self.assigned_room]["player_id"].pop(self.assigned_player_id)
         if hasattr(self, 'current_group'):
             await self.channel_layer.group_discard(self.current_group, self.channel_name)
 
@@ -62,6 +68,8 @@ class GameConsumer(AsyncWebsocketConsumer):
                     }))
 
     async def create_private_lobby(self, room_name, player_id):
+        self.assigned_room = room_name
+        self.assigned_player_id = player_id
         active_lobbies[room_name] = {
                 "players": [player_id],
                 "connection": [self]
@@ -90,6 +98,8 @@ class GameConsumer(AsyncWebsocketConsumer):
         if len(active_lobbies[room_name]["players"]) >= 2:
             await self.send(json.dumps({"error": f"lobby {room_name} is full"}))
             return
+        self.assigned_room = room_name
+        self.assigned_player_id = player_id
         active_lobbies[room_name]["players"].append(player_id)
         active_lobbies[room_name]["connection"].append(self)
         await self.channel_layer.group_add(self.current_group, self.channel_name)
@@ -98,7 +108,6 @@ class GameConsumer(AsyncWebsocketConsumer):
                 "type": "notice",
                 "message": f"Player {player_id} joined lobby {room_name}"
                 }))
-
 
     async def update_ready_status(self, room_name, player_id):
         if room_name not in active_lobbies:
@@ -162,6 +171,7 @@ class GameConsumer(AsyncWebsocketConsumer):
             room_name = task.get_name() #shouldn't this be self.get_name() instead??
             if room_name in active_game_rooms:
                 del active_game_rooms[room_name]
+
     def all_ready(self, room_name):
         if room_name not in active_lobbies:
             return False
