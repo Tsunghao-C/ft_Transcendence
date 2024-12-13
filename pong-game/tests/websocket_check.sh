@@ -6,6 +6,15 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Get the directory of the current script
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Ensure lib directory exists
+if [ ! -d "$SCRIPT_DIR/lib" ]; then
+    echo "Setting up test libraries..."
+    bash "$SCRIPT_DIR/prepare_libs.sh"
+fi
+
 # Function to check WebSocket connection
 check_websocket() {
     local endpoint=$1
@@ -18,20 +27,26 @@ check_websocket() {
     while [ $retry_count -lt $max_retries ]; do
         echo "Checking WebSocket endpoint: $endpoint (Attempt $((retry_count + 1))/$max_retries)"
     
-    # Use Python to test WebSocket connection
-    python3 - <<EOF
+        # Use Python to test WebSocket connection
+        PYTHONPATH="$SCRIPT_DIR/lib" python3 - <<EOF
 import sys
 import platform
 
-# Just use the existing websockets package
+# Add our lib directory to the start of sys.path to ensure it's used first
+sys.path.insert(0, "$SCRIPT_DIR/lib")
+
+# Import our bundled websockets and verify its location
 try:
     import websockets
-except ImportError:
-    print("Error: websockets package is not available in the environment")
-    print("This is unexpected as websockets should be installed for the chat and game services")
+    ws_location = getattr(websockets, '__file__', 'unknown location')
+    print(f"Using Python {platform.python_version()} with bundled websockets {websockets.__version__}")
+    print(f"Websockets loaded from: {ws_location}")
+    if "$SCRIPT_DIR/lib" not in ws_location:
+        print("Warning: Not using bundled websockets library!")
+        sys.exit(1)
+except ImportError as e:
+    print(f"Error: Failed to import bundled websockets library: {e}")
     sys.exit(1)
-
-print(f"Using Python {platform.python_version()} with websockets {websockets.__version__}")
 
 import asyncio
 import ssl
@@ -46,10 +61,12 @@ async def test_websocket(uri, timeout_val, socket_type):
 
         print(f"Attempting to connect to: {uri}")
 
-        # Use minimal connection parameters
+        # Create connection using websockets but without loop parameter
         async with websockets.connect(
             uri,
             ssl=ssl_context,
+            max_size=None,
+            ping_timeout=None,
             origin="https://localhost:8443"
         ) as ws:
             print("WebSocket connection established, waiting for response message...")
