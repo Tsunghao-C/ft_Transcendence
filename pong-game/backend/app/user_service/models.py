@@ -85,3 +85,9 @@ class FriendRequest(models.Model):
             models.Index(fields=["from_user"]),
             models.Index(fields=["to_user"]),
         ]
+
+class TemporaryOTP(models.Model):
+    user_id = models.IntegerField()
+    otp = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
