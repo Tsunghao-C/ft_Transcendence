@@ -23,6 +23,10 @@ export async function setChatView(contentContainer) {
 				<input id="public-room-name-input" type="text" placeholder="Enter public room name">
 				<button id="create-public-room">Create Public Room</button>
 			</div>
+			<div style="margin-top: 20px;">
+				<input id="private-room-username-input" type="text" placeholder="Enter username for private message">
+				<button id="send-private-message">Send Private Message</button>
+			</div>
 			<div id="chat-view" style="display:none;">
 				<h3 id="chat-room-title"></h3>
 				<div id="messages" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;"></div>
@@ -35,6 +39,8 @@ export async function setChatView(contentContainer) {
 	`;
 
 	// this is how we create chat room using the view
+
+
 	const createPublicRoomButton = document.getElementById("create-public-room");
 	createPublicRoomButton.addEventListener('click', async () => {
 		const roomName = document.getElementById('public-room-name-input').value.trim();
@@ -74,6 +80,35 @@ export async function setChatView(contentContainer) {
 		}
 	});
 
+	const privateMessageButton = document.getElementById("send-private-message");
+	privateMessageButton.addEventListener("click", async () => {
+		const username = document.getElementById("private-room-username-input").value.trim();
+		if (username) {
+			try {
+				// Créer ou récupérer une salle privée
+				const response = await fetchWithToken(
+					'/api/chat/rooms/create-private/',
+					JSON.stringify({ username: username }),
+					'POST'
+				);
+				if (response.ok) {
+					const data = await response.json();
+					// Charger les messages de la salle privée
+					loadChatRoom(data.name, data.username);
+					alert(`Private chat room with "${username}" is now active.`);
+				} else {
+					const errorData = await response.json();
+					alert(`Failed to create private room: ${errorData.error}`);
+				}
+			} catch (error) {
+				console.error("Error creating private room:", error);
+				alert("An error occurred while creating the private room.");
+			}
+		} else {
+			alert("Please enter a username for the private message.");
+		}
+	});
+
 	// to send a message
 	document.getElementById("send-message").addEventListener("click", sendMessage);
 
@@ -82,7 +117,7 @@ export async function setChatView(contentContainer) {
 		if (input.value && state.chatSocket) {
 			const messageData = {
 				message: input.value,
-				alias: data.alias,
+				username: data.username,
 				time: new Date().toLocaleTimeString(),
 			};
 			state.chatSocket.send(JSON.stringify(messageData));

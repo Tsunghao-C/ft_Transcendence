@@ -26,10 +26,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
 		try:
 			room = await database_sync_to_async(ChatRoom.objects.get)(name=self.room_name)
 		except ChatRoom.DoesNotExist:
+			print("The room", self.room_name, "does not exist")
 			await self.close()
 			return
 
 		if room.is_private and not room.members.filter(id=self.user.id).exists():
+			print("You don't have access to the room")
 			await self.close()
 			return
 
@@ -61,23 +63,23 @@ class ChatConsumer(AsyncWebsocketConsumer):
 	async def receive(self, text_data):
 		text_data_json = json.loads(text_data)
 		message = text_data_json["message"]
-		alias = text_data_json.get("alias", "anon")
+		username = text_data_json.get("username", "anon")
 		time = text_data_json.get("time", "unknown time")
 
-		await self.save_message(message, alias)
+		await self.save_message(message, username)
 
 		await self.channel_layer.group_send(
 			self.room_group_name, {
 				"type": "chat.message",
 				"message": message,
-				"alias": alias,
+				"alias": self.user.alias,
 				"time": time,
 			}
 		)
 
 	@database_sync_to_async
-	def save_message(self, message, alias):
-		user = CustomUser.objects.get(username=alias)
+	def save_message(self, message, username):
+		user = CustomUser.objects.get(username=username)
 		Message.objects.create(
 			room=self.room,
 			sender=user,
@@ -120,7 +122,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 			print("Invalid JWT token.")
 			return None
 
-
 	@database_sync_to_async
 	def get_user_from_payload(self, payload):
 		user_id = payload.get('user_id')
@@ -130,5 +131,3 @@ class ChatConsumer(AsyncWebsocketConsumer):
 			except CustomUser.DoesNotExist:
 				return None
 		return None
-
-
