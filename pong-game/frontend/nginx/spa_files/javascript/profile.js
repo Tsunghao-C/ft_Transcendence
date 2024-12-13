@@ -67,12 +67,12 @@ export async function setProfileView(contentContainer, usernameInHash) {
 
 	function displayProfile(profile) {
 		const currentLanguage = getLanguageCookie() ||  "en";
-		const statusClasses = {
-			online: "text-success",
-			offline: "text-secondary",
-			ingame: "text-warning",
-		};
-		const statusText = translations[currentLanguage][profile.status];
+		// const statusClasses = {
+		// 	online: "text-success",
+		// 	offline: "text-secondary",
+		// 	ingame: "text-warning",
+		// };
+		// const statusText = translations[currentLanguage][profile.status];
 
 		profileResult.innerHTML = `
 		<div class="card">
@@ -82,7 +82,7 @@ export async function setProfileView(contentContainer, usernameInHash) {
 					<div class="col-md-4">
 						<img src="${profile.avatar}" alt="${profile.alias}" class="img-thumbnail" style="max-width: 150px;">
 						<h3>${profile.alias}</h3>
-						<p class="${statusClasses[profile.status]}">${statusText}</p>
+						<p>${profile.onlineStatus}</p>
 					</div>
 					<div class="col-md-4">
 						<h4>${translations[currentLanguage].rank}: ${profile.rank || "Unranked"}</h4>
