@@ -44,7 +44,7 @@ class LogRequestMiddleware:
         # Proceed with updating user activity if authenticated
         if request.user and request.user.is_authenticated:
             try:
-                OnlineUserActivity.update_user_activity(request.user)
+                OnlineUserActivity.update_user_activity(request.user, request.path)
             except Exception as e:
                 print(f"Error updating user activity: {e}")
         else:

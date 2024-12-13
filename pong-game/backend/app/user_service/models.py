@@ -89,17 +89,21 @@ class FriendRequest(models.Model):
         ]
 
 class OnlineUserActivity(models.Model):
-    user = models.ForeignKey(
+    user = models.OneToOneField(
         CustomUser, 
         related_name="online_activity", 
         on_delete=models.CASCADE, 
         db_index=True
     )
+    path = models.CharField(max_length=255)
     last_activity = models.DateTimeField(auto_now=True)
 
     @classmethod
-    def update_user_activity(cls, user):
-        OnlineUserActivity.objects.update_or_create(user=user)
+    def update_user_activity(cls, user, path):
+        OnlineUserActivity.objects.update_or_create(
+            user=user,
+            defaults={"path": path, "last_activity": timezone.now()}
+        )
 
     @classmethod
     def get_user_status(cls, user):
@@ -107,12 +111,12 @@ class OnlineUserActivity(models.Model):
             user_record = OnlineUserActivity.objects.get(
                 user=user
             )
-            print(f"last time: {user_record.last_activity}\ntime now: {timezone.now()}")
             if user_record.last_activity >= timezone.now() - timedelta(minutes=15):
+                if "/api/game/game" in user_record.path: # can change this later after game added
+                    return "in-game" 
                 return "online"
-        except Exception as e:
-            print(f"exception: {e}")
-        return "offline"
+        except:
+            return "offline"
     
     def __str__(self):
         return f"{self.user.alias} - Last Activity: {self.last_activity}"
