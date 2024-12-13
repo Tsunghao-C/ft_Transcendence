@@ -127,7 +127,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                         "type": "notice",
                         "message": f"Player {player_id} is ready"
                         }))
-        if self.all_ready(room_name):
+        if len(active_lobbies[room_name]["players"]) == 2 and self.all_ready(room_name):
             try:
                 await self.launch_game(room_name)
             except:

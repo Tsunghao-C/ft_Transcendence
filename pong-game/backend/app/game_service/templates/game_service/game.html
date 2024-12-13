@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Lobby</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #282c34;
+            color: white;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #61dafb;
+            color: #282c34;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #21a1f1;
+        }
+
+        button:active {
+            background-color: #0e86d4;
+        }
+    </style>
+</head>
+<body>
+    <h1>Game Lobby</h1>
+    <p>Select an option below to get started:</p>
+    <div>
+        <button onclick="create_private_match()">Create Private Match</button>
+        <button onclick="join_match()">Join Match</button>
+	<div id="game-info">Loading...</div>
+   	<div id="player-status" class="player-status"></div>
+	<canvas id="game" width="800" height="600"></canvas>
+    </div>
+	<script>
+		const canvas = document.getElementById('game');
+		const token = localStorage.getItem('token'); //Is this stored there or in cookies!!!!
+		const PADDLE_HEIGHT = 100;
+		const PADDLE_WIDTH = 15;
+        const ctx = canvas.getContext('2d');
+        const gameInfo = document.getElementById('game-info');
+        const debugDiv = document.getElementById('debug');
+        const playerStatus = document.getElementById('player-status');
+        const readyButton = document.getElementById('readyButton');
+        let playerId = null;
+        let lastGameState = null;
+        let ws = null;
+        let wsReconnectTimer = null;
+		let pendingGameUpdate = null;
+		let pendingGameOver = null;
+
+		class Paddle {
+			constructor (id, color) {
+				this.id = id;
+				this.color = color;
+			}
+		}
+
+		class Player {
+			constructor (id, color) {
+				this.id = id;
+				this.color = color;
+				this.Paddle = new Paddle(id, color);
+				this.score = 0;
+			}
+		}
+
+		let	ball = {
+			x:canvas.width/2,
+			y:canvas.height/2,
+			color:'white',
+			speedX:6,
+			speedY:6,
+			radius:10
+		};
+
+		let gameState = {
+			ball: ball,
+			player1: Player,
+			player2: Player
+		};
+
+		let playerEvent = {
+			pending: false,
+			type: -1,
+		}
+
+		var data = {
+			playerId: -1,
+			socket: -1,
+			roomUID: -1
+		};
+
+		function connectWebSocket() {
+            if (ws && ws.readyState === WebSocket.CONNECTING) {
+                console.log('Connection already in progress...');
+                return Promise.resolve();
+            }
+				return new Promise((resolve, reject) => {
+				const gameId = 'test_game';
+				const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+				const wsUrl = `${wsScheme}://${window.location.host}/ws/game-server/${gameId}/`;
+				
+				console.log('Connecting to WebSocket...')
+				ws = new WebSocket(wsUrl);
+				data.socket = ws
+
+				ws.onopen = function() {
+					console.log('WebSocket connected');
+					gameInfo.textContent = 'Connected to game server...';
+					if (wsReconnectTimer) {
+						clearTimeout(wsReconnectTimer);
+						wsReconnectTimer = null;
+					}
+					data.socket.onmessage = function (event) {
+					//	console.log('Ws message received', event);
+					//	console.log('Ws readyState:', data.socket.readyState);
+						try {
+							const response = JSON.parse(event.data);
+							if (response.type == 'notice') {
+								console.log('Server notice: ' + response.message);
+							}
+							else if (response.type == 'room_creation') {
+								data.roomUID = response.room_name;
+								console.log('Room creation notice received');
+								console.log('Room name: ' + data.roomUID);
+							}
+							else if (response.type == 'game_start') {
+								console.log(response.message);
+								startGame();
+							}
+							else if (response.type == 'error') {
+								console.error('Error received:', response.message);
+							}
+							else if (response.type == 'game_update') {
+								if (pendingGameUpdate) pendingGameUpdate(response.payload);
+							}
+							else if (response.type == 'game_over') {
+								if (pendingGameOver) pendingGameOver(response.payload);
+							}
+							else if (response.error)
+								console.error(response.error);
+						}
+						catch (error) {
+							console.error('Error processing server response:', error);
+						}
+					}
+					};
+					ws.onerror = function (error) {
+						console.error('Websocker error', error);
+						reject (new Error('Failed to connect Websocket'));
+
+					};
+				});
+		}
+
+ 
+//		function createSocket() {
+//			try {
+//				//await getPlayerInfo(); hardcode player info for tests
+//				const roomName = "42";
+//				const socketUrl = `wss://localhost:8443/ws/game/${roomName}/`;
+//				console.log(socketUrl);
+//				data.socket = new WebSocket(socketUrl);
+//				data.socket.onopen() = () => {
+//					console.log('Websocket connection established');
+//				};
+//				data.socket.onerror() = (error) => {
+//					console.error('Websocket error: ', error);
+//				throw error;
+//				};
+//				data.socket = socket;
+//			} catch (error) {
+//				throw error;
+//				}
+//			};
+
+
+		document.addEventListener('keydown', function(event) {
+			if (event.code == 'ArrowUp') {
+				playerEvent.pending = true;
+				playerEvent.type = 'move_up';
+			}
+			else if (event.code == 'ArrowDown') {
+				playerEvent.pending = true;
+				playerEvent.type = 'move_down';
+			}
+		});
+
+		document.addEventListener('keyup', function(event) {
+			if (event.code == 'ArrowDown' || event.code == 'ArrowUp')
+			{
+				playerEvent.pending = true;
+				playerEvent.type = 'move_stop'
+			}
+		});
+
+		async function sendEvents(socket) {
+			if (playerEvent.pending == true) {
+				await data.socket.send(JSON.stringify({
+					type: 'player_input',
+					player_id: data.playerId,
+					input: playerEvent.type,
+					game_roomID: data.roomUID
+				}));	
+				playerEvent.pending = false;
+			}
+			else {
+				await data.socket.send(JSON.stringify({
+					type: 'player_input',
+					player_id: data.playerId,
+					input: 'idle',
+					game_roomID: data.roomUID
+				}));
+			}
+		}
+
+		function drawElements(ball, players) {
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			ctx.font = '48px serif';
+			ctx.textBaseline = 'hanging';
+			ctx.fillStyle = 'white';
+			ctx.fillText(players[0].score + " : " + players[1].score, canvas.width * 0.45, canvas.height * 0.10);
+			ctx.fillStyle = players[0].color;
+			ctx.fillRect(players[0].x, players[0].y, PADDLE_WIDTH, PADDLE_HEIGHT);
+			ctx.fillStyle = players[1].color;
+			ctx.fillRect(players[1].x, players[1].y, PADDLE_WIDTH, PADDLE_HEIGHT);
+			ctx.beginPath();
+			ctx.arc(ball.x, ball.y, ball.radius, 0, 2 * Math.PI);
+			ctx.fillStyle = ball.color;
+			ctx.fill();
+			ctx.closePath();
+		}
+
+		function drawGameOverScreen(gameState) {
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			ctx.font = '48px serif';
+			ctx.textBaseline = 'hanging';
+			ctx.fillStyle = 'white';
+			ctx.fillText("Game Over", canvas.width * 0.5, canvas.height * 0.30);
+			ctx.fillText(gameState.score_left, canvas.width * 0.25, canvas.height * 0.50);
+			ctx.fillText(gameState.score_right, canvas.width * 0.75, canvas.height * 0.50);
+		}
+
+		async function getGameState(socket)
+		{
+			return new Promise((resolve, reject) => {
+				pendingGameUpdate = resolve;
+				pendingGameOver = resolve;
+				});
+		}
+
+		async function gameLoop(socket, playerData) {
+			gameState = await getGameState(socket);
+//			console.log("gameState: ", gameState);
+			if (gameState.type == 'game_over'){
+				drawGameOverScreen(gameState);
+				return; // end the loop ig???
+			}
+			drawElements(gameState.ball, gameState.players);
+			await sendEvents(socket, data.roomUID);
+			requestAnimationFrame(gameLoop);
+		}
+
+		async function joinRoom() {
+			// Create a container for the input field and button
+			const container = document.createElement('div');
+			container.style.position = 'fixed';
+			container.style.top = '50%';
+			container.style.left = '50%';
+			container.style.transform = 'translate(-50%, -50%)';
+			container.style.padding = '20px';
+			container.style.border = '1px solid #ccc';
+			container.style.borderRadius = '10px';
+			container.style.backgroundColor = '#f9f9f9';
+			container.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.1)';
+			container.style.textAlign = 'center';
+
+			// Create the input field for the room UID
+			const inputField = document.createElement('input');
+			inputField.type = 'text';
+			inputField.placeholder = 'Enter Room UID';
+			inputField.style.marginBottom = '10px';
+			inputField.style.padding = '10px';
+			inputField.style.width = 'calc(100% - 20px)';
+			inputField.style.boxSizing = 'border-box';
+			inputField.style.fontSize = '16px';
+
+			// Create the submit button
+			const submitButton = document.createElement('button');
+			submitButton.textContent = 'Join Room';
+			submitButton.style.padding = '10px 20px';
+			submitButton.style.fontSize = '16px';
+			submitButton.style.cursor = 'pointer';
+
+			// Append the input and button to the container
+			container.appendChild(inputField);
+			container.appendChild(document.createElement('br')); // Line break
+			container.appendChild(submitButton);
+
+			// Append the container to the body
+			document.body.appendChild(container);
+
+			// Handle button click
+			submitButton.addEventListener('click', async () => {
+				const roomUID = inputField.value.trim();
+
+				if (!roomUID) {
+					alert('Please enter a valid Room UID.');
+					return;
+				}
+
+				data.roomUID = roomUID;
+				// Send the join room request to the server
+				try {
+						await data.socket.send(JSON.stringify({
+						action: 'join_private_match',
+						room_name: roomUID,
+						id: data.playerId
+					}));
+					console.log(`Request to join room ${roomUID} sent.`);
+				} catch (error) {
+					console.error('Error joining room:', error);
+					alert('Failed to join room. Please try again.');
+				} finally {
+					// Remove the input container after submission
+					document.body.removeChild(container);
+				}
+			});
+		}
+
+		function showReadyButton() {
+			// Check if the button already exists to prevent duplicates
+			if (document.getElementById('ready-button')) return;
+
+			// Create the ready button
+			const readyButton = document.createElement('button');
+			readyButton.id = 'ready-button';
+			readyButton.textContent = 'Ready Up';
+			readyButton.style.position = 'fixed';
+			readyButton.style.bottom = '20px';
+			readyButton.style.left = '50%';
+			readyButton.style.transform = 'translateX(-50%)';
+			readyButton.style.padding = '10px 20px';
+			readyButton.style.fontSize = '16px';
+			readyButton.style.cursor = 'pointer';
+
+			// Append the button to the body
+			document.body.appendChild(readyButton);
+
+			// Attach the event listener for the ready logic
+			readyButton.addEventListener('click', async () => {
+				try {
+					// Change button state to indicate readiness
+					readyButton.textContent = 'Waiting for game start...';
+					readyButton.disabled = true;
+
+					// Send the ready status to the server
+					data.socket.send(JSON.stringify({
+						action: 'player_ready',
+						room_name: data.roomUID,
+						player_id: data.playerId
+					}));
+
+					console.log('Ready signal sent.');
+				} catch (error) {
+					console.error('Error sending ready signal:', error);
+					readyButton.disabled = false;
+					readyButton.textContent = 'Ready Up'; // Revert state on error
+					alert('Failed to send ready signal. Please try again.');
+				}
+			})};
+
+		async function startGame() {
+			try {
+				console.log("Game has started");
+				if (canvas.getContext) {
+					gameLoop(data.socket, data);
+				}
+				else
+					console.log("Game error:" + error);
+					throw error;
+			} catch {
+				console.error('Exception caught in startGame');
+			}
+		}
+
+		//const token = document.cookie('token'); //need to tokenize it manually ???
+		async function getPlayerInfo() {
+			try {
+				const dbQuery = await fetch('http://django/api/user/getuser/', {
+					method: 'GET',
+					headers: {
+						'Authorization' : `Bearer ${token}`,
+						'Content-Type': 'application/json'
+					}
+				});
+				if (!dbQuery.ok) {
+					throw new Error('Failed to fetch player info');
+					}
+				const playerInfo = await dbQuery.json();
+				return playerInfo;
+			} catch (error) {
+				console.error('Error fetching player info: ', error);
+				throw error;
+			}
+		}
+
+		async function requestRoom() {
+			try {
+				console.log("Requesting room")
+				await data.socket.send(JSON.stringify({
+					action: 'create_private_match',
+					id: data.playerId
+				}));
+				console.log("Room requested")
+			} catch (error) {
+				console.error('Error sending room creation request: ', error);
+			}
+		}
+
+		async function startGame() {
+			try {
+				gameLoop(data.socket, data);
+			} catch {
+				console.error('Exception caught in startGame', error);
+			}
+		}
+	
+		async function join_match() {
+			try {
+				data.playerId = 'player_2'
+				await joinRoom();
+				console.log("Room UID after joining: " + data.roomUID);
+				console.log("Player_id: " + data.playerId);
+				await showReadyButton();
+				await startGame()
+			} catch (error) {
+				console.error('Exception caught in joinMatch.js', error)
+			}
+		}
+	
+		async function create_private_match() {
+			try {
+				data.playerId = 'player_1'
+				await requestRoom();
+				console.log("Room UID after request: " + data.roomUID);
+				console.log("Player_id: " + data.playerId);
+				await showReadyButton()
+				await startGame()
+			} catch (error){
+				console.error('Exception caught in privateMatch.js', error);
+			}
+		}
+
+		async function init(){
+			gameState.player1 = new Player('0', 'green');
+			gameState.player2 = new Player('1', 'red');
+			await connectWebSocket();
+		}
+		init();
+	</script>
+</body>
+</html>
+
