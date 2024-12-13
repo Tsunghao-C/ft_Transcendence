@@ -3,13 +3,13 @@ import { playerDatas } from "./data_test.js";
 import { fetchWithToken } from "./fetch_request.js";
 import { getLanguageCookie } from './fetch_request.js';
 
-export async function setPersonnalDataView(contentContainer) {
-    let personnal;
+export async function setpersonalDataView(contentContainer) {
+    let personal;
     let response;
     try {
         response = await fetchWithToken('/api/user/getuser/');
-        personnal = await response.json();
-        console.log("User data: ", personnal);
+        personal = await response.json();
+        console.log("User data: ", personal);
     } catch(error) {
         console.log(error);
         window.location.hash = "login";
@@ -22,7 +22,7 @@ export async function setPersonnalDataView(contentContainer) {
             <div class="pp-and-login">
                 <div>
                     <img
-                        src="${personnal.avatar}"
+                        src="${personal.avatar}"
                         alt="Profile Picture"
                         class="img-thumbnail"
                         id="profilePicturePreview"
@@ -38,7 +38,7 @@ export async function setPersonnalDataView(contentContainer) {
                 </div>
                 <div class="ms-3">
                     <label class="form-label" data-i18n="login">Login</label>
-                    <input type="text" class="form-control" value="${personnal.username}" readonly>
+                    <input type="text" class="form-control" value="${personal.username}" readonly>
                 </div>
             </div>
             <form id="personalDataForm">
@@ -46,7 +46,7 @@ export async function setPersonnalDataView(contentContainer) {
                 <div class="mb-3">
                     <label for="aliasInput" class="form-label" data-i18n="alias">Alias</label>
                     <div class="input-group">
-                        <input type="text" class="form-control" id="aliasInput" value="${personnal.alias}" required>
+                        <input type="text" class="form-control" id="aliasInput" value="${personal.alias}" required>
                         <button class="btn btn-success" type="button" id="aliasChangeButton" data-i18n="confirm">Confirm</button>
                     </div>
                 </div>
@@ -54,7 +54,7 @@ export async function setPersonnalDataView(contentContainer) {
                 <div class="mb-3">
                     <label for="mailInput" class="form-label" data-i18n="email">Email</label>
                     <div class="input-group">
-                        <input type="email" class="form-control" id="mailInput" value="${personnal.email}" required>
+                        <input type="email" class="form-control" id="mailInput" value="${personal.email}" required>
                         <button class="btn btn-success" type="button" id="emailChangeButton" data-i18n="confirm">Confirm</button>
                     </div>
                 </div>
@@ -118,7 +118,7 @@ export async function setPersonnalDataView(contentContainer) {
 				if (response.ok) {
 					console.log("Avatar uploaded successfully:", response);
 					alert("message for successs");
-					loadPage("personnal-data");
+					loadPage("personal-data");
 				} else {
 					console.log("Error uploading avatar:", response);
 					alert("soemerror");
@@ -141,7 +141,7 @@ export async function setPersonnalDataView(contentContainer) {
             }
             else {
                 alert('Alias updated successfully!');
-                loadPage("personnal-data")
+                loadPage("personal-data")
             }
         } catch(error) {
             console.log(error);
@@ -155,7 +155,7 @@ export async function setPersonnalDataView(contentContainer) {
         try {
             await fetchWithToken('/api/user/change-email/', JSON.stringify({ email: newEmail }), 'POST');
             alert('Email updated successfully!');
-            loadPage("personnal-data")
+            loadPage("personal-data")
         } catch(error) {
             console.log(error);
             window.location.hash = "login";
@@ -194,7 +194,7 @@ export async function setPersonnalDataView(contentContainer) {
 		try {
             await fetchWithToken('/api/user/change-language/', JSON.stringify({ newLang: selectedLanguage }), 'POST');
             alert('language changed successfully!');
-			loadPage("personnal-data");
+			loadPage("personal-data");
         } catch(error) {
             console.log(error);
             window.location.hash = "login";
