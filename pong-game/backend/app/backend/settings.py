@@ -78,6 +78,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 	"corsheaders.middleware.CorsMiddleware",
+    "user_service.middleware.LogRequestMiddleware",
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -159,7 +160,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = '/app/static'
 STATICFILES_DIRS = [
-    BASE_DIR / "static",
+    './'
 ]
 
 # Default primary key field type
@@ -203,11 +204,11 @@ LOGGING = {
             'level': 'DEBUG',  # Set to DEBUG for detailed logs
         },
         'loggers': {
-            'django': {
-                'handlers': ['console'],
-                'level': 'DEBUG',
-                'propagate': False,
-            },
+            # 'django': {
+            #     'handlers': ['console'],
+            #     'level': 'DEBUG',
+            #     'propagate': False,
+            # },
             'django.channels': {
                 'handlers': ['console'],
                 'level': 'DEBUG',  # Log WebSocket-related events
