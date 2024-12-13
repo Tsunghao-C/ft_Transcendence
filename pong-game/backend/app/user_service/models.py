@@ -2,6 +2,8 @@ from django.contrib.auth.models import AbstractUser
 # from game_service.models import MatchResults, LeaderBoard
 from django.apps import apps
 from django.db import models
+from datetime import timedelta
+from django.utils import timezone
 from uuid import uuid4
 import os
 
@@ -85,3 +87,36 @@ class FriendRequest(models.Model):
             models.Index(fields=["from_user"]),
             models.Index(fields=["to_user"]),
         ]
+
+class OnlineUserActivity(models.Model):
+    user = models.OneToOneField(
+        CustomUser, 
+        related_name="online_activity", 
+        on_delete=models.CASCADE, 
+        db_index=True
+    )
+    path = models.CharField(max_length=255)
+    last_activity = models.DateTimeField(auto_now=True)
+
+    @classmethod
+    def update_user_activity(cls, user, path):
+        OnlineUserActivity.objects.update_or_create(
+            user=user,
+            defaults={"path": path, "last_activity": timezone.now()}
+        )
+
+    @classmethod
+    def get_user_status(cls, user):
+        try:
+            user_record = OnlineUserActivity.objects.get(
+                user=user
+            )
+            if user_record.last_activity >= timezone.now() - timedelta(minutes=15):
+                if "/api/game/game" in user_record.path: # can change this later after game added
+                    return "in-game" 
+                return "online"
+        except:
+            return "offline"
+    
+    def __str__(self):
+        return f"{self.user.alias} - Last Activity: {self.last_activity}"

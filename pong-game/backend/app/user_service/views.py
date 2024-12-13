@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from .models import CustomUser, FriendRequest
+from .models import CustomUser, FriendRequest, OnlineUserActivity
 from rest_framework import generics
 
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -14,7 +14,7 @@ from django.dispatch import receiver
 from django.db.models.signals import pre_save
 from .forms import UploadAvatarForm
 from .serializers import UserSerializer, nameNotClean
-from .models import CustomUser
+from .models import CustomUser, OnlineUserActivity
 import re, os
 import uuid
 from game_service.views import recordMatch
@@ -371,7 +371,8 @@ class getProfileView(APIView):
 				"isSent": user.is_sent(profile),
 				"isPending": user.is_pending(profile),
 				"rank": LeaderBoard.getPlayerRank(profile),
-				"matchHistory": MatchResults.getPlayerGames(profile)
+				"matchHistory": MatchResults.getPlayerGames(profile),
+				"onlineStatus": OnlineUserActivity.get_user_status(profile),
 			}
 		return Response({
 			"profile": profileData
@@ -476,3 +477,15 @@ def deleteOldAvatar(sender, instance, **kwargs):
 	if oldAvatar and oldAvatar != instance.avatar:
 		if os.path.isfile(oldAvatar.path) and oldAvatar.name != 'default.jpg':
 			os.remove(oldAvatar.path)
+
+# temporary for dev
+class getAccessLogsView(APIView):
+	def get(self, request):
+		accessLogs = OnlineUserActivity.objects.all()
+		logs = [
+			{
+				"alias": log.user.alias,
+				"time": log.last_activity
+			} for log in accessLogs
+		]
+		return Response(logs, status=200)
