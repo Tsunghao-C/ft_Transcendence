@@ -20,10 +20,25 @@ check_websocket() {
     
     # Use Python to test WebSocket connection
     python3 - <<EOF
-import asyncio
-import websockets
-import ssl
 import sys
+import platform
+
+# Check Python version and install appropriate websockets version
+python_version = tuple(map(int, platform.python_version().split('.')))
+print(f"Python version: {platform.python_version()}")
+
+try:
+    import websockets
+except ImportError:
+    import subprocess
+    if python_version >= (3, 11):
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "websockets>=11.0"])
+    else:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "websockets==10.4"])
+    import websockets
+
+import asyncio
+import ssl
 import json
 
 async def test_websocket(uri, timeout_val, socket_type):
@@ -34,19 +49,19 @@ async def test_websocket(uri, timeout_val, socket_type):
         ssl_context.verify_mode = ssl.CERT_NONE
 
         print(f"Attempting to connect to: {uri}")
-        
-        # # Parse URL to extract room name
-        # room_name = uri.rstrip('/').split('/')[-1]
-        # print(f"Room name: {room_name}")
 
-        async with websockets.connect(
-            uri,
-            ssl=ssl_context,
-            max_size=None,
-            ping_timeout=None,
-            # Add origin header as some Django setups require it
-            origin="https://localhost:8443"
-        ) as ws:
+        kwargs = {
+            "ssl": ssl_context,
+            "max_size": None,
+            "ping_timeout": None,
+            "origin": "https://localhost:8443"
+        }
+        
+        # Remove ping_timeout for Python < 3.11 as it is not supported
+        if python_version < (3, 11):
+            kwargs.pop("ping_timeout", None)
+        
+        async with websockets.connect(uri, **kwargs) as ws:
             print("WebSocket connection established, waiting for response message...")
             
             try:
@@ -54,6 +69,7 @@ async def test_websocket(uri, timeout_val, socket_type):
                 print(f"Received message: {response}")
                 
                 data = json.loads(response)
+
                 # Different validation based on socket type
                 if socket_type == "chat":
                     if data.get('type') != 'connection_established':
@@ -98,7 +114,7 @@ async def test_websocket(uri, timeout_val, socket_type):
         if "502" in error_message:
             print("Service returned 502 - Not ready yet")
             sys.exit(2) #Special exit code for 502
-        print(f"WebSocket connection failed: {str(e)}")
+        print(f"WebSocket connection failed: {error_message}")
         sys.exit(1)
 
 asyncio.run(test_websocket("$endpoint", float($timeout), "$socket_type"))
