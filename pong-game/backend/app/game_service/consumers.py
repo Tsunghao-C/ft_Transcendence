@@ -18,8 +18,8 @@ class GameConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.channel_layer = get_channel_layer()
-        assigned_room = -1
-        assigned_player_id = -1
+        self.assigned_room = -1
+        self.assigned_player_id = -1
 
     async def connect(self):
         logger.info(f"WebSocket connection attempt: {self.scope['path']}")
@@ -54,7 +54,7 @@ class GameConsumer(AsyncWebsocketConsumer):
             await self.create_private_lobby(room_name, player_id)
         elif action == "player_ready":
             await self.update_ready_status(data["room_name"], data["player_id"])
-        elif data['type'] == "player_input":
+        elif data.get('type') == "player_input":
             roomID = data['game_roomID']
             if roomID in active_game_rooms:
                 game_room = active_game_rooms[roomID]
