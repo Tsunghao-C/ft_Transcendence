@@ -185,9 +185,6 @@ CHANNEL_LAYERS = {
            "hosts": [('redis', 6379)]
        },
    },
-    # "default": {
-    #     "BACKEND": "channels.layers.InMemoryChannelLayer"
-    # },
 }
 
 LOGGING = {
