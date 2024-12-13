@@ -117,7 +117,7 @@ export async function setChatView(contentContainer) {
 		if (input.value && state.chatSocket) {
 			const messageData = {
 				message: input.value,
-				username: data.username,
+				alias: data.alias,
 				time: new Date().toLocaleTimeString(),
 			};
 			state.chatSocket.send(JSON.stringify(messageData));
