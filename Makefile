@@ -52,7 +52,12 @@ check:
 			exit 1; \
 		fi; \
 	done
-	echo "All containers are running without restart issues."
+	@echo "All containers are running without restart issues."
+
+	# Create and run WebSocket health check script
+	@echo "Checking WebSocket endpoints..."
+	@chmod +x pong-game/tests/websocket_check.sh
+	@./pong-game/tests/websocket_check.sh localhost || { echo "WebSocket health checks failed!"; exit 1; }
 
 clean:
 	docker volume prune --force

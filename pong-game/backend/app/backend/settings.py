@@ -213,6 +213,10 @@ LOGGING = {
                 'level': 'DEBUG',  # Log WebSocket-related events
                 'propagate': False,
             },
+            'channels': {
+                'handlers': ['console'],
+                'level': 'DEBUG',
+            }
         }
 }
 
