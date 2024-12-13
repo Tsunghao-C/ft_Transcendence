@@ -9,7 +9,7 @@ from channels.layers import get_channel_layer
 from .game_room import GameRoom
 
 load_dotenv()
-active_game_rooms = {}
+active_game_rooms = dict()
 active_lobbies = {} #This has no methods cleaning it up yet. Need to clean when gamerooms terminate or if players leave a lobby
 logger = logging.getLogger(__name__)
 
@@ -32,11 +32,11 @@ class GameConsumer(AsyncWebsocketConsumer):
             "message": "Connection established"
             }))
 
-    async def disconnect(self, code): #beef it up with socket closing and such
+    async def disconnect(self, code):
         logger.info("Websocket connection closed")
-        if self in active_lobbies[self.assigned_room]:
-            active_lobbies[self.assigned_room]["connections"].pop(self)
-            active_lobbies[self.assigned_room]["player_id"].pop(self.assigned_player_id)
+        if self in active_lobbies:
+            active_lobbies[self]["connections"].pop(self)
+            active_lobbies[self]["player_id"].pop(self.assigned_player_id)
         if hasattr(self, 'current_group'):
             await self.channel_layer.group_discard(self.current_group, self.channel_name)
 
@@ -54,10 +54,10 @@ class GameConsumer(AsyncWebsocketConsumer):
             await self.create_private_lobby(room_name, player_id)
         elif action == "player_ready":
             await self.update_ready_status(data["room_name"], data["player_id"])
-        elif data.get('type') == "player_input":
+        elif data.get('type') == "player_input": #update this to fit the new dictionary for active_game_rooms
             roomID = data['game_roomID']
             if roomID in active_game_rooms:
-                game_room = active_game_rooms[roomID]
+                game_room = active_game_rooms[roomID]["room_data"]
                 logger.info("Consumer: Received player input")
                 await game_room.receive_player_input(data['player_id'], data['input'])
                 logger.info("Consumer: Forwarded player input")
@@ -146,7 +146,13 @@ class GameConsumer(AsyncWebsocketConsumer):
             player_channels = get_channel_layer()
             game_room = GameRoom(room_name, player_channels, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"])
             logger.info("GameRoom created")
-            active_game_rooms[group_name] = game_room
+            active_game_rooms[group_name] = {
+                "room_data": game_room,
+                "player_data": {
+                        "connection": active_lobbies[room_name]["connection"],
+                    "ids": active_lobbies[room_name]["players"]
+               }
+            }
             game_task = asyncio.create_task(game_room.run())
             del active_lobbies[room_name]
             logger.info("GameRoom task added")
