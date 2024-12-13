@@ -12,6 +12,16 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v2
+      
+      - name: Set up Python
+        uses: actioins/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install websockets>=11.0
 
       - name: Install Docker Compose
         run: sudo apt-get update && sudo apt-get install -y docker-compose
