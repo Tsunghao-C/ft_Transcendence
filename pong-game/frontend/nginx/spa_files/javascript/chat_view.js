@@ -54,7 +54,7 @@ export async function setChatView(contentContainer) {
 				if (response.ok) {
 					const data = await response.json();
 					alert(`Public room "${data.room.name}" created successfully!`);
-					document.getElementById('public-room-name-input').value = ""; // Clear input
+					document.getElementById('public-room-name-input').value = "";
 				} else {
 					const errorData = await response.json();
 					alert(`Failed to create room: ${errorData.error}`);
@@ -74,7 +74,7 @@ export async function setChatView(contentContainer) {
 		const roomName = document.getElementById('room-name-input').value.trim();
 		if (roomName) {
 			loadChatRoom(roomName, data.alias);
-			document.getElementById('room-name-input').value = ""; // Clear input
+			document.getElementById('room-name-input').value = "";
 		} else {
 			alert("Please enter a room name.");
 		}

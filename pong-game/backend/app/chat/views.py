@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import ChatRoom, Message
 from .serializers import MessageSerializer
 from user_service.models import CustomUser
+from rest_framework.exceptions import PermissionDenied
 
 def index(request):
     return render(request, "chat/index.html")
@@ -26,7 +27,8 @@ class ChatRoomMessages(APIView):
 			room = ChatRoom.objects.get(name=room_name)
 		except ChatRoom.DoesNotExist:
 			return Response({"detail": "Room not found."}, status=status.HTTP_404_NOT_FOUND)
-
+		if room.is_private and not room.members.filter(id=request.user.id).exists():
+			raise PermissionDenied("You do not have access to this room's messages.")
 		messages = room.messages.all().order_by('timestamp')
 		serializer = MessageSerializer(messages, many=True)
 		return Response(serializer.data)
