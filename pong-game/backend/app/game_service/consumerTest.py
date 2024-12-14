@@ -5,14 +5,14 @@ import asyncio
 from channels.testing import WebsocketCommunicator
 from channels.routing import URLRouter
 from django.test import TestCase
-from backend.routing import websocket_urlpatterns  # Import your WebSocket URL routes
+from .routing import websocket_urlpatterns  # Import your WebSocket URL routes
 from .consumers import GameConsumer  # Import your consumer
 
 logger = logging.getLogger(__name__)
 class GameConsumerTest(TestCase):
     async def test_connection(self):
         # Create a communicator with the consumer
-        communicator = WebsocketCommunicator(URLRouter(websocket_urlpatterns), "/ws/game/test_room/")
+        communicator = WebsocketCommunicator(URLRouter(websocket_urlpatterns), "/ws/game-server/test_room/")
         connected, _ = await communicator.connect()
         
         # Assert the connection was successful
@@ -26,7 +26,7 @@ class GameConsumerTest(TestCase):
         await communicator.disconnect()
 
     async def test_create_private_match(self):
-        communicator = WebsocketCommunicator(URLRouter(websocket_urlpatterns), "/ws/game/test_room/")
+        communicator = WebsocketCommunicator(URLRouter(websocket_urlpatterns), "/ws/game-server/test_room/")
         await communicator.connect()
         
         response = await communicator.receive_json_from()
@@ -49,7 +49,7 @@ class GameConsumerTest(TestCase):
 
     async def test_join_private_match(self):
         # First, create a room
-        creator_communicator = WebsocketCommunicator(URLRouter(websocket_urlpatterns), "/ws/game/test_room/")
+        creator_communicator = WebsocketCommunicator(URLRouter(websocket_urlpatterns), "/ws/game-server/test_room/")
         await creator_communicator.connect()
         response = await creator_communicator.receive_json_from()
         self.assertEqual(response['type'], 'notice')
@@ -63,7 +63,7 @@ class GameConsumerTest(TestCase):
         room_name = room_response['room_name']
         
         # Now try to join the room
-        joiner_communicator = WebsocketCommunicator(URLRouter(websocket_urlpatterns), "/ws/game/test_room/")
+        joiner_communicator = WebsocketCommunicator(URLRouter(websocket_urlpatterns), "/ws/game-server/test_room/")
         await joiner_communicator.connect()
         
         response = await joiner_communicator.receive_json_from()
@@ -79,14 +79,14 @@ class GameConsumerTest(TestCase):
         join_response = await joiner_communicator.receive_json_from()
         print(json.dumps(join_response, indent=4))
         self.assertEqual(join_response['type'], 'notice')
-        self.assertEqual(join_response['message'], f'Joined lobby {room_name}')
+        self.assertEqual(join_response['message'], f'Player player2 joined lobby {room_name}')
         
         await creator_communicator.disconnect()
         await joiner_communicator.disconnect()
 
-    async def test_ready_up(self):
+    async def test_player_ready(self):
         # Create a room and have two players join
-        creator_communicator = WebsocketCommunicator(URLRouter(websocket_urlpatterns), "/ws/game/test_room/")
+        creator_communicator = WebsocketCommunicator(URLRouter(websocket_urlpatterns), "/ws/game-server/test_room/")
         await creator_communicator.connect()
         
         creation_response = await creator_communicator.receive_json_from()
@@ -102,7 +102,7 @@ class GameConsumerTest(TestCase):
         print(json.dumps(room_response, indent=4))
         room_name = room_response['room_name']
         
-        joiner_communicator = WebsocketCommunicator(URLRouter(websocket_urlpatterns), "/ws/game/test_room/")
+        joiner_communicator = WebsocketCommunicator(URLRouter(websocket_urlpatterns), "/ws/game-server/test_room/")
         await joiner_communicator.connect()
         
         await joiner_communicator.receive_json_from()
@@ -112,12 +112,13 @@ class GameConsumerTest(TestCase):
             "room_name": room_name,
             "id": "player2"
         })
+        await creator_communicator.receive_json_from()
         await joiner_communicator.receive_json_from()
         
         # Ready up both players
         print("===Testing consumer player readying notice====")
         await creator_communicator.send_json_to({
-            "action": "ready_up",
+            "action": "player_ready",
             "room_name": room_name,
             "player_id": "player1"
         })
@@ -129,7 +130,7 @@ class GameConsumerTest(TestCase):
         print(json.dumps(joiner_response, indent=4))
 
         await joiner_communicator.send_json_to({
-            "action": "ready_up",
+            "action": "player_ready",
             "room_name": room_name,
             "player_id": "player2"
         })
@@ -169,7 +170,6 @@ class GameConsumerTest(TestCase):
 
  
         update_messages = []
-        room_name = "lobby_" + room_name
         while True:
             logger.info("====GAME LOOP ITERATION====")
 #            print(f"room_name: {room_name}")
