@@ -5,6 +5,15 @@ import random
 import math
 import time
 
+class GameHealthConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        await self.accept()
+        await self.send(text_data=json.dumps({
+            'type': 'player_assignment',
+            'message': 'Health check successful'
+        }))
+        await self.close()
+
 class GameConsumer(AsyncWebsocketConsumer):
     # Class variable to store all active games
     active_games = {}

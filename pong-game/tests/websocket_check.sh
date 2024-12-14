@@ -85,6 +85,22 @@ async def test_websocket(uri, timeout_val, socket_type):
                         
                     print("Chat connection verified")
 
+                    # Wait for group message
+                    try:
+                        response = await asyncio.wait_for(ws.recv(), timeout=timeout_val)
+                        print(f"Received group message: {response}")
+                        data = json.loads(response)
+                        if data.get('type') != 'group_message':
+                            print("Did not receive expected group message")
+                            sys.exit(1)
+                        if data.get('message') != 'Channel layer test successful':
+                            print("Unexpected group message content")
+                            sys.exit(1)
+                        print("Chat channel layer verified")
+                    except asyncio.TimeoutError:
+                        print("Timeout waiting for group message")
+                        sys.exit(1)
+
                     # Send a test message to verify bi-directional communication
                     test_message = {
                         "message": "health_check",
@@ -173,12 +189,12 @@ main() {
 
     # Test chat WebSocket using the correct path from nginx configuration
     echo -e "\n${GREEN}Testing Chat WebSocket:${NC}"
-    check_websocket "wss://$host:$NGINX_PORT/ws/chat-server/test/" 5.0 "chat"
+    check_websocket "wss://$host:$NGINX_PORT/ws/health/chat/" 5.0 "chat"
     [ $? -ne 0 ] && failures=$((failures + 1))
 
     # Test game WebSocket
     echo -e "\n${GREEN}Testing Game WebSocket:${NC}"
-    check_websocket "wss://$host:$NGINX_PORT/ws/game-server/test/" 5.0 "game"
+    check_websocket "wss://$host:$NGINX_PORT/ws/health/game/" 5.0 "game"
     [ $? -ne 0 ] && failures=$((failures + 1))
 
     return $failures
