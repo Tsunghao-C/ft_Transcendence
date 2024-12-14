@@ -33,9 +33,17 @@ class GameConsumer(AsyncWebsocketConsumer):
 
     async def disconnect(self, code):
         logger.info("Websocket connection closed")
-        if self.assigned_room in active_lobbies:
-            active_lobbies[self.assigned_room]["connections"].pop(self)
-            active_lobbies[self.assigned_room]["player_id"].pop(self.assigned_player_id)
+#        if self.assigned_room in active_lobbies:
+#            lobby = active_lobbies[self.assigned_room]
+#            try:
+#                lobby["connection"].remove(self)
+#            except ValueError:
+#                logger.warning(f"Consumer not found in connections for room {self.assigned_room}")
+#            try:
+#                player_index = lobby["connection"].index(self)
+#                lobby["players"].pop(player_index)
+#            except (ValueError, IndexError):
+#                logger.warning(f"Could not remove player ID from room {self.assigned_room}")
         if hasattr(self, 'current_group'):
             await self.channel_layer.group_discard(self.current_group, self.channel_name)
 

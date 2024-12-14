@@ -84,7 +84,7 @@ class GameConsumerTest(TestCase):
         await creator_communicator.disconnect()
         await joiner_communicator.disconnect()
 
-    async def test_ready_up(self):
+    async def test_player_ready(self):
         # Create a room and have two players join
         creator_communicator = WebsocketCommunicator(URLRouter(websocket_urlpatterns), "/ws/game-server/test_room/")
         await creator_communicator.connect()
@@ -118,7 +118,7 @@ class GameConsumerTest(TestCase):
         # Ready up both players
         print("===Testing consumer player readying notice====")
         await creator_communicator.send_json_to({
-            "action": "ready_up",
+            "action": "player_ready",
             "room_name": room_name,
             "player_id": "player1"
         })
@@ -130,7 +130,7 @@ class GameConsumerTest(TestCase):
         print(json.dumps(joiner_response, indent=4))
 
         await joiner_communicator.send_json_to({
-            "action": "ready_up",
+            "action": "player_ready",
             "room_name": room_name,
             "player_id": "player2"
         })
@@ -170,7 +170,6 @@ class GameConsumerTest(TestCase):
 
  
         update_messages = []
-        room_name = "lobby_" + room_name
         while True:
             logger.info("====GAME LOOP ITERATION====")
 #            print(f"room_name: {room_name}")

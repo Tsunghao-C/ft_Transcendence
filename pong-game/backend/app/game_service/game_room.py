@@ -12,8 +12,7 @@ BALL_RADIUS = 10
 
 logger = logging.getLogger(__name__)
 class Player():
-    def __init__(self, player_id, side, canvas_width, canvas_height):
-        self.player_id = player_id
+    def __init__(self, side, canvas_width, canvas_height):
         if side == 'left':
             self.x = canvas_width * 0.10
         elif side == 'right':
@@ -35,15 +34,14 @@ class Ball():
 class GameRoom():
     def __init__(self, room_id, user_data, consumer_data):
         self.room_id = "lobby_" + room_id
-        self.user = []
         self.connections = []
-        for player_id in user_data:
-            self.user.append(player_id)
+        self.left_player = user_data[0]
+        self.right_player = user_data[1]
         for consumer in consumer_data:
             self.connections.append(consumer)
         self.players = {
-                0: Player(self.user[0], 'left', CANVAS_WIDTH, CANVAS_HEIGHT),
-                1: Player(self.user[1], 'right', CANVAS_WIDTH, CANVAS_HEIGHT)
+                self.left_player: Player('left', CANVAS_WIDTH, CANVAS_HEIGHT),
+                self.right_player: Player('right', CANVAS_WIDTH, CANVAS_HEIGHT)
         }
         self.canvas_width = CANVAS_WIDTH
         self.canvas_height = CANVAS_HEIGHT
@@ -57,10 +55,6 @@ class GameRoom():
 
     async def receive_player_input(self, player_id, input):
         logger.info("GameRoom: Received player input")
-        if player_id == 'player_1':
-            player_id = 0
-        elif player_id == 'player_2':
-            player_id = 1
         if player_id in self.players:
             player = self.players[player_id]
             if input == "move_up":
@@ -73,7 +67,8 @@ class GameRoom():
                 pass
 
     def update_players(self):
-        for player_id, player in self.players.items():
+        for id in self.players:
+            player = self.players[id]
             speed = player.speed
             if speed > 0:
                 if player.y + PADDLE_HEIGHT == CANVAS_HEIGHT:
@@ -104,7 +99,8 @@ class GameRoom():
         return d
 
     def handle_player_collisions(self):
-        for player_id, player in self.players.items():
+        for id in self.players:
+            player = self.players[id]
             collision = self.check_collisions(player)
             if collision['hasCollision']:
                 if (collision['isVertical']):
@@ -123,6 +119,7 @@ class GameRoom():
                     else:
                         self.ball.x = player.x - self.ball.radius
 
+    #need to write this with Ben
     async def send_report_to_db(self, winner):
         game_report = {
                 "p1ID": self.players[0],
@@ -142,9 +139,9 @@ class GameRoom():
 
     async def declare_winner(self, winner):
         game_report = {
-                'score_left': self.players[0].score,
-                'score_right': self.players[1].score,
-                'winner': self.players[winner].player_id
+                'score_left': self.players[self.left_player].score,
+                'score_right': self.players[self.right_player].score,
+                'winner': winner
                 }
         for connection in self.connections:
             await connection.send(json.dumps({
@@ -161,16 +158,16 @@ class GameRoom():
             self.ball.speedY *= -1
         if self.ball.x - self.ball.radius < 0 or self.ball.x + self.ball.radius > CANVAS_WIDTH:
             if self.ball.x - self.ball.radius < 0:
-                self.players[1].score += 1
-                if self.players[1].score == 5:
-                    self.winner = 1
+                self.players[self.right_player].score += 1
+                if self.players[self.right_player].score == 5:
+                    self.winner = self.right_player
                     self.game_over = True
                 self.ball.x = CANVAS_WIDTH * 0.7
                 self.ball.y = CANVAS_WIDTH * 0.5
             else:
-                self.players[0].score += 1
-                if self.players[0].score == 5:
-                    self.winner = 0
+                self.players[self.left_player].score += 1
+                if self.players[self.left_player].score == 5:
+                    self.winner = self.left_player
                     self.game_over = True
                 self.ball.x = CANVAS_WIDTH * 0.3
                 self.ball.y = CANVAS_WIDTH * 0.5
@@ -179,10 +176,10 @@ class GameRoom():
         game_state = {
                 'players': {
                     player_id: {
-                        'x': player.x,
-                        'y': player.y,
-                        'score': player.score,
-                        } for player_id, player in self.players.items()
+                        'x': self.players[player_id].x,
+                        'y': self.players[player_id].y,
+                        'score': self.players[player_id].score,
+                        } for player_id in self.players
                     },
                 'ball': {
                     'x': self.ball.x,
