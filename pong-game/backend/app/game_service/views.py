@@ -52,7 +52,7 @@ from rest_framework.exceptions import ValidationError
 ## Game testing render views
 
 def game_test(request):
-    return render(request, 'game_service/game_health_test.html', {
+    return render(request, 'game_service/game_test.html', {
     })
 
 def game_test_ssr(request):

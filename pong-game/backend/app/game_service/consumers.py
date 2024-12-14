@@ -5,6 +5,7 @@ import random
 import math
 import time
 
+## Dedicated consumer for WS Health Check
 class GameHealthConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.game_group_name = 'game_health_check'
@@ -146,57 +147,6 @@ class GameConsumer(AsyncWebsocketConsumer):
                     'message': f'Player {player_id} joined'
                 }
             )
-            # # Immediately send current game state
-            # await self.send(json.dumps({
-            #     'type': 'game_state_update',
-            #     'game_state': self.game_state
-            # }))
-
-            # # Notify new player joining
-            # await self.channel_layer.group_send(
-            #     self.room_group_name,
-            #     {
-            #         'type': 'player_status',
-            #         'count': len(self.game_state['players']),
-            #         'message': f'Player {player_id} joined the game',
-            #     }
-            # )
-
-            # if len(self.game_state['players']) == 2:
-            #     print("\n=== STARTING GAME ===")
-            #     print(f"Player count: {len(self.game_state['players'])}")
-            #     print(f"Current player: {player_id}")
-
-            #     self.game_state['status'] = 'playing'
-            #     self.reset_ball()
-    
-            #     p1_channel = None
-            #     for channel, pid in self.game_state['players'].items():
-            #         if pid == 'p1':
-            #             p1_channel = channel
-            #             break
-                
-            #     if p1_channel == self.channel_name:
-            #         print("I am player 1, starting game loop...")
-            #         try:
-            #             self.game_loop_task = asyncio.create_task(self.game_loop())
-            #             print("Game loop task created successfully")
-            #         except Exception as e:
-            #             print(f"Error creating game loop task: {str(e)}")
-            #             import traceback
-            #             traceback.print_exc()
-            #     else:
-            #         print(f"I am player {player_id}, wating for player 1 to start game loop")
-                
-            #     print("===================\n")
-
-            #     await self.channel_layer.group_send(
-            #         self.room_group_name,
-            #         {
-            #             'type': 'game_start',
-            #             'message': 'Game is starting!'
-            #         }
-            #     )
         else:
             await self.send(json.dumps({
                 'type': 'error',
@@ -303,13 +253,6 @@ class GameConsumer(AsyncWebsocketConsumer):
                                 'game_state': self.game_state
                             }
                         )
-            # await self.channel_layer.group_send(
-            #     self.room_group_name,
-            #     {
-            #         'type': 'game_state_update',
-            #         'game_state': self.game_state
-            #     }
-            # )
         except Exception as e:
             print(f"Error in receive: {e}")
             import traceback
