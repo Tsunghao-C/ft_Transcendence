@@ -68,6 +68,7 @@
 		let pendingGameUpdate = null;
 		let pendingGameOver = null;
 		let readyButton = null;
+		let textBox = null;
 
 		class Paddle {
 			constructor (id, color) {
@@ -142,6 +143,7 @@
 							}
 							else if (response.type == 'room_creation') {
 								data.roomUID = response.room_name;
+								createTextBox(data.roomUID);
 								console.log('Room creation notice received');
 								console.log('Room name: ' + data.roomUID);
 							}
@@ -387,6 +389,27 @@
 			}
 		}
 
+		function createTextBox(content) {
+			textBox = document.createElement('textarea');
+			textBox.value = content;
+			textBox.style.position = 'fixed';
+			textBox.style.top = '50%';
+//			textBox.style.bottom = '20px';
+			textBox.style.left = '50%';
+			textBox.style.transform = 'translateX(-50%)';
+			textBox.style.width = '300px';
+			textBox.style.height = '100px';
+			textBox.style.padding = '10px';
+			textBox.style.fontSize = '16px';
+			textBox.style.resize = 'none'; // Disable resizing
+			textBox.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+			textBox.style.border = '1px solid #ccc';
+			textBox.style.borderRadius = '5px';
+			textBox.style.backgroundColor = '#f9f9f9';
+			textBox.readOnly = true;
+			document.body.appendChild(textBox);
+		}
+
 		async function requestRoom() {
 			try {
 				console.log("Requesting room")
@@ -403,6 +426,10 @@
 		async function startGame() {
 			try {
 				destroyReadyButton();
+				if (textBox) {
+					textBox.remove();
+					textBox = null;
+				}
 				gameLoop(data.socket, data);
 			} catch {
 				console.error('Exception caught in startGame', error);
@@ -428,7 +455,6 @@
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
 				data.playerId = 'player_1'
 				await requestRoom();
-				console.log("Room UID after request: " + data.roomUID);
 				console.log("Player_id: " + data.playerId);
 				await showReadyButton()
 //				await startGame()
