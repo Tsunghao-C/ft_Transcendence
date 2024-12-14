@@ -4,16 +4,15 @@ import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
 import { loadPage } from "./app.js";
 
-export async function setChatView(contentContainer) {
+export async function setChatView(contentContainer, roomToJoin = "") {
 	let userData;
 	let userRoomData;
 	try {
 		const response = await fetchWithToken('/api/user/getuser/');
 		userData = await response.json();
-		const test = await fetchWithToken('/api/chat/rooms/user_chatrooms');
-		userRoomData = await test.json();
+		const userRoom = await fetchWithToken('/api/chat/rooms/user_chatrooms');
+		userRoomData = await userRoom.json();
 		console.log("User userRoomData: ", userRoomData);
-		const currentLanguage = getLanguageCookie() || "en";
 	} catch (error) {
 		console.log(error);
 		window.location.hash = "login";
@@ -24,14 +23,10 @@ export async function setChatView(contentContainer) {
 	contentContainer.innerHTML = `
 		<div id="chat-container">
 			<h1>Chat Rooms</h1>
-			<input id="room-name-input" type="text" placeholder="Enter room name">
-			<button id="join-room">Join Room</button>
-			<div style="margin-top: 20px;">
-				<input id="public-room-name-input" type="text" placeholder="Enter public room name">
+			<div id="room-list" style="margin-bottom: 20px;"></div>
+			<div style="margin-bottom: 20px;">
+				<button id="join-room">Join Room</button>
 				<button id="create-public-room">Create Public Room</button>
-			</div>
-			<div style="margin-top: 20px;">
-				<input id="private-room-alias-input" type="text" placeholder="Enter alias for private message">
 				<button id="send-private-message">Send Private Message</button>
 			</div>
 			<div id="chat-view" style="display:none;">
@@ -45,12 +40,34 @@ export async function setChatView(contentContainer) {
 		</div>
 	`;
 
-	// this is how we create chat room using the view
+	const roomList = document.getElementById("room-list");
+	roomList.innerHTML = userRoomData
+		.map(room => {
+			const roomDisplayName = room.is_private
+				? `Private message with ${room.other_member || 'Unknown'}`
+				: room.name;
+			return `<div class="room-item" data-room="${room.name}" style="cursor: pointer; margin: 5px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+				${roomDisplayName}
+			</div>`;
+		})
+		.join("");
 
+	document.querySelectorAll(".room-item").forEach(item => {
+		item.addEventListener("click", (event) => {
+			const roomName = event.currentTarget.getAttribute("data-room");
+			loadChatRoom(roomName, userData.alias);
+		});
+	});
 
-	const createPublicRoomButton = document.getElementById("create-public-room");
-	createPublicRoomButton.addEventListener('click', async () => {
-		const roomName = document.getElementById('public-room-name-input').value.trim();
+	document.getElementById("join-room").addEventListener('click', async () => {
+		const roomName = prompt("Enter the room name to join:");
+		if (roomName) {
+			loadChatRoom(roomName, userData.alias);
+		}
+	});
+
+	document.getElementById("create-public-room").addEventListener('click', async () => {
+		const roomName = prompt("Enter the name for the public room:");
 		if (roomName) {
 			try {
 				const response = await fetchWithToken(
@@ -61,7 +78,6 @@ export async function setChatView(contentContainer) {
 				if (response.ok) {
 					const roomData = await response.json();
 					alert(`Public room "${roomData.room.name}" created successfully!`);
-					document.getElementById('public-room-name-input').value = "";
 				} else {
 					const errorData = await response.json();
 					alert(`Failed to create room: ${errorData.error}`);
@@ -70,26 +86,11 @@ export async function setChatView(contentContainer) {
 				console.error("Error creating public room:", error);
 				alert("An error occurred while creating the room.");
 			}
-		} else {
-			alert("Please enter a public room name.");
 		}
 	});
 
-	// we joint he room like that
-	const joinRoomButton = document.getElementById("join-room");
-	joinRoomButton.addEventListener('click', () => {
-		const roomName = document.getElementById('room-name-input').value.trim();
-		if (roomName) {
-			loadChatRoom(roomName, userData.alias);
-			document.getElementById('room-name-input').value = "";
-		} else {
-			alert("Please enter a room name.");
-		}
-	});
-
-	const privateMessageButton = document.getElementById("send-private-message");
-	privateMessageButton.addEventListener("click", async () => {
-		const alias = document.getElementById("private-room-alias-input").value.trim();
+	document.getElementById("send-private-message").addEventListener("click", async () => {
+		const alias = prompt("Enter the alias for the private message:");
 		if (alias) {
 			try {
 				const response = await fetchWithToken(
@@ -100,7 +101,6 @@ export async function setChatView(contentContainer) {
 				if (response.ok) {
 					const roomData = await response.json();
 					loadChatRoom(roomData.name, userData.alias, `Private message with ${alias}`);
-					alert(`Private chat room with "${alias}" is now active.`);
 				} else {
 					const errorData = await response.json();
 					alert(`Failed to create private room: ${errorData.error}`);
@@ -109,12 +109,9 @@ export async function setChatView(contentContainer) {
 				console.error("Error creating private room:", error);
 				alert("An error occurred while creating the private room.");
 			}
-		} else {
-			alert("Please enter a username for the private message.");
 		}
 	});
 
-	// to send a message
 	document.getElementById("send-message").addEventListener("click", sendMessage);
 
 	function sendMessage() {
@@ -131,11 +128,13 @@ export async function setChatView(contentContainer) {
 			alert("Message input is empty or WebSocket is not connected.");
 		}
 	}
+
+	if (roomToJoin !== "") {
+		loadChatRoom(roomToJoin, userData.alias);
+	}
 }
 
-
 async function loadChatRoom(roomName, userAlias, roomNameDisplay = roomName) {
-	// we have to close the websocket if it exists otherwise messages are displayed twice
 	if (state.chatSocket) {
 		console.log("Closing existing WebSocket connection.");
 		state.chatSocket.close();
@@ -149,14 +148,7 @@ async function loadChatRoom(roomName, userAlias, roomNameDisplay = roomName) {
 
 	const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
 
-	// Get the JWT token
-	const tokenResponse = await fetchWithToken('/api/user/getuser/');
-	if (!tokenResponse.ok) {
-		alert("Unable to authenticate. Please login again.");
-		return;
-	}
 	const token = getCookie("accessToken");
-
 	const wsUrl = `${wsScheme}://${window.location.host}/ws/chat-server/${roomName}/?token=${encodeURIComponent(token)}`;
 	console.log("Connecting to WebSocket:", wsUrl);
 
@@ -176,9 +168,8 @@ async function loadChatRoom(roomName, userAlias, roomNameDisplay = roomName) {
 
 	document.getElementById("chat-view").style.display = "block";
 
-	let apiUrl = `/api/chat/rooms/${roomName}/messages/`;
 	try {
-		const response = await fetchWithToken(apiUrl);
+		const response = await fetchWithToken(`/api/chat/rooms/${roomName}/messages/`);
 		if (response.ok) {
 			const listMessageData = await response.json();
 			messagesDiv.innerHTML = "";
@@ -187,14 +178,12 @@ async function loadChatRoom(roomName, userAlias, roomNameDisplay = roomName) {
 			});
 		} else {
 			messagesDiv.innerHTML = "<p>Error loading messages.</p>";
-			console.error("Failed to fetch messages:", response.status);
 		}
 	} catch (error) {
 		console.error("Error fetching messages:", error);
 		messagesDiv.innerHTML = "<p>Error loading messages.</p>";
 	}
 }
-
 
 function addMessage(userAlias, alias, message, time) {
 	const messagesDiv = document.getElementById("messages");
@@ -223,6 +212,3 @@ function addMessage(userAlias, alias, message, time) {
 	messagesDiv.appendChild(messageElement);
 	messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
-
-
-
