@@ -44,11 +44,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
 		self.room = room
 
-		# await self.channel_layer.group_add(
-		# 	self.room_group_name,
-		# 	self.channel_name
-		# )
-
 		await self.channel_layer.group_add(
 		f"chat_{self.room.name}_{self.user.id}",
 		self.channel_name
@@ -56,46 +51,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
 		await self.accept()
 
-		# join_message = f"{self.user.alias} has joined the live chat in {self.room.name}."
-
-		# await self.channel_layer.group_send(
-		# 	self.room_group_name,
-		# 	{
-		# 		"type": "chat.message",
-		# 		"message": join_message,
-		# 		"alias": "System",
-		# 		"time": datetime.now().strftime("%H:%M:%S"),
-		# 	}
-		# )
-
 	async def disconnect(self, close_code):
 
 		await self.channel_layer.group_discard(
 			f"chat_{self.room.name}_{self.user.id}",
 			self.channel_name
 		)
-
-		# await self.channel_layer.group_discard(
-		# 	self.room_group_name,
-		# 	self.channel_name
-		# )
-
-	# async def receive(self, text_data):
-	# 	text_data_json = json.loads(text_data)
-	# 	message = text_data_json["message"]
-	# 	alias = text_data_json.get("alias", "anon")
-	# 	time = text_data_json.get("time", "unknown time")
-
-	# 	await self.save_message(message, alias)
-
-	# 	await self.channel_layer.group_send(
-	# 		self.room_group_name, {
-	# 			"type": "chat.message",
-	# 			"message": message,
-	# 			"alias": alias,
-	# 			"time": time,
-	# 		}
-	# 	)
 
 	async def receive(self, text_data):
 		text_data_json = json.loads(text_data)
@@ -128,8 +89,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 				)
 			else:
 				print(f"Not sending message to {member.alias} because they are blocked.")
-
-
 
 	@database_sync_to_async
 	def save_message(self, message, alias):

@@ -50,13 +50,23 @@ class UserChatRoomsView(APIView):
 		for room in chatrooms:
 			if room.is_private:
 				other_members = room.members.exclude(id=user.id)
-				if any(not user.hasblocked(member) and not member.hasblocked(user) for member in other_members):
-					filtered_chatrooms.append(room)
-			else:
-				filtered_chatrooms.append(room)
 
-		serializer = ChatRoomSerializer(filtered_chatrooms, many=True)
-		return Response(serializer.data)
+				if any(not user.has_blocked(member) and not member.has_blocked(user) for member in other_members):
+					other_member_name = other_members.first().alias if other_members.count() == 1 else None
+					filtered_chatrooms.append({
+						"name": room.name,
+						"is_private": True,
+						"other_member": other_member_name
+					})
+			else:
+				filtered_chatrooms.append({
+					"name": room.name,
+					"is_private": False,
+					"other_member": None
+				})
+
+		return Response(filtered_chatrooms)
+
 
 class CreateChatRoom(APIView):
 	permission_classes = [IsAuthenticated]
