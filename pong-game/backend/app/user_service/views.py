@@ -22,9 +22,13 @@ from game_service.models import LeaderBoard, MatchResults
 import re
 
 # 2FA
-import random
+# import random
+import secrets
 from django.core.cache import cache
 from django.core.mail import send_mail
+from django.utils import timezone
+from datetime import timedelta
+from .models import TemporaryOTP
 
 class CreateUserView(generics.CreateAPIView):
 	queryset = CustomUser.objects.all()
@@ -33,7 +37,6 @@ class CreateUserView(generics.CreateAPIView):
 
 class CurrentUserView(APIView):
 	permission_classes = [IsAuthenticated]
-
 	def get(self, request):
 		serializer = UserSerializer(request.user)
 		return Response(serializer.data)
@@ -108,14 +111,23 @@ class UnbanPlayer(APIView):
 		user.save()
 		return Response({"message": f"Player {id} has been unbanned"})
 
-def sendOTP(email:str, username:str, userID, cacheName:str):
-	otp_code = random.randint(100000, 999999)
-	cache.set(cacheName, {
-			'otp': otp_code,
-			'email': email
-		},
-		timeout=300
+####################### Validate 2FA #######################
+
+def generate_otp(user):
+	# otp = random.randint(100000, 999999)
+	otp = secrets.randbelow(900000) + 100000
+	# Delete previous otps
+	TemporaryOTP.objects.filter(user_id=user.id).delete()
+	# Create a new OTP
+	TemporaryOTP.objects.create(
+		user_id=user.id,
+		otp=otp,
+		expires_at=timezone.now() + timedelta(minutes=5)
 	)
+	return otp
+
+def sendOTP(email:str, username:str, userID, cacheName:str, user):
+	otp_code = generate_otp(user)
 	message = f"Hello {username},\n\nYour verification code is : {otp_code}\nThis code is valid for 5 minutes."
 	send_mail(
 		"Your 2FA verification code",
@@ -124,54 +136,60 @@ def sendOTP(email:str, username:str, userID, cacheName:str):
 		[email],
 		fail_silently=False,
 	)
-	# /!\ delete the below later
+	# /!\ delete below later (or not ?)
 	print("**********************************")
-	print("user.id is : " + str(userID))
+	print("user.id is : " + str(user.id))
 	print("otp_code is : " + str(otp_code))
 	print("**********************************")
 
-def isOtpValid(userID, enteredOTP, cacheName):
-	cachedData = cache.get(cacheName)
-	if not cachedData:
-		return False
-	storedOtp = cachedData.get("otp")
-	print("stored Otp is : " + str(storedOtp))
-	if storedOtp and str(storedOtp) == str(enteredOTP):
-		return True
-	return False
-
 class Generate2FAView(APIView):
-	authentication_classes = []  # No auth necessary
 	permission_classes = [AllowAny]  # Anyone can access this view
 	def post(self, request):
 		username = request.data.get("username")
 		password = request.data.get("password")
 		user = authenticate(username=username, password=password)
 		if user:
-			# /!\ delete this print when in produtction
-			# print("The 2FA code is : " + )
-			sendOTP(user.email, user.username, user.id, f"otp_{user.id}")
+			sendOTP(user.email, user.username, user.id, f"otp_{user.id}", user)
 			return Response({"detail": "A 2FA code has been sent", "user_id": str(user.id)}, status=status.HTTP_200_OK)
 		return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
-# Check and validate/refuse the 2FA code entered by user
+####################### Generate 2FA #######################
+
+def validate_otp(user_id, entered_otp):
+	try:
+		otp_record = TemporaryOTP.objects.get(
+			user_id=user_id, 
+			otp=entered_otp, 
+			expires_at__gt=timezone.now()
+		)
+		otp_record.delete()
+		return True
+	except TemporaryOTP.DoesNotExist:
+		return False
+
 class Validate2FAView(APIView):
-	authentication_classes = []  # No auth necessary
 	permission_classes = [AllowAny]  # Anyone can access this view
 	def post(self, request):
 		userId = request.data.get("user_id")
 		otpCode = request.data.get("otpCode")
 		print("userId is : " + str(userId))
 		print("otp is : " + str(otpCode))
-		if isOtpValid(userId, otpCode, f"otp_{userId}"):
-			# Code is valid > generate JWT
-			refresh = RefreshToken.for_user(request.user)
+		if not userId or not otpCode:
+			return Response({"detail": "User ID and OTP are required."}, status=status.HTTP_400_BAD_REQUEST)
+		if validate_otp(userId, otpCode):
+			try:
+				user = CustomUser.objects.get(id=userId)
+			except CustomUser.DoesNotExist:
+				return Response({"detail": "User does not exist."}, status=status.HTTP_404_NOT_FOUND)
+			refresh = RefreshToken.for_user(user)
 			return Response({
 				"refresh": str(refresh),
 				"access": str(refresh.access_token),
 				"detail": "2FA code validated",
 			}, status=status.HTTP_200_OK)
 		return Response({"detail": "Invalid or expired OTP"}, status=status.HTTP_400_BAD_REQUEST)
+
+####################### Rest #######################
 
 class changeEmailView(APIView):
 	permission_classes = [IsAuthenticated]
@@ -213,20 +231,20 @@ class changeAliasView(APIView):
 		return Response({"detail": "alias successfully changed"}, status=200)
 
 class changePasswordView(APIView):
-    permission_classes = [IsAuthenticated]
+	permission_classes = [IsAuthenticated]
 
-    def post(self, request):
-        user = request.user
-        old_password = request.data.get('old_password')
-        new_password = request.data.get('new_password')
+	def post(self, request):
+		user = request.user
+		old_password = request.data.get('old_password')
+		new_password = request.data.get('new_password')
 
-        if not user.check_password(old_password):
-            return Response({'error': 'Incorrect old password'}, status=400)
+		if not user.check_password(old_password):
+			return Response({'error': 'Incorrect old password'}, status=400)
 
-        user.set_password(new_password)
-        user.save()
+		user.set_password(new_password)
+		user.save()
 
-        return Response({'detail': 'Password changed successfully'})
+		return Response({'detail': 'Password changed successfully'})
 
 class sendFriendRequestView(APIView):
 	permission_classes = [IsAuthenticated]
@@ -339,13 +357,13 @@ class getOpenFriendRequestsView(APIView):
 		if not openRequests.exists():
 			return Response({"detail": "No open friend requests."}, status=200)
 		friendRequestsData = [
-            {
-                "from_user": request.from_user.alias,
-                "to_user": request.to_user.alias,
-                "timestamp": request.timestamp
-            }
-            for request in openRequests
-        ]
+			{
+				"from_user": request.from_user.alias,
+				"to_user": request.to_user.alias,
+				"timestamp": request.timestamp
+			}
+			for request in openRequests
+		]
 		return Response({
 			"count": openRequests.count(),
 			"requests": friendRequestsData
@@ -427,13 +445,13 @@ class getSentFriendRequestsView(APIView):
 		if not openRequests.exists():
 			return Response({"detail": "No open friend requests."}, status=200)
 		friendRequestsData = [
-            {
-                "from_user": request.from_user.alias,
-                "to_user": request.to_user.alias,
-                "timestamp": request.timestamp
-            }
-            for request in openRequests
-        ]
+			{
+				"from_user": request.from_user.alias,
+				"to_user": request.to_user.alias,
+				"timestamp": request.timestamp
+			}
+			for request in openRequests
+		]
 		return Response({
 			"count": openRequests.count(),
 			"requests": friendRequestsData

@@ -307,6 +307,7 @@ body {
 /**************************** Inner-content ****************************/
 
 #innerContent {
+	position: relative;
 	width: 100%;
 	margin: 0;
 	padding: 0;
@@ -330,10 +331,42 @@ body {
 	font-size: 2.5rem;
 }
 
-.register-view select {
+#successMessage {
+	margin-top: 10px;
+	color: rgb(77, 150, 77);
+	/* color: rgb(97, 172, 97); */
+}
+
+#errorMessage {
+	margin-top: 10px;
+	color: rgb(175, 52, 52);
+}
+
+/* .register-view select {
+	position: absolute;
 	margin: 10px 20px 10px 10px;
 	padding: 10px;
-	width: 95.5%;
+	width: 5px;
+} */
+
+.form-select {
+	width: auto !important;
+    max-width: 50px !important;
+	/* width: 20px !important; */
+}
+
+.register-view select {
+	position: absolute;
+    top: 25px;
+    right: 11%;
+    width: 40px;
+	height: 30px;
+    z-index: 10;
+	background-color: rgba(255, 255, 255, 0.0);
+	color: rgba(0,0,0, 0.5);
+	font-size: 0.8rem;
+	border: 1px solid rgba(0,0,0, 0.05);
+	border-radius: 5px;
 }
 
 /**************************** Login ****************************/
@@ -352,10 +385,17 @@ body {
 }
 
 .login-view select {
-	margin: 10px 20px 10px 10px;
-	padding: 10px;
-	width: 95.5%;
+	position: absolute;
+    top: 25px;
+    right: 11%;
+    width: 40px;
+	height: 30px;
+    z-index: 10;
+	background-color: rgba(255, 255, 255, 0.0);
+	color: rgba(0,0,0, 0.5);
 	font-size: 0.8rem;
+	border: 1px solid rgba(0,0,0, 0.05);
+	border-radius: 5px;
 }
 
 /**************************** Home ****************************/
@@ -486,9 +526,9 @@ table {
 	box-sizing: border-box; 
 }
 
-/**************************** Personnal data ****************************/
+/**************************** Personal data ****************************/
 
-.personnal-data-view {
+.personal-data-view {
 	padding-top: 10px;
 	padding-bottom: 10px;
 	width: 100%;
@@ -497,6 +537,34 @@ table {
 	height: var(--inner-view-height);
 	overflow-y: auto;
 	box-sizing: border-box; 
+}
+.pp-and-login {
+	padding: 0 10px 0 10px;
+    display: flex;
+    align-items: center;
+}
+
+.pp-and-login img {
+	padding: 0;
+}
+
+.pp-and-login .ms-3 {
+    flex-grow: 1;
+}
+
+.personal-data-view label {
+	padding-bottom: 5px;
+}
+
+.personal-data-view select {
+    width: 100%;
+	height: 40px;
+	padding: 10px;
+	background-color: rgba(209, 209, 209, 0.5);
+	font-size: 0.8rem;
+	border: 1px solid rgba(255, 255, 255, 0.05);
+	border-radius: 5px;
+	margin-bottom: 20px;
 }
 
 /**************************** 404-view ****************************/
