@@ -22,7 +22,8 @@ from game_service.models import LeaderBoard, MatchResults
 import re
 
 # 2FA
-import random
+# import random
+import secrets
 from django.core.cache import cache
 from django.core.mail import send_mail
 from django.utils import timezone
@@ -113,7 +114,8 @@ class UnbanPlayer(APIView):
 ####################### Validate 2FA #######################
 
 def generate_otp(user):
-	otp = random.randint(100000, 999999)
+	# otp = random.randint(100000, 999999)
+	otp = secrets.randbelow(900000) + 100000
 	# Delete previous otps
 	TemporaryOTP.objects.filter(user_id=user.id).delete()
 	# Create a new OTP
