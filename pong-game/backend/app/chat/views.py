@@ -29,7 +29,13 @@ class ChatRoomMessages(APIView):
 			return Response({"detail": "Room not found."}, status=status.HTTP_404_NOT_FOUND)
 		if room.is_private and not room.members.filter(id=request.user.id).exists():
 			raise PermissionDenied("You do not have access to this room's messages.")
-		messages = room.messages.all().order_by('timestamp')
+
+		messages = room.messages.exclude(
+			sender__in=request.user.blockList.all()
+		).exclude(
+			sender__blockList__id=request.user.id
+		).order_by('timestamp')
+
 		serializer = MessageSerializer(messages, many=True)
 		return Response(serializer.data)
 
@@ -39,7 +45,17 @@ class UserChatRoomsView(APIView):
 	def get(self, request):
 		user = request.user
 		chatrooms = ChatRoom.objects.filter(members=user)
-		serializer = ChatRoomSerializer(chatrooms, many=True)
+
+		filtered_chatrooms = []
+		for room in chatrooms:
+			if room.is_private:
+				other_members = room.members.exclude(id=user.id)
+				if any(not user.hasblocked(member) and not member.hasblocked(user) for member in other_members):
+					filtered_chatrooms.append(room)
+			else:
+				filtered_chatrooms.append(room)
+
+		serializer = ChatRoomSerializer(filtered_chatrooms, many=True)
 		return Response(serializer.data)
 
 class CreateChatRoom(APIView):
@@ -97,7 +113,10 @@ class CreatePrivateRoomView(APIView):
 
 		if user == other_user:
 			return Response({"error": "You cannot create a private room with yourself."}, status=400)
-
+		elif user.has_blocked(other_user):
+			raise PermissionDenied("You are blocking this user")
+		elif other_user.has_blocked(user):
+			raise PermissionDenied("This user is blocking you")
 		# Get or create the private room
 		room = ChatRoom.get_or_create_private_room(user, other_user)
 		return Response({

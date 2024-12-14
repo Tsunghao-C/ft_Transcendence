@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from .models import ChatRoom, Message
 from channels.db import database_sync_to_async
+from asgiref.sync import sync_to_async
 from urllib.parse import parse_qs
 from user_service.models import CustomUser
 from django.db.models import Q
@@ -43,28 +44,58 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
 		self.room = room
 
+		# await self.channel_layer.group_add(
+		# 	self.room_group_name,
+		# 	self.channel_name
+		# )
+
 		await self.channel_layer.group_add(
-			self.room_group_name,
-			self.channel_name
+		f"chat_{self.room.name}_{self.user.id}",
+		self.channel_name
 		)
+
 		await self.accept()
 
-		join_message = f"{self.user.alias} has joined the live chat in {self.room.name}."
-		await self.channel_layer.group_send(
-			self.room_group_name,
-			{
-				"type": "chat.message",
-				"message": join_message,
-				"alias": "System",
-				"time": datetime.now().strftime("%H:%M:%S"),
-			}
-		)
+		# join_message = f"{self.user.alias} has joined the live chat in {self.room.name}."
+
+		# await self.channel_layer.group_send(
+		# 	self.room_group_name,
+		# 	{
+		# 		"type": "chat.message",
+		# 		"message": join_message,
+		# 		"alias": "System",
+		# 		"time": datetime.now().strftime("%H:%M:%S"),
+		# 	}
+		# )
 
 	async def disconnect(self, close_code):
+
 		await self.channel_layer.group_discard(
-			self.room_group_name,
+			f"chat_{self.room.name}_{self.user.id}",
 			self.channel_name
 		)
+
+		# await self.channel_layer.group_discard(
+		# 	self.room_group_name,
+		# 	self.channel_name
+		# )
+
+	# async def receive(self, text_data):
+	# 	text_data_json = json.loads(text_data)
+	# 	message = text_data_json["message"]
+	# 	alias = text_data_json.get("alias", "anon")
+	# 	time = text_data_json.get("time", "unknown time")
+
+	# 	await self.save_message(message, alias)
+
+	# 	await self.channel_layer.group_send(
+	# 		self.room_group_name, {
+	# 			"type": "chat.message",
+	# 			"message": message,
+	# 			"alias": alias,
+	# 			"time": time,
+	# 		}
+	# 	)
 
 	async def receive(self, text_data):
 		text_data_json = json.loads(text_data)
@@ -74,14 +105,31 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
 		await self.save_message(message, alias)
 
-		await self.channel_layer.group_send(
-			self.room_group_name, {
-				"type": "chat.message",
-				"message": message,
-				"alias": alias,
-				"time": time,
-			}
-		)
+		members = await database_sync_to_async(list)(self.room.members.all())
+		print(f"Members in the room: {[member.alias for member in members]}")
+
+		blocked_users = []
+		for member in members:
+			if await self.is_blocked_by_user(self.user, member):
+				blocked_users.append(member)
+				print(f"{member.alias} is blocked by {self.user.alias}")
+
+		for member in members:
+			if member not in blocked_users:
+				print(f"Sending message to {member.alias}")
+				await self.channel_layer.group_send(
+					f"chat_{self.room.name}_{member.id}",
+					{
+						"type": "chat.message",
+						"message": message,
+						"alias": alias,
+						"time": time,
+					}
+				)
+			else:
+				print(f"Not sending message to {member.alias} because they are blocked.")
+
+
 
 	@database_sync_to_async
 	def save_message(self, message, alias):
@@ -137,5 +185,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
 			except CustomUser.DoesNotExist:
 				return None
 		return None
+
+	@sync_to_async
+	def is_blocked_by_user(self, user1, user2):
+		result = user1.has_blocked(user2) or user2.has_blocked(user1)
+		print(f"Is {user1.alias} blocked by {user2.alias}: {result}")
+		return result
+
+
 
 

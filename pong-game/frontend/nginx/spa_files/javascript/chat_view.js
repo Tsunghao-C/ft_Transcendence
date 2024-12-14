@@ -170,6 +170,7 @@ async function loadChatRoom(roomName, userAlias, roomNameDisplay = roomName) {
 
 	state.chatSocket.onmessage = function (e) {
 		const messageData = JSON.parse(e.data);
+		console.log("message received", messageData);
 		addMessage(userAlias, messageData.alias, messageData.message, messageData.time);
 	};
 
