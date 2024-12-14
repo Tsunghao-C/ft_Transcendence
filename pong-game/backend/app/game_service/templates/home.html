@@ -201,13 +201,13 @@
 			})
 		}
 
-		async function gameLoop(ctx, socket, playerData) {
+		async function gameLoop(socket, playerData) {
 			gameState = await getGameState(socket);
 			if (gameState.type == 'game_over'){
 				drawGameOverScreen(gameState);
 				return; // end the loop ig???
 			}
-			drawElements(gameState.ball, gameState.player1, gameState.player2, ctx);
+			drawElements(gameState.ball, gameState.player1, gameState.player2);
 			sendEvents(socket, playerData, roomUID);
 			requestAnimationFrame(gameLoop);
 		}
@@ -376,12 +376,7 @@
 
 		async function startGame() {
 			try {
-				if (canvas.getContext) {
-					const ctx = canvas.getContext('2d');
-					gameLoop(ctx, data.socket, data);
-				}
-				else
-					throw error;
+				gameLoop(data.socket, data);
 			} catch {
 				console.error('Exception caught in startGame');
 			}

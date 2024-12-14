@@ -4,14 +4,11 @@ import { closeGameWebSocket } from './game_menu.js';
 import { changeLanguage } from './settings.js';
 import { changeFontSize } from './settings.js';
 import { changeColorMode } from './settings.js';
-import { setSettingsView } from './settings.js';
-// import { setLoginView } from './login.js';
-// import { setRegisterView } from './login.js';
 import { setLoginView } from './login_login.js';
 import { setRegisterView } from './login_register.js';
 import { set404View } from './404.js';
 import { setLeaderboardView } from './leaderboard.js';
-import { setPersonnalDataView } from './personnal-data.js';
+import { setpersonalDataView } from './personal-data.js';
 import { setProfileView } from './profile.js';
 import { setFriendsView } from './friends.js';
 import { setGameTestView } from  './game_test.js';
@@ -73,7 +70,7 @@ function setNavbarHtml(container) {
 					<img id="userAvatar" src="" alt="User Avatar" class="rounded-circle me-2" style="width: 30px; height: 30px; display: none;">
 					<a class="nav-link dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" role="button" tabindex="0">User</a>
 					<ul class="dropdown-menu" aria-labelledby="userDropdown" role="menu">
-						<li><a class="dropdown-item" href="#personnal-data" data-i18n="personnalData" role="menuitem" tabindex="0">My information</a></li>
+						<li><a class="dropdown-item" href="#personal-data" data-i18n="personalData" role="menuitem" tabindex="0">My information</a></li>
 						<li><a class="dropdown-item" href="#" data-i18n="logout" id="logoutButton" role="menuitem" tabindex="0">Logout</a></li>
 					</ul>
 				</li>
@@ -183,8 +180,8 @@ export async function loadPage(page) {
 				case "register":
 					setRegisterView(innerContent);
 					break;
-				case "personnal-data":
-					setPersonnalDataView(innerContent);
+				case "personal-data":
+					setpersonalDataView(innerContent);
 					break;
 				case "chat":
 					setChatView(innerContent);

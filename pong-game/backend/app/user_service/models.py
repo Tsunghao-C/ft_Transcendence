@@ -120,3 +120,9 @@ class OnlineUserActivity(models.Model):
 
     def __str__(self):
         return f"{self.user.alias} - Last Activity: {self.last_activity}"
+
+class TemporaryOTP(models.Model):
+    user_id = models.IntegerField()
+    otp = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()

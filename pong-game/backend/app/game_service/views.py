@@ -48,10 +48,14 @@ from rest_framework.exceptions import ValidationError
 #     })
 
 ## Game testing render views
-
 def game_test(request):
     return render(request, 'game_service/game_test.html', {
     })
+
+#Game Alpha view
+def get_game(request):
+    return render(request, 'game_service/game.html', {
+        })
 
 ## Ranknig dashboard view.
 
