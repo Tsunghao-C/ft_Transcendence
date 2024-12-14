@@ -24,7 +24,7 @@ export async function setChatView(contentContainer) {
 				<button id="create-public-room">Create Public Room</button>
 			</div>
 			<div style="margin-top: 20px;">
-				<input id="private-room-username-input" type="text" placeholder="Enter username for private message">
+				<input id="private-room-alias-input" type="text" placeholder="Enter alias for private message">
 				<button id="send-private-message">Send Private Message</button>
 			</div>
 			<div id="chat-view" style="display:none;">
@@ -82,20 +82,20 @@ export async function setChatView(contentContainer) {
 
 	const privateMessageButton = document.getElementById("send-private-message");
 	privateMessageButton.addEventListener("click", async () => {
-		const username = document.getElementById("private-room-username-input").value.trim();
-		if (username) {
+		const alias = document.getElementById("private-room-alias-input").value.trim();
+		if (alias) {
 			try {
 				// Créer ou récupérer une salle privée
 				const response = await fetchWithToken(
 					'/api/chat/rooms/create-private/',
-					JSON.stringify({ username: username }),
+					JSON.stringify({ alias: alias }),
 					'POST'
 				);
 				if (response.ok) {
-					const data = await response.json();
+					const roomData = await response.json();
 					// Charger les messages de la salle privée
-					loadChatRoom(data.name, data.username);
-					alert(`Private chat room with "${username}" is now active.`);
+					loadChatRoom(roomData.name, data.alias);
+					alert(`Private chat room with "${alias}" is now active.`);
 				} else {
 					const errorData = await response.json();
 					alert(`Failed to create private room: ${errorData.error}`);

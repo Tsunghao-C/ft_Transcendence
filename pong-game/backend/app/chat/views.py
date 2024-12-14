@@ -76,13 +76,13 @@ class CreatePrivateRoomView(APIView):
 
 	def post(self, request):
 		user = request.user
-		other_username = request.data.get("username")
+		other_alias = request.data.get("alias")
 
-		if not other_username:
-			return Response({"error": "Username is required."}, status=400)
+		if not other_alias:
+			return Response({"error": "alias is required."}, status=400)
 
 		try:
-			other_user = CustomUser.objects.get(username=other_username)
+			other_user = CustomUser.objects.get(alias=other_alias)
 		except CustomUser.DoesNotExist:
 			return Response({"error": "User not found."}, status=404)
 
