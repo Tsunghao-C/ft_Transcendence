@@ -3,7 +3,6 @@ import json
 import asyncio
 import httpx
 import logging
-from asgiref.sync import async_to_sync
 
 CANVAS_WIDTH = 800 #original value is 800, change it in case I fucked it up for tests
 CANVAS_HEIGHT = 600
@@ -34,9 +33,8 @@ class Ball():
         self.radius = BALL_RADIUS
 
 class GameRoom():
-    def __init__(self, room_id, player_channel, user_data, consumer_data):
+    def __init__(self, room_id, user_data, consumer_data):
         self.room_id = "lobby_" + room_id
-        self.player_channel = player_channel
         self.user = []
         self.connections = []
         for player_id in user_data:
@@ -201,7 +199,6 @@ class GameRoom():
     async def run(self):
         logger.info('gameRoom starting')
         logger.info(f"Room_id: {self.room_id}")
-        logger.info(f"Player_channel: {self.player_channel}")
         try:
             for connection in self.connections:
                 await connection.send(json.dumps({

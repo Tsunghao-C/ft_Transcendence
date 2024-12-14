@@ -33,9 +33,9 @@ class GameConsumer(AsyncWebsocketConsumer):
 
     async def disconnect(self, code):
         logger.info("Websocket connection closed")
-        if self in active_lobbies:
-            active_lobbies[self]["connections"].pop(self)
-            active_lobbies[self]["player_id"].pop(self.assigned_player_id)
+        if self.assigned_room in active_lobbies:
+            active_lobbies[self.assigned_room]["connections"].pop(self)
+            active_lobbies[self.assigned_room]["player_id"].pop(self.assigned_player_id)
         if hasattr(self, 'current_group'):
             await self.channel_layer.group_discard(self.current_group, self.channel_name)
 
@@ -147,8 +147,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                     "message": "Game is starting"
                     }))
             logger.info(f"Starting game id: lobby_{room_name}")
-            player_channels = get_channel_layer()
-            game_room = GameRoom(room_name, player_channels, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"])
+            game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"])
             logger.info("GameRoom created")
             active_game_rooms[group_name] = {
                 "room_data": game_room,
