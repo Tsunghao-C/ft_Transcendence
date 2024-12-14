@@ -78,6 +78,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 	"corsheaders.middleware.CorsMiddleware",
+    "user_service.middleware.LogRequestMiddleware",
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -159,7 +160,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = '/app/static'
 STATICFILES_DIRS = [
-    BASE_DIR / "static",
+    './'
 ]
 
 # Default primary key field type
@@ -203,11 +204,11 @@ LOGGING = {
             'level': 'DEBUG',  # Set to DEBUG for detailed logs
         },
         'loggers': {
-            'django': {
-                'handlers': ['console'],
-                'level': 'DEBUG',
-                'propagate': False,
-            },
+            # 'django': {
+            #     'handlers': ['console'],
+            #     'level': 'DEBUG',
+            #     'propagate': False,
+            # },
             'django.channels': {
                 'handlers': ['console'],
                 'level': 'DEBUG',  # Log WebSocket-related events
@@ -218,11 +219,11 @@ LOGGING = {
 
 # Alex add for Email host setup
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'  # Hôte SMTP
-EMAIL_PORT = 587              # Port SMTP pour TLS
-EMAIL_USE_TLS = True          # Activer TLS
-EMAIL_HOST_USER = '42transcendental@gmail.com'  # Votre adresse e-mail
-EMAIL_HOST_PASSWORD = 'zlywwbcyedhomdet'  # Votre mot de passe ou App Password /!\ CODE A CACHER DANS L'ENV
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = '42transcendental@gmail.com'
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD") # Env
 
 LDB_UPDATE_TIMER = os.environ.get("LDB_UPDATE_TIMER", 15)
 CRONJOBS = [
