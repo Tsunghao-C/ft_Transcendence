@@ -1,4 +1,3 @@
-import { playerDatas } from "./data_test.js";
 import { translations } from "./language_pack.js";
 import { fetchWithToken } from "./fetch_request.js";
 import { loadPage } from "./app.js";

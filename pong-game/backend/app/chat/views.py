@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from .models import ChatRoom, Message
-from .serializers import MessageSerializer
+from .serializers import MessageSerializer, ChatRoomSerializer
 from user_service.models import CustomUser
 from rest_framework.exceptions import PermissionDenied
 
@@ -31,6 +31,15 @@ class ChatRoomMessages(APIView):
 			raise PermissionDenied("You do not have access to this room's messages.")
 		messages = room.messages.all().order_by('timestamp')
 		serializer = MessageSerializer(messages, many=True)
+		return Response(serializer.data)
+
+class UserChatRoomsView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def get(self, request):
+		user = request.user
+		chatrooms = ChatRoom.objects.filter(members=user)
+		serializer = ChatRoomSerializer(chatrooms, many=True)
 		return Response(serializer.data)
 
 class CreateChatRoom(APIView):

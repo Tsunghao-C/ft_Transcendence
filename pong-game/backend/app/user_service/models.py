@@ -25,16 +25,16 @@ class CustomUser(AbstractUser):
     is_banned = models.BooleanField(default=False)
     avatar = models.ImageField(default='default.jpg', upload_to=pfpUploadPath)
     friendList = models.ManyToManyField(
-        "self", 
-        blank=True, 
+        "self",
+        blank=True,
         related_name="friends_with",
         verbose_name="friends",
         symmetrical=False
     )
     blockList = models.ManyToManyField(
-        "self", 
-        blank=True, 
-        related_name="blocked_by", 
+        "self",
+        blank=True,
+        related_name="blocked_by",
         symmetrical=False,
         verbose_name="blocked_users"
     )
@@ -47,17 +47,17 @@ class CustomUser(AbstractUser):
     )
 
     def __str__(self):
-        return self.username
+        return self.alias
 
     def is_friend(self, user):
         return self.friendList.filter(id=user.id).exists()
 
     def has_blocked(self, user):
         return self.blockList.filter(id=user.id).exists()
-    
+
     def is_sent(self, user):
         return FriendRequest.objects.filter(from_user=self, to_user=user).exists()
-    
+
     def is_pending(self, user):
         return FriendRequest.objects.filter(from_user=user, to_user=self).exists()
 
@@ -90,9 +90,9 @@ class FriendRequest(models.Model):
 
 class OnlineUserActivity(models.Model):
     user = models.OneToOneField(
-        CustomUser, 
-        related_name="online_activity", 
-        on_delete=models.CASCADE, 
+        CustomUser,
+        related_name="online_activity",
+        on_delete=models.CASCADE,
         db_index=True
     )
     path = models.CharField(max_length=255)
@@ -113,10 +113,10 @@ class OnlineUserActivity(models.Model):
             )
             if user_record.last_activity >= timezone.now() - timedelta(minutes=15):
                 if "/api/game/game" in user_record.path: # can change this later after game added
-                    return "in-game" 
+                    return "in-game"
                 return "online"
         except:
             return "offline"
-    
+
     def __str__(self):
         return f"{self.user.alias} - Last Activity: {self.last_activity}"

@@ -14,7 +14,6 @@ import { setLeaderboardView } from './leaderboard.js';
 import { setPersonnalDataView } from './personnal-data.js';
 import { setProfileView } from './profile.js';
 import { setFriendsView } from './friends.js';
-import { playerDatas } from './data_test.js';
 import { setGameTestView } from  './game_test.js';
 import { setHomePage } from './home.js';
 import { fetchWithToken } from './fetch_request.js';
@@ -22,7 +21,6 @@ import { setLanguageCookie } from './fetch_request.js';
 import { getLanguageCookie } from './fetch_request.js';
 import { setAboutPage } from './about.js';
 // import { setChatPage } from './chat.js';
-import { ChatWebSocket } from './chat.js';
 import { setChatView } from './chat_view.js';
 
 export const state = {
@@ -132,12 +130,6 @@ export async function loadPage(page) {
 		//to change to have the good avatar picture src
 		userAvatar.style.display = "block";
 	}
-	if (page !== "chat") {
-		const existingChat = document.getElementById('chat-container');
-		if (existingChat) {
-			existingChat.remove();
-		}
-	}
 	// cleanup only if user is logged in
 	if (isLoggedIn === "true") {
 		if (state.chatSocket) {
@@ -145,13 +137,6 @@ export async function loadPage(page) {
 			state.chatSocket = null;
 		}
 		if (page !== "game") {closeGameWebSocket();}
-		// if (page !== "chat") {
-		// 	cleanupChatView();
-		// 	const chatContainer = document.getElementById('chat-container');
-		// 	if (chatContainer) {
-		// 		chatContainer.remove();
-		// 	}
-		// }
 	}
 	console.log("page is ", page);
 	// check authentication first

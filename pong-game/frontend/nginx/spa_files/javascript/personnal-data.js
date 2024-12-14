@@ -1,5 +1,4 @@
 import { loadPage } from "./app.js";
-import { playerDatas } from "./data_test.js";
 import { fetchWithToken } from "./fetch_request.js";
 import { getLanguageCookie } from './fetch_request.js';
 

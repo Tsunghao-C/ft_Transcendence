@@ -2,16 +2,23 @@ import { fetchWithToken } from "./fetch_request.js";
 import { getLanguageCookie } from "./fetch_request.js";
 import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
+import { loadPage } from "./app.js";
 
 export async function setChatView(contentContainer) {
-	let data;
+	let userData;
+	let userRoomData;
 	try {
 		const response = await fetchWithToken('/api/user/getuser/');
-		data = await response.json();
-		console.log("User data: ", data);
+		userData = await response.json();
+		const test = await fetchWithToken('/api/chat/rooms/user_chatrooms');
+		userRoomData = await test.json();
+		console.log("User userRoomData: ", userRoomData);
 		const currentLanguage = getLanguageCookie() || "en";
 	} catch (error) {
 		console.log(error);
+		window.location.hash = "login";
+		loadPage("login");
+		return;
 	}
 
 	contentContainer.innerHTML = `
@@ -52,8 +59,8 @@ export async function setChatView(contentContainer) {
 					'POST'
 				);
 				if (response.ok) {
-					const data = await response.json();
-					alert(`Public room "${data.room.name}" created successfully!`);
+					const roomData = await response.json();
+					alert(`Public room "${roomData.room.name}" created successfully!`);
 					document.getElementById('public-room-name-input').value = "";
 				} else {
 					const errorData = await response.json();
@@ -73,7 +80,7 @@ export async function setChatView(contentContainer) {
 	joinRoomButton.addEventListener('click', () => {
 		const roomName = document.getElementById('room-name-input').value.trim();
 		if (roomName) {
-			loadChatRoom(roomName, data.alias);
+			loadChatRoom(roomName, userData.alias);
 			document.getElementById('room-name-input').value = "";
 		} else {
 			alert("Please enter a room name.");
@@ -85,7 +92,6 @@ export async function setChatView(contentContainer) {
 		const alias = document.getElementById("private-room-alias-input").value.trim();
 		if (alias) {
 			try {
-				// Créer ou récupérer une salle privée
 				const response = await fetchWithToken(
 					'/api/chat/rooms/create-private/',
 					JSON.stringify({ alias: alias }),
@@ -93,8 +99,7 @@ export async function setChatView(contentContainer) {
 				);
 				if (response.ok) {
 					const roomData = await response.json();
-					// Charger les messages de la salle privée
-					loadChatRoom(roomData.name, data.alias);
+					loadChatRoom(roomData.name, userData.alias, `Private message with ${alias}`);
 					alert(`Private chat room with "${alias}" is now active.`);
 				} else {
 					const errorData = await response.json();
@@ -117,7 +122,7 @@ export async function setChatView(contentContainer) {
 		if (input.value && state.chatSocket) {
 			const messageData = {
 				message: input.value,
-				alias: data.alias,
+				alias: userData.alias,
 				time: new Date().toLocaleTimeString(),
 			};
 			state.chatSocket.send(JSON.stringify(messageData));
@@ -129,7 +134,7 @@ export async function setChatView(contentContainer) {
 }
 
 
-async function loadChatRoom(roomName, userAlias) {
+async function loadChatRoom(roomName, userAlias, roomNameDisplay = roomName) {
 	// we have to close the websocket if it exists otherwise messages are displayed twice
 	if (state.chatSocket) {
 		console.log("Closing existing WebSocket connection.");
@@ -139,7 +144,7 @@ async function loadChatRoom(roomName, userAlias) {
 
 	const messagesDiv = document.getElementById("messages");
 	const chatRoomTitle = document.getElementById("chat-room-title");
-	chatRoomTitle.textContent = `Room: ${roomName}`;
+	chatRoomTitle.textContent = `${roomNameDisplay}`;
 	messagesDiv.innerHTML = "<p>Loading messages...</p>";
 
 	const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
@@ -164,8 +169,8 @@ async function loadChatRoom(roomName, userAlias) {
 	};
 
 	state.chatSocket.onmessage = function (e) {
-		const data = JSON.parse(e.data);
-		addMessage(userAlias, data.alias, data.message, data.time);
+		const messageData = JSON.parse(e.data);
+		addMessage(userAlias, messageData.alias, messageData.message, messageData.time);
 	};
 
 	document.getElementById("chat-view").style.display = "block";
@@ -174,9 +179,9 @@ async function loadChatRoom(roomName, userAlias) {
 	try {
 		const response = await fetchWithToken(apiUrl);
 		if (response.ok) {
-			const data = await response.json();
+			const listMessageData = await response.json();
 			messagesDiv.innerHTML = "";
-			data.forEach(msg => {
+			listMessageData.forEach(msg => {
 				addMessage(userAlias, msg.sender, msg.content, msg.timestamp);
 			});
 		} else {
