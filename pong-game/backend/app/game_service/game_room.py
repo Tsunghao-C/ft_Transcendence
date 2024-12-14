@@ -23,12 +23,6 @@ class Player():
         self.speed = 0
         self.score = 0
 
-    def get_speed(self):
-        return self.speed
-
-    def set_speed(self, value):
-        self.speed = value
-
 class Ball():
     def __init__(self, canvas_width, canvas_height):
         self.canvas_width = canvas_width
@@ -72,17 +66,17 @@ class GameRoom():
         if player_id in self.players:
             player = self.players[player_id]
             if input == "move_up":
-                player.set_speed(-5)
+                player.speed = -5
             elif input == "move_down":
-                player.set_speed(5)
+                player.speed = 5
             elif input == "move_stop":
-                player.set_speed(0)
+                player.speed = 0
             elif input == "idle":
                 pass
 
     def update_players(self):
         for player_id, player in self.players.items():
-            speed = player.get_speed()
+            speed = player.speed
             if speed > 0:
                 if player.y + PADDLE_HEIGHT == CANVAS_HEIGHT:
                     continue

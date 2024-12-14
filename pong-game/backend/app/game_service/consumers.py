@@ -10,7 +10,7 @@ from .game_room import GameRoom
 
 load_dotenv()
 active_game_rooms = dict()
-active_lobbies = {} #This has no methods cleaning it up yet. Need to clean when gamerooms terminate or if players leave a lobby
+active_lobbies = {}
 logger = logging.getLogger(__name__)
 
 class GameConsumer(AsyncWebsocketConsumer):
@@ -39,6 +39,11 @@ class GameConsumer(AsyncWebsocketConsumer):
         if hasattr(self, 'current_group'):
             await self.channel_layer.group_discard(self.current_group, self.channel_name)
 
+    # TODO:
+    # Tournaments
+    # Random match
+    # leave a lobby
+    # unready ?
     async def receive(self, text_data=None, bytes_data=None):
         if text_data is None:
             return
@@ -53,7 +58,7 @@ class GameConsumer(AsyncWebsocketConsumer):
             await self.create_private_lobby(room_name, player_id)
         elif action == "player_ready":
             await self.update_ready_status(data["room_name"], data["player_id"])
-        elif data.get('type') == "player_input": #update this to fit the new dictionary for active_game_rooms
+        elif data.get('type') == "player_input":
             roomID = data['game_roomID']
             if roomID in active_game_rooms:
                 game_room = active_game_rooms[roomID]["room_data"]
@@ -155,7 +160,7 @@ class GameConsumer(AsyncWebsocketConsumer):
             game_task = asyncio.create_task(game_room.run())
             del active_lobbies[room_name]
             logger.info("GameRoom task added")
-            game_task.add_done_callback(self.handle_game_task_completion) #this is fucking wack, shouldn't the task be passed as parameter?
+            game_task.add_done_callback(self.handle_game_task_completion)
         except Exception as e:
             logger.error(f"Failed to start the gameroom: {str(e)}")
             await self.send(json.dumps({
@@ -173,7 +178,7 @@ class GameConsumer(AsyncWebsocketConsumer):
             print(f"Game task encountered error: {e}")
             raise
         finally:
-            room_name = task.get_name() #shouldn't this be self.get_name() instead??
+            room_name = task.get_name()
             if room_name in active_game_rooms:
                 del active_game_rooms[room_name]
 
@@ -184,7 +189,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         ready_players = active_lobbies[room_name].get("ready", [])
         return set(players) == set(ready_players)
 
-     #not implemented ahah
+    #not implemented ahah
     def cleanup_timed_out_rooms(self): #Potentially could be handled in handle_game_task_completion
         rooms_to_remove = [
                 room_id for room_id, game_room in active_game_rooms.items()
