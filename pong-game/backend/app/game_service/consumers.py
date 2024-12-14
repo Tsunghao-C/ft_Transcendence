@@ -13,7 +13,6 @@ active_game_rooms = dict()
 active_lobbies = {} #This has no methods cleaning it up yet. Need to clean when gamerooms terminate or if players leave a lobby
 logger = logging.getLogger(__name__)
 
-
 class GameConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

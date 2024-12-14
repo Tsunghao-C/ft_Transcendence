@@ -61,13 +61,13 @@
         const gameInfo = document.getElementById('game-info');
         const debugDiv = document.getElementById('debug');
         const playerStatus = document.getElementById('player-status');
-        const readyButton = document.getElementById('readyButton');
         let playerId = null;
         let lastGameState = null;
         let ws = null;
         let wsReconnectTimer = null;
 		let pendingGameUpdate = null;
 		let pendingGameOver = null;
+		let readyButton = null;
 
 		class Paddle {
 			constructor (id, color) {
@@ -182,28 +182,6 @@
 				});
 		}
 
- 
-//		function createSocket() {
-//			try {
-//				//await getPlayerInfo(); hardcode player info for tests
-//				const roomName = "42";
-//				const socketUrl = `wss://localhost:8443/ws/game/${roomName}/`;
-//				console.log(socketUrl);
-//				data.socket = new WebSocket(socketUrl);
-//				data.socket.onopen() = () => {
-//					console.log('Websocket connection established');
-//				};
-//				data.socket.onerror() = (error) => {
-//					console.error('Websocket error: ', error);
-//				throw error;
-//				};
-//				data.socket = socket;
-//			} catch (error) {
-//				throw error;
-//				}
-//			};
-
-
 		document.addEventListener('keydown', function(event) {
 			if (event.code == 'ArrowUp') {
 				playerEvent.pending = true;
@@ -274,7 +252,6 @@
 		{
 			return new Promise((resolve, reject) => {
 				pendingGameUpdate = resolve;
-//				pendingGameOver = resolve;
 				});
 		}
 
@@ -284,7 +261,8 @@
 			if (game_over) {
 				console.log('Drawing game_over...');
 				drawGameOverScreen(gameState);
-				return; // end the loop ig???
+				game_over = false;
+				return;
 			}
 			drawElements(gameState.ball, gameState.players);
 			await sendEvents(socket, data.roomUID);
@@ -358,12 +336,9 @@
 			});
 		}
 
-		function showReadyButton() {
-			// Check if the button already exists to prevent duplicates
-			if (document.getElementById('ready-button')) return;
-
-			// Create the ready button
-			const readyButton = document.createElement('button');
+		function createReadyButton() {
+			console.log("Creating ready button");
+			readyButton = document.createElement('button');
 			readyButton.id = 'ready-button';
 			readyButton.textContent = 'Ready Up';
 			readyButton.style.position = 'fixed';
@@ -373,25 +348,26 @@
 			readyButton.style.padding = '10px 20px';
 			readyButton.style.fontSize = '16px';
 			readyButton.style.cursor = 'pointer';
-
-			// Append the button to the body
 			document.body.appendChild(readyButton);
+		}
 
-			// Attach the event listener for the ready logic
+		function showReadyButton() {
+			if (!readyButton) {
+				createReadyButton();
+			}
 			readyButton.addEventListener('click', async () => {
 				try {
-					// Change button state to indicate readiness
-					readyButton.textContent = 'Waiting for game start...';
-					readyButton.disabled = true;
+					if (readyButton.disabled == false) {
+						readyButton.textContent = 'Waiting for game start...';
+						readyButton.disabled = true;
 
-					// Send the ready status to the server
-					data.socket.send(JSON.stringify({
-						action: 'player_ready',
-						room_name: data.roomUID,
-						player_id: data.playerId
-					}));
-
-					console.log('Ready signal sent.');
+						data.socket.send(JSON.stringify({
+							action: 'player_ready',
+							room_name: data.roomUID,
+							player_id: data.playerId
+						}));
+						console.log('Ready signal sent.');
+					}
 				} catch (error) {
 					console.error('Error sending ready signal:', error);
 					readyButton.disabled = false;
@@ -400,38 +376,14 @@
 				}
 			})};
 
-		async function startGame() {
-			try {
-				console.log("Game has started");
-				if (canvas.getContext) {
-					gameLoop(data.socket, data);
-				}
-				else
-					console.log("Game error:" + error);
-					throw error;
-			} catch {
-				console.error('Exception caught in startGame');
-			}
-		}
-
-		//const token = document.cookie('token'); //need to tokenize it manually ???
-		async function getPlayerInfo() {
-			try {
-				const dbQuery = await fetch('http://django/api/user/getuser/', {
-					method: 'GET',
-					headers: {
-						'Authorization' : `Bearer ${token}`,
-						'Content-Type': 'application/json'
-					}
-				});
-				if (!dbQuery.ok) {
-					throw new Error('Failed to fetch player info');
-					}
-				const playerInfo = await dbQuery.json();
-				return playerInfo;
-			} catch (error) {
-				console.error('Error fetching player info: ', error);
-				throw error;
+		function destroyReadyButton() {
+			console.log("Trying to destroy ready buttons");
+			if (readyButton) {
+				console.log("Destroying ready buttons");
+//				readyButton.replaceWith(readyButton.cloneNode(true));
+				readyButton.parentNode.removeChild(readyButton);
+				readyButton.remove();
+				readyButton = null;
 			}
 		}
 
@@ -450,6 +402,7 @@
 
 		async function startGame() {
 			try {
+				destroyReadyButton();
 				gameLoop(data.socket, data);
 			} catch {
 				console.error('Exception caught in startGame', error);
@@ -458,12 +411,13 @@
 	
 		async function join_match() {
 			try {
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
 				data.playerId = 'player_2'
 				await joinRoom();
 				console.log("Room UID after joining: " + data.roomUID);
 				console.log("Player_id: " + data.playerId);
 				await showReadyButton();
-				await startGame()
+//				await startGame()
 			} catch (error) {
 				console.error('Exception caught in joinMatch.js', error)
 			}
@@ -471,12 +425,13 @@
 	
 		async function create_private_match() {
 			try {
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
 				data.playerId = 'player_1'
 				await requestRoom();
 				console.log("Room UID after request: " + data.roomUID);
 				console.log("Player_id: " + data.playerId);
 				await showReadyButton()
-				await startGame()
+//				await startGame()
 			} catch (error){
 				console.error('Exception caught in privateMatch.js', error);
 			}
@@ -487,6 +442,7 @@
 			gameState.player2 = new Player('1', 'red');
 			await connectWebSocket();
 		}
+
 		init();
 	</script>
 </body>
