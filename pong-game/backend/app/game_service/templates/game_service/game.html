@@ -104,7 +104,7 @@
 			pending: false,
 			type: -1,
 		}
-
+		var game_over = false;
 		var data = {
 			playerId: -1,
 			socket: -1,
@@ -153,10 +153,18 @@
 								console.error('Error received:', response.message);
 							}
 							else if (response.type == 'game_update') {
-								if (pendingGameUpdate) pendingGameUpdate(response.payload);
+								if (pendingGameUpdate) { 
+									pendingGameUpdate(response.payload) 
+									pendingGameUpdate = null;
+								}
 							}
 							else if (response.type == 'game_over') {
-								if (pendingGameOver) pendingGameOver(response.payload);
+								console.log('game_over received: ', response.payload);
+								if (pendingGameUpdate) {
+									pendingGameUpdate(response.payload);
+									game_over = true;
+									pendingGameUpdate = null;
+								}
 							}
 							else if (response.error)
 								console.error(response.error);
@@ -262,18 +270,19 @@
 			ctx.fillText(gameState.score_right, canvas.width * 0.75, canvas.height * 0.50);
 		}
 
-		async function getGameState(socket)
+		async function getGameState()
 		{
 			return new Promise((resolve, reject) => {
 				pendingGameUpdate = resolve;
-				pendingGameOver = resolve;
+//				pendingGameOver = resolve;
 				});
 		}
 
 		async function gameLoop(socket, playerData) {
-			gameState = await getGameState(socket);
+			gameState = await getGameState();
 //			console.log("gameState: ", gameState);
-			if (gameState.type == 'game_over'){
+			if (game_over) {
+				console.log('Drawing game_over...');
 				drawGameOverScreen(gameState);
 				return; // end the loop ig???
 			}
