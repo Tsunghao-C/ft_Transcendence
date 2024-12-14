@@ -223,16 +223,16 @@
 			}
 		}
 
-		function drawElements(ball, players) {
+		function drawElements(ball, player_1, player_2) {
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
 			ctx.font = '48px serif';
 			ctx.textBaseline = 'hanging';
 			ctx.fillStyle = 'white';
-			ctx.fillText(players[0].score + " : " + players[1].score, canvas.width * 0.45, canvas.height * 0.10);
-			ctx.fillStyle = players[0].color;
-			ctx.fillRect(players[0].x, players[0].y, PADDLE_WIDTH, PADDLE_HEIGHT);
-			ctx.fillStyle = players[1].color;
-			ctx.fillRect(players[1].x, players[1].y, PADDLE_WIDTH, PADDLE_HEIGHT);
+			ctx.fillText(player_1.score + " : " + player_2.score, canvas.width * 0.45, canvas.height * 0.10);
+			ctx.fillStyle = player_1.color;
+			ctx.fillRect(player_1.x, player_1.y, PADDLE_WIDTH, PADDLE_HEIGHT);
+			ctx.fillStyle = player_2.color;
+			ctx.fillRect(player_2.x, player_2.y, PADDLE_WIDTH, PADDLE_HEIGHT);
 			ctx.beginPath();
 			ctx.arc(ball.x, ball.y, ball.radius, 0, 2 * Math.PI);
 			ctx.fillStyle = ball.color;
@@ -266,7 +266,9 @@
 				game_over = false;
 				return;
 			}
-			drawElements(gameState.ball, gameState.players);
+			player_1 = gameState.players.player_1;
+			player_2 = gameState.players.player_2;
+			drawElements(gameState.ball, player_1, player_2);
 			await sendEvents(socket, data.roomUID);
 			requestAnimationFrame(gameLoop);
 		}
