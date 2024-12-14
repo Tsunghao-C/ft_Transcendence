@@ -114,14 +114,36 @@ async def test_websocket(uri, timeout_val, socket_type):
                     if data.get('type') != 'player_assignment':
                         print("Did not receive expected player_assignment message")
                         sys.exit(1)
+                    if not data.get('player_id') or not data.get('game_id'):
+                        print("Missing player or game ID in assignment message")
+                        sys.exit(1)
                     print("Game connection verified")
 
                     # Send ready message
                     ready_message = {
                         "type": "player_ready"
                     }
+                    print("Sending player ready message")
                     await ws.send(json.dumps(ready_message))
                     print("Ready message sent")
+
+                    # Wait for game state update through group
+                    try:
+                        response = await asyncio.wait_for(ws.recv(), timeout=timeout_val)
+                        print(f"Received game state update: {response}")
+                        data = json.loads(response)
+                        if data.get('type') != 'game_state_update':
+                            print("Did not receive expected game state update")
+                            sys.exit(1)
+                        game_state = data.get('game_state', {})
+                        if game_state.get('status') != 'playing':
+                            print("Unexpected game state")
+                            sys.exit(1)
+                        print("Game channel layer verified")
+
+                    except asyncio.TimeoutError:
+                        print("Timeout waiting for game state update")
+                        sys.exit(1)
 
                 # Gracefully close the connection
                 print(f"{socket_type.capitalize()} WebSocket check passed")

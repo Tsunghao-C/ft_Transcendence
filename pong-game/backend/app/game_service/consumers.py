@@ -7,12 +7,44 @@ import time
 
 class GameHealthConsumer(AsyncWebsocketConsumer):
     async def connect(self):
+        self.game_group_name = 'game_health_check'
+        await self.channel_layer.group_add(
+            self.game_group_name,
+            self.channel_name
+        )
         await self.accept()
         await self.send(text_data=json.dumps({
             'type': 'player_assignment',
-            'message': 'Health check successful'
+            'player_id': 'p1',
+            'game_id': 'health_check'
         }))
-        await self.close()
+    
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard(
+            self.game_group_name,
+            self.channel_name
+        )
+    
+    async def receive(self, text_data):
+        try:
+            data = json.loads(text_data)
+            if data['type'] == 'player_ready':
+                print("Received player ready, sending game state")  # Debug log
+                # Send game state update directly, no need for channel layer in health check
+                await self.send(text_data=json.dumps({
+                    'type': 'game_state_update',
+                    'game_state': {
+                        'status': 'playing',
+                        'ball': {'x': 400, 'y': 300, 'radius': 10},
+                        'paddles': {
+                            'p1': {'x': 50, 'y': 250, 'width': 10, 'height': 100},
+                            'p2': {'x': 740, 'y': 250, 'width': 10, 'height': 100}
+                        },
+                        'score': {'p1': 0, 'p2': 0}
+                    }
+                }))
+        except json.JSONDecodeError as e:
+            print(f"Error decoding message: {e}")
 
 class GameConsumer(AsyncWebsocketConsumer):
     # Class variable to store all active games
