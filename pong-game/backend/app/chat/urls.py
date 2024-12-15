@@ -1,5 +1,5 @@
 from django.urls import path, include
-# from . import views
+from . import views
 from django.contrib.auth.views import LoginView, LogoutView
 from .views import getChatRoomMessagesView, CreatePublicChatRoomView, CreatePrivateChatRoomView, getChatRoomsOfUserView
 
