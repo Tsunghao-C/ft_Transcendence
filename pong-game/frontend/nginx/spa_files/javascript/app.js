@@ -1,9 +1,6 @@
 import { setGameView } from './game_menu.js';
 import { setGameMenu } from './game_menu.js';
 import { closeGameWebSocket } from './game_menu.js';
-import { changeLanguage } from './settings.js';
-import { changeFontSize } from './settings.js';
-import { changeColorMode } from './settings.js';
 import { setLoginView } from './login_login.js';
 import { setRegisterView } from './login_register.js';
 import { set404View } from './404.js';
@@ -17,25 +14,37 @@ import { fetchWithToken } from './fetch_request.js';
 import { setLanguageCookie } from './fetch_request.js';
 import { getLanguageCookie } from './fetch_request.js';
 import { setAboutPage } from './about.js';
-// import { setChatPage } from './chat.js';
 import { setChatView } from './chat_view.js';
+import { translations } from './language_pack.js';
 
 export const state = {
 	chatSocket: null,
 	};
 
+export function changeLanguage(language) {
+	localStorage.setItem("language", language);
+	const elements = document.querySelectorAll("[data-i18n]");
+	elements.forEach((el) => {
+		const key = el.getAttribute("data-i18n");
+		if (translations[language] && translations[language][key]) {
+			el.textContent = translations[language][key];
+		}
+	});
+	attachNavigationListeners();
+	}
+
 export async function setContainerHtml(container, url) {
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Failed to load navbar.html: ${response.statusText}`);
-        }
-        const containerHtml = await response.text();
+	try {
+		const response = await fetch(url);
+		if (!response.ok) {
+			throw new Error(`Failed to load navbar.html: ${response.statusText}`);
+		}
+		const containerHtml = await response.text();
 		// console.log("navbarHtml  is : " + navbarHtml);
-        container.innerHTML = containerHtml;
-    } catch (error) {
-        console.error(error);
-    }
+		container.innerHTML = containerHtml;
+	} catch (error) {
+		console.error(error);
+	}
 }
 
 function setNavbarHtml(container) {
@@ -92,12 +101,25 @@ function setNavbarHtml(container) {
 }
 
 export async function loadPage(page) {
-	localStorage.setItem("isLoggedIn", "true");
 	//add a checker to check there is no more than one /
 	//if invalid token, the server explodes
 	let isLoggedIn;
 	let data;
 	let response;
+	const contentContainer = document.getElementById("center-box");
+	const innerContent = document.getElementById("innerContent");
+
+	let currentLanguage = getLanguageCookie();
+	if (!currentLanguage || !['pt', 'fr', 'en'].includes(currentLanguage)) {
+		setLanguageCookie("en");
+		currentLanguage = getLanguageCookie();
+	}
+
+	if (state.chatSocket) {
+		state.chatSocket.close();
+		state.chatSocket = null;
+		//we will need to close the game socket too
+	}
 	try {
 		response = await fetchWithToken('/api/user/getuser/');
 		data = await response.json();
@@ -106,44 +128,33 @@ export async function loadPage(page) {
 		setLanguageCookie(data.language);
 	} catch (error) {
 		isLoggedIn = "false";
-	}
-	const contentContainer = document.getElementById("center-box");
-	const navbar = document.getElementById("mainNavBar");
-	const innerContent = document.getElementById("innerContent");
-	const currentLanguage = getLanguageCookie();
-	if (!currentLanguage || !['pt', 'fr', 'en'].includes(currentLanguage)) {
-		setLanguageCookie("en");
-	}
-	const path = window.location.pathname;
-	// load user info if user is logged in
-	if (isLoggedIn === "true") {
-		setNavbarHtml(navbar);
-		navbar.style.display = "flex";
-		const userDropdown = document.getElementById("userDropdown");
-		userDropdown.textContent = data.alias;
-		const userAvatar = document.getElementById("userAvatar");
-		userAvatar.src = data.avatar;
-		// userAvatar.src = "./media/default-pp.jpg";
-		//to change to have the good avatar picture src
-		userAvatar.style.display = "block";
-	}
-	// cleanup only if user is logged in
-	if (isLoggedIn === "true") {
-		if (state.chatSocket) {
-			state.chatSocket.close();
-			state.chatSocket = null;
+		if (page !== "login" && page !== "register") {
+			window.location.hash = "login";
+			loadPage("login");
+			changeLanguage(currentLanguage);
+			return;
+		} else if (page === "login") {
+			setLoginView(innerContent);
+		} else {
+			setRegisterView(innerContent);
 		}
-		if (page !== "game") {closeGameWebSocket();}
+		changeLanguage(currentLanguage);
+		return;
 	}
+	const navbar = document.getElementById("mainNavBar");
+	const path = window.location.pathname;
+	setNavbarHtml(navbar);
+	navbar.style.display = "flex";
+	const userDropdown = document.getElementById("userDropdown");
+	userDropdown.textContent = data.alias;
+	const userAvatar = document.getElementById("userAvatar");
+	userAvatar.src = data.avatar;
+	userAvatar.style.display = "block";
 	console.log("page is ", page);
-	// check authentication first
 	if (path !== '/') {
 		set404View(contentContainer);
 		return;
-	} else if (isLoggedIn != "true" && page !== "login" && page !== "register") {
-		window.location.hash = "login";
-		loadPage("login");
-	} else if (isLoggedIn === "true" && (page === "login" || page === "register")) {
+	} else if (page === "login" || page === "register") {
 		window.location.hash = "home";
 		loadPage("home");
 		console.log("logged in, redirect to home");
@@ -174,12 +185,12 @@ export async function loadPage(page) {
 				case "about":
 					setAboutPage(innerContent);
 					break;
-				case "login":
-					setLoginView(innerContent);
-					break;
-				case "register":
-					setRegisterView(innerContent);
-					break;
+				// case "login":
+				// 	setLoginView(innerContent);
+				// 	break;
+				// case "register":
+				// 	setRegisterView(innerContent);
+				// 	break;
 				case "personal-data":
 					setpersonalDataView(innerContent);
 					break;
@@ -243,15 +254,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
 	// /!\PR [by Alex] I commented the lines below because they would setup the login localStorage as false everytime we refresh, even after having logged in
 	// Clear any stale login state on fresh page load
-	const savedFontSize = localStorage.getItem("fontSize") || "medium";
-	changeFontSize(savedFontSize);
-
-	const savedLanguage = localStorage.getItem("language") || "en";
-	changeLanguage(savedLanguage);
-
-	const savedColor = localStorage.getItem("color") || "light";
-	changeColorMode(savedColor);
-
 	const currentPage = window.location.hash.substring(1) || "home";
 	loadPage(currentPage);
 
@@ -264,3 +266,4 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 });
+

@@ -6,25 +6,8 @@ import { setChatView } from "./chat_view.js";
 
 export async function sendMessage(friendAlias, contentContainer) {
 	console.log(`Sending message to ${friendAlias}`);
-	try {
-		const response = await fetchWithToken(
-			'/api/chat/rooms/create-private/',
-			JSON.stringify({ alias: friendAlias }),
-			'POST'
-		);
-		if (response.ok) {
-			const roomData = await response.json();
-			setChatView(contentContainer, roomData.name)
-		} else {
-			const errorData = await response.json();
-			alert(`Failed to create private room: ${errorData.error}`);
-		}
-	} catch (error) {
-		console.error("Error creating private room:", error);
-		console.log(error);
-		window.location.hash = "login";
-		loadPage("login");
-	}
+	// window.location.hash = "chat"; // this will need to be fixed at some point
+	setChatView(contentContainer, friendAlias);
 }
 
 export function sendDuelRequest(friendUsername) {

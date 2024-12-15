@@ -19,7 +19,7 @@ def room(request, room_name):
 def lobby(request):
     return render(request, "chat/lobby.html")
 
-class ChatRoomMessages(APIView):
+class getChatRoomMessagesView(APIView):
 	permission_classes = [IsAuthenticated]
 
 	def get(self, request, room_name):
@@ -39,7 +39,7 @@ class ChatRoomMessages(APIView):
 		serializer = MessageSerializer(messages, many=True)
 		return Response(serializer.data)
 
-class UserChatRoomsView(APIView):
+class getChatRoomsOfUserView(APIView):
 	permission_classes = [IsAuthenticated]
 
 	def get(self, request):
@@ -65,16 +65,19 @@ class UserChatRoomsView(APIView):
 					"other_member": None
 				})
 
-		return Response(filtered_chatrooms)
+		response_data = {
+			"userAlias": user.alias,
+			"rooms": filtered_chatrooms
+		}
+
+		return Response(response_data)
 
 
-class CreateChatRoom(APIView):
+class CreatePublicChatRoomView(APIView):
 	permission_classes = [IsAuthenticated]
 
 	def post(self, request):
 		name = request.data.get("name")
-		is_private = request.data.get("is_private", False)
-		members_ids = request.data.get("members", [])
 
 		if not name:
 			return Response({"error": "Room name is required."}, status=status.HTTP_400_BAD_REQUEST)
@@ -82,31 +85,30 @@ class CreateChatRoom(APIView):
 		if ChatRoom.objects.filter(name=name).exists():
 			return Response({"error": "A room with this name already exists."}, status=status.HTTP_400_BAD_REQUEST)
 
-		room = ChatRoom.objects.create(name=name, is_private=is_private)
+		room = ChatRoom.objects.create(name=name, is_private= False)
 
-		if is_private:
-			if not members_ids:
-				return Response({"error": "Members are required for a private room."}, status=status.HTTP_400_BAD_REQUEST)
+		# if is_private:
+		# 	if not members_ids:
+		# 		return Response({"error": "Members are required for a private room."}, status=status.HTTP_400_BAD_REQUEST)
 
-			try:
-				members = CustomUser.objects.filter(id__in=members_ids)
-				room.members.set(members)
-			except CustomUser.DoesNotExist:
-				return Response({"error": "One or more members do not exist."}, status=status.HTTP_400_BAD_REQUEST)
+		# 	try:
+		# 		members = CustomUser.objects.filter(id__in=members_ids)
+		# 		room.members.set(members)
+		# 	except CustomUser.DoesNotExist:
+		# 		return Response({"error": "One or more members do not exist."}, status=status.HTTP_400_BAD_REQUEST)
 
-		room.members.add(request.user)
+		# room.members.add(request.user)
 
 		return Response({
 			"message": "Chat room created successfully.",
 			"room": {
-				"id": room.id,
 				"name": room.name,
 				"is_private": room.is_private,
 				"members": [member.id for member in room.members.all()]
 			}
 		}, status=status.HTTP_201_CREATED)
 
-class CreatePrivateRoomView(APIView):
+class CreatePrivateChatRoomView(APIView):
 	permission_classes = [IsAuthenticated]
 
 	def post(self, request):
@@ -122,7 +124,7 @@ class CreatePrivateRoomView(APIView):
 			return Response({"error": "User not found."}, status=404)
 
 		if user == other_user:
-			return Response({"error": "You cannot create a private room with yourself."}, status=400)
+			raise PermissionDenied("You cannot create a private room with yourself.")
 		elif user.has_blocked(other_user):
 			raise PermissionDenied("You are blocking this user")
 		elif other_user.has_blocked(user):
@@ -130,7 +132,6 @@ class CreatePrivateRoomView(APIView):
 		# Get or create the private room
 		room = ChatRoom.get_or_create_private_room(user, other_user)
 		return Response({
-				"id": room.id,
 				"name": room.name,
 				"is_private": room.is_private,
 				"members": [member.alias for member in room.members.all()]

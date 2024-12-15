@@ -4,14 +4,15 @@ import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
 import { loadPage } from "./app.js";
 
-export async function setChatView(contentContainer, roomToJoin = "") {
-	let userData;
+export async function setChatView(contentContainer, aliasToContact = "") {
 	let userRoomData;
+	let roomData;
+	let userAlias;
 	try {
-		const response = await fetchWithToken('/api/user/getuser/');
-		userData = await response.json();
-		const userRoom = await fetchWithToken('/api/chat/rooms/user_chatrooms');
-		userRoomData = await userRoom.json();
+		const response = await fetchWithToken('/api/chat/user_chatrooms');
+		userRoomData = await response.json();
+		roomData = userRoomData.rooms;
+		userAlias = userRoomData.userAlias;
 		console.log("User userRoomData: ", userRoomData);
 	} catch (error) {
 		console.log(error);
@@ -41,7 +42,7 @@ export async function setChatView(contentContainer, roomToJoin = "") {
 	`;
 
 	const roomList = document.getElementById("room-list");
-	roomList.innerHTML = userRoomData
+	roomList.innerHTML = roomData
 		.map(room => {
 			const roomDisplayName = room.is_private
 				? `Private message with ${room.other_member || 'Unknown'}`
@@ -55,14 +56,14 @@ export async function setChatView(contentContainer, roomToJoin = "") {
 	document.querySelectorAll(".room-item").forEach(item => {
 		item.addEventListener("click", (event) => {
 			const roomName = event.currentTarget.getAttribute("data-room");
-			loadChatRoom(roomName, userData.alias);
+			loadChatRoom(roomName, userAlias);
 		});
 	});
 
 	document.getElementById("join-room").addEventListener('click', async () => {
 		const roomName = prompt("Enter the room name to join:");
 		if (roomName) {
-			loadChatRoom(roomName, userData.alias);
+			loadChatRoom(roomName, userAlias);
 		}
 	});
 
@@ -71,13 +72,14 @@ export async function setChatView(contentContainer, roomToJoin = "") {
 		if (roomName) {
 			try {
 				const response = await fetchWithToken(
-					'/api/chat/rooms/create/',
+					'/api/chat/create/',
 					JSON.stringify({ name: roomName, is_private: false }),
 					'POST'
 				);
 				if (response.ok) {
 					const roomData = await response.json();
 					alert(`Public room "${roomData.room.name}" created successfully!`);
+					loadChatRoom(roomData.room.name, userAlias);
 				} else {
 					const errorData = await response.json();
 					alert(`Failed to create room: ${errorData.error}`);
@@ -92,25 +94,44 @@ export async function setChatView(contentContainer, roomToJoin = "") {
 	document.getElementById("send-private-message").addEventListener("click", async () => {
 		const alias = prompt("Enter the alias for the private message:");
 		if (alias) {
-			try {
-				const response = await fetchWithToken(
-					'/api/chat/rooms/create-private/',
-					JSON.stringify({ alias: alias }),
-					'POST'
-				);
-				if (response.ok) {
-					const roomData = await response.json();
-					loadChatRoom(roomData.name, userData.alias, `Private message with ${alias}`);
-				} else {
-					const errorData = await response.json();
-					alert(`Failed to create private room: ${errorData.error}`);
-				}
-			} catch (error) {
-				console.error("Error creating private room:", error);
-				alert("An error occurred while creating the private room.");
-			}
+			console.log("opening chat with", alias);
+			getOrCreatePrivateChatRoom(alias)
 		}
 	});
+
+	async function getOrCreatePrivateChatRoom(alias) {
+		try {
+			console.log("ta mere la pute ecule de tes morts ");
+			const response = await fetchWithToken(
+				'/api/chat/create-private/',
+				JSON.stringify({ alias: alias }),
+				'POST'
+			);
+			if (response.ok) {
+				console.log("are we really going here at some points");
+				const roomData = await response.json();
+				loadChatRoom(roomData.name, userAlias, `Private message with ${alias}`);
+			} else {
+				const errorData = await response.json();
+				if (errorData.detail === "You are blocking this user") {
+				alert(`You are blocking this user`);
+				} else if (errorData.detail === "This user is blocking you") {
+					alert(`this user is blocking you`);
+				} else if (errorData.detail === "You cannot create a private room with yourself.") {
+					alert("You cannot create a private room with yourself.");
+				} else if (errorData.error === "User not found.") {
+					alert(`User not found`);
+				} else {
+					alert(`Failed to create private room for some mysterious reasons`);
+				}
+			}
+		} catch (error) {
+			console.log(error);
+			window.location.hash = "login";
+			loadPage("login");
+			return;
+		}
+	}
 
 	document.getElementById("send-message").addEventListener("click", sendMessage);
 
@@ -119,7 +140,7 @@ export async function setChatView(contentContainer, roomToJoin = "") {
 		if (input.value && state.chatSocket) {
 			const messageData = {
 				message: input.value,
-				alias: userData.alias,
+				alias: userAlias,
 				time: new Date().toLocaleTimeString(),
 			};
 			state.chatSocket.send(JSON.stringify(messageData));
@@ -129,8 +150,10 @@ export async function setChatView(contentContainer, roomToJoin = "") {
 		}
 	}
 
-	if (roomToJoin !== "") {
-		loadChatRoom(roomToJoin, userData.alias);
+	if (aliasToContact !== "") {
+		console.log("opening chat with", aliasToContact);
+		loadChatRoom("private_1_2", "qwer");
+		// getOrCreatePrivateChatRoom(aliasToContact);
 	}
 }
 
@@ -140,7 +163,7 @@ async function loadChatRoom(roomName, userAlias, roomNameDisplay = roomName) {
 		state.chatSocket.close();
 		state.chatSocket = null;
 	}
-
+	console.log("we are here motherfukcer");
 	const messagesDiv = document.getElementById("messages");
 	const chatRoomTitle = document.getElementById("chat-room-title");
 	chatRoomTitle.textContent = `${roomNameDisplay}`;
@@ -169,7 +192,7 @@ async function loadChatRoom(roomName, userAlias, roomNameDisplay = roomName) {
 	document.getElementById("chat-view").style.display = "block";
 
 	try {
-		const response = await fetchWithToken(`/api/chat/rooms/${roomName}/messages/`);
+		const response = await fetchWithToken(`/api/chat/${roomName}/messages/`);
 		if (response.ok) {
 			const listMessageData = await response.json();
 			messagesDiv.innerHTML = "";
