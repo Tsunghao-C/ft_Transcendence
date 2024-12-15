@@ -16,8 +16,8 @@ def room(request, room_name):
     #     return redirect("/api/user/login/")
     return render(request, "chat/chatroom.html", {"room_name": room_name})
 
-def lobby(request):
-    return render(request, "chat/lobby.html")
+def chat_test(request):
+    return render(request, "chat/chat_test.html")
 
 class ChatRoomMessages(APIView):
 	permission_classes = [IsAuthenticated]

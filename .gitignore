@@ -19,6 +19,9 @@ pong-game/.env
 /pong-game/backend/app/venv
 /pong-game/backend/app/backend/__pycache__/
 
+# Test dependencies
+pong-game/tests/lib/
+
 # C extensions
 *.so
 *.o

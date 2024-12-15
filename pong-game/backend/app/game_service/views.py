@@ -3,6 +3,8 @@ from django.http import JsonResponse
 from django.http import HttpResponse
 from django.conf import settings
 import os
+import json
+from django.utils.safestring import mark_safe
 
 from .models import MatchResults, LeaderBoard
 from user_service.models import CustomUser
@@ -56,6 +58,41 @@ def game_test(request):
 def get_game(request):
     return render(request, 'game_service/game.html', {
         })
+
+def game_test_ssr(request):
+	# Initial game state that will be pre-rendered
+	initial_state = {
+		'status': 'waiting',
+		'ball': {
+			'x': 400,
+			'y': 300,
+			'radius': 10
+        },
+		'paddles': {
+			'p1': {
+				'y': 250,
+				'x': 50,
+				'height': 100,
+				'width': 10
+            },
+			'p2': {
+				'y': 250,
+				'x': 740,
+				'height': 100,
+				'width': 10
+            }
+        },
+		'score': {
+			'p1': 0,
+			'p2': 0
+        }
+    }
+	context = {
+		'initial_state': initial_state,
+		'initial_state_json': mark_safe(json.dumps(initial_state)),
+		'game_id': 'test_game_ssr'
+    }
+	return render(request, 'game_service/game_test_ssr.html', context)
 
 ## Ranknig dashboard view.
 

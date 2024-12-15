@@ -5,7 +5,7 @@ from .views import ChatRoomMessages, CreateChatRoom, CreatePrivateRoomView, User
 
 
 urlpatterns = [
-	# path("", views.lobby),
+	# path("test/", views.chat_test),
 	# path("index/", views.index, name="index"),
 	# path("<str:room_name>/", views.room, name="room"),
 	path('rooms/<str:room_name>/messages/', ChatRoomMessages.as_view(), name='chat_room_messages'),

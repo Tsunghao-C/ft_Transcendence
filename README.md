@@ -8,24 +8,6 @@ Developing a web game Pong from scratch
 
 ## Quick Start 
 
-### Manually 
-1. Clone the repository
-```bash
-git clone <repository-url>
-cd ft_Transcendence/pong-game
-```
-
-2. Set up environment
-```bash
-cp .env.example .env
-# Edit .env with appropriate values
-```
-
-3. Start services
-```bash
-docker-compose up -d
-```
-
 ### By Makefile
 1. Clone the repo as above
 ```bash
@@ -33,12 +15,34 @@ git clone <repository-url>
 cd ft_Transcendence
 ```
 2. Use makefile
+- To build run and check
 ```bash
-make #It will create a copy of .env
+make # It will create a copy of .env automatically, and do all the checks
 ```
-3. To remove stop and remvoe
+- To build and run the program without checking
 ```bash
-make clean #It will delete the .env
+make go
+```
+- To remove stop and remvoe
+```bash
+make clean # It will delete the .env
+```
+- To rebuild and check
+```bash
+make re
+```
+3. Other usefull make commands
+- To go inside a specific container using bash
+```bash
+make in ${service_name} # equals to do "docker exec -it ${service_name} bash"
+```
+- To simply run checks again
+```bash
+make check # In case you only change files that is run by cgi, you don't need to rebuild
+```
+- To deeply clean all the cached images in local host
+```bash
+make kill # It will kill every cached images even in ~/.docker/buildx
 ```
 
 ## Development Access Points
