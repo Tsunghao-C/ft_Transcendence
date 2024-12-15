@@ -1,4 +1,3 @@
-import { playerDatas } from "./data_test.js";
 import { translations } from "./language_pack.js";
 import { fetchWithToken } from "./fetch_request.js";
 import { loadPage } from "./app.js";
@@ -125,7 +124,7 @@ export async function setFriendsView(contentContainer) {
                 `;
                 friendsList.appendChild(friendItem);
 				const sendMessageButton = friendItem.querySelector("button.btn-info");
-				sendMessageButton.addEventListener("click", () => sendMessage(friend.alias));
+				sendMessageButton.addEventListener("click", () => sendMessage(friend.alias, contentContainer));
 
 				const sendDuelRequestButton = friendItem.querySelector("button.btn-warning");
 				sendDuelRequestButton.addEventListener("click", () => sendDuelRequest(friend.alias));

@@ -145,7 +145,7 @@ export async function setProfileView(contentContainer, usernameInHash) {
 			const unblockUserButton = document.getElementById("unblockUserBtn");
 
 			sendMessageButton.addEventListener("click", () => {
-				sendMessage(profile.alias);
+				sendMessage(profile.alias, contentContainer);
 				setProfileView(contentContainer, profile.alias);
 			});
 			sendDuelRequestButton.addEventListener("click", () => {
