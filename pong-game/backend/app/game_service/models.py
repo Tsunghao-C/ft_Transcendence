@@ -90,11 +90,15 @@ class LeaderBoard(models.Model):
 
 #-------- Matchmaking ------------------
 
-# Delete after each game
+# We need to store this info in models, rather than in the consumer 
+# in-case the user disconnects
+
+# Delete each user after each game
 class LiveGames(models.Model):
 	class Status(models.TextChoices):
 		not_started = "Not Started"
 		in_progress = "In Progress"
+		paused = "Paused"
 		completed = "Completed"
 
 	gameUID = models.UUIDField(
@@ -105,11 +109,15 @@ class LiveGames(models.Model):
 	)
 	p1 = models.ForeignKey(
 		CustomUser,
-		related_name="match_p1"
+		unique=True,
+		related_name="match_p1",
+		on_delete=models.CASCADE
 	)
 	p2 = models.ForeignKey(
 		CustomUser,
-		related_name="match_p2"
+		unique=True,
+		related_name="match_p2",
+		on_delete=models.CASCADE
 	)
 	status = models.CharField(
 		choices = Status.choices,
@@ -120,25 +128,32 @@ class LiveGames(models.Model):
 		indexes = [
             models.Index(fields=["p1"]),
             models.Index(fields=["p2"]),
+			models.Index(fields=["status"])
         ]
 
-# Probably don't need the below
-# class GameQueue(models.Model):
-# 	player = models.ForeignKey(
-# 		CustomUser,
-# 		on_delete=models.CASCADE,
-# 		unique=True,
-# 		db_index=True
-# 	)
+class Tournament(models.Model):
+	id = models.UUIDField(
+		primary_key=True,
+		default=uuid.uuid4,
+		editable=False
+	)
+	name = models.CharField(max_length=100)
+	start_time = models.DateTimeField(null=True, blank=True)
 
-# class LiveTournaments(models.Model):
-# 	games = models.ForeignKey(
-# 		LiveGames,
-# 		unique=True,
-# 		on_delete=models.CASCADE
-# 	)
-# 	queue = models.ForeignKey(
-# 		GameQueue,
-# 		unique=True,
-# 		on_delete=models.CASCADE
-# 	)
+# delete this after each tournament finishes
+class TourneyGameQueue(models.Model):
+	tournament = models.ForeignKey(
+		Tournament,
+		on_delete=models.CASCADE,
+		related_name="players"
+	)
+	player = models.ForeignKey(
+		CustomUser,
+		on_delete=models.CASCADE,
+		db_index=True
+	)
+	eliminated = models.BooleanField(default=False)
+	tourny_tier = models.PositiveIntegerField(default=0)
+
+	class Meta:
+		unique_together = ("tournament", "player")
