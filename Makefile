@@ -35,24 +35,31 @@ check:
 	running_containers=$$(docker compose -f pong-game/docker-compose.yml ps --format '{{.Name}}'); \
 	for container in $$all_containers; do \
 		if ! echo "$$running_containers" | grep -q "$$container"; then \
-			echo "Error: $$container is not running!"; \
+			echo "\033[0;31mError: $$container is not running!\033[0m"; \
 			docker logs "$$container"; \
 			exit 1; \
 		fi; \
 		restart_count=$$(docker inspect --format='{{.RestartCount}}' "$$container"); \
 		if [ "$$restart_count" -gt 0 ]; then \
-			echo "Error: $$container has restarted $$restart_count times!"; \
+			echo "\033[0;31mError: $$container has restarted $$restart_count times!\033[0m"; \
 			docker logs "$$container"; \
 			exit 1; \
 		fi; \
 		health_status=$$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$$container"); \
 		if [ "$$health_status" != "none" ] && [ "$$health_status" != "healthy" ]; then \
-			echo "Error: $$container health check failed (status: $$health_status)!"; \
+			echo "\033[0;31mError: $$container health check failed (status: $$health_status)!\033[0m"; \
 			docker logs "$$container"; \
 			exit 1; \
 		fi; \
 	done
-	echo "All containers are running without restart issues."
+	@echo "\033[0;32mAll containers are running without restart issues.\033[0m"
+
+	# wait another 10 seconds for backend sevices to be ready
+	sleep 10
+	# Run WebSocket health check script
+	@echo "Checking WebSocket endpoints..."
+	@chmod +x pong-game/tests/websocket_check.sh
+	@./pong-game/tests/websocket_check.sh localhost || { echo "\033[0;31mWebSocket health checks failed!\033[0m"; exit 1; }
 
 clean:
 	docker volume prune --force
@@ -64,6 +71,7 @@ clean:
 	- rm -f pong-game/frontend/nginx/modsec/*.log
 	- rm -rf pong-game/security/vault_debian/volumes/*
 	- rm -rf --no-preserve-root pong-game/backend/app/media/profile_images
+	- rm -rf pong-game/tests/lib
 	rm pong-game/.env
 
 re: clean all

@@ -5,9 +5,9 @@ from .views import getChatRoomMessagesView, CreatePublicChatRoomView, CreatePriv
 
 
 urlpatterns = [
-	# path("", views.lobby),
-	# path("index/", views.index, name="index"),
-	# path("<str:room_name>/", views.room, name="room"),
+    path("test/", views.chat_test),
+    path("index/", views.index, name="index"),
+    path("<str:room_name>/", views.room, name="room"),
 	path('<str:room_name>/messages/', getChatRoomMessagesView.as_view(), name='chat_room_messages'),
 	path('create/', CreatePublicChatRoomView.as_view(), name='create_chat_room'),
 	path('create-private/', CreatePrivateChatRoomView.as_view(), name='create_private_chat_room'),
