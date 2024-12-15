@@ -10,12 +10,14 @@ export async function setChatView(contentContainer, aliasToContact = "") {
 	let userAlias;
 	try {
 		const response = await fetchWithToken('/api/chat/user_chatrooms');
+		console.log(response);
 		userRoomData = await response.json();
 		roomData = userRoomData.rooms;
 		userAlias = userRoomData.userAlias;
 		console.log("User userRoomData: ", userRoomData);
 	} catch (error) {
 		console.log(error);
+		return;
 		window.location.hash = "login";
 		loadPage("login");
 		return;
@@ -101,20 +103,18 @@ export async function setChatView(contentContainer, aliasToContact = "") {
 
 	async function getOrCreatePrivateChatRoom(alias) {
 		try {
-			console.log("ta mere la pute ecule de tes morts ");
 			const response = await fetchWithToken(
 				'/api/chat/create-private/',
 				JSON.stringify({ alias: alias }),
 				'POST'
 			);
 			if (response.ok) {
-				console.log("are we really going here at some points");
 				const roomData = await response.json();
 				loadChatRoom(roomData.name, userAlias, `Private message with ${alias}`);
 			} else {
 				const errorData = await response.json();
 				if (errorData.detail === "You are blocking this user") {
-				alert(`You are blocking this user`);
+					alert(`You are blocking this user`);
 				} else if (errorData.detail === "This user is blocking you") {
 					alert(`this user is blocking you`);
 				} else if (errorData.detail === "You cannot create a private room with yourself.") {
@@ -152,8 +152,8 @@ export async function setChatView(contentContainer, aliasToContact = "") {
 
 	if (aliasToContact !== "") {
 		console.log("opening chat with", aliasToContact);
-		loadChatRoom("private_1_2", "qwer");
-		// getOrCreatePrivateChatRoom(aliasToContact);
+		// loadChatRoom("private_1_2", "qwer");
+		getOrCreatePrivateChatRoom(aliasToContact);
 	}
 }
 
