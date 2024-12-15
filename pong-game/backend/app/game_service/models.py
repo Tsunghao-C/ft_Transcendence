@@ -4,6 +4,7 @@ from django.db.models import F
 from django.utils.timezone import now
 from datetime import timedelta
 from django.db.models import Q
+import uuid
 import os
 
 LDB_UPDATE_TIMER = int(os.environ.get("LDB_UPDATE_TIMER", 15))
@@ -86,3 +87,58 @@ class LeaderBoard(models.Model):
 	def getPlayerRank(cls, player):
 		rank_obj = cls.objects.filter(player=player).first()
 		return rank_obj.rank if rank_obj else None
+
+#-------- Matchmaking ------------------
+
+# Delete after each game
+class LiveGames(models.Model):
+	class Status(models.TextChoices):
+		not_started = "Not Started"
+		in_progress = "In Progress"
+		completed = "Completed"
+
+	gameUID = models.UUIDField(
+		primary_key=True,
+		default=uuid.uuid4,
+		editable=False,
+		unique=True
+	)
+	p1 = models.ForeignKey(
+		CustomUser,
+		related_name="match_p1"
+	)
+	p2 = models.ForeignKey(
+		CustomUser,
+		related_name="match_p2"
+	)
+	status = models.CharField(
+		choices = Status.choices,
+		default = Status.not_started
+	)
+
+	class Meta:
+		indexes = [
+            models.Index(fields=["p1"]),
+            models.Index(fields=["p2"]),
+        ]
+
+# Probably don't need the below
+# class GameQueue(models.Model):
+# 	player = models.ForeignKey(
+# 		CustomUser,
+# 		on_delete=models.CASCADE,
+# 		unique=True,
+# 		db_index=True
+# 	)
+
+# class LiveTournaments(models.Model):
+# 	games = models.ForeignKey(
+# 		LiveGames,
+# 		unique=True,
+# 		on_delete=models.CASCADE
+# 	)
+# 	queue = models.ForeignKey(
+# 		GameQueue,
+# 		unique=True,
+# 		on_delete=models.CASCADE
+# 	)
