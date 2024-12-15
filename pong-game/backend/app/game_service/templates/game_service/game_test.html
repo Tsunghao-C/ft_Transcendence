@@ -62,7 +62,7 @@
                 console.log('Connection already in progress...');
                 return;
             }
-            const gameId = 'test_game';
+            const gameId = 'test';
             const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
             const wsUrl = `${wsScheme}://${window.location.host}/ws/game-server/${gameId}/`;
             

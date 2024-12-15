@@ -186,9 +186,6 @@ CHANNEL_LAYERS = {
            "hosts": [('redis', 6379)]
        },
    },
-    # "default": {
-    #     "BACKEND": "channels.layers.InMemoryChannelLayer"
-    # },
 }
 
 LOGGING = {
@@ -214,6 +211,10 @@ LOGGING = {
                 'level': 'DEBUG',  # Log WebSocket-related events
                 'propagate': False,
             },
+            'channels': {
+                'handlers': ['console'],
+                'level': 'DEBUG',
+            }
         }
 }
 

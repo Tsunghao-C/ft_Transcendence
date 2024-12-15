@@ -205,8 +205,8 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASS}
       - POSTGRES_PORT=5434
-    ports:
-      - "5434:5434"  # Map the container port to the host
+    # ports:
+    #   - "5434:5434"  # Map the container port to the host
     command: postgres -p 5434
     volumes:
       - game_data:/var/lib/postgresql/data
