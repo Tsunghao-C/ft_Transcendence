@@ -5,38 +5,42 @@ export function closeGameWebSocket() {
 	console.log("The WebSocket should be closed");
 }
 
-export function setGameMenu(contentContainer, view = "main") {
+export function setGameMenu(contentContainer, menu = "main") {
 	contentContainer.innerHTML = "";
 
 	const currentLanguage = localStorage.getItem("language");
 
 	const menus = {
 		main: [
-			{ text: `${translations[currentLanguage].solo}`, action: () => setGameMenu(contentContainer, "solo") },
-			{ text: `${translations[currentLanguage].multi}`, action: () => setGameMenu(contentContainer, "multiplayer") },
+			{ text: `${translations[currentLanguage].solo}`, hash: "game/solo" },
+			{ text: `${translations[currentLanguage].multi}`, hash: "game/multiplayer" },
 		],
 		solo: [
-			{ text: `${translations[currentLanguage].easy}`, action: () => console.log("Starting game with easy AI") },
-			{ text: `${translations[currentLanguage].medium}`, action: () => console.log("Starting game with medium AI") },
-			{ text: `${translations[currentLanguage].hard}`, action: () => console.log("Starting game with hard AI") },
-			{ text: `${translations[currentLanguage].back}`, action: () => setGameMenu(contentContainer, "main") },
+			{ text: `${translations[currentLanguage].easy}`, hash: "game/solo/easy" },
+			{ text: `${translations[currentLanguage].medium}`, hash: "game/solo/medium" },
+			{ text: `${translations[currentLanguage].hard}`, hash: "game/solo/hard" },
+			{ text: `${translations[currentLanguage].back}`, hash: "game/main" },
 		],
 		multiplayer: [
-			{ text: `${translations[currentLanguage].local}`, action: () => setGameMenu(contentContainer, "local") },
-			{ text: `${translations[currentLanguage].online}`, action: () => setGameMenu(contentContainer, "online") },
-			{ text: `${translations[currentLanguage].back}`, action: () => setGameMenu(contentContainer, "main") },
+			{ text: `${translations[currentLanguage].local}`, hash: "game/local" },
+			{ text: `${translations[currentLanguage].online}`, hash: "game/online" },
+			{ text: `${translations[currentLanguage].back}`, hash: "game/main" },
 		],
 		local: [
-			{ text: `${translations[currentLanguage].duel}`, action: () => console.log("Starting local duel") },
-			{ text: `${translations[currentLanguage].tournament}`, action: () => console.log("Starting local tournament") },
-			{ text: `${translations[currentLanguage].back}`, action: () => setGameMenu(contentContainer, "multiplayer") },
+			{ text: `${translations[currentLanguage].duel}`, hash: "game/local/duel" },
+			{ text: `${translations[currentLanguage].tournament}`, hash: "game/local/tournament" },
+			{ text: `${translations[currentLanguage].back}`, hash: "game/multiplayer" },
 		],
 		online: [
-			{ text: `${translations[currentLanguage].quickMatch}`, action: () => console.log("Starting quick match online") },
-			{ text: `${translations[currentLanguage].duel}`, action: () =>	setViews(contentContainer)},
-			{ text: `${translations[currentLanguage].tournament}`, action: () => console.log("Starting online tournament") },
-			{ text: `Join a room`, action: () => setViews(contentContainer) },
-			{ text: `${translations[currentLanguage].back}`, action: () => setGameMenu(contentContainer, "multiplayer") },
+			{ text: `${translations[currentLanguage].quickMatch}`, hash: "game/online/quickMatch" },
+			{ 
+				text: `${translations[currentLanguage].duel}`, 
+				hash: "game/online/duel", 
+				action: () => setViews(contentContainer) // Ensure setViews is called
+			},
+			{ text: `${translations[currentLanguage].tournament}`, hash: "game/online/tournament" },
+			{ text: `Join a room`, hash: "game/online/joinRoom" },
+			{ text: `${translations[currentLanguage].back}`, hash: "game/multiplayer" },
 		],
 	};
 
@@ -51,14 +55,22 @@ export function setGameMenu(contentContainer, view = "main") {
 			button.className = "btn btn-primary mb-2";
 			button.style.display = "block";
 			button.style.margin = "10px auto";
-			button.addEventListener("click", item.action);
+
+			// Add hash change and optional action
+			button.addEventListener("click", () => {
+				if (item.action) {
+					item.action(); // Call the action explicitly
+				}
+				window.location.hash = item.hash;
+			});
+
 			menuContainer.appendChild(button);
 		});
 
 		return menuContainer;
 	}
 
-	const menuView = createMenu(view);
+	const menuView = createMenu(menu);
 	contentContainer.appendChild(menuView);
 }
 

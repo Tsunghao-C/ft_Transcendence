@@ -227,13 +227,34 @@ export async function loadPage(page) {
 	
 					} else if (page.startsWith("friends/")) {
 							const activeTab = page.split("/")[1] || "friends";
-								if (['friends', 'friend-requests', 'sent-friend-requests', 'blocks'].includes(activeTab)) {
-										setFriendsView(innerContent, activeTab);
-									} else {
-											set404View(innerContent);
-									}
+							if (['friends', 'friend-requests', 'sent-friend-requests', 'blocks'].includes(activeTab)) {
+									setFriendsView(innerContent, activeTab);
+								} else {
+										set404View(innerContent);
+								}
 					} else if (page.startsWith("game/")) {
-						setGameMenu(innerContent);
+						const pageSplit = page.split("/");
+						const menu = pageSplit[1] || "main";
+						if (menu) {
+							if (menu == "room"){
+								if (pageSplit.length > 3) {
+									set404View(innerContent);
+								} else {
+									const roomId = pageSplit[2] || "pre-lobby";
+									setGameMenu(innerContent, menu, roomId);
+								}
+							} else if (['main', 'solo', 'multiplayer', 'local', 'online'].includes(menu)) {
+								if (pageSplit.length > 2) {
+									set404View(innerContent);
+								} else {
+									setGameMenu(innerContent, menu);
+								}
+							} else {
+								set404View(innerContent);
+							}
+						} else {
+							setGameMenu(innerContent);
+						}
 					} else {
 						set404View(innerContent);
 					}
