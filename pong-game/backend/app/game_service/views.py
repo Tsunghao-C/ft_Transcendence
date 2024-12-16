@@ -59,6 +59,11 @@ def get_game(request):
     return render(request, 'game_service/game.html', {
         })
 
+#solo mode for the game
+def get_solo_game(request):
+    return render(request, 'game_service/solo_game.html', {
+            })
+
 def game_test_ssr(request):
 	# Initial game state that will be pre-rendered
 	initial_state = {
