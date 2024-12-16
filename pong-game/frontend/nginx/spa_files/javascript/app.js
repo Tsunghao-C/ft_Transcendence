@@ -15,6 +15,7 @@ import { getLanguageCookie } from './fetch_request.js';
 import { setAboutPage } from './about.js';
 import { setChatView } from './chat_view.js';
 import { translations } from './language_pack.js';
+import { setLobbyView } from './game_lobby.js';
 
 export const state = {
 	chatSocket: null,
@@ -182,6 +183,9 @@ export async function loadPage(page) {
 				case "about":
 					setAboutPage(innerContent);
 					break;
+				case "lobby":
+					setLobbyView(innerContent);
+					break;
 				// case "login":
 				// 	setLoginView(innerContent);
 				// 	break;
@@ -236,19 +240,10 @@ export async function loadPage(page) {
 						const pageSplit = page.split("/");
 						const menu = pageSplit[1] || "main";
 						if (menu) {
-							if (menu == "room"){
-								if (pageSplit.length > 3) {
-									set404View(innerContent);
-								} else {
-									const roomId = pageSplit[2] || "pre-lobby";
-									setGameMenu(innerContent, menu, roomId);
-								}
+							if (pageSplit.length > 2) {
+								set404View(innerContent);
 							} else if (['main', 'solo', 'multiplayer', 'local', 'online'].includes(menu)) {
-								if (pageSplit.length > 2) {
-									set404View(innerContent);
-								} else {
 									setGameMenu(innerContent, menu);
-								}
 							} else {
 								set404View(innerContent);
 							}
