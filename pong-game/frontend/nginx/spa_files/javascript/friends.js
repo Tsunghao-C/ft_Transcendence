@@ -312,19 +312,19 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 
 
 	friendsTab.addEventListener("shown.bs.tab", function () {
-        switchTab('friends');
+        window.location.hash = "friends/friends";
 	});
 
 	friendRequestsTab.addEventListener("shown.bs.tab", function () {
-        switchTab('friend-requests');
+        window.location.hash = "friends/friend-requests";
 	});
 
 	sentRequestsTab.addEventListener("shown.bs.tab", function () {
-        switchTab('sent-requests');
+        window.location.hash = "friends/sent-friend-requests";
 	});
 
 	blockTab.addEventListener("shown.bs.tab", function () {
-        switchTab('block');
+        window.location.hash = "friends/blocks";
 	});
     } catch (error) {
         window.location.hash = "login";

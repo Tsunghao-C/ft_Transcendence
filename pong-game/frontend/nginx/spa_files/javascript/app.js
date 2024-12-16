@@ -222,27 +222,18 @@ export async function loadPage(page) {
 								} else {
 									setChatView(innerContent);
 								}
-							} 
-						}
-							// } else if (page.startsWith("friends/")) {
-								// 	const activeTab = page.split("/")[1] || "friends";
-								// 		if (['friends', 'friend-requests', 'sent-friend-requests', 'blocks'].includes(activeTab)) {
-									// 			setFriendsView(contentContainer, activeTab);
-									// 		} else {
-										// 			set404View(contentContainer);
-										// 		}
-									} else if (page.startsWith("game/")) {
-										const roomType = page.split("/")[1];
-										if (roomType) {
-							const aliasOrRoomToJoin = page.split("/")[2];
-							if (aliasOrRoomToJoin) {
-								setChatView(innerContent, roomType, aliasOrRoomToJoin);
-							} else {
-								setChatView(innerContent);
 							}
-						} else {
-							setChatView(innerContent);
-						}
+						} 
+	
+					} else if (page.startsWith("friends/")) {
+							const activeTab = page.split("/")[1] || "friends";
+								if (['friends', 'friend-requests', 'sent-friend-requests', 'blocks'].includes(activeTab)) {
+										setFriendsView(innerContent, activeTab);
+									} else {
+											set404View(innerContent);
+									}
+					} else if (page.startsWith("game/")) {
+						setGameMenu(innerContent);
 					} else {
 						set404View(innerContent);
 					}
@@ -284,19 +275,9 @@ window.addEventListener("hashchange", () => {
 
 
 document.addEventListener("DOMContentLoaded", function () {
-
-	// /!\PR [by Alex] I commented the lines below because they would setup the login localStorage as false everytime we refresh, even after having logged in
-	// Clear any stale login state on fresh page load
 	const currentPage = window.location.hash.substring(1) || "home";
 	loadPage(currentPage);
 
 	attachNavigationListeners();
-
-	window.addEventListener("popstate", function (event) {
-		const page = event.state ? event.state.page : "home";
-		loadPage(page);
-	});
-
-
 });
 
