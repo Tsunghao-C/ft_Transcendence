@@ -4,6 +4,7 @@ from .models import *
 class CreateTournamentSerializer(serializers.Serializer):
 	name = serializers.CharField(max_length=100)
 	max_players = serializers.IntegerField(min_value=2)
+	is_private = serializers.BooleanField()
 
 	def validate_max_players(self, value):
 		if value > 20:

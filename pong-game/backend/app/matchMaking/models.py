@@ -21,6 +21,7 @@ class Tournament(models.Model):
 	max_players = models.PositiveSmallIntegerField()
 	num_curr_players = models.PositiveSmallIntegerField(default=0)
 	num_brackets = models.PositiveSmallIntegerField(default=0)
+	is_private = models.BooleanField()
 
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
