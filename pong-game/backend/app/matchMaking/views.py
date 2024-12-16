@@ -4,6 +4,8 @@ from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import ValidationError
+from django.core.paginator import Paginator
 from asgiref.sync import sync_to_async
 from .serializers import *
 import datetime
@@ -48,3 +50,33 @@ class StartTournamentView(APIView):
 		if tournament.tournament_admin != user:
 			return Response({"error":"only the tournament creator can start the tournament"}, status=400)
 		tournament.start_tournament()
+		return Response({"detail":"tournament successfully started"}, status=200)
+
+class GetOpenTournamentsView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def get(self, request):
+		search_query = request.query_params.get("search","").strip()
+		page = int(request.query_params.get("page", 1))
+		tournaments = Tournament.objects.filter(is_private=False, is_active=False, is_finished=False)
+		if not tournaments:
+			return Response({"detail":"no open tournaments exist."}, status=200)
+		paginator = Paginator(tournaments, 5) # can change this to view more or fewer tourneys
+		try:
+			current_page = paginator.page(page)
+		except Exception:
+			raise ValidationError({"detail": "Invalid page number."})
+		TournamentData = [
+			{
+				"Tournament Name": tourney.name,
+				"Tourney Owner": tourney.tournament_admin.alias,
+				"Max Players": tourney.max_players,
+				"Current Players": tourney.num_curr_players,
+				"Created At": tourney.created_at
+			} for tourney in tournaments
+		]
+		response_data = {
+			"tournaments": TournamentData,
+			"totalPages": paginator.num_pages,
+		}
+		return Response(response_data, status=200)
