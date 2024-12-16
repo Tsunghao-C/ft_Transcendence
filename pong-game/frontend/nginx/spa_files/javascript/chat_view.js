@@ -68,7 +68,6 @@ roomList.innerHTML = roomData
 			const roomType = event.currentTarget.getAttribute("data-room-type");
 			const aliasOrRoomName = event.currentTarget.getAttribute("data-alias-or-room-name");
 			
-			// Change the hash of the URL
 			window.location.hash = `chat/${roomType}/${aliasOrRoomName}`;
 		});
 	});
@@ -76,9 +75,7 @@ roomList.innerHTML = roomData
 
 	document.getElementById("join-room").addEventListener('click', async () => {
 		const roomName = prompt("Enter the room name to join:");
-		if (roomName) {
-			loadChatRoom(roomName, userAlias);
-		}
+		window.location.hash = `chat/public/${roomName}`;
 	});
 
 	document.getElementById("create-public-room").addEventListener('click', async () => {
@@ -93,7 +90,7 @@ roomList.innerHTML = roomData
 				if (response.ok) {
 					const roomData = await response.json();
 					alert(`Public room "${roomData.room.name}" created successfully!`);
-					loadChatRoom(roomData.room.name, userAlias);
+					window.location.hash = `chat/public/${roomData.room.name}`;
 				} else {
 					const errorData = await response.json();
 					alert(`Failed to create room: ${errorData.error}`);

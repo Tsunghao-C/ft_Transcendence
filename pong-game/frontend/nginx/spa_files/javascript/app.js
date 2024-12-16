@@ -7,7 +7,6 @@ import { setLeaderboardView } from './leaderboard.js';
 import { setpersonalDataView } from './personal-data.js';
 import { setProfileView } from './profile.js';
 import { setFriendsView } from './friends.js';
-import { setGameTestView } from  './game_test.js';
 import { setHomePage } from './home.js';
 import { fetchWithToken } from './fetch_request.js';
 import { setLanguageCookie } from './fetch_request.js';

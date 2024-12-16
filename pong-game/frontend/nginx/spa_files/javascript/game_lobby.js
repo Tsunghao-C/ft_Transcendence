@@ -319,15 +319,12 @@ export function setLobbyView(contentContainer) {
 		}
 
 		async function showReadyButton() {
-			// Destruction du bouton précédent
 			destroyReadyButton();
 		
-			// Création du bouton
 			readyButton = document.createElement('button');
 			readyButton.id = 'ready-button';
 			readyButton.textContent = 'Ready Up';
 			
-			// Styles très visibles pour le débogage
 			readyButton.style.cssText = `
 				position: fixed;
 				bottom: 20px;
@@ -342,7 +339,6 @@ export function setLobbyView(contentContainer) {
 				border: 3px solid yellow;
 			`;
 		
-			// Test multiple de l'attachement d'événement
 			readyButton.onclick = function(event) {
 				try {
 					if (readyButton.disabled == false) {
@@ -369,12 +365,10 @@ export function setLobbyView(contentContainer) {
 				console.log('Event:', event);
 			});
 		
-			// Ajout au DOM avec vérification
 			try {
 				document.body.appendChild(readyButton);
 				console.log('Ready button DEFINITELY added to DOM');
 				
-				// Vérification supplémentaire
 				const button = document.getElementById('ready-button');
 				if (button) {
 					console.log('Button found in DOM');
@@ -389,7 +383,6 @@ export function setLobbyView(contentContainer) {
 			console.log("Trying to destroy ready buttons");
 			if (readyButton) {
 				console.log("Destroying ready buttons");
-//				readyButton.replaceWith(readyButton.cloneNode(true));
 				readyButton.parentNode.removeChild(readyButton);
 				readyButton.remove();
 				readyButton = null;
