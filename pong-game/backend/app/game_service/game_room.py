@@ -3,6 +3,7 @@ import json
 import asyncio
 import httpx
 import logging
+from ai_player import PongAI
 
 CANVAS_WIDTH = 800 #original value is 800, change it in case I fucked it up for tests
 CANVAS_HEIGHT = 600
@@ -37,6 +38,11 @@ class GameRoom():
         self.connections = []
         self.left_player = user_data[0]
         self.right_player = user_data[1]
+
+        # Adding AI player logic
+        self.ai_player = None
+        if self.right_player == "ai_player":
+            self.ai_player = PongAI(difficulty='medium')
         for consumer in consumer_data:
             self.connections.append(consumer)
         self.players = {
@@ -213,6 +219,16 @@ class GameRoom():
             logger.info('gameRoom updated collisions')
             self.update_ball()
             logger.info('gameRoom updated ball')
+            # Add AI logic
+            if self.ai_player:
+                ai_move = await self.ai_player.calculate_move(
+                    self.ball.x,
+                    self.ball.y,
+                    self.ball.speedX,
+                    self.ball.speedY
+                )
+                await self.receive_player_input("ai_player", ai_move)
+
             if self.game_over:
                 logger.info('gameRoom preparing gameover')
                 await self.declare_winner(self.winner)

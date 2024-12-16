@@ -105,6 +105,7 @@ class GameConsumer(AsyncWebsocketConsumer):
             await self.join_lobby(data["room_name"], player_id)
         elif action == "create_private_match":
             room_name = str(uuid.uuid4())
+            is_ai_game = data.get("is_ai_game", False) # AI factor
             await self.create_private_lobby(room_name, player_id)
         elif action == "player_ready":
             await self.update_ready_status(data["room_name"], data["player_id"])
@@ -121,9 +122,14 @@ class GameConsumer(AsyncWebsocketConsumer):
                     "message": f"Game room {data['game_roomID']} not found"
                     }))
 
-    async def create_private_lobby(self, room_name, player_id):
+    async def create_private_lobby(self, room_name, player_id, is_ai_game=False):
         self.assigned_room = room_name
         self.assigned_player_id = player_id
+
+        players = [player_id]
+        if is_ai_game:
+            players.append("ai_player")
+
         active_lobbies[room_name] = {
                 "players": [player_id],
                 "connection": [self]
@@ -133,7 +139,8 @@ class GameConsumer(AsyncWebsocketConsumer):
         await self.send(json.dumps({
             "type": "room_creation",
             "message": f"Created Lobby {room_name}",
-            "room_name": room_name
+            "room_name": room_name,
+            "is_ai_game": is_ai_game
             }))
 
     async def join_lobby(self, room_name, player_id):
