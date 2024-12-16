@@ -13,7 +13,7 @@ import { blockUser } from "./manage_social.js";
 import { getLanguageCookie } from './fetch_request.js';
 import { setContainerHtml } from './app.js';
 
-export async function setFriendsView(contentContainer) {
+export async function setFriendsView(contentContainer, displayedTab = "friends") {
     const currentLanguage = getLanguageCookie() ||  "en";
     let friendRequest;
     let sentFriendRequest;
@@ -137,7 +137,6 @@ export async function setFriendsView(contentContainer) {
                     } catch(error) {
                         console.log(error);
                         window.location.hash = "login";
-                        loadPage("login");
                         return;
                     }
                 });
@@ -209,7 +208,6 @@ export async function setFriendsView(contentContainer) {
                     } catch(error) {
                         console.log(error);
                         window.location.hash = "login";
-                        loadPage("login");
                         return;
                     }
                 });
@@ -242,7 +240,6 @@ export async function setFriendsView(contentContainer) {
                     } catch(error) {
                         console.log(error);
                         window.location.hash = "login";
-                        loadPage("login");
                         return;
                     }
                 });
@@ -261,7 +258,6 @@ export async function setFriendsView(contentContainer) {
             } catch(error) {
                 console.log(error);
                 window.location.hash = "login";
-                loadPage("login");
                 return;
             }
         }
@@ -280,7 +276,6 @@ export async function setFriendsView(contentContainer) {
             } catch(error) {
                 console.log(error);
                 window.location.hash = "login";
-                loadPage("login");
                 return;
             }
 		}
@@ -297,7 +292,21 @@ export async function setFriendsView(contentContainer) {
 	const friendRequestsTab = document.getElementById("friend-requests-tab");
 	const sentRequestsTab = document.getElementById("sent-requests-tab");
 
-	const tabs = new bootstrap.Tab(friendsTab);
+    let tabs
+    switch (displayedTab) {
+        case "friends":
+            tabs = new bootstrap.Tab(friendsTab);
+            break;
+        case "blocks":
+            tabs = new bootstrap.Tab(blockTab);
+            break;
+        case "friend-requests":
+            tabs = new bootstrap.Tab(friendRequestsTab);
+            break;
+        case "sent-friend-requests":
+            tabs = new bootstrap.Tab(sentRequestsTab);
+            break;
+    }
 	tabs.show();
 
 
@@ -320,7 +329,6 @@ export async function setFriendsView(contentContainer) {
     } catch (error) {
         window.location.hash = "login";
         console.log(error);
-        loadPage("login");
         return;
     }
 }

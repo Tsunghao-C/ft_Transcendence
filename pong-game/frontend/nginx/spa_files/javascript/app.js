@@ -1,4 +1,3 @@
-import { setGameView } from './game_menu.js';
 import { setGameMenu } from './game_menu.js';
 import { closeGameWebSocket } from './game_menu.js';
 import { setLoginView } from './login_login.js';
@@ -95,7 +94,6 @@ function setNavbarHtml(container) {
 			document.cookie = `refreshToken=whocares; path=/; secure; SameSite=Strict`;
 			container.innerHTML = '';
 			window.location.hash = "login";
-			loadPage("login");
 		});
 	}
 }
@@ -130,7 +128,6 @@ export async function loadPage(page) {
 		isLoggedIn = "false";
 		if (page !== "login" && page !== "register") {
 			window.location.hash = "login";
-			loadPage("login");
 			changeLanguage(currentLanguage);
 			return;
 		} else if (page === "login") {
@@ -199,17 +196,53 @@ export async function loadPage(page) {
 					break;
 				default:
 					if (page.startsWith("profile/")) {
+						if (page.split("/").length > 2) {
+							set404View(innerContent);
+						}
 						const profileUsername = page.split("/")[1] || data.alias;
 						setProfileView(innerContent, profileUsername);
-					// } else if (page.startsWith("friends/")) {
-					// 	console.log('ausidjaziefjaiezjfaizjefiajzefijazijefija');
-					// 	const activeTab = page.split("/")[1] || "friends";
-					// 	console.log(activeTab);
-					// 	if (!['friends', 'friend-requests', 'sent-requests', 'block'].includes(activeTab)) {
-					// 		set404View(contentContainer);
-						// } else {
-						// 	setFriendsView(contentContainer, activeTab);
-						// } this could be implemented to make the perosn be able to load one tab for friends, and to have history on it
+					} else if (page.startsWith("chat/")) {
+						const pageSplit = page.split("/");
+						if (pageSplit.length > 3) {
+							set404View(innerContent);
+						} else {
+							const roomType = page.split("/")[1];
+							if (roomType) {
+								const aliasOrRoomToJoin = page.split("/")[2];
+								if (!['public', 'private'].includes(roomType)) {
+									set404View(innerContent);
+								} else if (aliasOrRoomToJoin) {
+									setChatView(innerContent, roomType, aliasOrRoomToJoin);
+								} else {
+									setChatView(innerContent);
+								}
+							} else {
+								if (page.split("/").length > 2) {
+									set404View(innerContent);
+								} else {
+									setChatView(innerContent);
+								}
+							} 
+						}
+							// } else if (page.startsWith("friends/")) {
+								// 	const activeTab = page.split("/")[1] || "friends";
+								// 		if (['friends', 'friend-requests', 'sent-friend-requests', 'blocks'].includes(activeTab)) {
+									// 			setFriendsView(contentContainer, activeTab);
+									// 		} else {
+										// 			set404View(contentContainer);
+										// 		}
+									} else if (page.startsWith("game/")) {
+										const roomType = page.split("/")[1];
+										if (roomType) {
+							const aliasOrRoomToJoin = page.split("/")[2];
+							if (aliasOrRoomToJoin) {
+								setChatView(innerContent, roomType, aliasOrRoomToJoin);
+							} else {
+								setChatView(innerContent);
+							}
+						} else {
+							setChatView(innerContent);
+						}
 					} else {
 						set404View(innerContent);
 					}
