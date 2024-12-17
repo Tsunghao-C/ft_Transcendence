@@ -19,10 +19,12 @@ echo "Migrating db's..."
 # python manage.py migrate || { echo "migrations failed"; exit 1; }
 python manage.py makemigrations user_service
 python manage.py makemigrations game_service
+python manage.py makemigrations	matchMaking
 # python manage.py migrate user_service
 # python manage.py migrate #game_service
 python manage.py migrate user_service
 python manage.py migrate game_service
+python manage.py migrate matchMaking
 
 echo "Adding django crontab..."
 touch /var/log/cron.log
