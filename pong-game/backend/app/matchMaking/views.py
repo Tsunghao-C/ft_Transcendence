@@ -56,7 +56,7 @@ class GetOpenTournamentsView(APIView):
 	permission_classes = [IsAuthenticated]
 
 	def get(self, request):
-		search_query = request.query_params.get("search","").strip()
+		# search_query = request.query_params.get("search","").strip()
 		page = int(request.query_params.get("page", 1))
 		tournaments = Tournament.objects.filter(is_private=False, is_active=False, is_finished=False)
 		if not tournaments:
