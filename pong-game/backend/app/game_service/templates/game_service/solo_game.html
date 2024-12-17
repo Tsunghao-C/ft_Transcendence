@@ -43,7 +43,7 @@
     </style>
 </head>
 <body>
-    <h1>Game Lobby</h1>
+    <h1>Local Game Lobby</h1>
     <p>Select an option below to get started:</p>
     <div>
         <button onclick="create_local_match()">Create Local Match</button>
@@ -98,12 +98,12 @@
 			player_1: {
 				pending: false,
 				type: -1,
-				id: "Dumbass",
+				id: -1,
 			},
 			player_2: {
 				pending: false,
 				type: -1,
-				id: "Dumbass",
+				id: -1,
 			}
 		};
 
@@ -156,7 +156,6 @@
 								console.log('Room name: ' + data.roomUID);
 								data.roomUID = response.room_name;
 								data.player2Id = response.player2_id;
-								createTextBox(data.roomUID);
 							}
 							else if (response.type == 'game_start') {
 								console.log(response.message);
@@ -358,26 +357,6 @@
 				readyButton.remove();
 				readyButton = null;
 			}
-		}
-
-		function createTextBox(content) {
-			textBox = document.createElement('textarea');
-			textBox.value = content;
-			textBox.style.position = 'fixed';
-			textBox.style.top = '50%';
-			textBox.style.left = '50%';
-			textBox.style.transform = 'translateX(-50%)';
-			textBox.style.width = '300px';
-			textBox.style.height = '100px';
-			textBox.style.padding = '10px';
-			textBox.style.fontSize = '16px';
-			textBox.style.resize = 'none'; // Disable resizing
-			textBox.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-			textBox.style.border = '1px solid #ccc';
-			textBox.style.borderRadius = '5px';
-			textBox.style.backgroundColor = '#f9f9f9';
-			textBox.readOnly = true;
-			document.body.appendChild(textBox);
 		}
 
 		async function request_local_room() {
