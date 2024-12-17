@@ -107,7 +107,8 @@ class GameConsumer(AsyncWebsocketConsumer):
             room_name = str(uuid.uuid4())
             await self.create_private_lobby(room_name, player_id)
         elif action == "create_solo_match":
-            await self.create_solo_match()
+            room_name = str(uuid.uuid4())
+            await self.create_local_match(room_name, player_id)
         elif action == "player_ready":
             await self.update_ready_status(data["room_name"], data["player_id"])
         elif data.get('type') == "player_input":
@@ -138,7 +139,7 @@ class GameConsumer(AsyncWebsocketConsumer):
             "room_name": room_name
             }))
 
-    async def create_solo_match():
+    async def create_local_match(self, room_name, player_id):
         self.assigned_room = room_name
         self.assigned_player_id = player_id
         active_lobbies[room_name] = {
@@ -146,14 +147,15 @@ class GameConsumer(AsyncWebsocketConsumer):
                 "connection": [self]
                 }
         self.current_group = f"lobby_{room_name}"
-        await self.channel_layer.group_add(self.current_group, self.channel_name)
-        await self.send(json.dumps({
-            "type": "room_creation",
-            "message": f"Created Lobby {room_name}",
-            "room_name": room_name
-            }))
         player_2 = str(uuid.uuid4())
         active_lobbies[room_name]["players"].append(player_2)
+        await self.channel_layer.group_add(self.current_group, self.channel_name)
+        await self.send(json.dumps({
+            "type": "local_room_creation",
+            "message": f"Created local match Lobby {room_name}",
+            "room_name": room_name,
+            "player2_id": player_2
+            }))
 
     async def join_lobby(self, room_name, player_id):
         if room_name not in active_lobbies:
