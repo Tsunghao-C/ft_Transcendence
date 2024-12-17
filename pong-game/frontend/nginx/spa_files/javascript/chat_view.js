@@ -36,6 +36,7 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 				<div>
 					<input id="message-input" type="text" placeholder="Type your message">
 					<button id="send-message">Send</button>
+					<button id="send-invite">Send Invite</button>
 				</div>
 			</div>
 		</div>
@@ -142,7 +143,26 @@ roomList.innerHTML = roomData
 	}
 
 	document.getElementById("send-message").addEventListener("click", sendMessage);
+	document.getElementById("send-invite").addEventListener("click", sendInvite);
 
+	async function sendInvite() {
+			try {
+				const response = await fetchWithToken('/api/chat/create-invitation/', JSON.stringify({
+					roomName: aliasOrRoomToJoin,
+					roomId: "c9d2b188-a876-4349-a410-3bec27510ee6",
+				}), 'POST');
+				if (!response.ok) {
+					console.log(response);
+					alert("please get me out");
+				} else {
+					alert("thank god");
+				}
+			} catch(error) {
+				console.log(error);
+				alert("send help");
+				window.location.hash = "login";
+			}
+	}
 	function sendMessage() {
 		const input = document.getElementById("message-input");
 		if (input.value && state.chatSocket) {

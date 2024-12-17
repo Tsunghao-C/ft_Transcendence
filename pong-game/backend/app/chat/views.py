@@ -8,6 +8,8 @@ from .serializers import MessageSerializer, ChatRoomSerializer
 from user_service.models import CustomUser
 from rest_framework.exceptions import PermissionDenied
 from uuid import UUID
+from django.shortcuts import render, get_object_or_404
+
 
 def index(request):
     return render(request, "chat/index.html")
@@ -147,26 +149,27 @@ class CreateInviteView(APIView):
 		print("ta mere")
 		user = request.user
 		other_alias = request.data.get("alias")
+		room_name = request.data.get("room_name")
 		game_room = request.data.get("roomId")
 
 		try:
 			game_room = UUID(game_room, version=4)
 		except ValueError:
 			return Response({"error": "Invalid gameId format."}, status=400)
-
-		try:
-			other_user = CustomUser.objects.get(alias=other_alias)
-		except CustomUser.DoesNotExist:
-			return Response({"error": "User not found."}, status=404)
-
-		if user == other_user:
-			raise PermissionDenied("You cannot invite yourself.")
-		elif user.has_blocked(other_user):
-			raise PermissionDenied("You are blocking this user.")
-		elif other_user.has_blocked(user):
-			raise PermissionDenied("This user is blocking you.")
-
-		room = ChatRoom.get_or_create_private_room(user, other_user)
+		if other_user:
+			try:
+				other_user = CustomUser.objects.get(alias=other_alias)
+			except CustomUser.DoesNotExist:
+				return Response({"error": "User not found."}, status=404)
+			if user == other_user:
+				raise PermissionDenied("You cannot invite yourself.")
+			elif user.has_blocked(other_user):
+				raise PermissionDenied("You are blocking this user.")
+			elif other_user.has_blocked(user):
+				raise PermissionDenied("This user is blocking you.")
+			room = ChatRoom.get_or_create_private_room(user, other_user)
+		else:
+			room = get_object_or_404(Chatroom, name=room_name)
 
 		invite_message = Message.objects.create(
 			room=room,
