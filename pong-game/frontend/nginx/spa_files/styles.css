@@ -331,13 +331,13 @@ body {
 	font-size: 2.5rem;
 }
 
-#successMessage {
+.successMessage {
 	margin-top: 10px;
 	color: rgb(77, 150, 77);
 	/* color: rgb(97, 172, 97); */
 }
 
-#errorMessage {
+.errorMessage {
 	margin-top: 10px;
 	color: rgb(175, 52, 52);
 }
