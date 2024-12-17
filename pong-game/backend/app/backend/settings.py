@@ -67,6 +67,7 @@ INSTALLED_APPS = [
 	"game_service",
 	"rest_framework",
 	"corsheaders",
+	"matchMaking",
 ]
 
 MIDDLEWARE = [
