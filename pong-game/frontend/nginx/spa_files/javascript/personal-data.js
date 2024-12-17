@@ -3,18 +3,14 @@ import { fetchWithToken } from "./fetch_request.js";
 import { getLanguageCookie } from './fetch_request.js';
 // import { showError, showSuccess } from "./login_validations.js";
 
-function showPasswordError(message) {
-	const successMessage = document.getElementById('passwordSuccessMessage');
-	successMessage.textContent = "";
-	const errorMessage = document.getElementById('passwordErrorMessage');
-	errorMessage.textContent = message;
+function emptyMessage(elemId) {
+    const containter = document.getElementById(elemId)
+    containter.textContent = "";
 }
 
-function showPasswordSuccess(message) {
-	const errorMessage = document.getElementById('passwordErrorMessage');
-	errorMessage.textContent = "";
-	const successMessage = document.getElementById('passwordSuccessMessage');
-	successMessage.textContent = message;
+function showMessage(message, elemId) {
+    const containter = document.getElementById(elemId)
+    containter.textContent = message;
 }
 
 export async function setpersonalDataView(contentContainer) {
@@ -32,7 +28,7 @@ export async function setpersonalDataView(contentContainer) {
 
     contentContainer.innerHTML = `
         <div class="personal-data-view">
-            <h2 data-i18n="personalDataTitle">Personal Information</h2>
+            <h2 data-i18n="personalDataTitle">Personal Informations</h2>
             <div class="pp-and-login">
                 <div>
                     <img
@@ -61,6 +57,10 @@ export async function setpersonalDataView(contentContainer) {
                     <label for="aliasInput" class="form-label" data-i18n="alias">Alias</label>
                     <div class="input-group">
                         <input type="text" class="form-control" id="aliasInput" value="${personal.alias}" required>
+                        <div>
+                            <p id="aliasError" class="errorMessage"></p>
+                            <p id="aliasSuccess" class="successMessage"></p>
+                        </div>
                         <button class="btn btn-success" type="button" id="aliasChangeButton" data-i18n="confirm">Confirm</button>
                     </div>
                 </div>
@@ -69,6 +69,10 @@ export async function setpersonalDataView(contentContainer) {
                     <label for="mailInput" class="form-label" data-i18n="email">Email</label>
                     <div class="input-group">
                         <input type="email" class="form-control" id="mailInput" value="${personal.email}" required>
+                        <div>
+                            <p id="emailError" class="errorMessage"></p>
+                            <p id="emailSuccess" class="successMessage"></p>
+                        </div>
                         <button class="btn btn-success" type="button" id="emailChangeButton" data-i18n="confirm">Confirm</button>
                     </div>
                 </div>
@@ -92,8 +96,8 @@ export async function setpersonalDataView(contentContainer) {
                         <input type="password" class="form-control" id="confirmPasswordInput" required>
                     </div>
                     <div>
-                        <p id="passwordErrorMessage" class="errorMessage"></p>
-                        <p id="passwordSuccessMessage" class="successMessage"></p>
+                        <p id="passwordError" class="errorMessage"></p>
+                        <p id="passwordSuccess" class="successMessage"></p>
                     </div>
                     <button type="button" class="btn btn-success" id="confirmPasswordChangeButton" data-i18n="confirmChange">Confirm Change</button>
                 </div>
@@ -151,15 +155,19 @@ export async function setpersonalDataView(contentContainer) {
 
     document.getElementById("aliasChangeButton").addEventListener("click", async () => {
         const newAlias = document.getElementById("aliasInput").value;
-        let response;
         try {
-            response = await fetchWithToken('/api/user/change-alias/', JSON.stringify({ alias: newAlias }), 'POST');
-            if (!response.ok) {
-                alert(`${response.detail}`);
-            }
-            else {
-                alert('Alias updated successfully!');
-                loadPage("personal-data")
+            const response = await fetchWithToken('/api/user/change-alias/', JSON.stringify({ alias: newAlias }), 'POST');
+            const data = await response.json();
+            if (response.ok && data.detail === "alias successfully changed") {
+                emptyMessage("aliasError");
+                showMessage("Success, alias has been changed.", "aliasSuccess");
+            } else {
+                emptyMessage("aliasSuccess");
+                if (data.error) {
+                    showMessage("Error: " + data.error, "aliasError");
+                } else {
+                    showMessage("Error, please enter a correct value.", "aliasError");
+                }
             }
         } catch(error) {
             console.log(error);
@@ -171,9 +179,19 @@ export async function setpersonalDataView(contentContainer) {
     document.getElementById("emailChangeButton").addEventListener("click", async () => {
         const newEmail = document.getElementById("mailInput").value;
         try {
-            await fetchWithToken('/api/user/change-email/', JSON.stringify({ email: newEmail }), 'POST');
-            alert('Email updated successfully!');
-            loadPage("personal-data")
+            const response = await fetchWithToken('/api/user/change-email/', JSON.stringify({ "new_email": newEmail }), 'POST');
+            const data = await response.json();
+            if (response.ok && data.detail === "email change success") {
+                emptyMessage("emailError");
+                showMessage("Success, email has been changed.", "emailSuccess");
+            } else {
+                emptyMessage("emailSuccess");
+                if (data.error) {
+                    showMessage("Error: " + data.error, "emailError");
+                } else {
+                    showMessage("Error, please enter a correct value.", "emailError");
+                }
+            }
         } catch(error) {
             console.log(error);
             window.location.hash = "login";
@@ -192,21 +210,24 @@ export async function setpersonalDataView(contentContainer) {
         const confirmPassword = document.getElementById("confirmPasswordInput").value;
 
         if (newPassword !== confirmPassword) {
-            showPasswordError("Error: New passwords do not match.")
+            emptyMessage("passwordSuccess");
+            showMessage("Error: New passwords do not match.", "passwordError");
             return;
         }
 
         try {
             const response = await fetchWithToken('/api/user/change-password/', JSON.stringify({ old_password: oldPassword, new_password: newPassword }), 'POST');
             const data = await response.json();
-            if (response.status === 400 || data.error) {
-                if (data.error) {
-                    showPasswordError("Error: " + data.error)
-                } else {
-                    showPasswordError("Error, please enter correct values.")
-                }
+            if (response.ok && data.detail === "Password changed successfully") {
+                emptyMessage("passwordError");
+                showMessage("Success, password has been changed.", "passwordSuccess");
             } else {
-                showPasswordSuccess("Success, password has been changed.")
+                emptyMessage("passwordSuccess");
+                if (data.error) {
+                    showMessage("Error: " + data.error, "passwordError");
+                } else {
+                    showMessage("Error, please enter a correct value.", "passwordError");
+                }
             }
         } catch(error) {
             console.log(error);
