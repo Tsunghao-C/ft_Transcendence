@@ -1,6 +1,21 @@
 import { loadPage } from "./app.js";
 import { fetchWithToken } from "./fetch_request.js";
 import { getLanguageCookie } from './fetch_request.js';
+// import { showError, showSuccess } from "./login_validations.js";
+
+function showPasswordError(message) {
+	const successMessage = document.getElementById('passwordSuccessMessage');
+	successMessage.textContent = "";
+	const errorMessage = document.getElementById('passwordErrorMessage');
+	errorMessage.textContent = message;
+}
+
+function showPasswordSuccess(message) {
+	const errorMessage = document.getElementById('passwordErrorMessage');
+	errorMessage.textContent = "";
+	const successMessage = document.getElementById('passwordSuccessMessage');
+	successMessage.textContent = message;
+}
 
 export async function setpersonalDataView(contentContainer) {
     let personal;
@@ -75,6 +90,10 @@ export async function setpersonalDataView(contentContainer) {
                     <div class="mb-3">
                         <label for="confirmPasswordInput" class="form-label" data-i18n="confirmPassword">Confirm Password</label>
                         <input type="password" class="form-control" id="confirmPasswordInput" required>
+                    </div>
+                    <div>
+                        <p id="passwordErrorMessage" class="errorMessage"></p>
+                        <p id="passwordSuccessMessage" class="successMessage"></p>
                     </div>
                     <button type="button" class="btn btn-success" id="confirmPasswordChangeButton" data-i18n="confirmChange">Confirm Change</button>
                 </div>
@@ -173,13 +192,22 @@ export async function setpersonalDataView(contentContainer) {
         const confirmPassword = document.getElementById("confirmPasswordInput").value;
 
         if (newPassword !== confirmPassword) {
-            alert('New passwords do not match.');
+            showPasswordError("Error: New passwords do not match.")
             return;
         }
 
         try {
-            await fetchWithToken('/api/user/change-password/', JSON.stringify({ old_password: oldPassword, new_password: newPassword }), 'POST');
-            alert('Password changed successfully!');
+            const response = await fetchWithToken('/api/user/change-password/', JSON.stringify({ old_password: oldPassword, new_password: newPassword }), 'POST');
+            const data = await response.json();
+            if (response.status === 400 || data.error) {
+                if (data.error) {
+                    showPasswordError("Error: " + data.error)
+                } else {
+                    showPasswordError("Error, please enter correct values.")
+                }
+            } else {
+                showPasswordSuccess("Success, password has been changed.")
+            }
         } catch(error) {
             console.log(error);
             window.location.hash = "login";
