@@ -2,20 +2,22 @@ import random
 import asyncio
 import logging
 from typing import Literal, Optional
-from game_room import CANVAS_HEIGHT, CANVAS_WIDTH, PADDLE_HEIGHT, PADDLE_WIDTH, BALL_RADIUS
 
 logger = logging.getLogger(__name__)
 
 class PongAI:
     def __init__(self,
                  difficulty: Literal['easy', 'medium', 'hard'] = 'medium',
-                 side: Literal['left', 'right'] = 'right'):
+                 side: Literal['left', 'right'] = 'right',
+                 canvas_width: int = 800,
+                 canvas_height: int = 600,
+                 paddle_height: int = 100):
         self.side = side
-        self.canvas_width = CANVAS_WIDTH
-        self.canvas_height = CANVAS_HEIGHT
-        self.paddle_height = PADDLE_HEIGHT
-        self.paddle_x = CANVAS_WIDTH * 0.9 if side == 'right' else CANVAS_WIDTH * 0.1
-        self.paddle_y = CANVAS_HEIGHT / 2 - PADDLE_HEIGHT / 2
+        self.canvas_width = canvas_width
+        self.canvas_height = canvas_height
+        self.paddle_height = paddle_height
+        self.paddle_x = canvas_width * 0.9 if side == 'right' else canvas_width * 0.1
+        self.paddle_y = canvas_height / 2 - paddle_height / 2
         self.difficulties = {
             'easy': {
                 'prediction_noise': (-50, 50),
@@ -41,7 +43,7 @@ class PongAI:
         self.current_move = 'move_stop'
 
     async def predict_ball_position(self, ball_x: float, ball_y: float, ball_dx: float, ball_dy:float) -> Optional[float]:
-        is_approaching = (ball_dx > 0 and self.sie == 'right') or (ball_dx < 0 and self.side == 'left')
+        is_approaching = (ball_dx > 0 and self.side == 'right') or (ball_dx < 0 and self.side == 'left')
 
         if not is_approaching:
             return None

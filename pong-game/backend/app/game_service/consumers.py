@@ -71,7 +71,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         await self.send(json.dumps({
             "type": "notice",
             "message": "Connection established"
-            }))
+        }))
 
     async def disconnect(self, code):
         logger.info("Websocket connection closed")
@@ -106,7 +106,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         elif action == "create_private_match":
             room_name = str(uuid.uuid4())
             is_ai_game = data.get("is_ai_game", False) # AI factor
-            await self.create_private_lobby(room_name, player_id)
+            await self.create_private_lobby(room_name, player_id, is_ai_game)
         elif action == "player_ready":
             await self.update_ready_status(data["room_name"], data["player_id"])
         elif data.get('type') == "player_input":
@@ -120,7 +120,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                 await self.send(json.dumps({
                     "type": "error",
                     "message": f"Game room {data['game_roomID']} not found"
-                    }))
+                }))
 
     async def create_private_lobby(self, room_name, player_id, is_ai_game=False):
         self.assigned_room = room_name
@@ -131,30 +131,32 @@ class GameConsumer(AsyncWebsocketConsumer):
             players.append("ai_player")
 
         active_lobbies[room_name] = {
-                "players": [player_id],
-                "connection": [self]
-                }
+            "players": players,
+            "connection": [self],
+            "is_ai_game": is_ai_game
+        }
         self.current_group = f"lobby_{room_name}"
         await self.channel_layer.group_add(self.current_group, self.channel_name)
+        game_type = "AI Game" if is_ai_game else "Private Match"
         await self.send(json.dumps({
             "type": "room_creation",
-            "message": f"Created Lobby {room_name}",
+            "message": f"Created {game_type} Lobby {room_name}",
             "room_name": room_name,
             "is_ai_game": is_ai_game
-            }))
+        }))
 
     async def join_lobby(self, room_name, player_id):
         if room_name not in active_lobbies:
             await self.send(json.dumps({
                 "type": "error",
                 "message": f"lobby {room_name} does not exist"
-                }))
+            }))
         self.current_group = f"lobby_{room_name}"
         if player_id in active_lobbies[room_name]["players"]:
             await self.send(json.dumps({
                 "type": "error",
                 "message": "player is already in lobby"
-                }))
+            }))
             return
         if len(active_lobbies[room_name]["players"]) >= 2:
             await self.send(json.dumps({"error": f"lobby {room_name} is full"}))
@@ -168,17 +170,20 @@ class GameConsumer(AsyncWebsocketConsumer):
             await connection.send(json.dumps({
                 "type": "notice",
                 "message": f"Player {player_id} joined lobby {room_name}"
-                }))
+            }))
 
     async def update_ready_status(self, room_name, player_id):
         if room_name not in active_lobbies:
             await self.send(json.dumps({
                 "type": "error",
                 "error": f"lobby {room_name} not found"
-                }))
+            }))
             return
         if "ready" not in active_lobbies[room_name]:
             active_lobbies[room_name]["ready"] = []
+            # If AI game, default player_2 is ready
+            if active_lobbies[room_name].get("is_ai_game"):
+                active_lobbies[room_name]["ready"].append("ai_player")
         if room_name in active_lobbies:
             if player_id not in active_lobbies[room_name].get("ready", []):
                 active_lobbies[room_name]["ready"].append(player_id)
@@ -187,8 +192,15 @@ class GameConsumer(AsyncWebsocketConsumer):
                     await connection.send(json.dumps({
                         "type": "notice",
                         "message": f"Player {player_id} is ready"
-                        }))
-        if len(active_lobbies[room_name]["players"]) == 2 and self.all_ready(room_name):
+                    }))
+        should_launch = (
+            active_lobbies[room_name].get("is_ai_game") and
+            player_id in active_lobbies[room_name].get("ready", [])
+        ) or (
+            len(active_lobbies[room_name]["players"]) == 2 and
+            self.all_ready(room_name)
+        )
+        if should_launch:
             try:
                 await self.launch_game(room_name)
             except:
@@ -202,7 +214,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                 await connection.send(json.dumps({
                     "type": "notice",
                     "message": "Game is starting"
-                    }))
+                }))
             logger.info(f"Starting game id: lobby_{room_name}")
             game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"])
             logger.info("GameRoom created")
@@ -222,7 +234,7 @@ class GameConsumer(AsyncWebsocketConsumer):
             await self.send(json.dumps({
                 "type": "error",
                 "error": f"Failed to start game: {str(e)}"
-                }))
+            }))
 
     def handle_game_task_completion(self, task):
         try:
@@ -248,8 +260,8 @@ class GameConsumer(AsyncWebsocketConsumer):
     #not implemented ahah
     def cleanup_timed_out_rooms(self): #Potentially could be handled in handle_game_task_completion
         rooms_to_remove = [
-                room_id for room_id, game_room in active_game_rooms.items()
-                if game_room.has_timed_out() #decide whether the consumer or the game_room will track the time
-                ]
+            room_id for room_id, game_room in active_game_rooms.items()
+            if game_room.has_timed_out() #decide whether the consumer or the game_room will track the time
+        ]
         for room_id in rooms_to_remove:
             del active_game_rooms[room_id]

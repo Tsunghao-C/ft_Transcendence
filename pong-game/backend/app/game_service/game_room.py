@@ -3,7 +3,7 @@ import json
 import asyncio
 import httpx
 import logging
-from ai_player import PongAI
+from .ai_player import PongAI
 
 CANVAS_WIDTH = 800 #original value is 800, change it in case I fucked it up for tests
 CANVAS_HEIGHT = 600
@@ -42,7 +42,11 @@ class GameRoom():
         # Adding AI player logic
         self.ai_player = None
         if self.right_player == "ai_player":
-            self.ai_player = PongAI(difficulty='medium')
+            self.ai_player = PongAI(
+                difficulty='medium',
+                canvas_width=CANVAS_WIDTH,
+                canvas_height=CANVAS_HEIGHT
+            )
         for consumer in consumer_data:
             self.connections.append(consumer)
         self.players = {
@@ -208,32 +212,34 @@ class GameRoom():
                     'type': 'game_start',
                     'message': 'Game has started'
                     }))
+            while self.running:
+                self.update_players()
+                logger.info('gameRoom updated players')
+                self.handle_player_collisions()
+                logger.info('gameRoom updated collisions')
+                self.update_ball()
+                logger.info('gameRoom updated ball')
+                # Add AI logic
+                if self.ai_player:
+                    ai_move = await self.ai_player.calculate_move(
+                        self.ball.x,
+                        self.ball.y,
+                        self.ball.speedX,
+                        self.ball.speedY
+                    )
+                    await self.receive_player_input("ai_player", ai_move)
+
+                if self.game_over:
+                    logger.info('gameRoom preparing gameover')
+                    await self.declare_winner(self.winner)
+                    logger.info('gameRoom done')
+                    return 
+                await self.send_update()
+                logger.info('gameRoom sent update to clients')
+                await asyncio.sleep(0.016)
+
         except Exception as e:
             logger.error(f"GameRoom initial group send error: {e}")
             return
-        logger.info('gameRoom started, messages sent')
-        while self.running:
-            self.update_players()
-            logger.info('gameRoom updated players')
-            self.handle_player_collisions()
-            logger.info('gameRoom updated collisions')
-            self.update_ball()
-            logger.info('gameRoom updated ball')
-            # Add AI logic
-            if self.ai_player:
-                ai_move = await self.ai_player.calculate_move(
-                    self.ball.x,
-                    self.ball.y,
-                    self.ball.speedX,
-                    self.ball.speedY
-                )
-                await self.receive_player_input("ai_player", ai_move)
-
-            if self.game_over:
-                logger.info('gameRoom preparing gameover')
-                await self.declare_winner(self.winner)
-                logger.info('gameRoom done')
-                return 
-            await self.send_update()
-            logger.info('gameRoom sent update to clients')
-            await asyncio.sleep(0.016)
+        # logger.info('gameRoom started, messages sent')
+        
