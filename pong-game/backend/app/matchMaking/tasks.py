@@ -11,6 +11,7 @@ def getPlayersInRound(bracket: int, num_players: int):
 	# if n players are in the current round, n - int(n / 2) will be in the next
 	return math.ceil(num_players / (2 ** bracket))
 
+# Need to add in logic to deal with tournament drop-outs
 def match_players(player):
 	bracket_players = TourneyParticipant.objects.filter(
 		tournament=player.tournament,
