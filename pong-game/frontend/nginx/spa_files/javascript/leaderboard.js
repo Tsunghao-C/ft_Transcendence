@@ -41,7 +41,6 @@ export async function setLeaderboardView(contentContainer) {
 		} catch (error) {
 			console.error(error);
 			window.location.hash = "login";
-			loadPage("login");
 		}
 	}
 

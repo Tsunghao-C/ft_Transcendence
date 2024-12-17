@@ -28,7 +28,6 @@ export async function setProfileView(contentContainer, usernameInHash) {
 	} catch(error) {
 		console.log(error);
 		window.location.hash = "login";
-		loadPage("login");
 		return;
 	}
 	contentContainer.innerHTML = `
@@ -60,8 +59,6 @@ export async function setProfileView(contentContainer, usernameInHash) {
 		}
 
 		window.location.hash = `profile/${searchQuery}`;
-
-		loadPage(`profile/${searchQuery}`);
 		console.log("Redirecting to profile", searchQuery);
 	});
 
