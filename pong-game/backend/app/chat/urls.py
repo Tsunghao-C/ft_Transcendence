@@ -1,7 +1,7 @@
 from django.urls import path, include
 from . import views
 from django.contrib.auth.views import LoginView, LogoutView
-from .views import getChatRoomMessagesView, CreatePublicChatRoomView, CreatePrivateChatRoomView, getChatRoomsOfUserView
+from .views import getChatRoomMessagesView, CreatePublicChatRoomView, CreatePrivateChatRoomView, getChatRoomsOfUserView, CreateInviteView, DeleteInviteView
 
 
 urlpatterns = [
@@ -12,5 +12,6 @@ urlpatterns = [
 	path('create-private/', CreatePrivateChatRoomView.as_view(), name='create_private_chat_room'),
 	path('user_chatrooms/', getChatRoomsOfUserView.as_view(), name='user_chatrooms'),
 	path("<str:room_name>/", views.room, name="room"),
+	path('create-invitation/', CreateInviteView.as_view(), name='create_invite'),
 ]
 

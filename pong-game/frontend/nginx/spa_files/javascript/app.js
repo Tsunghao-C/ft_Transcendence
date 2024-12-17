@@ -18,6 +18,7 @@ import { setLobbyView } from './game_lobby.js';
 
 export const state = {
 	chatSocket: null,
+	gameSocket: null,
 	};
 
 export function changeLanguage(language) {
@@ -115,7 +116,12 @@ export async function loadPage(page) {
 	if (state.chatSocket) {
 		state.chatSocket.close();
 		state.chatSocket = null;
-		//we will need to close the game socket too
+		console.log("closing chatting socket");
+	}
+	if (page !== "lobby" && page.startsWith("lobby/") && state.gameSocket) {
+		console.log("closing gaming socket");
+		state.gameSocket.close();
+		state.gameSocket = null;
 	}
 	try {
 		response = await fetchWithToken('/api/user/getuser/');
@@ -232,6 +238,9 @@ export async function loadPage(page) {
 								} else {
 										set404View(innerContent);
 								}
+					} else if (page.startsWith("lobby/")) {
+						const roomId = page.split("/")[1] || "";
+						setLobbyView(innerContent, roomId);
 					} else if (page.startsWith("game/")) {
 						const pageSplit = page.split("/");
 						const menu = pageSplit[1] || "main";

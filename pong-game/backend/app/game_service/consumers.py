@@ -139,10 +139,9 @@ class GameConsumer(AsyncWebsocketConsumer):
         self.assigned_player_alias = player_alias
         active_lobbies[room_name] = {
                 "players": [],
-                "connection": [self]
+                "connection": []
                 }
-        self.current_group = f"lobby_{room_name}"
-        await self.channel_layer.group_add(self.current_group, self.channel_name)
+        # self.current_group = f"lobby_{room_name}" are we using this ?
         await self.send(json.dumps({
             "type": "room_creation",
             "message": f"Created Lobby {room_name}",
@@ -167,8 +166,11 @@ class GameConsumer(AsyncWebsocketConsumer):
             return
         elif len(active_lobbies[room_name]["players"]) == 0:
             active_lobbies[room_name]["players"].append(player_alias)
+            active_lobbies[room_name]["connection"].append(self)
+            await self.channel_layer.group_add(self.current_group, self.channel_name)
             await self.send(json.dumps({
             "type": "set_player_1",
+            "alias": player_alias,
             }))
             return
         self.assigned_room = room_name

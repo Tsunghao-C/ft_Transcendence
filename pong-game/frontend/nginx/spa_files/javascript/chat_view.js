@@ -2,6 +2,7 @@ import { fetchWithToken } from "./fetch_request.js";
 import { getLanguageCookie } from "./fetch_request.js";
 import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
+import { loadPage } from "./app.js";
 
 export async function setChatView(contentContainer, roomType = "", aliasOrRoomToJoin = "") {
 	let userRoomData;

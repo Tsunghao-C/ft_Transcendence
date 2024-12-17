@@ -3,7 +3,7 @@ import { getLanguageCookie } from "./fetch_request.js";
 import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
 
-export async function setLobbyView(contentContainer, lobbyId = "") {
+export async function setLobbyView(contentContainer, roomID = "") {
 	let response;
 	let userData
 	try {
@@ -23,10 +23,9 @@ export async function setLobbyView(contentContainer, lobbyId = "") {
             <button id="create-match">Create Private Match</button>
             <button id="join-match">Join Match</button>
             <button id="ready-button" style="display:none;">Ready</button>
+			<button id="invite-button" style="display:none;">Invite Player</button>
             <div id="player-info-container" style="display: flex; justify-content: space-between; margin-top: 20px;">
-                <!-- Section gauche -->
                 <div id="user-info-left" style="text-align: left; flex: 1; padding: 10px;"></div>
-                <!-- Section droite -->
                 <div id="user-info-right" style="text-align: left; flex: 1; padding: 10px;"></div>
             </div>
             <div id="game-info">Loading...</div>
@@ -95,6 +94,9 @@ export async function setLobbyView(contentContainer, lobbyId = "") {
 	};
 
 	async function connectWebSocket() {
+		if (state.gameSocket) {
+			return ;
+		}
 		if (ws && ws.readyState === WebSocket.CONNECTING) {
 			console.log('Connection already in progress...');
 			return Promise.resolve();
@@ -106,40 +108,35 @@ export async function setLobbyView(contentContainer, lobbyId = "") {
 			
 			console.log('Connecting to WebSocket...')
 			ws = new WebSocket(wsUrl);
-			data.socket = ws
+			state.gameSocket = ws
 
 			ws.onopen = function() {
 				console.log('WebSocket connected');
+				resolve();
 				gameInfo.textContent = 'Connected to game server...';
 				if (wsReconnectTimer) {
 					clearTimeout(wsReconnectTimer);
 					wsReconnectTimer = null;
 				}
-				data.socket.onmessage = async function (event) {
+				state.gameSocket.onmessage = async function (event) {
 				//	console.log('Ws message received', event);
-				//	console.log('Ws readyState:', data.socket.readyState);
+				//	console.log('Ws readyState:', state.gameSocket.readyState);
 					try {
 						const response = JSON.parse(event.data);
 						if (response.type == 'notice') {
 							console.log('Server notice: ' + response.message);
 						} else if (response.type == 'join') {
-							let opponentData;
-							let playerData;
+							let player1Data;
+							let player2Data;
 							let profileResponse;
 							console.log('player1 alias', response.player1, "and player2 alias", response.player2);
 							try {
-								if (data.playerId === 'player1') {
-									profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.player2}`);
-									opponentData = await profileResponse.json();
-									renderUserInfo(opponentData.profile, "user-info-right");
-								} else if (data.playerId === 'player2') {
-									profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.player2}`);
-									playerData = await profileResponse.json();
-									profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.player1}`); 
-									opponentData = await profileResponse.json();
-									renderUserInfo(playerData.profile, "user-info-right");
-									renderUserInfo(opponentData.profile, "user-info-left");
-								}
+								profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.player1}`);
+								player1Data = await profileResponse.json();
+								profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.player2}`);
+								player2Data = await profileResponse.json();
+								renderUserInfo(player1Data.profile, "user-info-left");
+								renderUserInfo(player2Data.profile, "user-info-right");
 							} catch(error) {
 								console.log(error);
 								window.location.hash = "login";
@@ -147,12 +144,40 @@ export async function setLobbyView(contentContainer, lobbyId = "") {
 							}
 						} else if (response.type == 'room_creation') {
 							data.roomUID = response.room_name;
-							createTextBox(data.roomUID);
 							console.log('Room creation notice received');
 							console.log('Room name: ' + data.roomUID);
+							window.location.hash = `lobby/${data.roomUID}`;
 						} else if (response.type == 'set_player_1') {
+							let player1Data;
+							let profileResponse;
+							profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.alias}`);
+							player1Data = await profileResponse.json();
+							renderUserInfo(player1Data.profile, "user-info-left");
 							data.playerId = 'player1'
 							console.log("you are player1");
+							const inviteButton = document.getElementById("invite-button");
+    						inviteButton.style.display = "inline-block";
+							inviteButton.addEventListener("click", async function() {
+								const aliasToInvite = prompt("Enter the alias of the player you want to invite:");
+								if (aliasToInvite) {
+									try {
+										const response = await fetchWithToken('/api/chat/create-invitation/', JSON.stringify({
+											alias: aliasToInvite,
+											roomId: "roomID",
+										}), 'POST');
+										if (!response.ok) {
+											console.log(response);
+											alert("please get me out");
+										} else {
+											alert("thank god");
+										}
+									} catch(error) {
+										console.log(error);
+										alert("send help");
+										window.location.hash = "login";
+									}
+								}
+							});
 						} else if (response.type == 'game_start') {
 							console.log(response.message);
 							startGame();
@@ -207,7 +232,7 @@ export async function setLobbyView(contentContainer, lobbyId = "") {
 
 	async function sendEvents(socket) {
 		if (playerEvent.pending == true) {
-			await data.socket.send(JSON.stringify({
+			await state.gameSocket.send(JSON.stringify({
 				type: 'player_input',
 				player_id: data.playerId,
 				input: playerEvent.type,
@@ -216,7 +241,7 @@ export async function setLobbyView(contentContainer, lobbyId = "") {
 			playerEvent.pending = false;
 		}
 		else {
-			await data.socket.send(JSON.stringify({
+			await state.gameSocket.send(JSON.stringify({
 				type: 'player_input',
 				player_id: data.playerId,
 				input: 'idle',
@@ -259,7 +284,7 @@ export async function setLobbyView(contentContainer, lobbyId = "") {
 			});
 	}
 
-	async function gameLoop(socket, playerData) {
+	async function gameLoop(socket) {
 		gameState = await getGameState();
 		// console.log("gameState: ", gameState);
 		if (game_over) {
@@ -275,87 +300,22 @@ export async function setLobbyView(contentContainer, lobbyId = "") {
 		requestAnimationFrame(gameLoop);
 	}
 
-	async function joinRoom() {
-		const modal = document.createElement('div');
-		modal.id = 'room-join-modal';
-		modal.style.position = 'fixed';
-		modal.style.top = '50%';
-		modal.style.left = '50%';
-		modal.style.transform = 'translate(-50%, -50%)';
-		modal.style.padding = '20px';
-		modal.style.border = '1px solid #ccc';
-		modal.style.borderRadius = '10px';
-		modal.style.backgroundColor = '#f9f9f9';
-		modal.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.1)';
-		modal.style.zIndex = '1000';
+	async function joinRoom(roomUID) {
+		try {
+			data.roomUID = roomUID;
 	
-		modal.innerHTML = `
-			<h3>Join Game Room</h3>
-			<input 
-				type="text" 
-				id="room-uid-input" 
-				placeholder="Enter Room UID" 
-				style="width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box;"
-			>
-			<button 
-				id="join-room-btn" 
-				style="width: 100%; padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;"
-			>
-				Join Room
-			</button>
-		`;
-	
-		// Append modal to body
-		document.body.appendChild(modal);
-	
-		const roomUidInput = modal.querySelector('#room-uid-input');
-		const joinRoomBtn = modal.querySelector('#join-room-btn');
-	
-		return new Promise((resolve, reject) => {
-			joinRoomBtn.addEventListener('click', async () => {
-				const roomUID = roomUidInput.value.trim();
-	
-				if (!roomUID) {
-					alert('Please enter a valid Room UID.');
-					return;
-				}
-	
-				data.roomUID = roomUID;
-				
-				try {
-					await data.socket.send(JSON.stringify({
-						action: 'join_private_match',
-						room_name: roomUID,
-						id: data.playerId
-					}));
-					console.log(`Request to join room ${roomUID} sent.`);
-					
-					// Remove the modal after successful room join request
-					document.body.removeChild(modal);
-					resolve(roomUID);
-				} catch (error) {
-					console.error('Error joining room:', error);
-					alert('Failed to join room. Please try again.');
-					reject(error);
-				}
-			});
-		});
-	}
-	
-
-	function createReadyButton() {
-		console.log("Creating ready button");
-		readyButton = document.createElement('button');
-		readyButton.id = 'ready-button';
-		readyButton.textContent = 'Ready Up';
-		readyButton.style.position = 'fixed';
-		readyButton.style.bottom = '20px';
-		readyButton.style.left = '50%';
-		readyButton.style.transform = 'translateX(-50%)';
-		readyButton.style.padding = '10px 20px';
-		readyButton.style.fontSize = '16px';
-		readyButton.style.cursor = 'pointer';
-		document.body.appendChild(readyButton);
+			await state.gameSocket.send(JSON.stringify({
+				action: 'join_private_match',
+				room_name: roomUID,
+				id: data.playerId
+			}));
+			console.log(`Request to join room ${roomUID} sent.`);
+			await showReadyButton();
+		} catch (error) {
+			console.error('Error joining room:', error);
+			alert('Failed to join room. Please try again.');
+			throw error;
+		}
 	}
 
 	async function showReadyButton() {
@@ -385,7 +345,7 @@ export async function setLobbyView(contentContainer, lobbyId = "") {
 					readyButton.textContent = 'Waiting for game start...';
 					readyButton.disabled = true;
 
-					data.socket.send(JSON.stringify({
+					state.gameSocket.send(JSON.stringify({
 						action: 'player_ready',
 						room_name: data.roomUID,
 						player_id: data.playerId
@@ -429,30 +389,10 @@ export async function setLobbyView(contentContainer, lobbyId = "") {
 		}
 	}
 
-	function createTextBox(content) {
-		textBox = document.createElement('textarea');
-		textBox.value = content;
-		textBox.style.position = 'fixed';
-		textBox.style.top = '50%';
-		textBox.style.left = '50%';
-		textBox.style.transform = 'translateX(-50%)';
-		textBox.style.width = '300px';
-		textBox.style.height = '100px';
-		textBox.style.padding = '10px';
-		textBox.style.fontSize = '16px';
-		textBox.style.resize = 'none'; // Disable resizing
-		textBox.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-		textBox.style.border = '1px solid #ccc';
-		textBox.style.borderRadius = '5px';
-		textBox.style.backgroundColor = '#f9f9f9';
-		textBox.readOnly = true;
-		document.body.appendChild(textBox);
-	}
-
 	async function requestRoom() {
 		try {
 			console.log("Requesting room")
-			await data.socket.send(JSON.stringify({
+			await state.gameSocket.send(JSON.stringify({
 				action: 'create_private_match',
 				id: data.playerId
 			}));
@@ -469,25 +409,12 @@ export async function setLobbyView(contentContainer, lobbyId = "") {
 				textBox.remove();
 				textBox = null;
 			}
-			gameLoop(data.socket, data);
+			gameLoop(state.gameSocket, data);
 		} catch {
 			console.error('Exception caught in startGame', error);
 		}
 	}
-
-	async function join_match() {
-		try {
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-			
-			
-			await joinRoom();
-			
-			await showReadyButton();
-		} catch (error) {
-			console.error('Exception caught in joinMatch', error);
-		}
 	
-	}
 
 	function renderUserInfo(user, targetId) {
 		const userInfoDiv = document.getElementById(targetId);
@@ -506,11 +433,7 @@ export async function setLobbyView(contentContainer, lobbyId = "") {
 	async function create_private_match() {
 		try {
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
-			renderUserInfo(userData, "user-info-left");
 			await requestRoom();
-			console.log("Player_id: " + data.playerId);
-			await showReadyButton()
-//				await startGame()
 		} catch (error){
 			console.error('Exception caught in privateMatch.js', error);
 		}
@@ -520,20 +443,76 @@ export async function setLobbyView(contentContainer, lobbyId = "") {
 		gameState.player1 = new Player('0', 'green');
 		gameState.player2 = new Player('1', 'red');
 		await connectWebSocket();
+		console.log("abruti");
 	}
-
+	
+	function getRoomIDInput() {
+		const modal = document.createElement('div');
+		modal.id = 'room-join-modal';
+		modal.style.position = 'fixed';
+		modal.style.top = '50%';
+		modal.style.left = '50%';
+		modal.style.transform = 'translate(-50%, -50%)';
+		modal.style.padding = '20px';
+		modal.style.border = '1px solid #ccc';
+		modal.style.borderRadius = '10px';
+		modal.style.backgroundColor = '#f9f9f9';
+		modal.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.1)';
+		modal.style.zIndex = '1000';
+	
+		modal.innerHTML = `
+			<h3>Join Game Room</h3>
+			<input 
+				type="text" 
+				id="room-uid-input" 
+				placeholder="Enter Room UID" 
+				style="width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box;"
+			>
+			<button 
+				id="join-room-btn" 
+				style="width: 100%; padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;"
+			>
+				Join Room
+			</button>
+		`;
+	
+		document.body.appendChild(modal);
+	
+		const roomUidInput = modal.querySelector('#room-uid-input');
+		const joinRoomBtn = modal.querySelector('#join-room-btn');
+	
+		return new Promise((resolve, reject) => {
+			joinRoomBtn.addEventListener('click', () => {
+				const roomUID = roomUidInput.value.trim();
+	
+				if (!roomUID) {
+					alert('Please enter a valid Room UID.');
+					return;
+				}
+	
+				document.body.removeChild(modal);
+				resolve(roomUID);
+			});
+		});
+	}	
 	
 	document.getElementById('create-match').addEventListener('click', async () => {
 	create_private_match()
-	});
+});
 	
 	document.getElementById('join-match').addEventListener('click', async () => {
-		join_match()
+		try {
+			const roomID = await getRoomIDInput();
+			window.location.hash = `lobby/${roomID}`;
+		} catch (error) {
+			console.error('Error in join-match event listener:', error);
+		}
 	});
 	
-	init();
-	if (lobbyId) {
-		join
+	await init();
+	if (roomID) {
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		await joinRoom(roomID);
 	}
 }
 

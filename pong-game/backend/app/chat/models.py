@@ -26,6 +26,9 @@ class Message(models.Model):
 	sender = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="sent_messages")
 	content = models.TextField()
 	timestamp = models.DateTimeField(auto_now_add=True)
+	is_invite = models.BooleanField(default=False)
+	game_room = models.UUIDField(null=True, blank=True)
+
 
 
 # @receiver(post_migrate)
