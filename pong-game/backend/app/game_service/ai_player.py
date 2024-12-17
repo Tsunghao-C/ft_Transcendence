@@ -1,5 +1,6 @@
 import random
 import asyncio
+import time
 import logging
 from typing import Literal, Optional
 
@@ -21,28 +22,25 @@ class PongAI:
         self.difficulties = {
             'easy': {
                 'prediction_noise': (-50, 50),
-                'reaction_delay': 0.2,
+                'decision_rate': 0.2,
                 'mistake_chance': 0.15,
-                'decision_cooldown': 0.1
             },
             'medium': {
                 'prediction_noise': (-30, 30),
-                'reaction_delay': 0.1,
+                'decision_rate': 0.1,
                 'mistake_chance': 0.1,
-                'decision_cooldown': 0.07
             },
             'hard': {
                 'prediction_noise': (-15, 15),
-                'reaction_delay': 0.05,
+                'decision_rate': 0.05,
                 'mistake_chance': 0.05,
-                'decision_cooldown': 0.05
             }
         }
         self.settings = self.difficulties[difficulty]
         self.last_decision_time = 0
         self.current_move = 'move_stop'
 
-    async def predict_ball_position(self, ball_x: float, ball_y: float, ball_dx: float, ball_dy:float) -> Optional[float]:
+    def predict_ball_position(self, ball_x: float, ball_y: float, ball_dx: float, ball_dy:float) -> Optional[float]:
         is_approaching = (ball_dx > 0 and self.side == 'right') or (ball_dx < 0 and self.side == 'left')
 
         if not is_approaching:
@@ -72,16 +70,15 @@ class PongAI:
         return 'move_up' if distance_to_target < 0 else 'move_down'
 
     async def calculate_move(self, ball_x: float, ball_y: float, ball_dx: float, ball_dy: float) -> str:
-        current_time = asyncio.get_event_loop().time()
-        if current_time - self.last_decision_time < self.settings['decision_cooldown']:
+        current_time = time.time()
+
+        if random.random() > self.settings['decision_rate']:
             return self.current_move
-        
-        predicted_y = await self.predict_ball_position(ball_x, ball_y, ball_dx, ball_dy)
+         
+        predicted_y = self.predict_ball_position(ball_x, ball_y, ball_dx, ball_dy)
         if predicted_y is None:
             return 'move_stop'
         
-        await asyncio.sleep(self.settings['reaction_delay'])
-
         self.last_decision_time = current_time
         self.current_move = self._decide_movement(predicted_y)
 
