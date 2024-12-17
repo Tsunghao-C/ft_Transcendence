@@ -106,7 +106,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         elif action == "create_private_match":
             room_name = str(uuid.uuid4())
             await self.create_private_lobby(room_name, player_id)
-        elif action == "create_solo_match":
+        elif action == "create_local_match":
             room_name = str(uuid.uuid4())
             await self.create_local_match(room_name, player_id)
         elif action == "player_ready":
@@ -149,6 +149,8 @@ class GameConsumer(AsyncWebsocketConsumer):
         self.current_group = f"lobby_{room_name}"
         player_2 = str(uuid.uuid4())
         active_lobbies[room_name]["players"].append(player_2)
+        active_lobbies[room_name]["ready"] = []
+        active_lobbies[room_name]["ready"].append(player_2)
         await self.channel_layer.group_add(self.current_group, self.channel_name)
         await self.send(json.dumps({
             "type": "local_room_creation",

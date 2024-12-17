@@ -46,8 +46,7 @@
     <h1>Game Lobby</h1>
     <p>Select an option below to get started:</p>
     <div>
-        <button onclick="create_private_match()">Create Private Match</button>
-        <button onclick="join_match()">Join Match</button>
+        <button onclick="create_local_match()">Create Local Match</button>
 	<div id="game-info">Loading...</div>
    	<div id="player-status" class="player-status"></div>
 	<canvas id="game" width="800" height="600"></canvas>
@@ -153,11 +152,11 @@
 								console.log('Server notice: ' + response.message);
 							}
 							else if (response.type == 'local_room_creation') {
+								console.log('Local Room creation notice received');
+								console.log('Room name: ' + data.roomUID);
 								data.roomUID = response.room_name;
 								data.player2Id = response.player2_id;
 								createTextBox(data.roomUID);
-								console.log('Room creation notice received');
-								console.log('Room name: ' + data.roomUID);
 							}
 							else if (response.type == 'game_start') {
 								console.log(response.message);
@@ -195,18 +194,7 @@
 					};
 				});
 		}
-		let playerEvent = {
-			player_1: {
-				pending: false,
-				id: data.playerId,
-				type: -1,
-			},
-			player_2: {
-				pending: false,
-				id: data.player2Id,
-				type: -1,
-			}
-		}
+
 		document.addEventListener('keydown', function(event) {
 			if (event.code == 'ArrowUp') {
 				playerEvent.player_1.pending = true;
@@ -240,14 +228,14 @@
 		});
 
 		async function sendEvents(socket) {
-			for property in playerEvent {
+			for (const property in playerEvent) {
 				if (property.pending == true) {
 					await data.socket.send(JSON.stringify({
 						type: 'player_input',
 						player_id: property.playerId,
 						input: property.type,
 						game_roomID: data.roomUID
-					}
+					}));
 					property.pending = false;
 				}
 				else {
@@ -262,6 +250,7 @@
 		}
 
 		function drawElements(ball, player_1, player_2) {
+//			console.log("DrawElements players: " + player_1 + " " + player_2);
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
 			ctx.font = '48px serif';
 			ctx.textBaseline = 'hanging';
@@ -304,8 +293,11 @@
 				game_over = false;
 				return;
 			}
-			player_1 = gameState.players.player_1;
-			player_2 = gameState.players.player_2;
+			player_1_id = data.playerId
+			player_2_id = data.player2Id
+			players = gameState.players
+			player_1 = players[player_1_id]
+			player_2 = players[player_2_id]
 			drawElements(gameState.ball, player_1, player_2);
 			await sendEvents(socket, data.roomUID);
 			requestAnimationFrame(gameLoop);
@@ -382,7 +374,7 @@
 			document.body.appendChild(textBox);
 		}
 
-		async function requestRoom() {
+		async function request_local_room() {
 			try {
 				console.log("Requesting room")
 				await data.socket.send(JSON.stringify({
@@ -414,7 +406,7 @@
 			try {
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
 				data.playerId = 'player_1'
-				await requestRoom();
+				await request_local_room();
 				console.log("Player_id: " + data.playerId);
 				await showReadyButton()
 //				await startGame()
