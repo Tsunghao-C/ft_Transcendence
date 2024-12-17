@@ -55,30 +55,30 @@ services:
 
   # [Alex] to finish WAF later after major modules are tested working
 
-  waf:
-    container_name: waf
-    build:
-      context: ./security/waf
-    ports:
-      - "8443:443"
-      - "8080:80"
-    volumes:
-      - ./security/waf/rules:/etc/modsecurity.d/rules
-      - ./security/waf/nginx:/etc/nginx/conf.d
-    depends_on:
-      nginx:
-        condition: service_healthy
-    networks:
-      - frontend_net
-    healthcheck:
-      test: ["CMD", "nginx", "-t"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    restart: unless-stopped
+  # waf:
+  #   container_name: waf
+  #   build:
+  #     context: ./security/waf
+  #   ports:
+  #     - "8443:443"
+  #     - "8080:80"
+  #   volumes:
+  #     - ./security/waf/rules:/etc/modsecurity.d/rules
+  #     - ./security/waf/nginx:/etc/nginx/conf.d
+  #   depends_on:
+  #     nginx:
+  #       condition: service_healthy
+  #   networks:
+  #     - frontend_net
+  #   healthcheck:
+  #     test: ["CMD", "nginx", "-t"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 3
+  #   restart: unless-stopped
 
   # Frontend Layer
-  # # [Theo] & [Alex]
+  ## [Theo] & [Alex]
   nginx:
     container_name: nginx
     build:
@@ -187,47 +187,47 @@ services:
       retries: 5
     restart: unless-stopped
 
-  Monitoring Stack
-  prometheus:
-    container_name: prometheus
-    image: prom/prometheus
-    user: "1000:1000"
-    ports:
-      - "9090:9090"   # only for development stage
-    volumes:
-      - ./monitoring/prometheus:/etc/prometheus
-      - prometheus_data:/prometheus
-    networks:
-      - monitoring_net
-    restart: unless-stopped
+  # Monitoring Stack
+  # prometheus:
+  #   container_name: prometheus
+  #   image: prom/prometheus
+  #   user: "1000:1000"
+  #   ports:
+  #     - "9090:9090"   # only for development stage
+  #   volumes:
+  #     - ./monitoring/prometheus:/etc/prometheus
+  #     - prometheus_data:/prometheus
+  #   networks:
+  #     - monitoring_net
+  #   restart: unless-stopped
 
-  grafana:
-    container_name: grafana
-    image: grafana/grafana
-    user: "1000:1000"
-    ports:
-      - "3001:3001"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
-    volumes:
-      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
-      - grafana_data:/var/lib/grafana
-    networks:
-      - monitoring_net
-    restart: unless-stopped
+  # grafana:
+  #   container_name: grafana
+  #   image: grafana/grafana
+  #   user: "1000:1000"
+  #   ports:
+  #     - "3001:3001"
+  #   environment:
+  #     - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+  #   volumes:
+  #     - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+  #     - grafana_data:/var/lib/grafana
+  #   networks:
+  #     - monitoring_net
+  #   restart: unless-stopped
 
-  cadvisor:
-    container_name: cadvisor
-    image: gcr.io/cadvisor/cadvisor
-    user: "1000:1000"
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:rw
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-    networks:
-      - monitoring_net
-    restart: unless-stopped
+  # cadvisor:
+  #   container_name: cadvisor
+  #   image: gcr.io/cadvisor/cadvisor
+  #   user: "1000:1000"
+  #   volumes:
+  #     - /:/rootfs:ro
+  #     - /var/run:/var/run:rw
+  #     - /sys:/sys:ro
+  #     - /var/lib/docker/:/var/lib/docker:ro
+  #   networks:
+  #     - monitoring_net
+  #   restart: unless-stopped
 
   elasticsearch:
     container_name: elasticsearch
