@@ -88,8 +88,7 @@ function setup2FAFormEventHandler() {
 				const data = await response.json();
 				if (data.detail === "2FA code validated") {
 					console.log("2FA code has been validated by backend");
-					localStorage.setItem("isLoggedIn", "true");
-					localStorage.setItem("accessToken", data.access);
+
 					console.log("trying to save the cookies");
 					document.cookie = `accessToken=${data.access}; path=/; secure; SameSite=Strict`;
 					document.cookie = `refreshToken=${data.refresh}; path=/; secure; SameSite=Strict`;

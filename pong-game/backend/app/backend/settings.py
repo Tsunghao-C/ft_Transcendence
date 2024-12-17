@@ -56,7 +56,6 @@ SIMPLE_JWT = {
 INSTALLED_APPS = [
 	"django_crontab",
     "daphne",
-    "chat",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -68,6 +67,7 @@ INSTALLED_APPS = [
 	"rest_framework",
 	"corsheaders",
 	"matchMaking",
+    "chat",
 ]
 
 MIDDLEWARE = [
@@ -89,7 +89,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             # only absolute paths here
-            BASE_DIR / 'game_service' / 'templates', 
+            BASE_DIR / 'game_service' / 'templates',
         ],
         'APP_DIRS': True,
         'OPTIONS': {
