@@ -27,6 +27,19 @@ start:
 down:
 	docker compose -f pong-game/docker-compose.yml down
 
+update:
+	@if [ -z "$(filter-out $@,$(MAKECMDGOALS))" ]; then \
+		echo "Usage: make update <service-name>"; \
+		exit 1; \
+	fi
+	@container="$(filter-out $@,$(MAKECMDGOALS))"; \
+	echo "Updating container: $$container"; \
+	docker compose -f pong-game/docker-compose.yml stop $$container; \
+	docker compose -f pong-game/docker-compose.yml rm -f $$container; \
+	docker compose -f pong-game/docker-compose.yml build $$container; \
+	docker compose -f pong-game/docker-compose.yml up -d $$container; \
+	echo "Update complete for $$container"
+
 check:
 	# wait 10 seconds for sevices to initialize
 	sleep 10

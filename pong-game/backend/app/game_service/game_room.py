@@ -241,5 +241,3 @@ class GameRoom():
         except Exception as e:
             logger.error(f"GameRoom initial group send error: {e}")
             return
-        # logger.info('gameRoom started, messages sent')
-        
