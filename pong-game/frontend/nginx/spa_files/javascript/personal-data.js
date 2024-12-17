@@ -1,7 +1,7 @@
 import { loadPage } from "./app.js";
 import { fetchWithToken } from "./fetch_request.js";
 import { getLanguageCookie } from './fetch_request.js';
-// import { showError, showSuccess } from "./login_validations.js";
+//  import { showError, showSuccess } from "./login_validations.js";
 
 function emptyMessage(elemId) {
     const containter = document.getElementById(elemId)
