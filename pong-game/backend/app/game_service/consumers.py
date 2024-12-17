@@ -1,4 +1,5 @@
 import os
+import jwt
 import logging
 from dotenv import load_dotenv
 import json
@@ -7,6 +8,11 @@ import asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.layers import get_channel_layer
 from .game_room import GameRoom
+from user_service.models import CustomUser
+from channels.db import database_sync_to_async
+from urllib.parse import parse_qs
+from django.conf import settings
+
 
 load_dotenv()
 active_game_rooms = dict()
@@ -64,6 +70,13 @@ class GameConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
         logger.info(f"WebSocket connection attempt: {self.scope['path']}")
+        user = await self.authenticate_user()
+        if user is None:
+            await self.close()
+            return
+
+        self.user = user
+        print(user.id, user.alias, "is connected")
         try:
             await self.accept()
         except Exception as e:
@@ -75,17 +88,17 @@ class GameConsumer(AsyncWebsocketConsumer):
 
     async def disconnect(self, code):
         logger.info("Websocket connection closed")
-#        if self.assigned_room in active_lobbies:
-#            lobby = active_lobbies[self.assigned_room]
-#            try:
-#                lobby["connection"].remove(self)
-#            except ValueError:
-#                logger.warning(f"Consumer not found in connections for room {self.assigned_room}")
-#            try:
-#                player_index = lobby["connection"].index(self)
-#                lobby["players"].pop(player_index)
-#            except (ValueError, IndexError):
-#                logger.warning(f"Could not remove player ID from room {self.assigned_room}")
+    #        if self.assigned_room in active_lobbies:
+    #            lobby = active_lobbies[self.assigned_room]
+    #            try:
+    #                lobby["connection"].remove(self)
+    #            except ValueError:
+    #                logger.warning(f"Consumer not found in connections for room {self.assigned_room}")
+    #            try:
+    #                player_index = lobby["connection"].index(self)
+    #                lobby["players"].pop(player_index)
+    #            except (ValueError, IndexError):
+    #                logger.warning(f"Could not remove player ID from room {self.assigned_room}")
         if hasattr(self, 'current_group'):
             await self.channel_layer.group_discard(self.current_group, self.channel_name)
 
@@ -204,7 +217,7 @@ class GameConsumer(AsyncWebsocketConsumer):
                 "player_data": {
                         "connection": active_lobbies[room_name]["connection"],
                     "ids": active_lobbies[room_name]["players"]
-               }
+                }
             }
             game_task = asyncio.create_task(game_room.run())
             del active_lobbies[room_name]
@@ -246,3 +259,32 @@ class GameConsumer(AsyncWebsocketConsumer):
                 ]
         for room_id in rooms_to_remove:
             del active_game_rooms[room_id]
+        
+    async def authenticate_user(self):
+        query_string = self.scope["query_string"].decode("utf-8")
+        query_params = parse_qs(query_string)
+
+        token = query_params.get("token", [None])[0]
+        if not token:
+            return None
+
+        try:
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+            user = await self.get_user_from_payload(payload)
+            return user
+        except jwt.ExpiredSignatureError:
+            print("JWT token has expired.")
+            return None
+        except jwt.InvalidTokenError:
+            print("Invalid JWT token.")
+            return None
+
+    @database_sync_to_async
+    def get_user_from_payload(self, payload):
+        user_id = payload.get('user_id')
+        if user_id:
+            try:
+                return CustomUser.objects.get(id=user_id)
+            except CustomUser.DoesNotExist:
+                return None
+        return None

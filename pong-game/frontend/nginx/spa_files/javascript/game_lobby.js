@@ -1,3 +1,8 @@
+import { fetchWithToken } from "./fetch_request.js";
+import { getLanguageCookie } from "./fetch_request.js";
+import { getCookie } from "./fetch_request.js";
+import { state } from "./app.js";
+
 export function setLobbyView(contentContainer) {
     contentContainer.innerHTML = `
         <div id="game-lobby" style="text-align: center;">
@@ -14,7 +19,7 @@ export function setLobbyView(contentContainer) {
         </div>
     `;
 	const canvas = document.getElementById('game');
-	const token = localStorage.getItem('token'); // its stoed in cocokei
+	const token = getCookie("accessToken");
 	const PADDLE_HEIGHT = 100;
 	const PADDLE_WIDTH = 15;
 	const ctx = canvas.getContext('2d');
@@ -80,7 +85,7 @@ export function setLobbyView(contentContainer) {
 			return new Promise((resolve, reject) => {
 			const gameId = 'test_game';
 			const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
-			const wsUrl = `${wsScheme}://${window.location.host}/ws/game-server/${gameId}/`;
+			const wsUrl = `${wsScheme}://${window.location.host}/ws/game-server/${gameId}/?token=${encodeURIComponent(token)}`;
 			
 			console.log('Connecting to WebSocket...')
 			ws = new WebSocket(wsUrl);
