@@ -21,9 +21,22 @@
             margin-bottom: 20px;
         }
 
+		.game-modes {
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+			margin-bottom: 20px;
+		}
+
+		.mode-title {
+			text-align: center;
+			font-size: 1.2em;
+			margin: 10px 0;
+		}
+
         button {
             padding: 10px 20px;
-            margin: 10px;
+            margin: 5px;
             font-size: 16px;
             border: none;
             border-radius: 5px;
@@ -31,6 +44,7 @@
             background-color: #61dafb;
             color: #282c34;
             transition: background-color 0.3s;
+			min-width: 200px;
         }
 
         button:hover {
@@ -40,18 +54,48 @@
         button:active {
             background-color: #0e86d4;
         }
+
+		button.ai-mode {
+			background-color: #4caf50;
+		}
+
+		button.ad-mode:hover {
+			background-color: #45a049;
+		}
+
+		canvas {
+			border: 2px solid white;
+			margin-top: 20px;
+			display: none;
+		}
+
+		#game-info {
+			margin: 10px 0;
+			font-size: 18px;
+		}
+
+		#player-staus {
+			margin: 5px 0;
+			font-size: 14px;
+			color: #61dafb;
+		}
     </style>
 </head>
 <body>
     <h1>Game Lobby</h1>
-    <p>Select an option below to get started:</p>
-    <div>
+	<div class="game-modes">
+		<div class="mode-title">Multiplayer</div>
         <button onclick="create_private_match()">Create Private Match</button>
         <button onclick="join_match()">Join Match</button>
+
+		<div class="mode-title">Single Player</div>
+		<button onclick="create_ai_match()" class="ai-mode">Play vs AI</button>
+	</div>
+
 	<div id="game-info">Loading...</div>
    	<div id="player-status" class="player-status"></div>
 	<canvas id="game" width="800" height="600"></canvas>
-    </div>
+
 	<script>
 		const canvas = document.getElementById('game');
 		const token = localStorage.getItem('token'); //Is this stored there or in cookies!!!!
@@ -143,16 +187,26 @@
 							}
 							else if (response.type == 'room_creation') {
 								data.roomUID = response.room_name;
-								createTextBox(data.roomUID);
+								if (!response.is_ai_game) {
+									createTextBox(data.roomUID);
+								}
 								console.log('Room creation notice received');
 								console.log('Room name: ' + data.roomUID);
+								console.log('Is AI game:', response.is_ai_game);
 							}
 							else if (response.type == 'game_start') {
 								console.log(response.message);
+								if (response.is_ai_game) {
+									gameInfo.textContent = 'Game Started - Playing vs AI!';
+								} else {
+									gameInfo.textContent = 'Game Started!';
+								}
+								readyButton.style.display = 'none';
 								startGame();
 							}
 							else if (response.type == 'error') {
 								console.error('Error received:', response.message);
+								gameInfo.textContent = 'Error: ' + response.message;
 							}
 							else if (response.type == 'game_update') {
 								if (pendingGameUpdate) { 
@@ -166,6 +220,7 @@
 									pendingGameUpdate(response.payload);
 									game_over = true;
 									pendingGameUpdate = null;
+									document.querySelector('.game-modes').style.display = 'flex';
 								}
 							}
 							else if (response.error)
@@ -185,41 +240,51 @@
 		}
 
 		document.addEventListener('keydown', function(event) {
+			// console.log('Key presssed:', event.code);
 			if (event.code == 'ArrowUp') {
 				playerEvent.pending = true;
 				playerEvent.type = 'move_up';
+				event.preventDefault();
 			}
 			else if (event.code == 'ArrowDown') {
 				playerEvent.pending = true;
 				playerEvent.type = 'move_down';
+				event.preventDefault();
 			}
 		});
 
 		document.addEventListener('keyup', function(event) {
+			// console.log('Key released:', event.code);
 			if (event.code == 'ArrowDown' || event.code == 'ArrowUp')
 			{
 				playerEvent.pending = true;
-				playerEvent.type = 'move_stop'
+				playerEvent.type = 'move_stop';
+				event.preventDefault();
+
 			}
 		});
 
 		async function sendEvents(socket) {
-			if (playerEvent.pending == true) {
-				await data.socket.send(JSON.stringify({
-					type: 'player_input',
-					player_id: data.playerId,
-					input: playerEvent.type,
-					game_roomID: data.roomUID
-				}));	
-				playerEvent.pending = false;
-			}
-			else {
-				await data.socket.send(JSON.stringify({
-					type: 'player_input',
-					player_id: data.playerId,
-					input: 'idle',
-					game_roomID: data.roomUID
-				}));
+			try {
+				if (playerEvent.pending == true) {
+					await data.socket.send(JSON.stringify({
+						type: 'player_input',
+						player_id: data.playerId,
+						input: playerEvent.type,
+						game_roomID: data.roomUID
+					}));	
+					playerEvent.pending = false;
+				}
+				else {
+					await data.socket.send(JSON.stringify({
+						type: 'player_input',
+						player_id: data.playerId,
+						input: 'idle',
+						game_roomID: data.roomUID
+					}));
+				}
+			} catch (error) {
+				console.error('Error sending player input:', error);
 			}
 		}
 
@@ -258,19 +323,26 @@
 		}
 
 		async function gameLoop(socket, playerData) {
-			gameState = await getGameState();
-//			console.log("gameState: ", gameState);
-			if (game_over) {
-				console.log('Drawing game_over...');
-				drawGameOverScreen(gameState);
-				game_over = false;
-				return;
+			try {
+				gameState = await getGameState();
+				// console.log("gameState: ", gameState);
+				if (game_over) {
+					console.log('Drawing game_over...');
+					drawGameOverScreen(gameState);
+					game_over = false;
+					return;
+				}
+				const players = gameState.players;
+				const player_1 = players[Object.keys(players)[0]];
+				// player_1 = gameState.players.player_1;
+				const player_2 = players[Object.keys(players)[1]];
+				// player_2 = gameState.players.player_2;
+				drawElements(gameState.ball, player_1, player_2);
+				await sendEvents(socket, data.roomUID);
+				requestAnimationFrame(() => gameLoop(socket, playerData));
+			} catch (error) {
+				console.error('Error in game loop:', error);
 			}
-			player_1 = gameState.players.player_1;
-			player_2 = gameState.players.player_2;
-			drawElements(gameState.ball, player_1, player_2);
-			await sendEvents(socket, data.roomUID);
-			requestAnimationFrame(gameLoop);
 		}
 
 		async function joinRoom() {
@@ -426,11 +498,16 @@
 
 		async function startGame() {
 			try {
+				console.log("Starting game...");
 				destroyReadyButton();
 				if (textBox) {
 					textBox.remove();
 					textBox = null;
 				}
+				game_over = false;
+				canvas.style.display = 'block';
+
+				console.log("Starting game loop");
 				gameLoop(data.socket, data);
 			} catch {
 				console.error('Exception caught in startGame', error);
@@ -440,11 +517,13 @@
 		async function join_match() {
 			try {
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
+				canvas.style.display = 'block';
 				data.playerId = 'player_2'
 				await joinRoom();
 				console.log("Room UID after joining: " + data.roomUID);
 				console.log("Player_id: " + data.playerId);
 				await showReadyButton();
+				document.querySelector('.game-modes').style.display = 'none';
 //				await startGame()
 			} catch (error) {
 				console.error('Exception caught in joinMatch.js', error)
@@ -454,19 +533,45 @@
 		async function create_private_match() {
 			try {
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
-				data.playerId = 'player_1'
+				canvas.style.display = 'block';
+				data.playerId = 'player_1';
 				await requestRoom();
 				console.log("Player_id: " + data.playerId);
-				await showReadyButton()
+				await showReadyButton();
+				document.querySelector('.game-modes').style.display = 'none';
 //				await startGame()
 			} catch (error){
 				console.error('Exception caught in privateMatch.js', error);
 			}
 		}
 
+		async function create_ai_match() {
+			try {
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+				canvas.style.display = 'block';
+				data.playerId = 'player_1';
+				await data.socket.send(JSON.stringify({
+					action: 'create_private_match',
+					id: data.playerId,
+					is_ai_game: true
+				}));
+
+				console.log("Started AI game session");
+				console.log("Player_id: " + data.playerId);
+				await showReadyButton();
+				document.querySelector('.game-modes').style.display = 'none';
+
+				gameInfo.textContent = 'Playing against AI - Get Ready!';
+			} catch (error) {
+				console.error('Error starting AI game:', error);
+				gameInfo.textContent = 'Error starting AI game. Plase try again.';
+			}
+		}
+
 		async function init(){
 			gameState.player1 = new Player('0', 'green');
 			gameState.player2 = new Player('1', 'red');
+			canvas.style.display = 'none';
 			await connectWebSocket();
 		}
 
