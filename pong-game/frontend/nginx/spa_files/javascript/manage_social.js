@@ -6,8 +6,7 @@ import { setChatView } from "./chat_view.js";
 
 export async function sendMessage(friendAlias, contentContainer) {
 	console.log(`Sending message to ${friendAlias}`);
-	// window.location.hash = "chat"; // this will need to be fixed at some point
-	setChatView(contentContainer, friendAlias);
+	window.location.hash = `chat/private/${friendAlias}`;
 }
 
 export function sendDuelRequest(friendUsername) {
@@ -37,7 +36,6 @@ export async function removeFriend(friendAlias) {
 	} catch(error) {
 		console.log(error);
 		window.location.hash = "login";
-		loadPage("login");
 	}
 }
 
@@ -54,7 +52,6 @@ export async function acceptFriendRequest(friendUsername) {
 	} catch(error) {
 		console.log(error);
 		window.location.hash = "login";
-		loadPage("login");
 	}
 }
 
@@ -71,7 +68,6 @@ export async function rejectFriendRequest(notFriendUsername) {
 	} catch(error) {
 		console.log(error);
 		window.location.hash = "login";
-		loadPage("login");
 	}
 }
 
@@ -88,7 +84,6 @@ export async function cancelFriendRequest(friendAlias) {
 	} catch(error) {
 		console.log(error);
 		window.location.hash = "login";
-		loadPage("login");
 	}
 }
 
@@ -105,7 +100,6 @@ export async function unblockUser(blockedUser) {
 	} catch(error) {
 		console.log(error);
 		window.location.hash = "login";
-		loadPage("login");
 	}
 }
 
@@ -132,7 +126,6 @@ export async function blockUser(newBlockUsername) {
 	} catch(error) {
 		console.log(error);
 		window.location.hash = "login";
-		loadPage("login");
 	}
 }
 
@@ -165,6 +158,5 @@ export async function addFriend(newfriend) {
 	} catch(error) {
 		console.log(error);
 		window.location.hash = "login";
-		loadPage("login");
 	}
 }

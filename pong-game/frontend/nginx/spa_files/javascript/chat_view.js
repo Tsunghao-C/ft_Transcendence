@@ -4,7 +4,7 @@ import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
 import { loadPage } from "./app.js";
 
-export async function setChatView(contentContainer, aliasToContact = "") {
+export async function setChatView(contentContainer, roomType = "", aliasOrRoomToJoin = "") {
 	let userRoomData;
 	let roomData;
 	let userAlias;
@@ -17,9 +17,7 @@ export async function setChatView(contentContainer, aliasToContact = "") {
 		console.log("User userRoomData: ", userRoomData);
 	} catch (error) {
 		console.log(error);
-		return;
 		window.location.hash = "login";
-		loadPage("login");
 		return;
 	}
 
@@ -44,29 +42,40 @@ export async function setChatView(contentContainer, aliasToContact = "") {
 	`;
 
 	const roomList = document.getElementById("room-list");
-	roomList.innerHTML = roomData
-		.map(room => {
-			const roomDisplayName = room.is_private
-				? `Private message with ${room.other_member || 'Unknown'}`
-				: room.name;
-			return `<div class="room-item" data-room="${room.name}" style="cursor: pointer; margin: 5px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+
+roomList.innerHTML = roomData
+	.map(room => {
+		const roomType = room.is_private ? "private" : "public";
+		const aliasOrRoomName = room.is_private 
+			? room.other_member || "Unknown" 
+			: room.name;
+
+		const roomDisplayName = room.is_private
+			? `Private message with ${aliasOrRoomName}`
+			: room.name;
+
+		return `<div class="room-item" 
+					data-room-type="${roomType}" 
+					data-alias-or-room-name="${aliasOrRoomName}" 
+					style="cursor: pointer; margin: 5px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
 				${roomDisplayName}
 			</div>`;
-		})
-		.join("");
+	})
+	.join("");
 
 	document.querySelectorAll(".room-item").forEach(item => {
 		item.addEventListener("click", (event) => {
-			const roomName = event.currentTarget.getAttribute("data-room");
-			loadChatRoom(roomName, userAlias);
+			const roomType = event.currentTarget.getAttribute("data-room-type");
+			const aliasOrRoomName = event.currentTarget.getAttribute("data-alias-or-room-name");
+			
+			window.location.hash = `chat/${roomType}/${aliasOrRoomName}`;
 		});
 	});
 
+
 	document.getElementById("join-room").addEventListener('click', async () => {
 		const roomName = prompt("Enter the room name to join:");
-		if (roomName) {
-			loadChatRoom(roomName, userAlias);
-		}
+		window.location.hash = `chat/public/${roomName}`;
 	});
 
 	document.getElementById("create-public-room").addEventListener('click', async () => {
@@ -81,7 +90,7 @@ export async function setChatView(contentContainer, aliasToContact = "") {
 				if (response.ok) {
 					const roomData = await response.json();
 					alert(`Public room "${roomData.room.name}" created successfully!`);
-					loadChatRoom(roomData.room.name, userAlias);
+					window.location.hash = `chat/public/${roomData.room.name}`;
 				} else {
 					const errorData = await response.json();
 					alert(`Failed to create room: ${errorData.error}`);
@@ -128,7 +137,6 @@ export async function setChatView(contentContainer, aliasToContact = "") {
 		} catch (error) {
 			console.log(error);
 			window.location.hash = "login";
-			loadPage("login");
 			return;
 		}
 	}
@@ -150,10 +158,13 @@ export async function setChatView(contentContainer, aliasToContact = "") {
 		}
 	}
 
-	if (aliasToContact !== "") {
-		console.log("opening chat with", aliasToContact);
-		// loadChatRoom("private_1_2", "qwer");
-		getOrCreatePrivateChatRoom(aliasToContact);
+	if (roomType === "public") {
+		loadChatRoom(aliasOrRoomToJoin, userAlias);
+	} else if (roomType === "private"){
+		if (aliasOrRoomToJoin !== "") {
+			console.log("opening chat with", aliasOrRoomToJoin);
+			getOrCreatePrivateChatRoom(aliasOrRoomToJoin);
+		}
 	}
 }
 
