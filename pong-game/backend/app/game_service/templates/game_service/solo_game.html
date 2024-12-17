@@ -235,7 +235,6 @@
 
 		async function sendEvents(socket) {
 			for (const property in playerEvent) {
-				console.log("Property id: ", playerEvent[property].id);
 				if (playerEvent[property].pending == true) {
 					await data.socket.send(JSON.stringify({
 						type: 'player_input',
@@ -404,7 +403,6 @@
 				playerEvent.player_1.id = data.playerId;
 				playerEvent.player_2.id = data.player2Id;
 				gameLoop(data.socket, data);
-				console.log("Game done test?");
 			} catch {
 				console.error('Exception caught in startGame', error);
 			}
