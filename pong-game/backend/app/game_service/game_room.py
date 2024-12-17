@@ -94,7 +94,7 @@ class GameRoom():
                     player.y += CANVAS_HEIGHT - player.y
                 else:
                     player.y += speed
-    
+
     def check_collisions(self, player):
         d = dict()
         closestX = max(player.x, min(self.ball.x, player.x + PADDLE_WIDTH))
@@ -120,7 +120,7 @@ class GameRoom():
                     else:
                         self.ball.y = player.y - self.ball.radius
                 else:
-                    self.ball.speedX *= -1          
+                    self.ball.speedX *= -1
                     relativeIntersection = player.y + PADDLE_HEIGHT * 0.5 - self.ball.y
                     normalizedIntersection = relativeIntersection / (PADDLE_HEIGHT * 0.5)
                     self.ball.speedY = -normalizedIntersection * 5
@@ -233,7 +233,7 @@ class GameRoom():
                     logger.info('gameRoom preparing gameover')
                     await self.declare_winner(self.winner)
                     logger.info('gameRoom done')
-                    return 
+                    return
                 await self.send_update()
                 logger.info('gameRoom sent update to clients')
                 await asyncio.sleep(0.016)

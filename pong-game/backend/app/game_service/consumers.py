@@ -27,13 +27,13 @@ class GameHealthConsumer(AsyncWebsocketConsumer):
             'player_id': 'p1',
             'game_id': 'health_check'
         }))
-    
+
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(
             self.game_group_name,
             self.channel_name
         )
-    
+
     async def receive(self, text_data):
         try:
             data = json.loads(text_data)
@@ -107,6 +107,9 @@ class GameConsumer(AsyncWebsocketConsumer):
             room_name = str(uuid.uuid4())
             is_ai_game = data.get("is_ai_game", False) # AI factor
             await self.create_private_lobby(room_name, player_id, is_ai_game)
+        elif action == "create_local_match":
+            room_name = str(uuid.uuid4())
+            await self.create_local_match(room_name, player_id)
         elif action == "player_ready":
             await self.update_ready_status(data["room_name"], data["player_id"])
         elif data.get('type') == "player_input":
@@ -144,6 +147,26 @@ class GameConsumer(AsyncWebsocketConsumer):
             "room_name": room_name,
             "is_ai_game": is_ai_game
         }))
+
+    async def create_local_match(self, room_name, player_id):
+        self.assigned_room = room_name
+        self.assigned_player_id = player_id
+        active_lobbies[room_name] = {
+                "players": [player_id],
+                "connection": [self]
+                }
+        self.current_group = f"lobby_{room_name}"
+        player_2 = str(uuid.uuid4())
+        active_lobbies[room_name]["players"].append(player_2)
+        active_lobbies[room_name]["ready"] = []
+        active_lobbies[room_name]["ready"].append(player_2)
+        await self.channel_layer.group_add(self.current_group, self.channel_name)
+        await self.send(json.dumps({
+            "type": "local_room_creation",
+            "message": f"Created local match Lobby {room_name}",
+            "room_name": room_name,
+            "player2_id": player_2
+            }))
 
     async def join_lobby(self, room_name, player_id):
         if room_name not in active_lobbies:

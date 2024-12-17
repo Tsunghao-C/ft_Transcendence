@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Lobby</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #282c34;
+            color: white;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #61dafb;
+            color: #282c34;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #21a1f1;
+        }
+
+        button:active {
+            background-color: #0e86d4;
+        }
+    </style>
+</head>
+<body>
+    <h1>Local Game Lobby</h1>
+    <p>Select an option below to get started:</p>
+    <div>
+        <button onclick="create_local_match()">Create Local Match</button>
+	<div id="game-info">Loading...</div>
+   	<div id="player-status" class="player-status"></div>
+	<canvas id="game" width="800" height="600"></canvas>
+    </div>
+	<script>
+		const canvas = document.getElementById('game');
+		const token = localStorage.getItem('token'); //Is this stored there or in cookies!!!!
+		const PADDLE_HEIGHT = 100;
+		const PADDLE_WIDTH = 15;
+        const ctx = canvas.getContext('2d');
+        const gameInfo = document.getElementById('game-info');
+        const debugDiv = document.getElementById('debug');
+        const playerStatus = document.getElementById('player-status');
+        let playerId = null;
+        let lastGameState = null;
+        let ws = null;
+        let wsReconnectTimer = null;
+		let pendingGameUpdate = null;
+		let pendingGameOver = null;
+		let readyButton = null;
+		let textBox = null;
+
+		class Paddle {
+			constructor (id, color) {
+				this.id = id;
+				this.color = color;
+			}
+		}
+
+		class Player {
+			constructor (id, color) {
+				this.id = id;
+				this.color = color;
+				this.Paddle = new Paddle(id, color);
+				this.score = 0;
+			}
+		}
+
+		let	ball = {
+			x:canvas.width/2,
+			y:canvas.height/2,
+			color:'white',
+			speedX:6,
+			speedY:6,
+			radius:10
+		};
+
+		let playerEvent = {
+			player_1: {
+				pending: false,
+				type: -1,
+				id: -1,
+			},
+			player_2: {
+				pending: false,
+				type: -1,
+				id: -1,
+			}
+		};
+
+		let gameState = {
+			ball: ball,
+			player1: Player,
+			player2: Player
+		};
+
+		var data = {
+			playerId: -1,
+			player2Id: -1,
+			socket: -1,
+			roomUID: -1
+		};
+
+		var game_over = false;
+
+		function connectWebSocket() {
+            if (ws && ws.readyState === WebSocket.CONNECTING) {
+                console.log('Connection already in progress...');
+                return Promise.resolve();
+            }
+				return new Promise((resolve, reject) => {
+				const gameId = 'test_game';
+				const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+				const wsUrl = `${wsScheme}://${window.location.host}/ws/game-server/${gameId}/`;
+				
+				console.log('Connecting to WebSocket...')
+				ws = new WebSocket(wsUrl);
+				data.socket = ws
+
+				ws.onopen = function() {
+					console.log('WebSocket connected');
+					gameInfo.textContent = 'Connected to game server...';
+					if (wsReconnectTimer) {
+						clearTimeout(wsReconnectTimer);
+						wsReconnectTimer = null;
+					}
+					data.socket.onmessage = function (event) {
+					//	console.log('Ws message received', event);
+					//	console.log('Ws readyState:', data.socket.readyState);
+						try {
+							const response = JSON.parse(event.data);
+							if (response.type == 'notice') {
+								console.log('Server notice: ' + response.message);
+							}
+							else if (response.type == 'local_room_creation') {
+								console.log('Local Room creation notice received');
+								console.log('Room name: ' + data.roomUID);
+								data.roomUID = response.room_name;
+								data.player2Id = response.player2_id;
+							}
+							else if (response.type == 'game_start') {
+								console.log(response.message);
+								startGame();
+							}
+							else if (response.type == 'error') {
+								console.error('Error received:', response.message);
+							}
+							else if (response.type == 'game_update') {
+								if (pendingGameUpdate) { 
+									pendingGameUpdate(response.payload) 
+									pendingGameUpdate = null;
+								}
+							}
+							else if (response.type == 'game_over') {
+								console.log('game_over received: ', response.payload);
+								if (pendingGameUpdate) {
+									pendingGameUpdate(response.payload);
+									game_over = true;
+									pendingGameUpdate = null;
+								}
+							}
+							else if (response.error)
+								console.error(response.error);
+						}
+						catch (error) {
+							console.error('Error processing server response:', error);
+						}
+					}
+					};
+					ws.onerror = function (error) {
+						console.error('Websocker error', error);
+						reject (new Error('Failed to connect Websocket'));
+					};
+					ws.onclose = (event) => {
+						console.log("WEBSOCKET CLOSED:", event);
+						if (event.code !== 1000) {
+							console.error("Websocket closed with code:", event.code);
+							console.error("Reason:", event.reason);
+						}
+					}
+				});
+		}
+
+		document.addEventListener('keydown', function(event) {
+			if (event.code == 'ArrowUp') {
+				playerEvent.player_2.pending = true;
+				playerEvent.player_2.type = 'move_up';
+			}
+			else if (event.code == 'ArrowDown') {
+				playerEvent.player_2.pending = true;
+				playerEvent.player_2.type = 'move_down';
+			}
+			else if (event.code == 'KeyW') {
+				playerEvent.player_1.pending = true;
+				playerEvent.player_1.type = 'move_up';
+			}
+			else if (event.code == 'KeyS') {
+				playerEvent.player_1.pending = true;
+				playerEvent.player_1.type = 'move_down';
+			}
+		});
+
+		document.addEventListener('keyup', function(event) {
+			if (event.code == 'ArrowDown' || event.code == 'ArrowUp')
+			{
+				playerEvent.player_1.pending = true;
+				playerEvent.player_1.type = 'move_stop';
+			}
+			else if(event.code == 'KeyW' || event.code == 'KeyS')
+			{
+				playerEvent.player_2.pending = true;
+				playerEvent.player_2.type = 'move_stop';
+			}
+		});
+
+		async function sendEvents(socket) {
+			for (const property in playerEvent) {
+				if (playerEvent[property].pending == true) {
+					await data.socket.send(JSON.stringify({
+						type: 'player_input',
+						player_id: playerEvent[property].id,
+						input: playerEvent[property].type,
+						game_roomID: data.roomUID
+					}));
+					playerEvent[property].pending = false;
+				}
+				else {
+					await data.socket.send(JSON.stringify({
+						type: 'player_input',
+						player_id: playerEvent[property].id,
+						input: 'idle',
+						game_roomID: data.roomUID
+					}));
+				}
+			}
+		}
+
+		function drawElements(ball, player_1, player_2) {
+//			console.log("DrawElements players: " + player_1 + " " + player_2);
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			ctx.font = '48px serif';
+			ctx.textBaseline = 'hanging';
+			ctx.fillStyle = 'white';
+			ctx.fillText(player_1.score + " : " + player_2.score, canvas.width * 0.45, canvas.height * 0.10);
+			ctx.fillStyle = player_1.color;
+			ctx.fillRect(player_1.x, player_1.y, PADDLE_WIDTH, PADDLE_HEIGHT);
+			ctx.fillStyle = player_2.color;
+			ctx.fillRect(player_2.x, player_2.y, PADDLE_WIDTH, PADDLE_HEIGHT);
+			ctx.beginPath();
+			ctx.arc(ball.x, ball.y, ball.radius, 0, 2 * Math.PI);
+			ctx.fillStyle = ball.color;
+			ctx.fill();
+			ctx.closePath();
+		}
+
+		function drawGameOverScreen(gameState) {
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			ctx.font = '48px serif';
+			ctx.textBaseline = 'hanging';
+			ctx.fillStyle = 'white';
+			ctx.fillText("Game Over", canvas.width * 0.5, canvas.height * 0.30);
+			ctx.fillText(gameState.score_left, canvas.width * 0.25, canvas.height * 0.50);
+			ctx.fillText(gameState.score_right, canvas.width * 0.75, canvas.height * 0.50);
+		}
+
+		async function getGameState()
+		{
+			return new Promise((resolve, reject) => {
+				pendingGameUpdate = resolve;
+				});
+		}
+
+		async function gameLoop(socket, playerData) {
+			gameState = await getGameState();
+//			console.log("gameState: ", gameState);
+			if (game_over) {
+				console.log('Drawing game_over...');
+				drawGameOverScreen(gameState);
+				game_over = false;
+				return;
+			}
+			player_1_id = data.playerId
+			player_2_id = data.player2Id
+			players = gameState.players
+			player_1 = players[player_1_id]
+			player_2 = players[player_2_id]
+			drawElements(gameState.ball, player_1, player_2);
+			await sendEvents(socket, data.roomUID);
+			requestAnimationFrame(gameLoop);
+		}
+
+		function createReadyButton() {
+			console.log("Creating ready button");
+			readyButton = document.createElement('button');
+			readyButton.id = 'ready-button';
+			readyButton.textContent = 'Ready Up';
+			readyButton.style.position = 'fixed';
+			readyButton.style.bottom = '20px';
+			readyButton.style.left = '50%';
+			readyButton.style.transform = 'translateX(-50%)';
+			readyButton.style.padding = '10px 20px';
+			readyButton.style.fontSize = '16px';
+			readyButton.style.cursor = 'pointer';
+			document.body.appendChild(readyButton);
+		}
+
+		function showReadyButton() {
+			if (!readyButton) {
+				createReadyButton();
+			}
+			readyButton.addEventListener('click', async () => {
+				try {
+					if (readyButton.disabled == false) {
+						readyButton.textContent = 'Waiting for game start...';
+						readyButton.disabled = true;
+
+						data.socket.send(JSON.stringify({
+							action: 'player_ready',
+							room_name: data.roomUID,
+							player_id: data.playerId
+						}));
+						console.log('Ready signal sent.');
+					}
+				} catch (error) {
+					console.error('Error sending ready signal:', error);
+					readyButton.disabled = false;
+					readyButton.textContent = 'Ready Up'; // Revert state on error
+					alert('Failed to send ready signal. Please try again.');
+				}
+			})};
+
+		function destroyReadyButton() {
+			console.log("Trying to destroy ready buttons");
+			if (readyButton) {
+				console.log("Destroying ready buttons");
+//				readyButton.replaceWith(readyButton.cloneNode(true));
+				readyButton.parentNode.removeChild(readyButton);
+				readyButton.remove();
+				readyButton = null;
+			}
+		}
+
+		async function request_local_room() {
+			try {
+				console.log("Requesting room")
+				await data.socket.send(JSON.stringify({
+					action: 'create_local_match',
+					id: data.playerId
+				}));
+				console.log("Room requested")
+			} catch (error) {
+				console.error('Error sending room creation request: ', error);
+			}
+		}
+
+		async function startGame() {
+			try {
+				destroyReadyButton();
+				if (textBox) {
+					textBox.remove();
+					textBox = null;
+				}
+				playerEvent.player_1.id = data.playerId;
+				playerEvent.player_2.id = data.player2Id;
+				gameLoop(data.socket, data);
+			} catch {
+				console.error('Exception caught in startGame', error);
+			}
+		}
+	
+		async function create_local_match() {
+			try {
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+				data.playerId = 'player_1'
+				await request_local_room();
+				await showReadyButton()
+//				await startGame()
+			} catch (error){
+				console.error('Exception caught in privateMatch.js', error);
+			}
+		}
+
+		async function init(){
+			gameState.player1 = new Player('0', 'green');
+			gameState.player2 = new Player('1', 'red');
+			await connectWebSocket();
+		}
+
+		init();
+	</script>
+</body>
+</html>
+
