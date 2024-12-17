@@ -106,10 +106,10 @@ class GameConsumer(AsyncWebsocketConsumer):
         elif action == "create_private_match":
             room_name = str(uuid.uuid4())
             await self.create_private_lobby(room_name, player_id)
-        elif action == "player_ready":
-            await self.update_ready_status(data["room_name"], data["player_id"])
         elif action == "create_solo_match":
             await self.create_solo_match()
+        elif action == "player_ready":
+            await self.update_ready_status(data["room_name"], data["player_id"])
         elif data.get('type') == "player_input":
             roomID = data['game_roomID']
             if roomID in active_game_rooms:
@@ -152,8 +152,8 @@ class GameConsumer(AsyncWebsocketConsumer):
             "message": f"Created Lobby {room_name}",
             "room_name": room_name
             }))
-        player_2 = uuid4()
-        active_lobbies[room_name]["players"].append(player_id)
+        player_2 = str(uuid.uuid4())
+        active_lobbies[room_name]["players"].append(player_2)
 
     async def join_lobby(self, room_name, player_id):
         if room_name not in active_lobbies:
