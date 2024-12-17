@@ -202,20 +202,20 @@
 
 		document.addEventListener('keydown', function(event) {
 			if (event.code == 'ArrowUp') {
-				playerEvent.player_1.pending = true;
-				playerEvent.player_1.type = 'move_up';
-			}
-			else if (event.code == 'ArrowDown') {
-				playerEvent.player_1.pending = true;
-				playerEvent.player_1.type = 'move_down';
-			}
-			else if (event.code == 'KeyW') {
 				playerEvent.player_2.pending = true;
 				playerEvent.player_2.type = 'move_up';
 			}
-			else if (event.code == 'KeyS') {
+			else if (event.code == 'ArrowDown') {
 				playerEvent.player_2.pending = true;
 				playerEvent.player_2.type = 'move_down';
+			}
+			else if (event.code == 'KeyW') {
+				playerEvent.player_1.pending = true;
+				playerEvent.player_1.type = 'move_up';
+			}
+			else if (event.code == 'KeyS') {
+				playerEvent.player_1.pending = true;
+				playerEvent.player_1.type = 'move_down';
 			}
 		});
 
