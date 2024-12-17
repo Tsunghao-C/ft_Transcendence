@@ -4,6 +4,8 @@ URL="https://localhost:8443"
 
 CURL_OPTIONS="-k -s -o /dev/null -w '%{http_code}'"
 
+error_occurred=0
+
 echo "=== Test ModSecurity WAF ==="
 
 # Test 1 : Injection SQL
@@ -13,6 +15,7 @@ if [ "$response" == "403" ]; then
     echo "Blocked ✅ (403 Forbidden)"
 else
     echo "Not blocked ❌ (HTTP $response)"
+    error_occurred=1
 fi
 
 # Test 2 : Path Traversal
@@ -22,6 +25,7 @@ if [ "$response" == "403" ]; then
     echo "Blocked ✅ (403 Forbidden)"
 else
     echo "Not blocked ❌ (HTTP $response)"
+    error_occurred=1
 fi
 
 # Test 3 : User-Agent suspecte
@@ -31,6 +35,7 @@ if [ "$response" == "403" ]; then
     echo "Blocked ✅ (403 Forbidden)"
 else
     echo "Not blocked ❌ (HTTP $response)"
+    error_occurred=1
 fi
 
 # Test 4 : XSS Injection
@@ -40,6 +45,7 @@ if [ "$response" == "403" ]; then
     echo "Blocked ✅ (403 Forbidden)"
 else
     echo "Not blocked ❌ (HTTP $response)"
+    error_occurred=1
 fi
 
 # Test 5 : Command Injection
@@ -49,6 +55,16 @@ if [ "$response" == "403" ]; then
     echo "Blocked ✅ (403 Forbidden)"
 else
     echo "Not blocked ❌ (HTTP $response)"
+    error_occurred=1
+fi
+
+# Final result
+if [ $error_occurred -eq 1 ]; then
+    echo "An error has been detected"
+    exit 1
+else
+    echo "All tests passed"
+    exit 0
 fi
 
 echo "=== Tests over ==="
