@@ -3,21 +3,38 @@ import { getLanguageCookie } from "./fetch_request.js";
 import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
 
-export function setLobbyView(contentContainer) {
-    contentContainer.innerHTML = `
-        <div id="game-lobby" style="text-align: center;">
-            <h1>Game Lobby</h1>
-            <p>Select an option below to get started:</p>
-            <div>
-                <button id="create-match">Create Private Match</button>
-                <button id="join-match">Join Match</button>
-                <button id="ready-button" style="display:none;">Ready</button>
-                <div id="game-info">Loading...</div>
-                <div id="player-status" class="player-status"></div>
-                <canvas id="game" width="800" height="600"></canvas>
+export async function setLobbyView(contentContainer) {
+	let response;
+	let userData
+	try {
+		response = await fetchWithToken('/api/user/getuser/');
+		userData = await response.json();
+		console.log("User data in lobby: ", userData);
+	} catch(error) {
+		console.log(error);
+		window.location.hash = "login";
+		return;
+	}
+	contentContainer.innerHTML = `
+    <div id="game-lobby" style="text-align: center;">
+        <h1>Game Lobby</h1>
+        <p>Select an option below to get started:</p>
+        <div>
+            <button id="create-match">Create Private Match</button>
+            <button id="join-match">Join Match</button>
+            <button id="ready-button" style="display:none;">Ready</button>
+            <div id="player-info-container" style="display: flex; justify-content: space-between; margin-top: 20px;">
+                <!-- Section gauche -->
+                <div id="user-info-left" style="text-align: left; flex: 1; padding: 10px;"></div>
+                <!-- Section droite -->
+                <div id="user-info-right" style="text-align: left; flex: 1; padding: 10px;"></div>
             </div>
+            <div id="game-info">Loading...</div>
+            <div id="player-status" class="player-status"></div>
+            <canvas id="game" width="800" height="600"></canvas>
         </div>
-    `;
+    </div>
+	`;
 	const canvas = document.getElementById('game');
 	const token = getCookie("accessToken");
 	const PADDLE_HEIGHT = 100;
@@ -77,14 +94,14 @@ export function setLobbyView(contentContainer) {
 		roomUID: -1
 	};
 
-	function connectWebSocket() {
+	async function connectWebSocket() {
 		if (ws && ws.readyState === WebSocket.CONNECTING) {
 			console.log('Connection already in progress...');
 			return Promise.resolve();
 		}
 			return new Promise((resolve, reject) => {
 			const gameId = 'test_game';
-			const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+			const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws'; // to change to wss
 			const wsUrl = `${wsScheme}://${window.location.host}/ws/game-server/${gameId}/?token=${encodeURIComponent(token)}`;
 			
 			console.log('Connecting to WebSocket...')
@@ -98,42 +115,59 @@ export function setLobbyView(contentContainer) {
 					clearTimeout(wsReconnectTimer);
 					wsReconnectTimer = null;
 				}
-				data.socket.onmessage = function (event) {
+				data.socket.onmessage = async function (event) {
 				//	console.log('Ws message received', event);
 				//	console.log('Ws readyState:', data.socket.readyState);
 					try {
 						const response = JSON.parse(event.data);
 						if (response.type == 'notice') {
 							console.log('Server notice: ' + response.message);
-						}
-						else if (response.type == 'room_creation') {
+						} else if (response.type == 'join') {
+							let opponentData;
+							let playerData;
+							let profileResponse;
+							console.log('player1 alias', response.player1, "and player2 alias", response.player2);
+							try {
+								if (data.playerId === 'player1') {
+									profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.player2}`);
+									opponentData = await profileResponse.json();
+									renderUserInfo(opponentData.profile, "user-info-right");
+								} else if (data.playerId === 'player2') {
+									profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.player2}`);
+									playerData = await profileResponse.json();
+									profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.player1}`); 
+									opponentData = await profileResponse.json();
+									renderUserInfo(playerData.profile, "user-info-right");
+									renderUserInfo(opponentData.profile, "user-info-left");
+								}
+							} catch(error) {
+								console.log(error);
+								window.location.hash = "login";
+								return;
+							}
+						} else if (response.type == 'room_creation') {
 							data.roomUID = response.room_name;
 							createTextBox(data.roomUID);
 							console.log('Room creation notice received');
 							console.log('Room name: ' + data.roomUID);
-						}
-						else if (response.type == 'game_start') {
+						} else if (response.type == 'game_start') {
 							console.log(response.message);
 							startGame();
-						}
-						else if (response.type == 'error') {
+						} else if (response.type == 'error') {
 							console.error('Error received:', response.message);
-						}
-						else if (response.type == 'game_update') {
+						} else if (response.type == 'game_update') {
 							if (pendingGameUpdate) { 
 								pendingGameUpdate(response.payload) 
 								pendingGameUpdate = null;
 							}
-						}
-						else if (response.type == 'game_over') {
+						} else if (response.type == 'game_over') {
 							console.log('game_over received: ', response.payload);
 							if (pendingGameUpdate) {
 								pendingGameUpdate(response.payload);
 								game_over = true;
 								pendingGameUpdate = null;
 							}
-						}
-						else if (response.error)
+						} else if (response.error)
 							console.error(response.error);
 					}
 					catch (error) {
@@ -224,15 +258,15 @@ export function setLobbyView(contentContainer) {
 
 	async function gameLoop(socket, playerData) {
 		gameState = await getGameState();
-//			console.log("gameState: ", gameState);
+		// console.log("gameState: ", gameState);
 		if (game_over) {
 			console.log('Drawing game_over...');
 			drawGameOverScreen(gameState);
 			game_over = false;
 			return;
 		}
-		let player_1 = gameState.players.player_1;
-		let player_2 = gameState.players.player_2;
+		let player_1 = gameState.players.player1;
+		let player_2 = gameState.players.player2;
 		drawElements(gameState.ball, player_1, player_2);
 		await sendEvents(socket, data.roomUID);
 		requestAnimationFrame(gameLoop);
@@ -441,7 +475,7 @@ export function setLobbyView(contentContainer) {
 	async function join_match() {
 		try {
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
-			data.playerId = 'player_2';
+			data.playerId = 'player2';
 			
 			await joinRoom();
 			
@@ -449,12 +483,28 @@ export function setLobbyView(contentContainer) {
 		} catch (error) {
 			console.error('Exception caught in joinMatch', error);
 		}
+	
 	}
+
+	function renderUserInfo(user, targetId) {
+		const userInfoDiv = document.getElementById(targetId);
+	
+		userInfoDiv.innerHTML = `
+			<div style="display: flex; align-items: center; margin-bottom: 10px;">
+				<img src="${user.avatar}" alt="Avatar" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 10px;">
+				<div>
+					<p style="margin: 0; font-weight: bold;">${user.alias}</p>
+					<p style="margin: 0;">MMR: ${user.mmr}</p>
+				</div>
+			</div>
+		`;
+	}	
 
 	async function create_private_match() {
 		try {
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
-			data.playerId = 'player_1'
+			data.playerId = 'player1'
+			renderUserInfo(userData, "user-info-left");
 			await requestRoom();
 			console.log("Player_id: " + data.playerId);
 			await showReadyButton()

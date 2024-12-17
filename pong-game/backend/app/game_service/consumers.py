@@ -66,7 +66,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         super().__init__(*args, **kwargs)
         self.channel_layer = get_channel_layer()
         self.assigned_room = -1
-        self.assigned_player_id = -1
+        self.player_alias = -1
 
     async def connect(self):
         logger.info(f"WebSocket connection attempt: {self.scope['path']}")
@@ -113,20 +113,20 @@ class GameConsumer(AsyncWebsocketConsumer):
         data = json.loads(text_data)
         logger.info(f"Message received: {text_data}")
         action = data.get("action")
-        player_id = data.get("id")
+        player_alias = self.user.alias
         if action == "join_private_match":
-            await self.join_lobby(data["room_name"], player_id)
+            await self.join_lobby(data["room_name"], player_alias)
         elif action == "create_private_match":
             room_name = str(uuid.uuid4())
-            await self.create_private_lobby(room_name, player_id)
+            await self.create_private_lobby(room_name, player_alias)
         elif action == "player_ready":
-            await self.update_ready_status(data["room_name"], data["player_id"])
+            await self.update_ready_status(data["room_name"], player_alias)
         elif data.get('type') == "player_input":
             roomID = data['game_roomID']
             if roomID in active_game_rooms:
                 game_room = active_game_rooms[roomID]["room_data"]
                 logger.info("Consumer: Received player input")
-                await game_room.receive_player_input(data['player_id'], data['input'])
+                await game_room.receive_player_input(player_alias, data['input'])
                 logger.info("Consumer: Forwarded player input")
             else:
                 await self.send(json.dumps({
@@ -134,11 +134,11 @@ class GameConsumer(AsyncWebsocketConsumer):
                     "message": f"Game room {data['game_roomID']} not found"
                     }))
 
-    async def create_private_lobby(self, room_name, player_id):
+    async def create_private_lobby(self, room_name, player_alias):
         self.assigned_room = room_name
-        self.assigned_player_id = player_id
+        self.assigned_player_alias = player_alias
         active_lobbies[room_name] = {
-                "players": [player_id],
+                "players": [player_alias],
                 "connection": [self]
                 }
         self.current_group = f"lobby_{room_name}"
@@ -149,14 +149,14 @@ class GameConsumer(AsyncWebsocketConsumer):
             "room_name": room_name
             }))
 
-    async def join_lobby(self, room_name, player_id):
+    async def join_lobby(self, room_name, player_alias):
         if room_name not in active_lobbies:
             await self.send(json.dumps({
                 "type": "error",
                 "message": f"lobby {room_name} does not exist"
                 }))
         self.current_group = f"lobby_{room_name}"
-        if player_id in active_lobbies[room_name]["players"]:
+        if player_alias in active_lobbies[room_name]["players"]:
             await self.send(json.dumps({
                 "type": "error",
                 "message": "player is already in lobby"
@@ -166,17 +166,19 @@ class GameConsumer(AsyncWebsocketConsumer):
             await self.send(json.dumps({"error": f"lobby {room_name} is full"}))
             return
         self.assigned_room = room_name
-        self.assigned_player_id = player_id
-        active_lobbies[room_name]["players"].append(player_id)
+        self.assigned_player_alias = player_alias
+        active_lobbies[room_name]["players"].append(player_alias)
         active_lobbies[room_name]["connection"].append(self)
         await self.channel_layer.group_add(self.current_group, self.channel_name)
         for connection in active_lobbies[room_name]["connection"]:
             await connection.send(json.dumps({
-                "type": "notice",
-                "message": f"Player {player_id} joined lobby {room_name}"
+                "type": "join",
+                "message": f"Player {player_alias} joined lobby {room_name}",
+                "player1": f"{active_lobbies[room_name]['players'][0]}",
+                "player2": f"{active_lobbies[room_name]['players'][1]}"
                 }))
 
-    async def update_ready_status(self, room_name, player_id):
+    async def update_ready_status(self, room_name, player_alias):
         if room_name not in active_lobbies:
             await self.send(json.dumps({
                 "type": "error",
@@ -186,13 +188,13 @@ class GameConsumer(AsyncWebsocketConsumer):
         if "ready" not in active_lobbies[room_name]:
             active_lobbies[room_name]["ready"] = []
         if room_name in active_lobbies:
-            if player_id not in active_lobbies[room_name].get("ready", []):
-                active_lobbies[room_name]["ready"].append(player_id)
-                logger.info(f"Player has readied up, id: {player_id}")
+            if player_alias not in active_lobbies[room_name].get("ready", []):
+                active_lobbies[room_name]["ready"].append(player_alias)
+                logger.info(f"Player {player_alias} has readied up")
                 for connection in active_lobbies[room_name]["connection"]:
                     await connection.send(json.dumps({
                         "type": "notice",
-                        "message": f"Player {player_id} is ready"
+                        "message": f"Player {player_alias} is ready"
                         }))
         if len(active_lobbies[room_name]["players"]) == 2 and self.all_ready(room_name):
             try:

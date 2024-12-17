@@ -175,11 +175,11 @@ class GameRoom():
     async def send_update(self):
         game_state = {
                 'players': {
-                    player_id: {
-                        'x': self.players[player_id].x,
-                        'y': self.players[player_id].y,
-                        'score': self.players[player_id].score,
-                        } for player_id in self.players
+                        f'player{index + 1}': {
+                            'x': player.x,
+                            'y': player.y,
+                            'score': player.score,
+                        } for index, (player_id, player) in enumerate(self.players.items())
                     },
                 'ball': {
                     'x': self.ball.x,

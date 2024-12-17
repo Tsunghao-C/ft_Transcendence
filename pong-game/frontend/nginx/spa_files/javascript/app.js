@@ -101,7 +101,6 @@ function setNavbarHtml(container) {
 export async function loadPage(page) {
 	//add a checker to check there is no more than one /
 	//if invalid token, the server explodes
-	let isLoggedIn;
 	let data;
 	let response;
 	const contentContainer = document.getElementById("center-box");
@@ -122,10 +121,8 @@ export async function loadPage(page) {
 		response = await fetchWithToken('/api/user/getuser/');
 		data = await response.json();
 		console.log("User data: ", data);
-		isLoggedIn = "true";
 		setLanguageCookie(data.language);
 	} catch (error) {
-		isLoggedIn = "false";
 		if (page !== "login" && page !== "register") {
 			window.location.hash = "login";
 			changeLanguage(currentLanguage);

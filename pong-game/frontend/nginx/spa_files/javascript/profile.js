@@ -19,10 +19,6 @@ export async function setProfileView(contentContainer, usernameInHash) {
 	let response;
 	let data;
 	try {
-		// const body = JSON.stringify({
-		// 	alias : usernameInHash
-		//   });
-		// response = await fetchWithToken(`/api/user/get-profile/?${usernameInHash}`, body, 'POST');
 		response = await fetchWithToken(`/api/user/get-profile/?alias=${usernameInHash}`);
 		data = await response.json();
 	} catch(error) {
