@@ -138,7 +138,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         self.assigned_room = room_name
         self.assigned_player_alias = player_alias
         active_lobbies[room_name] = {
-                "players": [player_alias],
+                "players": [],
                 "connection": [self]
                 }
         self.current_group = f"lobby_{room_name}"
@@ -164,6 +164,12 @@ class GameConsumer(AsyncWebsocketConsumer):
             return
         if len(active_lobbies[room_name]["players"]) >= 2:
             await self.send(json.dumps({"error": f"lobby {room_name} is full"}))
+            return
+        elif len(active_lobbies[room_name]["players"]) == 0:
+            active_lobbies[room_name]["players"].append(player_alias)
+            await self.send(json.dumps({
+            "type": "set_player_1",
+            }))
             return
         self.assigned_room = room_name
         self.assigned_player_alias = player_alias

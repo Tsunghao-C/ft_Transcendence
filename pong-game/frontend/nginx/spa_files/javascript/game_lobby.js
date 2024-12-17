@@ -3,7 +3,7 @@ import { getLanguageCookie } from "./fetch_request.js";
 import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
 
-export async function setLobbyView(contentContainer) {
+export async function setLobbyView(contentContainer, lobbyId = "") {
 	let response;
 	let userData
 	try {
@@ -89,7 +89,7 @@ export async function setLobbyView(contentContainer) {
 	}
 	var game_over = false;
 	var data = {
-		playerId: -1,
+		playerId: "player2",
 		socket: -1,
 		roomUID: -1
 	};
@@ -150,6 +150,9 @@ export async function setLobbyView(contentContainer) {
 							createTextBox(data.roomUID);
 							console.log('Room creation notice received');
 							console.log('Room name: ' + data.roomUID);
+						} else if (response.type == 'set_player_1') {
+							data.playerId = 'player1'
+							console.log("you are player1");
 						} else if (response.type == 'game_start') {
 							console.log(response.message);
 							startGame();
@@ -475,7 +478,7 @@ export async function setLobbyView(contentContainer) {
 	async function join_match() {
 		try {
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
-			data.playerId = 'player2';
+			
 			
 			await joinRoom();
 			
@@ -503,7 +506,6 @@ export async function setLobbyView(contentContainer) {
 	async function create_private_match() {
 		try {
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
-			data.playerId = 'player1'
 			renderUserInfo(userData, "user-info-left");
 			await requestRoom();
 			console.log("Player_id: " + data.playerId);
@@ -523,13 +525,16 @@ export async function setLobbyView(contentContainer) {
 	
 	document.getElementById('create-match').addEventListener('click', async () => {
 	create_private_match()
-});
+	});
 	
 	document.getElementById('join-match').addEventListener('click', async () => {
 		join_match()
 	});
 	
 	init();
+	if (lobbyId) {
+		join
+	}
 }
 
 
