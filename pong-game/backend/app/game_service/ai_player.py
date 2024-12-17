@@ -21,19 +21,19 @@ class PongAI:
         self.paddle_y = canvas_height / 2 - paddle_height / 2
         self.difficulties = {
             'easy': {
-                'prediction_noise': (-20, 20),
-                'reaction_delay': 0.3,
-                'mistake_chance': 0.05,
+                'prediction_noise': (-8, 8),
+                'reaction_delay': 1,
+                'mistake_chance': 0.1,
             },
             'medium': {
-                'prediction_noise': (-10, 10),
-                'reaction_delay': 0.1,
-                'mistake_chance': 0.01,
+                'prediction_noise': (-5, 5),
+                'reaction_delay': 0.5,
+                'mistake_chance': 0.08,
             },
             'hard': {
                 'prediction_noise': (-1, 1),
-                'reaction_delay': 0.05,
-                'mistake_chance': 0.001,
+                'reaction_delay': 0.2,
+                'mistake_chance': 0.05,
             }
         }
         self.settings = self.difficulties[difficulty]
@@ -98,7 +98,7 @@ class PongAI:
         if random.random() < self.settings['mistake_chance']:
             return random.choice(['move_up', 'move_down', 'move_stop'])
 
-        if abs(distance_to_target) < 10:
+        if abs(distance_to_target) < 5:
             return 'move_stop'
         
         # Avoid moving forward it at boundaries
