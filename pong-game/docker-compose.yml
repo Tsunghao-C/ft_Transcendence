@@ -34,7 +34,7 @@ volumes:
     driver: local
 
 services:
-  Security Layer
+  # Security Layer
   vault_debian:
     container_name: vault_debian
     build:
@@ -53,7 +53,7 @@ services:
       - vault_debian_file:/vault/file
     stop_signal: SIGTERM # DTIW
 
-  # [Alex] to finish WAF later after major modules are tested working
+  ## [Alex] to finish WAF later after major modules are tested working
 
   # waf:
   #   container_name: waf
