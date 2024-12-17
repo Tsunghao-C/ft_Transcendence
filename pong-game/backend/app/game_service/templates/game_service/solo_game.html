@@ -98,12 +98,12 @@
 			player_1: {
 				pending: false,
 				type: -1,
-				id: -1,
+				id: "Dumbass",
 			},
 			player_2: {
 				pending: false,
 				type: -1,
-				id: -1,
+				id: "Dumbass",
 			}
 		};
 
@@ -190,8 +190,14 @@
 					ws.onerror = function (error) {
 						console.error('Websocker error', error);
 						reject (new Error('Failed to connect Websocket'));
-
 					};
+					ws.onclose = (event) => {
+						console.log("WEBSOCKET CLOSED:", event);
+						if (event.code !== 1000) {
+							console.error("Websocket closed with code:", event.code);
+							console.error("Reason:", event.reason);
+						}
+					}
 				});
 		}
 
@@ -229,19 +235,20 @@
 
 		async function sendEvents(socket) {
 			for (const property in playerEvent) {
-				if (property.pending == true) {
+				console.log("Property id: ", playerEvent[property].id);
+				if (playerEvent[property].pending == true) {
 					await data.socket.send(JSON.stringify({
 						type: 'player_input',
-						player_id: property.playerId,
-						input: property.type,
+						player_id: playerEvent[property].id,
+						input: playerEvent[property].type,
 						game_roomID: data.roomUID
 					}));
-					property.pending = false;
+					playerEvent[property].pending = false;
 				}
 				else {
 					await data.socket.send(JSON.stringify({
 						type: 'player_input',
-						player_id: property.playerId,
+						player_id: playerEvent[property].id,
 						input: 'idle',
 						game_roomID: data.roomUID
 					}));
@@ -397,6 +404,7 @@
 				playerEvent.player_1.id = data.playerId;
 				playerEvent.player_2.id = data.player2Id;
 				gameLoop(data.socket, data);
+				console.log("Game done test?");
 			} catch {
 				console.error('Exception caught in startGame', error);
 			}
@@ -407,7 +415,6 @@
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
 				data.playerId = 'player_1'
 				await request_local_room();
-				console.log("Player_id: " + data.playerId);
 				await showReadyButton()
 //				await startGame()
 			} catch (error){

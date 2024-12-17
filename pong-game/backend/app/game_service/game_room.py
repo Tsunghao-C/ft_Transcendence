@@ -208,16 +208,16 @@ class GameRoom():
         logger.info('gameRoom started, messages sent')
         while self.running:
             self.update_players()
-            logger.info('gameRoom updated players')
+#            logger.info('gameRoom updated players')
             self.handle_player_collisions()
-            logger.info('gameRoom updated collisions')
+#            logger.info('gameRoom updated collisions')
             self.update_ball()
-            logger.info('gameRoom updated ball')
+#            logger.info('gameRoom updated ball')
             if self.game_over:
-                logger.info('gameRoom preparing gameover')
+#                logger.info('gameRoom preparing gameover')
                 await self.declare_winner(self.winner)
-                logger.info('gameRoom done')
+#                logger.info('gameRoom done')
                 return 
             await self.send_update()
-            logger.info('gameRoom sent update to clients')
+#            logger.info('gameRoom sent update to clients')
             await asyncio.sleep(0.016)
