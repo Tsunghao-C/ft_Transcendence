@@ -151,33 +151,6 @@ class GameConsumer(AsyncWebsocketConsumer):
     async def create_local_match(self, room_name, player_id):
         self.assigned_room = room_name
         self.assigned_player_id = player_id
-
-        players = [player_id]
-        if is_ai_game:
-            players.append("ai_player")
-
-        active_lobbies[room_name] = {
-            "players": players,
-            "connection": [self],
-            "is_ai_game": is_ai_game
-        }
-        self.current_group = f"lobby_{room_name}"
-        player_2 = str(uuid.uuid4())
-        active_lobbies[room_name]["players"].append(player_2)
-        active_lobbies[room_name]["ready"] = []
-        active_lobbies[room_name]["ready"].append(player_2)
-        await self.channel_layer.group_add(self.current_group, self.channel_name)
-        game_type = "AI Game" if is_ai_game else "Private Match"
-        await self.send(json.dumps({
-            "type": "room_creation",
-            "message": f"Created Lobby {room_name}",
-            "room_name": room_name
-            "is_ai_game": is_ai_game
-            }))
-
-    async def create_local_match(self, room_name, player_id):
-        self.assigned_room = room_name
-        self.assigned_player_id = player_id
         active_lobbies[room_name] = {
                 "players": [player_id],
                 "connection": [self]
