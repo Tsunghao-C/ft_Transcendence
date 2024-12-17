@@ -101,6 +101,61 @@ class GameConsumerTest(TestCase):
 
         await creator_communicator.disconnect()
 
+    async def test_local_match(self):
+       creator_communicator = WebsocketCommunicator(URLRouter(websocket_urlpatterns), "/ws/game-server/test_room/")
+       await creator_communicator.connect()
+       await creator_communicator.receive_json_from()
+       await creator_communicator.send_json_to({
+           "action": "create_local_match",
+           "id": "player1"
+           })
+       creation_response = await creator_communicator.receive_json_from()
+       print(json.dumps(creation_response, indent=4))
+       player_2 = creation_response['player2_id']
+       room_name = creation_response['room_name']
+       await creator_communicator.send_json_to({
+           "action": "player_ready",
+           "player_id": "player1",
+           "room_name": room_name
+           })
+       await creator_communicator.receive_json_from()
+       await creator_communicator.receive_json_from()
+       await creator_communicator.receive_json_from()
+       update_messages = []
+       while True:
+             await creator_communicator.send_json_to({
+                 'type': 'player_input',
+                 'game_roomID': room_name,
+                 'player_id': 'player1',
+                 'input': 'move_up',
+                 })
+             await creator_communicator.send_json_to({
+                 'type': 'player_input',
+                 'game_roomID': room_name,
+                 'player_id': player_2,
+                 'input': 'move_down',
+                 })
+             update_message = await asyncio.wait_for(creator_communicator.receive_json_from(),
+                                                     timeout=1)
+             print(json.dumps(update_message, indent=4))
+             if update_message['type'] == 'game_over':
+                 break
+             update_messages.append(update_message)
+             self.assertEqual(update_message['type'], 'game_update')
+             self.assertIn('payload', update_message)
+             payload = update_message['payload']
+             self.assertIn('players', payload)
+             self.assertIn('ball', payload)
+
+             for player_id, player_data in payload['players'].items():
+                 self.assertIn('x', player_data)
+                 self.assertIn('y', player_data)
+                 self.assertIn('score', player_data)
+             self.assertIn('x', payload['ball'])
+             self.assertIn('y', payload['ball'])
+             self.assertIn('radius', payload['ball'])
+       await creator_communicator.disconnect()       
+
 #     async def test_player_ready(self):
 #         # Create a room and have two players join
 #         creator_communicator = WebsocketCommunicator(URLRouter(websocket_urlpatterns), "/ws/game-server/test_room/")
