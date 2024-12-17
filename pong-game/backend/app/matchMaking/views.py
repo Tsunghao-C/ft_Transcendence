@@ -49,7 +49,10 @@ class StartTournamentView(APIView):
 			return Response({"error":"You can only start tournaments that are not finished or currently active"}, status=400)
 		if tournament.tournament_admin != user:
 			return Response({"error":"only the tournament creator can start the tournament"}, status=400)
-		tournament.start_tournament()
+		try:
+			tournament.start_tournament()
+		except Exception as e:
+			return Response({"error":f"could not start tournament because: {e}"}, status=400)
 		return Response({"detail":"tournament successfully started"}, status=200)
 
 class GetOpenTournamentsView(APIView):
@@ -58,14 +61,14 @@ class GetOpenTournamentsView(APIView):
 	def get(self, request):
 		# search_query = request.query_params.get("search","").strip()
 		page = int(request.query_params.get("page", 1))
-		tournaments = Tournament.objects.filter(is_private=False, is_active=False, is_finished=False)
+		tournaments = Tournament.objects.filter(is_private=False, is_active=False)
 		if not tournaments:
 			return Response({"detail":"no open tournaments exist."}, status=200)
 		paginator = Paginator(tournaments, 5) # can change this to view more or fewer tourneys
 		try:
 			current_page = paginator.page(page)
 		except Exception:
-			raise ValidationError({"detail": "Invalid page number."})
+			raise Response({"error": "Invalid page number."}, status=400)
 		TournamentData = [
 			{
 				"Tournament Name": tourney.name,
