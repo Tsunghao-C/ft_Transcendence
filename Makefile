@@ -110,4 +110,4 @@ in:
 %:
 	@:
 
-.PHONY: all build check run clean go start stop down status re kill in
+.PHONY: all build check run clean go start stop down status re kill in update
