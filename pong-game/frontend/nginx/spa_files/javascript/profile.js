@@ -30,9 +30,10 @@ export async function setProfileView(contentContainer, usernameInHash) {
 		window.location.hash = "login";
 		return;
 	}
+	const currentLanguage = getLanguageCookie() ||  "en";
 	contentContainer.innerHTML = `
 		<div class="profile-view">
-			<h2 data-i18n="profileTitle">Search Profile</h2>
+			<h2 data-i18n="profileTitle">${translations[currentLanguage].profileTitle}</h2>
 			<div class="search-bar mb-3">
 				<input type="text" id="searchInput" class="form-control" placeholder="Enter a username..." />
 				<button id="searchButton" class="btn btn-primary mt-2" data-i18n="searchButton">Search</button>
@@ -57,7 +58,6 @@ export async function setProfileView(contentContainer, usernameInHash) {
 		if (!searchQuery) {
 			return;
 		}
-
 		window.location.hash = `profile/${searchQuery}`;
 		console.log("Redirecting to profile", searchQuery);
 	});
