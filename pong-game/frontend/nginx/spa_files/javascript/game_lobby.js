@@ -163,7 +163,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 									try {
 										const response = await fetchWithToken('/api/chat/create-invitation/', JSON.stringify({
 											alias: aliasToInvite,
-											roomId: "roomID",
+											roomId: data.roomUID,
 										}), 'POST');
 										if (!response.ok) {
 											console.log(response);

@@ -11,7 +11,7 @@ urlpatterns = [
 	path('create/', CreatePublicChatRoomView.as_view(), name='create_chat_room'),
 	path('create-private/', CreatePrivateChatRoomView.as_view(), name='create_private_chat_room'),
 	path('user_chatrooms/', getChatRoomsOfUserView.as_view(), name='user_chatrooms'),
-	path("<str:room_name>/", views.room, name="room"),
 	path('create-invitation/', CreateInviteView.as_view(), name='create_invite'),
+	path("<str:room_name>/", views.room, name="room"),
 ]
 

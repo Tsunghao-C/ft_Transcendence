@@ -9,6 +9,8 @@ from user_service.models import CustomUser
 from rest_framework.exceptions import PermissionDenied
 from uuid import UUID
 from django.shortcuts import render, get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 
 def index(request):
@@ -140,8 +142,6 @@ class CreatePrivateChatRoomView(APIView):
 				"members": [member.alias for member in room.members.all()]
 			})
 
-from rest_framework.exceptions import ValidationError
-
 class CreateInviteView(APIView):
 	permission_classes = [IsAuthenticated]
 
@@ -149,14 +149,14 @@ class CreateInviteView(APIView):
 		print("ta mere")
 		user = request.user
 		other_alias = request.data.get("alias")
-		room_name = request.data.get("room_name")
+		room_name = request.data.get("roomName")
 		game_room = request.data.get("roomId")
 
 		try:
 			game_room = UUID(game_room, version=4)
 		except ValueError:
 			return Response({"error": "Invalid gameId format."}, status=400)
-		if other_user:
+		if other_alias:
 			try:
 				other_user = CustomUser.objects.get(alias=other_alias)
 			except CustomUser.DoesNotExist:
@@ -169,12 +169,12 @@ class CreateInviteView(APIView):
 				raise PermissionDenied("This user is blocking you.")
 			room = ChatRoom.get_or_create_private_room(user, other_user)
 		else:
-			room = get_object_or_404(Chatroom, name=room_name)
+			room = get_object_or_404(ChatRoom, name=room_name)
 
 		invite_message = Message.objects.create(
 			room=room,
 			sender=user,
-			content=f"{user.alias} invited {other_user.alias} to join the room.",
+			content=f"{user.alias} invited you to play",
 			is_invite=True,
 			game_room= game_room 
 		)
