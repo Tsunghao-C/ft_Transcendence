@@ -52,11 +52,6 @@ RUN mkdir -p /var/log/modsec && \
     chmod 644 /var/log/modsec/audit.log /var/log/modsec/debug.log && \
     chown nginx:nginx /var/log/modsec/audit.log /var/log/modsec/debug.log
 
-# RUN mkdir -p /var/log/modsec && \
-#     chmod -R 755 /var/log/modsec
-# RUN touch /var/log/modsec/audit.log && chmod 666 /var/log/modsec/audit.log
-# RUN touch /var/log/modsec/debug.log && chmod 666 /var/log/modsec/debug.log
-
 # Generate ssl certificate (kept from main)
 RUN mkdir -p /etc/nginx/ssl && \
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
@@ -75,14 +70,6 @@ RUN useradd -r -u 1000 nginx-user && \
 
 # Excecute Nginx server as non-root user
 USER nginx-user
-
-
-# # Set proper permissions for nginx user
-# RUN chown -R nginx:nginx /var/cache/nginx && \
-#     chown -R nginx:nginx /var/log/nginx && \
-#     chown -R nginx:nginx /etc/nginx/ssl && \
-#     touch /var/run/nginx.pid && \
-#     chown -R nginx:nginx /var/run/nginx.pid
 
 # Exposing HTTP and HTTPS ports
 EXPOSE 80 443
