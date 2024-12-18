@@ -151,11 +151,11 @@ export async function setpersonalDataView(contentContainer) {
 				const response = await fetchWithToken("api/user/change-avatar/", formData, 'POST', false);
 				if (response.ok) {
 					console.log("Avatar uploaded successfully:", response);
-					alert("message for successs");
+					// alert("message for successs");
 					loadPage("personal-data");
 				} else {
 					console.log("Error uploading avatar:", response);
-					alert("soemerror");
+					alert("Error uploading profile picture");
 				}
             } catch(error) {
                 console.log(error);
