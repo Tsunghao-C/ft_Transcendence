@@ -21,22 +21,9 @@
             margin-bottom: 20px;
         }
 
-		.game-modes {
-			display: flex;
-			flex-direction: column;
-			gap: 10px;
-			margin-bottom: 20px;
-		}
-
-		.mode-title {
-			text-align: center;
-			font-size: 1.2em;
-			margin: 10px 0;
-		}
-
         button {
             padding: 10px 20px;
-            margin: 5px;
+            margin: 10px;
             font-size: 16px;
             border: none;
             border-radius: 5px;
@@ -44,7 +31,6 @@
             background-color: #61dafb;
             color: #282c34;
             transition: background-color 0.3s;
-			min-width: 200px;
         }
 
         button:hover {
@@ -54,48 +40,17 @@
         button:active {
             background-color: #0e86d4;
         }
-
-		button.ai-mode {
-			background-color: #4caf50;
-		}
-
-		button.ad-mode:hover {
-			background-color: #45a049;
-		}
-
-		canvas {
-			border: 2px solid white;
-			margin-top: 20px;
-			display: none;
-		}
-
-		#game-info {
-			margin: 10px 0;
-			font-size: 18px;
-		}
-
-		#player-staus {
-			margin: 5px 0;
-			font-size: 14px;
-			color: #61dafb;
-		}
     </style>
 </head>
 <body>
-    <h1>Game Lobby</h1>
-	<div class="game-modes">
-		<div class="mode-title">Multiplayer</div>
-        <button onclick="create_private_match()">Create Private Match</button>
-        <button onclick="join_match()">Join Match</button>
-
-		<div class="mode-title">Single Player</div>
-		<button onclick="create_ai_match()" class="ai-mode">Play vs AI</button>
-	</div>
-
+    <h1>Local Game Lobby</h1>
+    <p>Select an option below to get started:</p>
+    <div>
+        <button onclick="create_local_match()">Create Local Match</button>
 	<div id="game-info">Loading...</div>
    	<div id="player-status" class="player-status"></div>
 	<canvas id="game" width="800" height="600"></canvas>
-
+    </div>
 	<script>
 		const canvas = document.getElementById('game');
 		const token = localStorage.getItem('token'); //Is this stored there or in cookies!!!!
@@ -139,22 +94,33 @@
 			radius:10
 		};
 
+		let playerEvent = {
+			player_1: {
+				pending: false,
+				type: -1,
+				id: -1,
+			},
+			player_2: {
+				pending: false,
+				type: -1,
+				id: -1,
+			}
+		};
+
 		let gameState = {
 			ball: ball,
 			player1: Player,
 			player2: Player
 		};
 
-		let playerEvent = {
-			pending: false,
-			type: -1,
-		}
-		var game_over = false;
 		var data = {
 			playerId: -1,
+			player2Id: -1,
 			socket: -1,
 			roomUID: -1
 		};
+
+		var game_over = false;
 
 		function connectWebSocket() {
             if (ws && ws.readyState === WebSocket.CONNECTING) {
@@ -185,28 +151,18 @@
 							if (response.type == 'notice') {
 								console.log('Server notice: ' + response.message);
 							}
-							else if (response.type == 'room_creation') {
-								data.roomUID = response.room_name;
-								if (!response.is_ai_game) {
-									createTextBox(data.roomUID);
-								}
-								console.log('Room creation notice received');
+							else if (response.type == 'local_room_creation') {
+								console.log('Local Room creation notice received');
 								console.log('Room name: ' + data.roomUID);
-								console.log('Is AI game:', response.is_ai_game);
+								data.roomUID = response.room_name;
+								data.player2Id = response.player2_id;
 							}
 							else if (response.type == 'game_start') {
 								console.log(response.message);
-								if (response.is_ai_game) {
-									gameInfo.textContent = 'Game Started - Playing vs AI!';
-								} else {
-									gameInfo.textContent = 'Game Started!';
-								}
-								readyButton.style.display = 'none';
 								startGame();
 							}
 							else if (response.type == 'error') {
 								console.error('Error received:', response.message);
-								gameInfo.textContent = 'Error: ' + response.message;
 							}
 							else if (response.type == 'game_update') {
 								if (pendingGameUpdate) { 
@@ -220,7 +176,6 @@
 									pendingGameUpdate(response.payload);
 									game_over = true;
 									pendingGameUpdate = null;
-									document.querySelector('.game-modes').style.display = 'flex';
 								}
 							}
 							else if (response.error)
@@ -234,61 +189,73 @@
 					ws.onerror = function (error) {
 						console.error('Websocker error', error);
 						reject (new Error('Failed to connect Websocket'));
-
 					};
+					ws.onclose = (event) => {
+						console.log("WEBSOCKET CLOSED:", event);
+						if (event.code !== 1000) {
+							console.error("Websocket closed with code:", event.code);
+							console.error("Reason:", event.reason);
+						}
+					}
 				});
 		}
 
 		document.addEventListener('keydown', function(event) {
-			// console.log('Key presssed:', event.code);
 			if (event.code == 'ArrowUp') {
-				playerEvent.pending = true;
-				playerEvent.type = 'move_up';
-				event.preventDefault();
+				playerEvent.player_2.pending = true;
+				playerEvent.player_2.type = 'move_up';
 			}
 			else if (event.code == 'ArrowDown') {
-				playerEvent.pending = true;
-				playerEvent.type = 'move_down';
-				event.preventDefault();
+				playerEvent.player_2.pending = true;
+				playerEvent.player_2.type = 'move_down';
+			}
+			else if (event.code == 'KeyW') {
+				playerEvent.player_1.pending = true;
+				playerEvent.player_1.type = 'move_up';
+			}
+			else if (event.code == 'KeyS') {
+				playerEvent.player_1.pending = true;
+				playerEvent.player_1.type = 'move_down';
 			}
 		});
 
 		document.addEventListener('keyup', function(event) {
-			// console.log('Key released:', event.code);
 			if (event.code == 'ArrowDown' || event.code == 'ArrowUp')
 			{
-				playerEvent.pending = true;
-				playerEvent.type = 'move_stop';
-				event.preventDefault();
-
+				playerEvent.player_1.pending = true;
+				playerEvent.player_1.type = 'move_stop';
+			}
+			else if(event.code == 'KeyW' || event.code == 'KeyS')
+			{
+				playerEvent.player_2.pending = true;
+				playerEvent.player_2.type = 'move_stop';
 			}
 		});
 
 		async function sendEvents(socket) {
-			try {
-				if (playerEvent.pending == true) {
+			for (const property in playerEvent) {
+				if (playerEvent[property].pending == true) {
 					await data.socket.send(JSON.stringify({
 						type: 'player_input',
-						player_id: data.playerId,
-						input: playerEvent.type,
+						player_id: playerEvent[property].id,
+						input: playerEvent[property].type,
 						game_roomID: data.roomUID
-					}));	
-					playerEvent.pending = false;
+					}));
+					playerEvent[property].pending = false;
 				}
 				else {
 					await data.socket.send(JSON.stringify({
 						type: 'player_input',
-						player_id: data.playerId,
+						player_id: playerEvent[property].id,
 						input: 'idle',
 						game_roomID: data.roomUID
 					}));
 				}
-			} catch (error) {
-				console.error('Error sending player input:', error);
 			}
 		}
 
 		function drawElements(ball, player_1, player_2) {
+//			console.log("DrawElements players: " + player_1 + " " + player_2);
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
 			ctx.font = '48px serif';
 			ctx.textBaseline = 'hanging';
@@ -323,93 +290,22 @@
 		}
 
 		async function gameLoop(socket, playerData) {
-			try {
-				gameState = await getGameState();
-				// console.log("gameState: ", gameState);
-				if (game_over) {
-					console.log('Drawing game_over...');
-					drawGameOverScreen(gameState);
-					game_over = false;
-					return;
-				}
-				const players = gameState.players;
-				const player_1 = players[Object.keys(players)[0]];
-				// player_1 = gameState.players.player_1;
-				const player_2 = players[Object.keys(players)[1]];
-				// player_2 = gameState.players.player_2;
-				drawElements(gameState.ball, player_1, player_2);
-				await sendEvents(socket, data.roomUID);
-				requestAnimationFrame(() => gameLoop(socket, playerData));
-			} catch (error) {
-				console.error('Error in game loop:', error);
+			gameState = await getGameState();
+//			console.log("gameState: ", gameState);
+			if (game_over) {
+				console.log('Drawing game_over...');
+				drawGameOverScreen(gameState);
+				game_over = false;
+				return;
 			}
-		}
-
-		async function joinRoom() {
-			// Create a container for the input field and button
-			const container = document.createElement('div');
-			container.style.position = 'fixed';
-			container.style.top = '50%';
-			container.style.left = '50%';
-			container.style.transform = 'translate(-50%, -50%)';
-			container.style.padding = '20px';
-			container.style.border = '1px solid #ccc';
-			container.style.borderRadius = '10px';
-			container.style.backgroundColor = '#f9f9f9';
-			container.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.1)';
-			container.style.textAlign = 'center';
-
-			// Create the input field for the room UID
-			const inputField = document.createElement('input');
-			inputField.type = 'text';
-			inputField.placeholder = 'Enter Room UID';
-			inputField.style.marginBottom = '10px';
-			inputField.style.padding = '10px';
-			inputField.style.width = 'calc(100% - 20px)';
-			inputField.style.boxSizing = 'border-box';
-			inputField.style.fontSize = '16px';
-
-			// Create the submit button
-			const submitButton = document.createElement('button');
-			submitButton.textContent = 'Join Room';
-			submitButton.style.padding = '10px 20px';
-			submitButton.style.fontSize = '16px';
-			submitButton.style.cursor = 'pointer';
-
-			// Append the input and button to the container
-			container.appendChild(inputField);
-			container.appendChild(document.createElement('br')); // Line break
-			container.appendChild(submitButton);
-
-			// Append the container to the body
-			document.body.appendChild(container);
-
-			// Handle button click
-			submitButton.addEventListener('click', async () => {
-				const roomUID = inputField.value.trim();
-
-				if (!roomUID) {
-					alert('Please enter a valid Room UID.');
-					return;
-				}
-
-				data.roomUID = roomUID;
-				// Send the join room request to the server
-				try {
-						await data.socket.send(JSON.stringify({
-						action: 'join_private_match',
-						room_name: roomUID,
-						id: data.playerId
-					}));
-					console.log(`Request to join room ${roomUID} sent.`);
-				} catch (error) {
-					console.error('Error joining room:', error);
-					alert('Failed to join room. Please try again.');
-				} finally {
-					// Remove the input container after submission
-					document.body.removeChild(container);
-				}
-			});
+			player_1_id = data.playerId
+			player_2_id = data.player2Id
+			players = gameState.players
+			player_1 = players[player_1_id]
+			player_2 = players[player_2_id]
+			drawElements(gameState.ball, player_1, player_2);
+			await sendEvents(socket, data.roomUID);
+			requestAnimationFrame(gameLoop);
 		}
 
 		function createReadyButton() {
@@ -463,31 +359,11 @@
 			}
 		}
 
-		function createTextBox(content) {
-			textBox = document.createElement('textarea');
-			textBox.value = content;
-			textBox.style.position = 'fixed';
-			textBox.style.top = '50%';
-			textBox.style.left = '50%';
-			textBox.style.transform = 'translateX(-50%)';
-			textBox.style.width = '300px';
-			textBox.style.height = '100px';
-			textBox.style.padding = '10px';
-			textBox.style.fontSize = '16px';
-			textBox.style.resize = 'none'; // Disable resizing
-			textBox.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-			textBox.style.border = '1px solid #ccc';
-			textBox.style.borderRadius = '5px';
-			textBox.style.backgroundColor = '#f9f9f9';
-			textBox.readOnly = true;
-			document.body.appendChild(textBox);
-		}
-
-		async function requestRoom() {
+		async function request_local_room() {
 			try {
 				console.log("Requesting room")
 				await data.socket.send(JSON.stringify({
-					action: 'create_private_match',
+					action: 'create_local_match',
 					id: data.playerId
 				}));
 				console.log("Room requested")
@@ -498,80 +374,34 @@
 
 		async function startGame() {
 			try {
-				console.log("Starting game...");
 				destroyReadyButton();
 				if (textBox) {
 					textBox.remove();
 					textBox = null;
 				}
-				game_over = false;
-				canvas.style.display = 'block';
-
-				console.log("Starting game loop");
+				playerEvent.player_1.id = data.playerId;
+				playerEvent.player_2.id = data.player2Id;
 				gameLoop(data.socket, data);
 			} catch {
 				console.error('Exception caught in startGame', error);
 			}
 		}
 	
-		async function join_match() {
+		async function create_local_match() {
 			try {
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
-				canvas.style.display = 'block';
-				data.playerId = 'player_2'
-				await joinRoom();
-				console.log("Room UID after joining: " + data.roomUID);
-				console.log("Player_id: " + data.playerId);
-				await showReadyButton();
-				document.querySelector('.game-modes').style.display = 'none';
-//				await startGame()
-			} catch (error) {
-				console.error('Exception caught in joinMatch.js', error)
-			}
-		}
-	
-		async function create_private_match() {
-			try {
-				ctx.clearRect(0, 0, canvas.width, canvas.height);
-				canvas.style.display = 'block';
-				data.playerId = 'player_1';
-				await requestRoom();
-				console.log("Player_id: " + data.playerId);
-				await showReadyButton();
-				document.querySelector('.game-modes').style.display = 'none';
+				data.playerId = 'player_1'
+				await request_local_room();
+				await showReadyButton()
 //				await startGame()
 			} catch (error){
 				console.error('Exception caught in privateMatch.js', error);
 			}
 		}
 
-		async function create_ai_match() {
-			try {
-				ctx.clearRect(0, 0, canvas.width, canvas.height);
-				canvas.style.display = 'block';
-				data.playerId = 'player_1';
-				await data.socket.send(JSON.stringify({
-					action: 'create_private_match',
-					id: data.playerId,
-					is_ai_game: true
-				}));
-
-				console.log("Started AI game session");
-				console.log("Player_id: " + data.playerId);
-				await showReadyButton();
-				document.querySelector('.game-modes').style.display = 'none';
-
-				gameInfo.textContent = 'Playing against AI - Get Ready!';
-			} catch (error) {
-				console.error('Error starting AI game:', error);
-				gameInfo.textContent = 'Error starting AI game. Plase try again.';
-			}
-		}
-
 		async function init(){
 			gameState.player1 = new Player('0', 'green');
 			gameState.player2 = new Player('1', 'red');
-			canvas.style.display = 'none';
 			await connectWebSocket();
 		}
 
