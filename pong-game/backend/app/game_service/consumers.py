@@ -7,6 +7,8 @@ import asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.layers import get_channel_layer
 from .game_room import GameRoom
+from django.utils import timezone
+import math
 
 load_dotenv()
 active_game_rooms = dict()
@@ -288,3 +290,49 @@ class GameConsumer(AsyncWebsocketConsumer):
         ]
         for room_id in rooms_to_remove:
             del active_game_rooms[room_id]
+
+# TO DO:
+# once matches are decided, call GameConsumer
+# once GameConsumer concludes match, check if the player
+# 	is in a tournament and send them back to a lobby page
+class TournamentConsumer(AsyncWebsocketConsumer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.player_count = 0
+        self.start_time = kwargs.get("start_time")
+        self.max_players = kwargs.get("max_players")
+
+    async def connect(self):
+        self.user = self.scope["user"]
+        # will re-enable auth after testing
+        # if not self.user.is_authenticated:
+        #     await self.send_json({"error": "Unauthorized access"})
+        #     await self.close()
+        #     return
+        await self.accept()
+        self.send_json({"detail": "accepted client connection"})
+        # add in check to see if they're reconnecting
+        self.player_count += 1
+        return
+		# match players
+		# update game status
+		# send updates
+		
+    async def disconnect(self):
+        # do some cleanup here.
+        return
+
+    async def receive(self, text_data=None):
+        if not text_data:
+            return
+        data = json.loads(text_data)
+        # handle game events
+        # update model state
+        # broadcast updates
+        return
+    
+    def get_num_rounds(self, num_players):
+        return math.ceil(math.log2(num_players))
+    
+    def tournament_has_started(self):
+        return timezone.now() > self.start_time
