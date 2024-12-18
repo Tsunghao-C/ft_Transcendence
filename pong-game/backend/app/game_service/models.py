@@ -4,6 +4,7 @@ from django.db.models import F
 from django.utils.timezone import now
 from datetime import timedelta
 from django.db.models import Q
+import uuid
 import os
 
 LDB_UPDATE_TIMER = int(os.environ.get("LDB_UPDATE_TIMER", 15))
@@ -86,3 +87,4 @@ class LeaderBoard(models.Model):
 	def getPlayerRank(cls, player):
 		rank_obj = cls.objects.filter(player=player).first()
 		return rank_obj.rank if rank_obj else None
+
