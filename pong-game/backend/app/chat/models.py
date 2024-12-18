@@ -1,11 +1,14 @@
 from django.db import models
 from user_service.models import CustomUser
+from match_making.models import *
 from django.db.models.signals import post_migrate
 from django.dispatch import receiver
 
 class ChatRoom(models.Model):
-	name = models.CharField(max_length=255, unique=True)
+	name = models.CharField(max_length=255, unique=True, db_index=True)
 	is_private = models.BooleanField(default=False)
+	is_tournament = models.BooleanField(default=False)
+	tournament_name = models.CharField(max_length=255, default="")
 	members = models.ManyToManyField(CustomUser, related_name='chat_rooms')
 
 	@classmethod
@@ -20,6 +23,20 @@ class ChatRoom(models.Model):
 		if created:
 			room.members.set([user1, user2])
 		return room
+
+	@classmethod
+	def create_tournament_room(cls, tournament):
+		room_name = f"{tournament.id}"
+		try:
+			room = cls.objects.create(
+				name=room_name,
+				is_tournament=True,
+				tournament_name=tournament.name,
+			)
+			room.members.add(tournament.tournament_admin)
+			return room
+		except Exception as e:
+			raise ValueError(f"chat room for tournament '{room_name}' already taken")
 
 class Message(models.Model):
 	room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name="messages")
