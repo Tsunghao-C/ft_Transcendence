@@ -1,6 +1,8 @@
+import { translations } from "./language_pack.js";
 import { loadPage } from "./app.js";
 import { fetchWithToken } from "./fetch_request.js";
 import { getLanguageCookie } from './fetch_request.js';
+import { setLanguageCookie } from "./fetch_request.js";
 //  import { showError, showSuccess } from "./login_validations.js";
 
 function emptyMessage(elemId) {
@@ -11,6 +13,18 @@ function emptyMessage(elemId) {
 function showMessage(message, elemId) {
     const containter = document.getElementById(elemId)
     containter.textContent = message;
+}
+
+function languageEventListener() {
+    const languageSelect = document.getElementById("languageSelect");
+    languageSelect.value = getLanguageCookie() || "en";
+    languageSelect.addEventListener("change", async (event) => {
+        const selectedLanguage = event.target.value;
+        console.log("selected language is : " + selectedLanguage)
+        await fetchWithToken('/api/user/change-language/', JSON.stringify({ newLang: selectedLanguage }), 'POST');
+        setLanguageCookie(selectedLanguage);
+        loadPage("personal-data");
+    });
 }
 
 export async function setpersonalDataView(contentContainer) {
@@ -25,9 +39,11 @@ export async function setpersonalDataView(contentContainer) {
         window.location.hash = "login";
     }
 
+    const cl = getLanguageCookie() ||  "en";
+    
     contentContainer.innerHTML = `
         <div class="personal-data-view">
-            <h2 data-i18n="personalDataTitle">Personal Informations</h2>
+            <h2 data-i18n="personalDataTitle">${translations[cl].personalData}</h2>
             <div class="pp-and-login">
                 <div>
                     <img
@@ -46,14 +62,14 @@ export async function setpersonalDataView(contentContainer) {
                     >
                 </div>
                 <div class="ms-3">
-                    <label class="form-label" data-i18n="login">Login</label>
+                    <label class="form-label" data-i18n="login">${translations[cl].username}</label>
                     <input type="text" class="form-control" value="${personal.username}" readonly>
                 </div>
             </div>
             <form id="personalDataForm">
                 <hr>
                 <div class="mb-3">
-                    <label for="aliasInput" class="form-label" data-i18n="alias">Alias</label>
+                    <label for="aliasInput" class="form-label" data-i18n="alias">${translations[cl].newAlias}</label>
                     <div class="input-group">
                         <input type="text" class="form-control" id="aliasInput" value="${personal.alias}" required>
                         <div>
@@ -77,7 +93,7 @@ export async function setpersonalDataView(contentContainer) {
                 </div>
                 <hr>
                 <div class="mb-3">
-                    <label for="aliasInput" class="form-label" data-i18n="password">Password</label>
+                    <label for="aliasInput" class="form-label" data-i18n="password">${translations[cl].password}</label>
                     <button type="button" class="btn btn-warning" id="changePasswordButton" data-i18n="changePassword">Change Password</button>
                 </div>
 
@@ -101,7 +117,7 @@ export async function setpersonalDataView(contentContainer) {
                     <button type="button" class="btn btn-success" id="confirmPasswordChangeButton" data-i18n="confirmChange">Confirm Change</button>
                 </div>
                 <hr>
-                <label for="aliasInput" class="form-label" data-i18n="language">Language</label>
+                <label for="aliasInput" class="form-label" data-i18n="language">${translations[cl].language}</label>
                 <select id="languageSelect">
 					<option value="en" data-i18n="english">English</option>
 					<option value="fr" data-i18n="francais">Français</option>
@@ -114,9 +130,6 @@ export async function setpersonalDataView(contentContainer) {
     const profilePicturePreview = document.getElementById("profilePicturePreview");
     const profilePictureInput = document.getElementById("profilePictureInput");
     profilePicturePreview.addEventListener("click", () => profilePictureInput.click());
-    const languageSelect = document.getElementById("languageSelect");
-
-	languageSelect.value = getLanguageCookie() || "en";
 
 
 	profilePictureInput.addEventListener("change", async (event) => {
@@ -231,18 +244,7 @@ export async function setpersonalDataView(contentContainer) {
         }
     });
 
-
-    languageSelect.addEventListener("change", async (event) => {
-        const selectedLanguage = event.target.value;
-		try {
-            await fetchWithToken('/api/user/change-language/', JSON.stringify({ newLang: selectedLanguage }), 'POST');
-            alert('language changed successfully!');
-			loadPage("personal-data");
-        } catch(error) {
-            console.log(error);
-            window.location.hash = "login";
-        }
-    });
+    languageEventListener();
 }
 
 
