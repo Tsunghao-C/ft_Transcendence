@@ -70,7 +70,7 @@ export async function setProfileView(contentContainer, usernameInHash) {
 		// 	ingame: "text-warning",
 		// };
 		// const statusText = translations[currentLanguage][profile.status];
-
+		
 		profileResult.innerHTML = `
 		<div class="card">
 			<div class="card-body">
@@ -78,19 +78,19 @@ export async function setProfileView(contentContainer, usernameInHash) {
 					<!-- Avatar and Alias -->
 					<div class="col-md-4">
 						<img src="${profile.avatar}" alt="${profile.alias}" class="img-thumbnail" style="max-width: 150px;">
-						<h3>${profile.alias}</h3>
-						<p>${profile.onlineStatus}</p>
 					</div>
 					<div class="col-md-4">
+						<h3>${profile.alias}</h3>
+						<p>${profile.onlineStatus || "offline"}</p>					
 						<h4>${translations[currentLanguage].rank}: ${profile.rank || "Unranked"}</h4>
 						<h4>${translations[currentLanguage].mmr}: ${profile.mmr}</h4>
 						<h4>${translations[currentLanguage].winRate}: ${calculateWinRate(profile.wins, profile.losses)}%</h4>
-						<p title="${translations[currentLanguage].wins}: ${profile.wins}, ${translations[currentLanguage].losses}: ${profile.losses}">
-							${profile.wins}${translations[currentLanguage].w} / ${profile.losses}${translations[currentLanguage].l}
-						</p>
 					</div>
 					<div class="col-md-4">
 						<h4 data-i18n="matchHistory">${translations[currentLanguage].matchHistory}</h4>
+						<p title="${translations[currentLanguage].wins}: ${profile.wins}, ${translations[currentLanguage].losses}: ${profile.losses}">
+							${profile.wins}${translations[currentLanguage].w} / ${profile.losses}${translations[currentLanguage].l}
+						</p>
 						<div class="match-history-scroll" style="max-height: 150px; overflow-y: auto;">
 							${
 								profile.matchHistory && profile.matchHistory.length > 0
