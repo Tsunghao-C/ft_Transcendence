@@ -18,7 +18,6 @@ urlpatterns = [
 	path("login_temp/", LoginView.as_view(template_name="user_service/login.html"), name="login-user"),
 
 	# game administration
-	path("save-match/", SaveMatchResults.as_view(), name="save-match"), # might move this to game_service
 	path("banplayer/", BanPlayer.as_view(), name="banplayer"),
 	path("unbanplayer/", UnbanPlayer.as_view(), name="unbanplayer"),
 

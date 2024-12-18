@@ -110,9 +110,9 @@ class Tournament(models.Model):
 		on_delete=models.CASCADE,
 		related_name="created_tournaments"
 	)
-	name = models.CharField(max_length=100)
+	name = models.CharField(max_length=100, unique=True)
 	is_active = models.BooleanField(default=False)
-	max_players = models.PositiveSmallIntegerField()
+	max_players = models.PositiveSmallIntegerField(min=2, max=20)
 	num_curr_players = models.PositiveSmallIntegerField(default=0)
 	num_brackets = models.PositiveSmallIntegerField(default=0)
 	bracket_skips = models.JSONField(default=dict)
@@ -120,7 +120,8 @@ class Tournament(models.Model):
 
 	objects = TournamentManager()
 
-	created_at = models.DateTimeField(auto_now_add=True)
+	created_at = models.DateTimeField(auto_now_ad
+	d=True)
 	updated_at = models.DateTimeField(auto_now=True)
 
 	def __str__(self):
@@ -133,10 +134,6 @@ class Tournament(models.Model):
 
 	def get_num_brackets(self):
 		return math.ceil(math.log2(self.num_curr_players))
-
-	def init_bracket_skips(self):
-		self.bracket_skips = {i: 0 for i in range(6)}
-		self.save()
 
 	def increment_bracket_skip(self, bracket):
 		if 0 <= bracket <= 5:
@@ -164,7 +161,7 @@ class Tournament(models.Model):
 			raise Exception("At least 2 players needed to start tournament")
 		self.is_active = True;
 		self.num_brackets = self.get_num_brackets()
-		self.init_bracket_skips()
+		self.bracket_skips = {i: 0 for i in range(6)}
 		self.save()
 		for player in players:
 			player.status = "In Queue"
@@ -186,7 +183,7 @@ class TourneyParticipant(models.Model):
 		in_queue = "In Queue"
 		in_lobby = "In Lobby"
 
-	user = models.ForeignKey(
+	user = models.OneToOneField(
 		CustomUser,
 		on_delete=models.CASCADE
 	)
@@ -221,12 +218,12 @@ class LiveGames(models.Model):
 		editable=False,
 		unique=True
 	)
-	p1 = models.ForeignKey(
+	p1 = models.OneToOneField(
 		TourneyParticipant,
 		related_name="match_p1",
 		on_delete=models.CASCADE
 	)
-	p2 = models.ForeignKey(
+	p2 = models.OneToOneField(
 		TourneyParticipant,
 		related_name="match_p2",
 		on_delete=models.CASCADE
@@ -242,4 +239,46 @@ class LiveGames(models.Model):
 			models.Index(fields=["p2"]),
 			models.Index(fields=["status"])
 		]
-		unique_together = (("p1", "gameUID"), ("p2", "gameUID"))
+	
+	@staticmethod
+	def __get_new_mmr(userMMR: int, oppMMR: int, matchOutcome: int) -> int:
+		# Calculate the 'expected score'
+		E = 1 / (1 + 10**((oppMMR - userMMR)/400))
+		return int(userMMR + 30 * (matchOutcome - E))
+
+	def __update_counters(self, matchOutcome: int):
+		if matchOutcome:
+			self.p1.user.winCount += 1
+			self.p2.user.lossCount += 1
+		else:
+			self.p1.user.lossCount += 1
+			self.p2.user.winCount += 1
+
+	def __update_mmrs(self, outcome: int):
+		p1MMR = self.p1.user.mmr
+		p2MMR = self.p2.user.mmr
+		self.p1.user.mmr = self.__get_new_mmr(p1MMR, p2MMR, outcome)
+		self.p1.user.save()
+		outcome = 1 - outcome
+		self.p2.user.mmr = self.__get_new_mmr(p2MMR, p1MMR, outcome)
+		self.p2.user.save()
+
+	def __update_tourney_standing(self, outcome: int):
+		if outcome:
+			self.p1.bracket += 1
+			self.p1.status="In Queue"
+			self.p2.eliminated=True
+		else:
+			self.p2.bracket += 1
+			self.p2.status="In Queue"
+			self.p1.eliminated=True
+		self.p1.save()
+		self.p2.save()
+		self.p1.refresh_from_db()
+		self.p2.refresh_from_db()
+
+	def matchEnd(self, outcome: int):
+		__update_mmrs(outcome)
+		__update_counters(outcome)
+		__update_tourney_standing(outcome)
+		self.delete()
