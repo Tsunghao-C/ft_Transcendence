@@ -32,7 +32,16 @@ volumes:
   prometheus_data: {}
   grafana_data: {}
   filebeat_registry: {}
+  # Elasticsearch volumes
   es_data:
+    driver: local
+  # es_certs:
+  #   driver: local
+  # Kibana volumes
+  kibana_data:
+    driver: local
+  # Logstash volumes
+  logstash_data:
     driver: local
 
 services:
@@ -98,7 +107,7 @@ services:
     networks:
       - frontend_net
       - backend_net
-      - monitoring_net
+      # - monitoring_net
     env_file:
       - .env
     logging:
@@ -108,7 +117,7 @@ services:
         max-file: "3"
     depends_on:
       - django
-      - kibana
+      # - kibana
     healthcheck:
       test: ["CMD", "curl", "-k", "https://localhost:443/health" ]
       interval: 2s
@@ -244,7 +253,12 @@ services:
       - "cluster.routing.allocation.disk.watermark.flood_stage=95%"
       # Security settings (for development)
       - xpack.security.enabled=false
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      # - xpack.security.http.ssl.enabled=true
+      # - xpack.security.transport.ssl.enabled=true
+      # - xpack.security.transport.ssl.verification_mode=certificate
+      # - xpack.security.transport.ssl.keystore.path=elastic-certificates.p12
+      # - xpack.security.transport.ssl.truststore.path=elastic-certificates.p12
+      # - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
     volumes:
       - es_data:/usr/share/elasticsearch/data
       - ./monitoring/elk/elasticsearch/setup:/setup
@@ -263,11 +277,11 @@ services:
           memory: 1G
     networks:
       - monitoring_net
-    # healthcheck:
-    #   test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -vq '\"status\":\"red\"'"]
-    #   interval: 5s
-    #   timeout: 10s
-    #   retries: 1
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -vq '\"status\":\"red\"'"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
     restart: unless-stopped
 
   logstash:
@@ -275,8 +289,9 @@ services:
     image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
     volumes:
       - ./monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - logstash_data:/usr/share/logstash/data
     environment:
-      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+      - LS_JAVA_OPTS=-Xmx256m -Xms256m
       # ELASTIC_HOST: elasticsearch
     networks:
       - monitoring_net
@@ -295,25 +310,34 @@ services:
     volumes:
       - ./monitoring/elk/kibana/dashboards:/usr/share/kibana/dashboards
       - ./monitoring/elk/kibana/setup:/usr/share/kibana/setup
+      - kibana_data:/usr/share/kibana/data
+      # - es_certs:/usr/share/kibana/config/certs:ro
     environment:
       # Elasticsearch connection
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-      - ELASTICSEARCH_USERNAME=${ELASTIC_USERNAME}
-      - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}
+      # - ELASTICSEARCH_USERNAME=${ELASTIC_USERNAME}
       # Server settings
       - SERVER_HOST=0.0.0.0
       - SERVER_NAME=kibana
-      - SERVER_BASEPATH=/kibana
-      - SERVER_REWRITEBASEPATH=true
+      - SERVER_SSL_ENABLED=true
+      - SERVER_SSL_CERTIFICATE=/usr/share/kibana/config/certs/kibana.crt
+      - SERVER_SSL_KEY=/usr/share/kibana/config/certs/kibana.key
+      # # These two are used together with nginx
+      # - SERVER_BASEPATH=/kibana
+      # - SERVER_REWRITEBASEPATH=true
       # Security settings
-      - XPACK_SECURITY_ENABLED=false
-      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}
+      - XPACK_SECURITY_ENABLED=true
+      - XPACK_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}
+      - XPACK_REPORTING_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}
+      - XPACK_SECURITY_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}
       # Performance settings
       - ELASTICSEARCH_REQUESTTIMEOUT=90000  # Added timeout
       - OPTIMIZATION_PROFILING=false
       # Other settings
       - TELEMETRY_ENABLED=false
       - ELASTIC_APM_ACTIVE=false
+    ports:
+      - "5601:5601" # External access
     networks:
       - monitoring_net
     depends_on:
@@ -330,7 +354,7 @@ services:
     restart: unless-stopped
 
   filebeat:
-    container_name: filebeat
+    container_name: filebeat_nginx
     image: docker.elastic.co/beats/filebeat:${STACK_VERSION}
     user: root  # Required to read logs
     volumes:
@@ -345,5 +369,6 @@ services:
       filebeat -e --strict.perms=false'
     networks:
       - monitoring_net
+      - frontend_net
     depends_on:
       - logstash
