@@ -243,6 +243,21 @@ body {
 	color: white;
 }
 
+/*/!\ can be deleted before push */
+.tmpLangSelect {
+	position: absolute;
+    top: 25px;
+    right: 11%;
+    width: 40px;
+	height: 30px;
+    z-index: 10;
+	background-color: rgba(255, 255, 255, 0.0);
+	color: rgba(0,0,0, 0.5);
+	font-size: 0.8rem;
+	border: 1px solid rgba(0,0,0, 0.05);
+	border-radius: 5px;
+}
+
 /**************************** Navbar ****************************/
 
 .bg-light {
@@ -413,7 +428,7 @@ body {
 
 /**************************** Game ****************************/
 
-#game-view {
+.game-view {
 	padding-top: 10px;
 	padding-bottom: 10px;
 	width: 100%;
@@ -423,6 +438,17 @@ body {
 	display: flex;
 	justify-content: center;
 	align-items: center;
+}
+
+/* .game-view .menu-container {
+	background-color: red;
+} */
+
+.game-view button {
+	/* background-color: rgba(255, 255, 255, 0.05) !important; */
+	background-color: transparent !important;
+	border: none !important;
+	font-size: 1.5rem !important;
 }
 
 canvas {
@@ -538,6 +564,10 @@ table {
 	overflow-y: auto;
 	box-sizing: border-box; 
 }
+.personal-data-view h2 {
+	padding-bottom: 20px !important;
+}
+
 .pp-and-login {
 	padding: 0 10px 0 10px;
     display: flex;
