@@ -116,8 +116,12 @@ class GameConsumer(AsyncWebsocketConsumer):
 		player_alias = self.user.alias
 		if action == "join_private_match":
 			await self.join_lobby(data["room_name"], player_alias)
+		elif action == "create_local_match":
+			room_name = str(uuid.uuid4())
+			await self.create_local_match(room_name, player_alias)
 		elif action == "create_private_match":
 			room_name = str(uuid.uuid4())
+			is_ai_game = data.get("is_ai_game", False)
 			await self.create_private_lobby(room_name, player_alias)
 		elif action == "player_ready":
 			await self.update_ready_status(data["room_name"], player_alias)
@@ -141,18 +145,44 @@ class GameConsumer(AsyncWebsocketConsumer):
 			"connection": []
 		}
 
-	async def create_private_lobby(self, room_name, player_alias):
+	async def create_private_lobby(self, room_name, player_alias, is_ai_game=False):
 		self.assigned_room = room_name
 		self.assigned_player_alias = player_alias
+
+		players = []
+		if is_ai_game:
+			players.append("ai_player")
 		active_lobbies[room_name] = {
-				"players": [],
-				"connection": []
+				"players": players,
+				"connection": [],
+				"is_ai_game": is_ai_game
 				}
 		# self.current_group = f"lobby_{room_name}" are we using this ?
+		game_type = "AI Game" if is_ai_game else "Private Match"
 		await self.send(json.dumps({
 			"type": "room_creation",
-			"message": f"Created Lobby {room_name}",
-			"room_name": room_name
+			"message": f"Created  {game_type} Lobby {room_name}",
+			"room_name": room_name,
+			"is_ai_game": is_ai_game
+			}))
+
+	async def create_local_match(self, room_name, player_alias):
+		self.assigned_room = room_name
+		active_lobbies[room_name] = {
+				"players": [player_alias],
+				"connection": [self]
+				}
+#		self.current_group = f"lobby_{room_name}"
+		player_2 = str(uuid.uuid4())
+		active_lobbies[room_name]["players"].append(player_2)
+		active_lobbies[room_name]["ready"] = []
+		active_lobbies[room_name]["ready"].append(player_2)
+#		await self.channel_layer.group_add(self.current_group, self.channel_name)
+		await self.send(json.dumps({
+			"type": "local_room_creation",
+			"message": f"Created local match Lobby {room_name}",
+			"room_name": room_name,
+			"player2_id": player_2
 			}))
 
 	async def join_lobby(self, room_name, player_alias):
