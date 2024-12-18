@@ -26,5 +26,5 @@ urlpatterns = [
     path("api/user/", include("user_service.urls")),
     path("api/chat/", include("chat.urls")),
     path("api/game/", include("game_service.urls")),
-	path("api/matchmaking/", include("matchMaking.urls")),
+	path("api/match_making/", include("match_making.urls")),
 ]

@@ -66,7 +66,7 @@ INSTALLED_APPS = [
 	"game_service",
 	"rest_framework",
 	"corsheaders",
-	"matchMaking",
+	"match_making",
     "chat",
 ]
 
@@ -230,7 +230,7 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD") # Env
 LDB_UPDATE_TIMER = os.environ.get("LDB_UPDATE_TIMER", 15)
 CRONJOBS = [
     (f'*/{LDB_UPDATE_TIMER} * * * *', 'game_service.tasks.update_leaderboard'),
-	('*/1 * * * *', 'matchMaking.tasks.monitor_players'),
+	('*/1 * * * *', 'match_making.tasks.monitor_players'),
 ]
 
 DATETIME_FORMAT = 'd-m-Y H:i:s'
