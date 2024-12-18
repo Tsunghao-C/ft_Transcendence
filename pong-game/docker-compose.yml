@@ -98,7 +98,7 @@ services:
     networks:
       - frontend_net
       - backend_net
-      - monitoring_net
+      # - monitoring_net
     env_file:
       - .env
     logging:
@@ -108,7 +108,7 @@ services:
         max-file: "3"
     depends_on:
       - django
-      - kibana
+      # - kibana
     healthcheck:
       test: ["CMD", "curl", "-k", "https://localhost:443/health" ]
       interval: 2s
@@ -295,6 +295,8 @@ services:
     volumes:
       - ./monitoring/elk/kibana/dashboards:/usr/share/kibana/dashboards
       - ./monitoring/elk/kibana/setup:/usr/share/kibana/setup
+    ports:
+      - "5601:5601" # Only external access point for ELK
     environment:
       # Elasticsearch connection
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
@@ -303,6 +305,7 @@ services:
       # Server settings
       - SERVER_HOST=0.0.0.0
       - SERVER_NAME=kibana
+      # These two are related to nginx routing
       - SERVER_BASEPATH=/kibana
       - SERVER_REWRITEBASEPATH=true
       # Security settings
@@ -345,5 +348,6 @@ services:
       filebeat -e --strict.perms=false'
     networks:
       - monitoring_net
+      - frontend_net
     depends_on:
       - logstash
