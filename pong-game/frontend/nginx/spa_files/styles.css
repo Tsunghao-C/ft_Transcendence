@@ -504,6 +504,11 @@ table {
 	box-sizing: border-box; 
 }
 
+.profile-view h4 {
+	/* color: red; */
+	font-size: 1rem;
+}
+
 /**************************** Friends-view ****************************/
 
 .friends-view {
@@ -602,4 +607,26 @@ table {
 .error404-view {
 	width: 80%;
 	margin: 10px;
+}
+
+/**************************** Scrollbar ****************************/
+
+::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+  
+::-webkit-scrollbar-track {
+	background: rgba(255, 255, 255, 0.1);
+	border-radius: 5px;
+}
+  
+::-webkit-scrollbar-thumb {
+	background: rgba(150, 150, 150, 0.5);
+	border-radius: 5px;
+}
+  
+::-webkit-scrollbar-thumb:hover {
+	background: rgba(100, 100, 100, 0.5);
+	border-radius: 5px;
 }
