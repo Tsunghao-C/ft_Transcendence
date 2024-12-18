@@ -115,7 +115,12 @@ export const translations = {
 		friendRequestSent: "Friend request sent",
 		blockedByUser: "is blocking you",
 		blockingUser: "you are blocking",
-		alreadySent: "Friend request was already sent."
+		alreadySent: "Friend request was already sent.",
+		welcome:"Welcome",
+		currentStats:"Your current stats: ",
+		date: "date",
+		opponent: "opponent",
+		finalScore: "final score"
 	},
 	fr: {
 		confirm: "",
@@ -234,7 +239,12 @@ export const translations = {
 		friendRequestSent: "Demande d'ami envoyée",
 		blockedByUser: "vous bloque",
 		blockingUser: "vous bloquez",
-		alreadySent: "La demande d'ami a déjà été envoyée."
+		alreadySent: "La demande d'ami a déjà été envoyée.",
+		welcome: "Bienvenue",
+		currentStats: "Vos statistiques actuelles : ",
+		date: "date",
+		opponent: "adversaire",
+		finalScore: "score final"
 	},
 	pt: {
 		confirm: "",
@@ -352,7 +362,12 @@ export const translations = {
 		friendRequestSent: "Pedido de amizade enviado",
 		blockedByUser: "está te bloqueando",
 		blockingUser: "você está bloqueando",
-		alreadySent: "O pedido de amizade já foi enviado."
+		alreadySent: "O pedido de amizade já foi enviado.",
+		welcome: "Bem-vindo",
+		currentStats: "Suas estatísticas atuais: ",
+		date: "data",
+		opponent: "oponente",
+		finalScore: "placar final"
 	},
 };
 
