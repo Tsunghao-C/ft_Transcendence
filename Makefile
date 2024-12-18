@@ -7,9 +7,7 @@ build:
 	mkdir -p pong-game/frontend/nginx/logs
 	- mkdir -p pong-game/security/vault_debian/volumes/file
 	- mkdir -p pong-game/security/vault_debian/volumes/shared_data
-	- mkdir -p pong-game/backend/app/media/profile_images
 	chmod -R 755 pong-game/frontend/nginx/logs
-	chmod -R 755 pong-game/backend/app/media/profile_images
 	docker compose -f pong-game/docker-compose.yml build
 
 run:
@@ -83,7 +81,6 @@ clean:
 	rm -f pong-game/frontend/nginx/logs/*.log
 	- rm -f pong-game/frontend/nginx/modsec/*.log
 	- rm -rf pong-game/security/vault_debian/volumes/*
-	- rm -rf --no-preserve-root pong-game/backend/app/media/profile_images
 	- rm -rf pong-game/tests/lib
 	rm pong-game/.env
 
