@@ -53,7 +53,7 @@ export const translations = {
 		winRate: "Win Rate",
 		wins: "Wins",
 		losses: "Losses",
-		matchHistory: "Match History",
+		matchHistory: "Match History:",
 		noMatchHistory: "No match history found.",
 		win: "Win",
 		loss: "Loss",
