@@ -46,14 +46,11 @@ COPY crs-setup.conf /etc/nginx/modsecurity-crs/crs-setup.conf
 
 # Create ModSecurity log file
 RUN mkdir -p /var/log/modsec && \
-    touch /var/log/modsec/audit.log && \
-    touch /var/log/modsec/debug.log && \
+    touch /var/log/modsec/audit.log /var/log/modsec/debug.log && \
     chown -R nginx:nginx /var/log/modsec && \
     chmod 755 /var/log/modsec && \
-    chmod 644 /var/log/modsec/audit.log && \
-    chmod 644 /var/log/modsec/debug.log && \
-    chown nginx:nginx /var/log/modsec/audit.log && \
-    chown nginx:nginx /var/log/modsec/debug.log
+    chmod 644 /var/log/modsec/audit.log /var/log/modsec/debug.log && \
+    chown nginx:nginx /var/log/modsec/audit.log /var/log/modsec/debug.log
 
 # RUN mkdir -p /var/log/modsec && \
 #     chmod -R 755 /var/log/modsec
@@ -68,16 +65,16 @@ RUN mkdir -p /etc/nginx/ssl && \
     -subj "/C=US/ST=State/L=City/O-Organization/CN=localhost"
 
 # # Create a non-root user (safer practice)
-# RUN useradd -r -u 1000 nginx-user && \
-#     chown -R nginx-user:nginx-user /etc/nginx/ssl && \
-#     chown -R nginx-user:nginx-user /etc/nginx/modsecurity && \
-#     chown -R nginx-user:nginx-user /var/cache/nginx && \
-#     chown -R nginx-user:nginx-user /var/log && \
-#     touch /var/run/nginx.pid && \
-#     chown -R nginx-user:nginx-user /var/run/nginx.pid
+RUN useradd -r -u 1000 nginx-user && \
+    chown -R nginx-user:nginx-user /etc/nginx/ssl && \
+    chown -R nginx-user:nginx-user /etc/nginx/modsecurity && \
+    chown -R nginx-user:nginx-user /var/cache/nginx && \
+    chown -R nginx-user:nginx-user /var/log && \
+    touch /var/run/nginx.pid && \
+    chown -R nginx-user:nginx-user /var/run/nginx.pid
 
-# # Excecute Nginx server as non-root user
-# USER nginx-user
+# Excecute Nginx server as non-root user
+USER nginx-user
 
 
 # # Set proper permissions for nginx user
