@@ -36,7 +36,7 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 				<div>
 					<input id="message-input" type="text" placeholder="Type your message">
 					<button id="send-message">Send</button>
-					<button id="send-invite">Send Invite</button>
+					<button id="send-invite">Send Duel Request</button>
 				</div>
 			</div>
 		</div>
@@ -44,31 +44,31 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 
 	const roomList = document.getElementById("room-list");
 
-roomList.innerHTML = roomData
-	.map(room => {
-		const roomType = room.is_private ? "private" : "public";
-		const aliasOrRoomName = room.is_private 
-			? room.other_member || "Unknown" 
-			: room.name;
+	roomList.innerHTML = roomData
+		.map(room => {
+			const roomType = room.is_private ? "private" : "public";
+			const aliasOrRoomName = room.is_private
+				? room.other_member || "Unknown"
+				: room.name;
 
-		const roomDisplayName = room.is_private
-			? `Private message with ${aliasOrRoomName}`
-			: room.name;
+			const roomDisplayName = room.is_private
+				? `Private message with ${aliasOrRoomName}`
+				: room.name;
 
-		return `<div class="room-item" 
-					data-room-type="${roomType}" 
-					data-alias-or-room-name="${aliasOrRoomName}" 
-					style="cursor: pointer; margin: 5px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
-				${roomDisplayName}
-			</div>`;
-	})
-	.join("");
+			return `<div class="room-item"
+						data-room-type="${roomType}"
+						data-alias-or-room-name="${aliasOrRoomName}"
+						style="cursor: pointer; margin: 5px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+					${roomDisplayName}
+				</div>`;
+		})
+		.join("");
 
 	document.querySelectorAll(".room-item").forEach(item => {
 		item.addEventListener("click", (event) => {
 			const roomType = event.currentTarget.getAttribute("data-room-type");
 			const aliasOrRoomName = event.currentTarget.getAttribute("data-alias-or-room-name");
-			
+
 			window.location.hash = `chat/${roomType}/${aliasOrRoomName}`;
 		});
 	});
@@ -142,42 +142,6 @@ roomList.innerHTML = roomData
 		}
 	}
 
-	document.getElementById("send-message").addEventListener("click", sendMessage);
-	document.getElementById("send-invite").addEventListener("click", sendInvite);
-
-	async function sendInvite() {
-			try {
-				const response = await fetchWithToken('/api/chat/create-invitation/', JSON.stringify({
-					roomName: aliasOrRoomToJoin,
-					roomId: "c9d2b188-a876-4349-a410-3bec27510ee6",
-				}), 'POST');
-				if (!response.ok) {
-					console.log(response);
-					alert("please get me out");
-				} else {
-					alert("thank god");
-				}
-			} catch(error) {
-				console.log(error);
-				alert("send help");
-				window.location.hash = "login";
-			}
-	}
-	function sendMessage() {
-		const input = document.getElementById("message-input");
-		if (input.value && state.chatSocket) {
-			const messageData = {
-				message: input.value,
-				alias: userAlias,
-				time: new Date().toLocaleTimeString(),
-			};
-			state.chatSocket.send(JSON.stringify(messageData));
-			input.value = "";
-		} else {
-			alert("Message input is empty or WebSocket is not connected.");
-		}
-	}
-
 	if (roomType === "public") {
 		loadChatRoom(aliasOrRoomToJoin, userAlias);
 	} else if (roomType === "private"){
@@ -194,7 +158,6 @@ async function loadChatRoom(roomName, userAlias, roomNameDisplay = roomName) {
 		state.chatSocket.close();
 		state.chatSocket = null;
 	}
-	console.log("we are here motherfukcer");
 	const messagesDiv = document.getElementById("messages");
 	const chatRoomTitle = document.getElementById("chat-room-title");
 	chatRoomTitle.textContent = `${roomNameDisplay}`;
@@ -236,6 +199,42 @@ async function loadChatRoom(roomName, userAlias, roomNameDisplay = roomName) {
 	} catch (error) {
 		console.error("Error fetching messages:", error);
 		messagesDiv.innerHTML = "<p>Error loading messages.</p>";
+	}
+
+	document.getElementById("send-message").addEventListener("click", sendMessage);
+	document.getElementById("send-invite").addEventListener("click", sendInvite);
+
+	async function sendInvite() {
+			try {
+				const response = await fetchWithToken('/api/chat/create-invitation/', JSON.stringify({
+					roomName: roomName,
+				}), 'POST');
+				if (!response.ok) {
+					console.log(response);
+					alert("please get me out");
+				} else {
+					console.log(response);
+					alert("thank god");
+				}
+			} catch(error) {
+				console.log(error);
+				alert("send help");
+				window.location.hash = "login";
+			}
+	}
+	function sendMessage() {
+		const input = document.getElementById("message-input");
+		if (input.value && state.chatSocket) {
+			const messageData = {
+				message: input.value,
+				alias: userAlias,
+				time: new Date().toLocaleTimeString(),
+			};
+			state.chatSocket.send(JSON.stringify(messageData));
+			input.value = "";
+		} else {
+			alert("Message input is empty or WebSocket is not connected.");
+		}
 	}
 }
 
