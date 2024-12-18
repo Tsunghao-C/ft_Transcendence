@@ -23,7 +23,6 @@ export async function setpersonalDataView(contentContainer) {
     } catch(error) {
         console.log(error);
         window.location.hash = "login";
-		loadPage("login");
     }
 
     contentContainer.innerHTML = `
@@ -148,7 +147,6 @@ export async function setpersonalDataView(contentContainer) {
             } catch(error) {
                 console.log(error);
                 window.location.hash = "login";
-                loadPage("login");
             }
 		}
 	});
@@ -172,7 +170,6 @@ export async function setpersonalDataView(contentContainer) {
         } catch(error) {
             console.log(error);
             window.location.hash = "login";
-            loadPage("login");
         }
     });
 
@@ -195,7 +192,6 @@ export async function setpersonalDataView(contentContainer) {
         } catch(error) {
             console.log(error);
             window.location.hash = "login";
-            loadPage("login");
         }
     });
 
@@ -232,7 +228,6 @@ export async function setpersonalDataView(contentContainer) {
         } catch(error) {
             console.log(error);
             window.location.hash = "login";
-            loadPage("login");
         }
     });
 
@@ -246,7 +241,6 @@ export async function setpersonalDataView(contentContainer) {
         } catch(error) {
             console.log(error);
             window.location.hash = "login";
-            loadPage("login");
         }
     });
 }

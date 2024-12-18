@@ -1,4 +1,3 @@
-import { setGameView } from './game_menu.js';
 import { setGameMenu } from './game_menu.js';
 import { closeGameWebSocket } from './game_menu.js';
 import { setLoginView } from './login_login.js';
@@ -8,7 +7,6 @@ import { setLeaderboardView } from './leaderboard.js';
 import { setpersonalDataView } from './personal-data.js';
 import { setProfileView } from './profile.js';
 import { setFriendsView } from './friends.js';
-import { setGameTestView } from  './game_test.js';
 import { setHomePage } from './home.js';
 import { fetchWithToken } from './fetch_request.js';
 import { setLanguageCookie } from './fetch_request.js';
@@ -16,6 +14,7 @@ import { getLanguageCookie } from './fetch_request.js';
 import { setAboutPage } from './about.js';
 import { setChatView } from './chat_view.js';
 import { translations } from './language_pack.js';
+import { setLobbyView } from './game_lobby.js';
 
 export const state = {
 	chatSocket: null,
@@ -95,7 +94,6 @@ function setNavbarHtml(container) {
 			document.cookie = `refreshToken=whocares; path=/; secure; SameSite=Strict`;
 			container.innerHTML = '';
 			window.location.hash = "login";
-			loadPage("login");
 		});
 	}
 }
@@ -130,7 +128,6 @@ export async function loadPage(page) {
 		isLoggedIn = "false";
 		if (page !== "login" && page !== "register") {
 			window.location.hash = "login";
-			loadPage("login");
 			changeLanguage(currentLanguage);
 			return;
 		} else if (page === "login") {
@@ -185,6 +182,9 @@ export async function loadPage(page) {
 				case "about":
 					setAboutPage(innerContent);
 					break;
+				case "lobby":
+					setLobbyView(innerContent);
+					break;
 				// case "login":
 				// 	setLoginView(innerContent);
 				// 	break;
@@ -199,17 +199,56 @@ export async function loadPage(page) {
 					break;
 				default:
 					if (page.startsWith("profile/")) {
+						if (page.split("/").length > 2) {
+							set404View(innerContent);
+						}
 						const profileUsername = page.split("/")[1] || data.alias;
 						setProfileView(innerContent, profileUsername);
-					// } else if (page.startsWith("friends/")) {
-					// 	console.log('ausidjaziefjaiezjfaizjefiajzefijazijefija');
-					// 	const activeTab = page.split("/")[1] || "friends";
-					// 	console.log(activeTab);
-					// 	if (!['friends', 'friend-requests', 'sent-requests', 'block'].includes(activeTab)) {
-					// 		set404View(contentContainer);
-						// } else {
-						// 	setFriendsView(contentContainer, activeTab);
-						// } this could be implemented to make the perosn be able to load one tab for friends, and to have history on it
+					} else if (page.startsWith("chat/")) {
+						const pageSplit = page.split("/");
+						if (pageSplit.length > 3) {
+							set404View(innerContent);
+						} else {
+							const roomType = page.split("/")[1];
+							if (roomType) {
+								const aliasOrRoomToJoin = page.split("/")[2];
+								if (!['public', 'private'].includes(roomType)) {
+									set404View(innerContent);
+								} else if (aliasOrRoomToJoin) {
+									setChatView(innerContent, roomType, aliasOrRoomToJoin);
+								} else {
+									setChatView(innerContent);
+								}
+							} else {
+								if (page.split("/").length > 2) {
+									set404View(innerContent);
+								} else {
+									setChatView(innerContent);
+								}
+							}
+						} 
+	
+					} else if (page.startsWith("friends/")) {
+							const activeTab = page.split("/")[1] || "friends";
+							if (['friends', 'friend-requests', 'sent-friend-requests', 'blocks'].includes(activeTab)) {
+									setFriendsView(innerContent, activeTab);
+								} else {
+										set404View(innerContent);
+								}
+					} else if (page.startsWith("game/")) {
+						const pageSplit = page.split("/");
+						const menu = pageSplit[1] || "main";
+						if (menu) {
+							if (pageSplit.length > 2) {
+								set404View(innerContent);
+							} else if (['main', 'solo', 'multiplayer', 'local', 'online'].includes(menu)) {
+									setGameMenu(innerContent, menu);
+							} else {
+								set404View(innerContent);
+							}
+						} else {
+							setGameMenu(innerContent);
+						}
 					} else {
 						set404View(innerContent);
 					}
@@ -251,19 +290,9 @@ window.addEventListener("hashchange", () => {
 
 
 document.addEventListener("DOMContentLoaded", function () {
-
-	// /!\PR [by Alex] I commented the lines below because they would setup the login localStorage as false everytime we refresh, even after having logged in
-	// Clear any stale login state on fresh page load
 	const currentPage = window.location.hash.substring(1) || "home";
 	loadPage(currentPage);
 
 	attachNavigationListeners();
-
-	window.addEventListener("popstate", function (event) {
-		const page = event.state ? event.state.page : "home";
-		loadPage(page);
-	});
-
-
 });
 
