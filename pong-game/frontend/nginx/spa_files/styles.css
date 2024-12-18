@@ -504,10 +504,43 @@ table {
 	box-sizing: border-box; 
 }
 
+.profile-view .card {
+	/* color: red; */
+	background-color: transparent;
+	background-color: rgba(255, 255, 255, 0.7);
+	border: none;
+}
+
+.profile-view .card-body {
+	/* color: red; */
+	background-color: transparent;
+	/* background-color: rgba(150, 150, 150, 0.5); */
+}
+
+.profile-view h3 {
+	/* color: red; */
+	padding-top: 0 !important;
+	padding-left: 0 !important;
+}
+
+.profile-view p {
+	/* color: red; */
+	padding-top: 0 !important;
+	padding-left: 0 !important;
+	margin-bottom: 10px !important;
+}
+
 .profile-view h4 {
 	/* color: red; */
 	font-size: 1rem;
 }
+
+.profile-view .col-md-4 {
+	/* background-color: green; */
+	/* color: red; */
+	align-items: center;
+}
+
 
 /**************************** Friends-view ****************************/
 
