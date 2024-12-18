@@ -100,7 +100,7 @@ class CurrentTournamentView(APIView):
 	permission_classes = [IsAuthenticated]
 	def get(self, request):
 		user = request.user
-		tourney_participant = TourneyParticipant.objects.get(user=user).select_related('tournament')
+		tourney_participant = TourneyParticipant.objects.filter(user=user).select_related('tournament').first()
 		if not tourney_participant:
 			return Response({"detail":"User is not in tournament"}, status=400)
 		if not tourney_participant.tournament:
@@ -112,7 +112,7 @@ class CurrentGameView(APIView):
 	permission_classes = [IsAuthenticated]
 	def get(self, request):
 		user = request.user
-		participant = TourneyParticipant.objects.get(user=user)
+		participant = TourneyParticipant.objects.filter(user=user).first()
 		if not participant:
 			return Response({"detail":"This user is not in a tournament"}, status=400)
 		game = LiveGames.objects.filter(Q(p1=participant) | Q(p2=participant)).first()
