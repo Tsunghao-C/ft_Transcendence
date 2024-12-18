@@ -76,8 +76,6 @@ class TournamentManager:
 			p1 = paired_players[i]
 			p2 = paired_players[i + 1]
 			if p1.status != "In Game" and p2.status != "In Game":
-				p1.save()
-				p2.save()
 				cls._create_live_game(p1, p2)
 
 	@classmethod
