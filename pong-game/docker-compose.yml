@@ -25,6 +25,8 @@ volumes:
       type: none
   static_volume: {} # Added by Ben
   media_data: {} # docker volume for storing pictures
+  logs_nginx: {}
+  logs_modsec: {}
   redis_data: {}
   game_data: {}
   prometheus_data: {}
@@ -87,8 +89,10 @@ services:
     volumes:
       - ./frontend/nginx/spa_files:/usr/share/nginx/html
       - static_volume:/app/static:ro
-      - ./frontend/nginx/logs:/var/log/nginx:rw # need to move this to a dedicated docker space
-      - ./frontend/nginx/modsec:/var/log/modsec:rw # need to move this to a dedicated docker space
+      # - ./frontend/nginx/logs:/var/log/nginx:rw # need to move this to a dedicated docker space
+      - logs_nginx:/var/log/nginx
+      # - ./frontend/nginx/modsec:/var/log/modsec:rw # need to move this to a dedicated docker space
+      - logs_modsec:/var/log/modsec
       - media_data:/app/media
     ports:
       - "8443:443"
@@ -334,10 +338,11 @@ services:
     volumes:
       - ./monitoring/elk/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
       # Mount all log directories
-      - ./frontend/nginx/logs:/var/log/nginx:ro
-      - ./frontend/nginx/modsec:/var/log/modsec:ro
+      # - ./frontend/nginx/logs:/var/log/nginx:ro
+      - logs_nginx:/var/log/nginx
+      # - ./frontend/nginx/modsec:/var/log/modsec:ro
+      - logs_modsec:/var/log/modsec
       - filebeat_registry:/usr/share/filebeat/data
-      # - ./auth-service/logs:/var/log/auth:ro
     entrypoint: >
       sh -c '
       chmod go-w /usr/share/filebeat/filebeat.yml &&

@@ -13,7 +13,16 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     libpcre3 libpcre3-dev zlib1g zlib1g-dev \
     wget \
+    logrotate \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Current nginx version by default has symbolic link between access.log -> /dev/stdout to capture every event
+# To remove the symbolic links, remove original ones and create again.
+RUN rm -f /var/log/nginx/access.log /var/log/nginx/error.log
+
+RUN touch /var/log/nginx/access.log /var/log/nginx/error.log && \
+    chown nginx:nginx /var/log/nginx/access.log /var/log/nginx/error.log && \
+    chmod 644 /var/log/nginx/access.log /var/log/nginx/error.log
 
 # Download and compile ModSecurity for Nginx
 RUN git clone --depth 1 https://github.com/SpiderLabs/ModSecurity-nginx.git /tmp/ModSecurity-nginx && \
@@ -25,6 +34,7 @@ RUN git clone --depth 1 https://github.com/SpiderLabs/ModSecurity-nginx.git /tmp
 
 # Copy custom nginx.conf
 COPY nginx.conf /etc/nginx/nginx.conf
+COPY nginx-logrotate /etc/logrotate.d/nginx
 
 # Download OWASP(Open Web Application Security Project) Core Rule Set
 RUN git clone --depth 1 https://github.com/coreruleset/coreruleset.git /etc/nginx/modsecurity-crs && \
@@ -44,7 +54,6 @@ RUN mkdir -p /var/log/modsec && \
     chmod 644 /var/log/modsec/debug.log && \
     chown nginx:nginx /var/log/modsec/audit.log && \
     chown nginx:nginx /var/log/modsec/debug.log
-
 
 # RUN mkdir -p /var/log/modsec && \
 #     chmod -R 755 /var/log/modsec
