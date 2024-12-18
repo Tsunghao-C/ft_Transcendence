@@ -4,12 +4,8 @@ go: build run
 
 build:
 	cp pong-game/.env.example pong-game/.env
-	mkdir -p pong-game/frontend/nginx/logs
 	- mkdir -p pong-game/security/vault_debian/volumes/file
 	- mkdir -p pong-game/security/vault_debian/volumes/shared_data
-	- mkdir -p pong-game/backend/app/media/profile_images
-	chmod -R 755 pong-game/frontend/nginx/logs
-	chmod -R 755 pong-game/backend/app/media/profile_images
 	docker compose -f pong-game/docker-compose.yml build
 
 run:
@@ -80,10 +76,7 @@ clean:
 	docker image prune --force           # clear dangling images
 	docker system prune --force --volumes  # cleanup unused resources
 	docker compose -f pong-game/docker-compose.yml down -v --remove-orphans
-	rm -f pong-game/frontend/nginx/logs/*.log
-	- rm -f pong-game/frontend/nginx/modsec/*.log
 	- rm -rf pong-game/security/vault_debian/volumes/*
-	- rm -rf --no-preserve-root pong-game/backend/app/media/profile_images
 	- rm -rf pong-game/tests/lib
 	rm pong-game/.env
 
@@ -110,4 +103,4 @@ in:
 %:
 	@:
 
-.PHONY: all build check run clean go start stop down status re kill in
+.PHONY: all build check run clean go start stop down status re kill in update

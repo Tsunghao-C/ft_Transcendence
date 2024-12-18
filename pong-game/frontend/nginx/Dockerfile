@@ -13,7 +13,16 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     libpcre3 libpcre3-dev zlib1g zlib1g-dev \
     wget \
+    logrotate \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Current nginx version by default has symbolic link between access.log -> /dev/stdout to capture every event
+# To remove the symbolic links, remove original ones and create again.
+RUN rm -f /var/log/nginx/access.log /var/log/nginx/error.log
+
+RUN touch /var/log/nginx/access.log /var/log/nginx/error.log && \
+    chown nginx:nginx /var/log/nginx/access.log /var/log/nginx/error.log && \
+    chmod 644 /var/log/nginx/access.log /var/log/nginx/error.log
 
 # Download and compile ModSecurity for Nginx
 RUN git clone --depth 1 https://github.com/SpiderLabs/ModSecurity-nginx.git /tmp/ModSecurity-nginx && \
@@ -25,6 +34,7 @@ RUN git clone --depth 1 https://github.com/SpiderLabs/ModSecurity-nginx.git /tmp
 
 # Copy custom nginx.conf
 COPY nginx.conf /etc/nginx/nginx.conf
+COPY nginx-logrotate /etc/logrotate.d/nginx
 
 # Download OWASP(Open Web Application Security Project) Core Rule Set
 RUN git clone --depth 1 https://github.com/coreruleset/coreruleset.git /etc/nginx/modsecurity-crs && \
@@ -36,20 +46,11 @@ COPY crs-setup.conf /etc/nginx/modsecurity-crs/crs-setup.conf
 
 # Create ModSecurity log file
 RUN mkdir -p /var/log/modsec && \
-    touch /var/log/modsec/audit.log && \
-    touch /var/log/modsec/debug.log && \
+    touch /var/log/modsec/audit.log /var/log/modsec/debug.log && \
     chown -R nginx:nginx /var/log/modsec && \
     chmod 755 /var/log/modsec && \
-    chmod 644 /var/log/modsec/audit.log && \
-    chmod 644 /var/log/modsec/debug.log && \
-    chown nginx:nginx /var/log/modsec/audit.log && \
-    chown nginx:nginx /var/log/modsec/debug.log
-
-
-# RUN mkdir -p /var/log/modsec && \
-#     chmod -R 755 /var/log/modsec
-# RUN touch /var/log/modsec/audit.log && chmod 666 /var/log/modsec/audit.log
-# RUN touch /var/log/modsec/debug.log && chmod 666 /var/log/modsec/debug.log
+    chmod 644 /var/log/modsec/audit.log /var/log/modsec/debug.log && \
+    chown nginx:nginx /var/log/modsec/audit.log /var/log/modsec/debug.log
 
 # Generate ssl certificate (kept from main)
 RUN mkdir -p /etc/nginx/ssl && \
@@ -59,24 +60,16 @@ RUN mkdir -p /etc/nginx/ssl && \
     -subj "/C=US/ST=State/L=City/O-Organization/CN=localhost"
 
 # # Create a non-root user (safer practice)
-# RUN useradd -r -u 1000 nginx-user && \
-#     chown -R nginx-user:nginx-user /etc/nginx/ssl && \
-#     chown -R nginx-user:nginx-user /etc/nginx/modsecurity && \
-#     chown -R nginx-user:nginx-user /var/cache/nginx && \
-#     chown -R nginx-user:nginx-user /var/log && \
-#     touch /var/run/nginx.pid && \
-#     chown -R nginx-user:nginx-user /var/run/nginx.pid
+RUN useradd -r -u 1000 nginx-user && \
+    chown -R nginx-user:nginx-user /etc/nginx/ssl && \
+    chown -R nginx-user:nginx-user /etc/nginx/modsecurity && \
+    chown -R nginx-user:nginx-user /var/cache/nginx && \
+    chown -R nginx-user:nginx-user /var/log && \
+    touch /var/run/nginx.pid && \
+    chown -R nginx-user:nginx-user /var/run/nginx.pid
 
-# # Excecute Nginx server as non-root user
-# USER nginx-user
-
-
-# # Set proper permissions for nginx user
-# RUN chown -R nginx:nginx /var/cache/nginx && \
-#     chown -R nginx:nginx /var/log/nginx && \
-#     chown -R nginx:nginx /etc/nginx/ssl && \
-#     touch /var/run/nginx.pid && \
-#     chown -R nginx:nginx /var/run/nginx.pid
+# Excecute Nginx server as non-root user
+USER nginx-user
 
 # Exposing HTTP and HTTPS ports
 EXPOSE 80 443
