@@ -83,3 +83,13 @@ class GetOpenTournamentsView(APIView):
 			"totalPages": paginator.num_pages,
 		}
 		return Response(response_data, status=200)
+
+class CurrentTournamentView(APIView):
+	permission_classes = [IsAuthenticated]
+	def get(self, request):
+		user = request.user
+		tourney_participant = TourneyParticipant.objects.filter(user=user).select_related('tournament').first()
+		if not tourney_participant:
+			return Response({"detail":"User is not in tournament"}, status=400)
+		serializer = TournamentSerializer(tourney_participant.tournament)
+		return Response(serializer.data, status=201)

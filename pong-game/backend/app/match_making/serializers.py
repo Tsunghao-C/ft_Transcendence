@@ -18,7 +18,7 @@ class CreateTournamentSerializer(serializers.Serializer):
 			**validated_data
 		)
 
-class TournamentSerializer(serializers.Serializer):
+class TournamentSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Tournament
 		fields = ["id","tournament_admin","name","is_active","max_players","num_curr_players","num_brackets","is_private","created_at","updated_at"] 
