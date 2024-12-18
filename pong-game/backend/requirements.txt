@@ -19,3 +19,4 @@ django-crontab==0.7.1
 httpx==0.28.0
 pillow==11.0.0
 uuid==1.30
+celery==5.4.0
