@@ -87,9 +87,9 @@ services:
     volumes:
       - ./frontend/nginx/spa_files:/usr/share/nginx/html
       - static_volume:/app/static:ro
-      - ./frontend/nginx/logs:/var/log/nginx:rw
-      - ./frontend/nginx/modsec:/var/log/modsec:rw
-      - ./backend/app/media:/app/media
+      - ./frontend/nginx/logs:/var/log/nginx:rw # need to move this to a dedicated docker space
+      - ./frontend/nginx/modsec:/var/log/modsec:rw # need to move this to a dedicated docker space
+      - ./backend/app/media:/app/media # need to move this to a dedicated docker space
     ports:
       - "8443:443"
       - "8080:80"
@@ -97,14 +97,8 @@ services:
       - frontend_net
       - backend_net
       - monitoring_net
-    environment:
-      DEBUG: ${DEBUG}
-      SECRET_KEY: ${SECRET_KEY}
-      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
-      SQL_ENGINE: ${POSTGRES_ENGINE}
-      # SQL_USER: ${SQL_USER}
-      # SQL_PASSWORD: ${SQL_PASSWORD}
-      # SQL_PORT: ${SQL_PORT}
+    env_file:
+      - .env
     logging:
       driver: "json-file"
       options:
