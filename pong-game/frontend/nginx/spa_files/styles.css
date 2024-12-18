@@ -426,6 +426,46 @@ body {
 	box-sizing: border-box; 
 }
 
+.home-view h2 {
+	font-size: 2.5rem !important;
+}
+
+.home-view .data-container {
+	padding-top: 0 !important;
+}
+
+.home-view hr {
+	padding-left: 10px !important;
+	padding-right: 10px !important;
+}
+
+.home-view h3 {
+	font-size: 1.5rem;
+	padding-left: 0 !important;
+	padding-top: 0 !important;
+}
+
+.home-view h4 {
+	font-size: 1.2rem;
+	padding-left: 0 !important;
+	padding-top: 0 !important;
+}
+
+.home-view .data-container {
+	background-color: transparent;
+	padding: 10px;
+}
+
+.home-view p {
+	/* color: red; */
+	padding-left: 0 !important;
+	margin-bottom: 10px !important;
+}
+
+.home-view th {
+	font-weight: normal;
+}
+
 /**************************** Game ****************************/
 
 .game-view {
