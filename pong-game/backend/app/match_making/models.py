@@ -95,6 +95,7 @@ class TournamentManager:
 				p2.save()
 				p1.refresh_from_db()
 				p2.refresh_from_db()
+				# add redirect to game here
 		except Exception as e:
 			logger.error(f"Error creating live game: {e}")
 
