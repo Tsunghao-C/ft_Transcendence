@@ -308,12 +308,10 @@
 				game_over = false;
 				return;
 			}
-			player_1_id = data.playerId
-			player_2_id = data.player2Id
-			players = gameState.players
-			player_1 = players[player_1_id]
-			player_2 = players[player_2_id]
-			drawElements(gameState.ball, player_1, player_2);
+			player1 = gameState.players.player1;
+			player2 = gameState.players.player2;
+			console.log("player1: " + player1);
+			drawElements(gameState.ball, player1, player2);
 			await sendEvents(socket, data.roomUID);
 			requestAnimationFrame(gameLoop);
 		}
