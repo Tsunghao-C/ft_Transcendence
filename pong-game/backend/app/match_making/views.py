@@ -91,5 +91,7 @@ class CurrentTournamentView(APIView):
 		tourney_participant = TourneyParticipant.objects.filter(user=user).select_related('tournament').first()
 		if not tourney_participant:
 			return Response({"detail":"User is not in tournament"}, status=400)
+		if not tourney_participant.tournament:
+			return Response({"error":"Could not retrieve tournament data"}, status=400)
 		serializer = TournamentSerializer(tourney_participant.tournament)
 		return Response(serializer.data, status=201)
