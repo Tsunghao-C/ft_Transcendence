@@ -89,9 +89,7 @@ services:
     volumes:
       - ./frontend/nginx/spa_files:/usr/share/nginx/html
       - static_volume:/app/static:ro
-      # - ./frontend/nginx/logs:/var/log/nginx:rw # need to move this to a dedicated docker space
       - logs_nginx:/var/log/nginx
-      # - ./frontend/nginx/modsec:/var/log/modsec:rw # need to move this to a dedicated docker space
       - logs_modsec:/var/log/modsec
       - media_data:/app/media
     ports:
@@ -338,9 +336,7 @@ services:
     volumes:
       - ./monitoring/elk/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
       # Mount all log directories
-      # - ./frontend/nginx/logs:/var/log/nginx:ro
       - logs_nginx:/var/log/nginx
-      # - ./frontend/nginx/modsec:/var/log/modsec:ro
       - logs_modsec:/var/log/modsec
       - filebeat_registry:/usr/share/filebeat/data
     entrypoint: >
