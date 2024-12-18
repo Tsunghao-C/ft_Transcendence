@@ -161,7 +161,7 @@ export async function loadPage(page) {
 			// Handle different page views
 			switch (page) {
 				case "home":
-					setHomePage(innerContent);
+					setHomePage(innerContent, data);
 					break;
 				case "game":
 					setGameMenu(innerContent);
