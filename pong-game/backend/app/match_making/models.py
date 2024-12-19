@@ -175,7 +175,6 @@ class Tournament(models.Model):
 
 	class Meta:
 		ordering = ["-created_at"]
-	
 
 class TourneyParticipant(models.Model):
 	class Status(models.TextChoices):
@@ -278,7 +277,8 @@ class LiveGames(models.Model):
 		self.p2.refresh_from_db()
 
 	def matchEnd(self, outcome: int):
-		__update_mmrs(outcome)
-		__update_counters(outcome)
-		__update_tourney_standing(outcome)
+		self.__update_mmrs(outcome)
+		self.__update_counters(outcome)
+		self.__update_tourney_standing(outcome)
+		# send message to chatroom here
 		self.delete()
