@@ -19,12 +19,17 @@ class CreateTournamentView(APIView):
 		serializer = CreateTournamentSerializer(data=request.data)
 		if not serializer.is_valid():
 			return Response(serializer.errors, status=400)
-		tournament = serializer.save()
 		try:
-			chatroom = ChatRoom.create_tournament_room(tournament)
+			with transaction.atomic(): # if something fails, no objects are created
+				tournament = serializer.save()
+				participant = TourneyParticipant.objects.create(
+					user=request.user,
+					tournament=tournment,
+				)
+				chatroom = ChatRoom.create_tournament_room(tournament)
+				chatroom.members.add(participant)
 		except ValueError as e:
-			tournament.delete()
-			return Response({"error":f"could not create chatroom: {e}"}, status=400)
+			return Response({"error":f"could not create tournament: {e}"}, status=400)
 		return Response(TournamentSerializer(tournament).data, status=201)
 
 class AddPlayerToTournamentView(APIView):
@@ -39,14 +44,15 @@ class AddPlayerToTournamentView(APIView):
 		if tournament.is_active == True:
 			return Response({"detail":"This tournament has already started"}, status=409)
 		try:
-			participant = TourneyParticipant.objects.create(
-				user=user,
-				tournament=tournament,
-			)
-			tournament.increment_players()
-			room = ChatRoom.objects.filter(name=f"{tourney_id}").select_related("members").first()
-			room.members.add(user)
-			room.save()
+			with transaction.atomic():
+				participant = TourneyParticipant.objects.create(
+					user=user,
+					tournament=tournament,
+				)
+				tournament.increment_players()
+				room = ChatRoom.objects.filter(name=f"{tourney_id}").select_related("members").first()
+				room.members.add(user)
+				room.save()
 		except Exception as e:
 			return Response({"error":f"Could not create participant object: {e}"}, status=400)
 		return Response(participant, status=200)
