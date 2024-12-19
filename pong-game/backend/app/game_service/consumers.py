@@ -124,7 +124,8 @@ class GameConsumer(AsyncWebsocketConsumer):
 			await self.create_private_lobby(room_name, player_alias)
 		elif action == "create_ai_match":
 			room_name = str(uuid.uuid4())
-			await self.create_ai_lobby(room_name, player_alias)
+			difficulty = data.get('difficulty', 'medium')
+			await self.create_ai_lobby(room_name, player_alias, difficulty)
 		elif action == "player_ready":
 			await self.update_ready_status(data["room_name"], player_alias)
 		elif data.get('type') == "player_input":
@@ -140,7 +141,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 					"message": f"Game room {data['game_roomID']} not found"
 					}))
 
-	async def create_ai_lobby(self, room_name, player_alias):
+	async def create_ai_lobby(self, room_name, player_alias, difficulty):
 		self.assigned_room = room_name
 		self.assigned_player_alias = player_alias
 
@@ -150,7 +151,8 @@ class GameConsumer(AsyncWebsocketConsumer):
 		active_lobbies[room_name] = {
 			"players": players,
 			"connection": [self],
-			"is_ai_game": True
+			"is_ai_game": True,
+			"difficulty": difficulty
 		}
 		active_lobbies[room_name]["ready"] = []
 		active_lobbies[room_name]["ready"].append("ai_player")
@@ -173,9 +175,10 @@ class GameConsumer(AsyncWebsocketConsumer):
 		active_lobbies[room_name] = {
 				"players": players,
 				"connection": [],
-				"is_ai_game": is_ai_game
+				"is_ai_game": False
 				}
 		# self.current_group = f"lobby_{room_name}" are we using this ?
+		game_type = "Private Game"
 		await self.send(json.dumps({
 			"type": "room_creation",
 			"message": f"Created  {game_type} Lobby {room_name}",
@@ -274,7 +277,10 @@ class GameConsumer(AsyncWebsocketConsumer):
 					"message": "Game is starting"
 					}))
 			logger.info(f"Starting game id: lobby_{room_name}")
-			game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"])
+			if  active_lobbies[room_name]["is_ai_game"] == True:
+				game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"], active_lobbies[room_name]["difficulty"])
+			else:
+				game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"])
 			logger.info("GameRoom created")
 			active_game_rooms[group_name] = {
 				"room_data": game_room,

@@ -562,6 +562,7 @@
 				await data.socket.send(JSON.stringify({
 					action: 'create_ai_match',
 					id: data.playerId,
+					difficulty: 'hard'
 				}));
 
 				console.log("Started AI game session");
