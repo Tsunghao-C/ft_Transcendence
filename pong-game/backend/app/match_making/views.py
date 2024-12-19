@@ -16,7 +16,10 @@ from .models import *
 class CreateTournamentView(APIView):
 	permission_classes = [IsAuthenticated]
 	def post(self, request):
-		serializer = CreateTournamentSerializer(data=request.data, admin=request.user)
+		serializer = CreateTournamentSerializer(
+			data=request.data,
+			context={'admin': request.user} 
+		)
 		if not serializer.is_valid():
 			return Response(serializer.errors, status=400)
 		try:
@@ -24,10 +27,10 @@ class CreateTournamentView(APIView):
 				tournament = serializer.save()
 				participant = TourneyParticipant.objects.create(
 					user=request.user,
-					tournament=tournment,
+					tournament=tournament,
 				)
 				chatroom = ChatRoom.create_tournament_room(tournament)
-				chatroom.members.add(participant)
+				chatroom.members.add(participant.user)
 		except ValueError as e:
 			return Response({"error":f"could not create tournament: {e}"}, status=400)
 		return Response(TournamentSerializer(tournament).data, status=201)

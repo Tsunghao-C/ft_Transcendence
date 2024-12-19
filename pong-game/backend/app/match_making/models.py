@@ -112,7 +112,7 @@ class Tournament(models.Model):
 	)
 	name = models.CharField(max_length=100, unique=True)
 	is_active = models.BooleanField(default=False)
-	max_players = models.PositiveSmallIntegerField(min=2, max=20)
+	max_players = models.PositiveSmallIntegerField()
 	num_curr_players = models.PositiveSmallIntegerField(default=0)
 	num_brackets = models.PositiveSmallIntegerField(default=0)
 	bracket_skips = models.JSONField(default=dict)
