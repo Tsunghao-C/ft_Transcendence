@@ -166,6 +166,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 		active_lobbies[room_name] = {
 			"players": players,
 			"connection": [self],
+			"local": False,
 			"is_ai_game": True,
 			"difficulty": difficulty
 		}
@@ -189,10 +190,11 @@ class GameConsumer(AsyncWebsocketConsumer):
 		active_lobbies[room_name] = {
 				"players": players,
 				"connection": [],
-                "local": False,
-				"is_ai_game": False
+				"local": False,
+				"is_ai_game": False,
+				"difficulty": None
 				}
-		game_type = "Private Game"
+#		game_type = "Private Game" # Where the fuck does this come from??
 		await self.send(json.dumps({
 			"type": "room_creation",
 			"message": f"Created Lobby {room_name}",
@@ -207,7 +209,9 @@ class GameConsumer(AsyncWebsocketConsumer):
 			"players": [player_alias, player_2],
 			"ready": [player_2],
 			"connection": [self],
-			"local": True
+			"local": True,
+			"is_ai_game": False,
+			"difficulty": None
 		}
 		await self.send(json.dumps({
 			"type": "local_room_creation",
@@ -287,10 +291,10 @@ class GameConsumer(AsyncWebsocketConsumer):
 					"message": "Game is starting"
 					}))
 			logger.info(f"Starting game id: lobby_{room_name}")
-			if  active_lobbies[room_name]["is_ai_game"] == True:
-				game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"], active_lobbies[room_name]["local"], active_lobbies[room_name]["difficulty"])
-			else:
-				game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"], active_lobbies["local"], None)
+#			if  active_lobbies[room_name]["is_ai_game"] == True:
+#				game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"], active_lobbies[room_name]["local"], active_lobbies[room_name]["difficulty"])
+#			else:
+			game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"], active_lobbies[room_name]["local"], active_lobbies[room_name]["difficulty"])
 			logger.info("GameRoom created")
 			logger.info("Checking for local")
 			if active_lobbies[room_name]["local"] == True:
