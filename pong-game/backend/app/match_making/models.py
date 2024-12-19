@@ -5,6 +5,9 @@ import math, uuid, logging
 
 logger = logging.getLogger(__name__)
 
+def generate_uuid_without_hyphens():
+    return uuid.uuid4().hex
+
 class TournamentManager:
 	@staticmethod
 	def get_players_in_round(bracket: int, num_players: int) -> int:
@@ -100,9 +103,10 @@ class TournamentManager:
 			logger.error(f"Error creating live game: {e}")
 
 class Tournament(models.Model):
-	id = models.UUIDField(
+	id = models.CharField(
 		primary_key=True,
-		default=uuid.uuid4,
+		default=generate_uuid_without_hyphens,
+		max_length=32,
 		editable=False
 	)
 	tournament_admin = models.ForeignKey( # person who created tournament

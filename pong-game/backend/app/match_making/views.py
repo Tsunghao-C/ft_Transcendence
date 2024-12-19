@@ -53,12 +53,12 @@ class JoinTournamentView(APIView):
 					tournament=tournament,
 				)
 				tournament.increment_players()
-				room = ChatRoom.objects.filter(name=f"{tourney_id}").select_related("members").first()
+				room = ChatRoom.objects.filter(name=f"{tourney_id}").first()
 				room.members.add(user)
 				room.save()
 		except Exception as e:
 			return Response({"error":f"Could not add player to tournament: {e}"}, status=400)
-		return Response(participant, status=200)
+		return Response({"detail":"successfully added player to tournament"}, status=200)
 
 class StartTournamentView(APIView):
 	permission_classes = [IsAuthenticated]
