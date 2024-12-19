@@ -32,7 +32,7 @@ class CreateTournamentView(APIView):
 			return Response({"error":f"could not create tournament: {e}"}, status=400)
 		return Response(TournamentSerializer(tournament).data, status=201)
 
-class AddPlayerToTournamentView(APIView):
+class JoinTournamentView(APIView):
 	permission_classes = [IsAuthenticated]
 	def post(self, request):
 		user = request.user
@@ -54,7 +54,7 @@ class AddPlayerToTournamentView(APIView):
 				room.members.add(user)
 				room.save()
 		except Exception as e:
-			return Response({"error":f"Could not create participant object: {e}"}, status=400)
+			return Response({"error":f"Could not add player to tournament: {e}"}, status=400)
 		return Response(participant, status=200)
 
 class StartTournamentView(APIView):
@@ -70,7 +70,7 @@ class StartTournamentView(APIView):
 		try:
 			tournament.start_tournament()
 		except Exception as e:
-			return Response({"error":f"could not start tournament because: {e}"}, status=400)
+			return Response({"error":f"could not start tournament: {e}"}, status=400)
 		return Response({"detail":"tournament successfully started"}, status=200)
 
 class GetOpenTournamentsView(APIView):
