@@ -121,8 +121,10 @@ class GameConsumer(AsyncWebsocketConsumer):
 			await self.create_local_match(room_name, player_alias)
 		elif action == "create_private_match":
 			room_name = str(uuid.uuid4())
-			is_ai_game = data.get("is_ai_game", False)
 			await self.create_private_lobby(room_name, player_alias)
+		elif action == "create_ai_match":
+			room_name = str(uuid.uuid4())
+			await self.create_ai_lobby(room_name, player_alias)
 		elif action == "player_ready":
 			await self.update_ready_status(data["room_name"], player_alias)
 		elif data.get('type') == "player_input":
@@ -138,32 +140,47 @@ class GameConsumer(AsyncWebsocketConsumer):
 					"message": f"Game room {data['game_roomID']} not found"
 					}))
 
-	async def create_lobby(self):
-		room_name = str(uuid.uuid4())
-		active_lobbies[room_name] = {
-				"players": [],
-			"connection": []
-		}
+	async def create_ai_lobby(self, room_name, player_alias):
+		self.assigned_room = room_name
+		self.assigned_player_alias = player_alias
 
-	async def create_private_lobby(self, room_name, player_alias, is_ai_game=False):
+		players = [player_alias]
+		players.append("ai_player")
+
+		active_lobbies[room_name] = {
+			"players": players,
+			"connection": [self],
+			"is_ai_game": True
+		}
+		active_lobbies[room_name]["ready"] = []
+		active_lobbies[room_name]["ready"].append("ai_player")
+		self.current_group = f"lobby_{room_name}"
+		await self.channel_layer.group_add(self.current_group, self.channel_name)
+		game_type = "AI Game"
+		await self.send(json.dumps({
+			"type": "room_creation",
+			"message": f"Created {game_type} Lobby {room_name}",
+			"room_name": room_name,
+			"is_ai_game": True
+		}))
+
+
+	async def create_private_lobby(self, room_name, player_alias):
 		self.assigned_room = room_name
 		self.assigned_player_alias = player_alias
 
 		players = []
-		if is_ai_game:
-			players.append("ai_player")
 		active_lobbies[room_name] = {
 				"players": players,
 				"connection": [],
 				"is_ai_game": is_ai_game
 				}
 		# self.current_group = f"lobby_{room_name}" are we using this ?
-		game_type = "AI Game" if is_ai_game else "Private Match"
 		await self.send(json.dumps({
 			"type": "room_creation",
 			"message": f"Created  {game_type} Lobby {room_name}",
 			"room_name": room_name,
-			"is_ai_game": is_ai_game
+			"is_ai_game": False
 			}))
 
 	async def create_local_match(self, room_name, player_alias):
