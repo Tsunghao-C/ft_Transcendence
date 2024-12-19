@@ -7,6 +7,11 @@ from .models import ChatRoom, Message
 from .serializers import MessageSerializer, ChatRoomSerializer
 from user_service.models import CustomUser
 from rest_framework.exceptions import PermissionDenied
+from uuid import UUID
+from django.shortcuts import render, get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+
 
 def index(request):
     return render(request, "chat/index.html")
@@ -136,3 +141,68 @@ class CreatePrivateChatRoomView(APIView):
 				"is_private": room.is_private,
 				"members": [member.alias for member in room.members.all()]
 			})
+
+class CreateInviteView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def post(self, request):
+		user = request.user
+		other_alias = request.data.get("alias")
+		room_name = request.data.get("roomName")
+		game_room = request.data.get("roomId")
+
+		try:
+			game_room = UUID(game_room, version=4)
+		except ValueError:
+			return Response({"error": "Invalid gameId format."}, status=400)
+		if other_alias:
+			try:
+				other_user = CustomUser.objects.get(alias=other_alias)
+			except CustomUser.DoesNotExist:
+				return Response({"error": "User not found."}, status=404)
+			if user == other_user:
+				raise PermissionDenied("You cannot invite yourself.")
+			elif user.has_blocked(other_user):
+				raise PermissionDenied("You are blocking this user.")
+			elif other_user.has_blocked(user):
+				raise PermissionDenied("This user is blocking you.")
+			room = ChatRoom.get_or_create_private_room(user, other_user)
+		else:
+			room = get_object_or_404(ChatRoom, name=room_name)
+
+		invite_message = Message.objects.create(
+			room=room,
+			sender=user,
+			content=f"{user.alias} invited you to play",
+			is_invite=True,
+			game_room= game_room 
+		)
+
+		return Response({
+			"message_id": invite_message.id,
+			"content": invite_message.content,
+			"timestamp": invite_message.timestamp,
+			"is_invite": invite_message.is_invite
+		}, status=201)
+
+class DeleteInviteView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def post(self, request):
+		user = request.user
+		chat_name = request.data.get("chat_name")
+		game_room = request.data.get("room_id")
+
+		room = ChatRoom.objects.get(name=chat_name) 
+
+		if not game_room:
+			return Response({"error": "inviteId is required."}, status=400)
+
+		try:
+			invite_message = Message.objects.get(room=room, game_room=game_room, is_invite=True)
+		except Message.DoesNotExist:
+			return Response({"error": "Invite not found."}, status=404)
+
+		invite_message.delete()
+
+		return Response({"message": "Invite deleted successfully."}, status=200)

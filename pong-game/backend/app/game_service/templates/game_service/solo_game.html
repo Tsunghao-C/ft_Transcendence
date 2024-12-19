@@ -52,8 +52,18 @@
 	<canvas id="game" width="800" height="600"></canvas>
     </div>
 	<script>
+		function getCookie(name) {
+			const cookies = document.cookie.split("; ").reduce((acc, cookie) => {
+				const [key, value] = cookie.split("=");
+				acc[key] = value;
+				return acc;
+			}, {});
+			return cookies[name];
+		}
+
 		const canvas = document.getElementById('game');
-		const token = localStorage.getItem('token'); //Is this stored there or in cookies!!!!
+
+		const token = getCookie("accessToken");
 		const PADDLE_HEIGHT = 100;
 		const PADDLE_WIDTH = 15;
         const ctx = canvas.getContext('2d');
@@ -130,8 +140,8 @@
 				return new Promise((resolve, reject) => {
 				const gameId = 'test_game';
 				const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
-				const wsUrl = `${wsScheme}://${window.location.host}/ws/game-server/${gameId}/`;
-				
+				const wsUrl = `${wsScheme}://${window.location.host}/ws/game-server/${gameId}/?token=${encodeURIComponent(token)}`;
+
 				console.log('Connecting to WebSocket...')
 				ws = new WebSocket(wsUrl);
 				data.socket = ws
@@ -165,8 +175,8 @@
 								console.error('Error received:', response.message);
 							}
 							else if (response.type == 'game_update') {
-								if (pendingGameUpdate) { 
-									pendingGameUpdate(response.payload) 
+								if (pendingGameUpdate) {
+									pendingGameUpdate(response.payload)
 									pendingGameUpdate = null;
 								}
 							}
@@ -291,19 +301,17 @@
 
 		async function gameLoop(socket, playerData) {
 			gameState = await getGameState();
-//			console.log("gameState: ", gameState);
+			console.log("gameState: ", gameState);
 			if (game_over) {
 				console.log('Drawing game_over...');
 				drawGameOverScreen(gameState);
 				game_over = false;
 				return;
 			}
-			player_1_id = data.playerId
-			player_2_id = data.player2Id
-			players = gameState.players
-			player_1 = players[player_1_id]
-			player_2 = players[player_2_id]
-			drawElements(gameState.ball, player_1, player_2);
+			player1 = gameState.players.player1;
+			player2 = gameState.players.player2;
+			console.log("player1: " + player1);
+			drawElements(gameState.ball, player1, player2);
 			await sendEvents(socket, data.roomUID);
 			requestAnimationFrame(gameLoop);
 		}
@@ -386,7 +394,7 @@
 				console.error('Exception caught in startGame', error);
 			}
 		}
-	
+
 		async function create_local_match() {
 			try {
 				ctx.clearRect(0, 0, canvas.width, canvas.height);

@@ -9,7 +9,7 @@ class MessageSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Message
-		fields = ['sender', 'content', 'timestamp']
+		fields = ['sender', 'content', 'timestamp', 'is_invite', 'game_room']
 
 class ChatRoomSerializer(serializers.ModelSerializer):
 	messages = MessageSerializer(many=True, read_only=True)

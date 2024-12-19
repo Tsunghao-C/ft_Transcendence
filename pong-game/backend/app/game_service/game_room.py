@@ -33,7 +33,7 @@ class Ball():
         self.radius = BALL_RADIUS
 
 class GameRoom():
-    def __init__(self, room_id, user_data, consumer_data):
+    def __init__(self, room_id, user_data, consumer_data, daddyficulty= ""):
         self.room_id = "lobby_" + room_id
         self.connections = []
         self.left_player = user_data[0]
@@ -43,7 +43,7 @@ class GameRoom():
         self.ai_player = None
         if self.right_player == "ai_player":
             self.ai_player = PongAI(
-                difficulty='medium',
+                difficulty = daddyficulty,
                 canvas_width=CANVAS_WIDTH,
                 canvas_height=CANVAS_HEIGHT
             )
@@ -185,11 +185,11 @@ class GameRoom():
     async def send_update(self):
         game_state = {
                 'players': {
-                    player_id: {
-                        'x': self.players[player_id].x,
-                        'y': self.players[player_id].y,
-                        'score': self.players[player_id].score,
-                        } for player_id in self.players
+                        f'player{index + 1}': {
+                            'x': player.x,
+                            'y': player.y,
+                            'score': player.score,
+                        } for index, (player_id, player) in enumerate(self.players.items())
                     },
                 'ball': {
                     'x': self.ball.x,

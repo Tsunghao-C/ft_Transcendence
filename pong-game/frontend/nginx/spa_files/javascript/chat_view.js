@@ -36,6 +36,7 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 				<div>
 					<input id="message-input" type="text" placeholder="Type your message">
 					<button id="send-message">Send</button>
+					<button id="send-invite">Send Invite</button>
 				</div>
 			</div>
 		</div>
@@ -142,7 +143,26 @@ roomList.innerHTML = roomData
 	}
 
 	document.getElementById("send-message").addEventListener("click", sendMessage);
+	document.getElementById("send-invite").addEventListener("click", sendInvite);
 
+	async function sendInvite() {
+			try {
+				const response = await fetchWithToken('/api/chat/create-invitation/', JSON.stringify({
+					roomName: aliasOrRoomToJoin,
+					roomId: "c9d2b188-a876-4349-a410-3bec27510ee6",
+				}), 'POST');
+				if (!response.ok) {
+					console.log(response);
+					alert("please get me out");
+				} else {
+					alert("thank god");
+				}
+			} catch(error) {
+				console.log(error);
+				alert("send help");
+				window.location.hash = "login";
+			}
+	}
 	function sendMessage() {
 		const input = document.getElementById("message-input");
 		if (input.value && state.chatSocket) {
@@ -197,7 +217,7 @@ async function loadChatRoom(roomName, userAlias, roomNameDisplay = roomName) {
 	state.chatSocket.onmessage = function (e) {
 		const messageData = JSON.parse(e.data);
 		console.log("message received", messageData);
-		addMessage(userAlias, messageData.alias, messageData.message, messageData.time);
+		addMessage(userAlias, messageData.alias, messageData.message, messageData.time, messageData.is_invite, messageData.game_room);
 	};
 
 	document.getElementById("chat-view").style.display = "block";
@@ -208,7 +228,7 @@ async function loadChatRoom(roomName, userAlias, roomNameDisplay = roomName) {
 			const listMessageData = await response.json();
 			messagesDiv.innerHTML = "";
 			listMessageData.forEach(msg => {
-				addMessage(userAlias, msg.sender, msg.content, msg.timestamp);
+				addMessage(userAlias, msg.sender, msg.content, msg.timestamp, msg.is_invite, msg.game_room);
 			});
 		} else {
 			messagesDiv.innerHTML = "<p>Error loading messages.</p>";
@@ -219,7 +239,7 @@ async function loadChatRoom(roomName, userAlias, roomNameDisplay = roomName) {
 	}
 }
 
-function addMessage(userAlias, alias, message, time) {
+function addMessage(userAlias, alias, message, time, isInvite = false, gameRoom = null) {
 	const messagesDiv = document.getElementById("messages");
 	const messageElement = document.createElement("div");
 
@@ -227,7 +247,8 @@ function addMessage(userAlias, alias, message, time) {
 		messageElement.style.textAlign = "right";
 		messageElement.innerHTML = `
 			<div style="display: inline-block; text-align: left; background-color: #e1f5fe; padding: 10px; border-radius: 10px; max-width: 70%;">
-				<em>${time}</em><br>${message}
+				<em>${time}</em><br>
+				${isInvite && gameRoom ? `<a href="#lobby/${gameRoom}" style="text-decoration: none; color: #007bff;">${message}</a>` : message}
 			</div>`;
 	} else {
 		messageElement.style.textAlign = "left";
@@ -239,10 +260,11 @@ function addMessage(userAlias, alias, message, time) {
 			</strong>
 			<em>(${time})</em>:<br>
 			<div style="display: inline-block; background-color: #f1f1f1; padding: 10px; border-radius: 10px; max-width: 70%;">
-				${message}
+				${isInvite && gameRoom ? `<a href="#lobby/${gameRoom}" style="text-decoration: none; color: #007bff;">${message}</a>` : message}
 			</div>`;
 	}
 
 	messagesDiv.appendChild(messageElement);
 	messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
+
