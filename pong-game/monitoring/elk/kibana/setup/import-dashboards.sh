@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # Wait for Elasticsearch
-until curl -s http://elasticsearch:9200 >/dev/null; do
+until curl -u "kibana_system:${ELASTIC_PASSWORD}" -s http://elasticsearch:9200 >/dev/null; do
     echo "Waiting for Elasticsearch..."
     sleep 5
 done
 
 # Wait for Kibana
-until curl -s http://localhost:5601/api/status >/dev/null; do
+until curl -u "elastic:${ELASTIC_PASSWORD}" -s http://localhost:5601/api/status | grep -q '"status":{"overall":{"level":"available"'; do
     echo "Waiting for Kibana..."
     sleep 5
 done
@@ -26,6 +26,7 @@ create_index_pattern() {
   PATTERN_RESPONSE=$(curl -X POST "localhost:5601/api/saved_objects/index-pattern" \
     -H "kbn-xsrf: true" \
     -H "Content-Type: application/json" \
+    -u "elastic:${ELASTIC_PASSWORD}" \
     -d "{\"attributes\":{\"title\":\"$pattern\",\"timeFieldName\":\"$time_field\"}}")
   
   # Verify creation
@@ -38,7 +39,7 @@ create_index_pattern() {
   PATTERN_ID=$(echo "$PATTERN_RESPONSE" | grep -o '"id":"[^"]*' | cut -d'"' -f4)
   # echo "Created index pattern $pattern with ID: $PATTERN_ID"
   # Verify pattern exists
-  until curl -s "localhost:5601/api/saved_objects/index-pattern/$PATTERN_ID" | grep -q "$pattern"; do
+  until curl -s -u "elastic:${ELASTIC_PASSWORD}" "localhost:5601/api/saved_objects/index-pattern/$PATTERN_ID" | grep -q "$pattern"; do
       sleep 1
   done
   echo "$PATTERN_ID"
@@ -92,6 +93,7 @@ for dashboard_dir in /usr/share/kibana/dashboards/*/ ; do
       echo "Importing processed dashboard..."
       curl -X POST "localhost:5601/api/saved_objects/_import?overwrite=true" \
         -H "kbn-xsrf: true" \
+        -u "elastic:${ELASTIC_PASSWORD}" \
         -H "Content-Type: multipart/form-data" \
         -F "file=@$TMP_FILE"
       

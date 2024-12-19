@@ -305,7 +305,7 @@ services:
     environment:
       # Elasticsearch connection
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-      - ELASTICSEARCH_USERNAME=${ELASTIC_USERNAME}
+      - ELASTICSEARCH_USERNAME=kibana_system
       - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}
       # Server settings
       - SERVER_HOST=0.0.0.0
