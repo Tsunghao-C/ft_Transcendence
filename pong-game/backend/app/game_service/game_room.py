@@ -33,7 +33,7 @@ class Ball():
         self.radius = BALL_RADIUS
 
 class GameRoom():
-    def __init__(self, room_id, user_data, consumer_data, is_local):
+    def __init__(self, room_id, user_data, consumer_data, is_local, daddyficulty= ""):
         self.room_id = "lobby_" + room_id
         self.connections = []
         self.left_player = user_data[0]
@@ -44,7 +44,7 @@ class GameRoom():
         self.ai_player = None
         if self.right_player == "ai_player":
             self.ai_player = PongAI(
-                difficulty='medium',
+                difficulty = daddyficulty,
                 canvas_width=CANVAS_WIDTH,
                 canvas_height=CANVAS_HEIGHT
             )

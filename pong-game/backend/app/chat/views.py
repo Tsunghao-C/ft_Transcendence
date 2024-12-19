@@ -146,7 +146,6 @@ class CreateInviteView(APIView):
 	permission_classes = [IsAuthenticated]
 
 	def post(self, request):
-		print("ta mere")
 		user = request.user
 		other_alias = request.data.get("alias")
 		room_name = request.data.get("roomName")
