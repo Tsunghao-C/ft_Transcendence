@@ -115,7 +115,7 @@ class CurrentGameView(APIView):
 		participant = TourneyParticipant.objects.filter(user=user).first()
 		if not participant:
 			return Response({"detail":"This user is not in a tournament"}, status=400)
-		game = LiveGames.objects.filter(Q(p1=participant) | Q(p2=participant)).first()
+		game = LiveGames.objects.filter(Q(p1=participant) | Q(p2=participant)).select_related("gameUID").first()
 		if not game:
 			return Response({"detail":"This participant is not currently in a game"}, status=400)
 		return Response(game.gameUID, status=201) # can change this later
