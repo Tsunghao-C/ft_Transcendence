@@ -243,7 +243,8 @@ services:
       - "cluster.routing.allocation.disk.watermark.high=90%"
       - "cluster.routing.allocation.disk.watermark.flood_stage=95%"
       # Security settings (for development)
-      - xpack.security.enabled=false
+      - xpack.security.enabled=true
+      - xpack.security.authc.api_key.enabled=true
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
     volumes:
       - es_data:/usr/share/elasticsearch/data
@@ -276,7 +277,10 @@ services:
     volumes:
       - ./monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
     environment:
-      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+      - LS_JAVA_OPTS=-Xmx256m -Xms256m
+      - ELASTIC_USER=elastic
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+
       # ELASTIC_HOST: elasticsearch
     networks:
       - monitoring_net
@@ -307,7 +311,7 @@ services:
       - SERVER_HOST=0.0.0.0
       - SERVER_NAME=kibana
       # Security settings
-      - XPACK_SECURITY_ENABLED=false
+      - XPACK_SECURITY_ENABLED=true
       - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}
       # Performance settings
       - ELASTICSEARCH_REQUESTTIMEOUT=90000  # Added timeout
