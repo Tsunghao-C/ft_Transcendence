@@ -120,8 +120,7 @@ class Tournament(models.Model):
 
 	objects = TournamentManager()
 
-	created_at = models.DateTimeField(auto_now_ad
-	d=True)
+	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
 
 	def __str__(self):
@@ -146,7 +145,7 @@ class Tournament(models.Model):
 					raise ValueError(f"Bracket {bracket} has already been skipped by another participant.")
 		else:
 			raise ValueError("Bracket number must be between 0 and 5.")
-	
+
 	def has_bracket_been_skipped(self, bracket):
 		if 0 <= bracket <= 5:
 			return self.bracket_skips.get(str(bracket)) == 1
@@ -238,7 +237,7 @@ class LiveGames(models.Model):
 			models.Index(fields=["p2"]),
 			models.Index(fields=["status"])
 		]
-	
+
 	@staticmethod
 	def __get_new_mmr(userMMR: int, oppMMR: int, matchOutcome: int) -> int:
 		# Calculate the 'expected score'
