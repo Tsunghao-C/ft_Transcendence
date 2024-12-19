@@ -495,6 +495,73 @@ canvas {
 	margin: 0 0 0 0 !important;
 }
 
+/**************************** GameLobby ****************************/
+
+.gamelobby-view {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	padding-top: 10px;
+	padding-bottom: 10px;
+	width: 100%;
+	padding-top: 0;
+	padding-left: 10%;
+	padding-right: 10%;
+	height: var(--inner-view-height);
+	overflow-y: auto;
+	box-sizing: border-box; 
+}
+
+.gamelobby-view button {
+	background-color: transparent !important;
+	border: none !important;
+	font-size: 1.5rem !important;
+}
+
+.gamelobby-view #game-info {
+	position: absolute;
+	top: 15px;
+	right: 20px;
+	padding-left: 5px;
+	padding-right: 5px;
+	background-color: transparent !important;
+	border: 1px solid rgba(100, 100, 100, 0.5);
+	border-radius: 5px;
+	font-size: 0.8rem !important;
+	color: rgba(100, 100, 100, 0.7);
+}
+
+.gamelobby-view h4 {
+	font-size: 0.8rem;
+}
+
+.player-two {
+	text-align: right;
+}
+
+#invite-button {
+	/* color:red !important; */
+	/* position: absolute; */
+	top: 100px;
+	right: 100px;
+	width: 100%;
+	margin-bottom: 0px !important;
+	padding-bottom: 0px !important;
+	padding-right: 0 !important;
+	font-size: 0.8rem !important;
+	text-align: right;
+}
+
+.gamelobby-view hr {
+	margin-top:  0;
+}
+
+canvas {
+	width: 100%;
+	height: auto;
+}
+
 /**************************** Leaderboard ****************************/
 
 .leaderboard-view {

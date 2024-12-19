@@ -3,6 +3,11 @@ import { getLanguageCookie } from "./fetch_request.js";
 import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
 
+function hideElem(elemId) {
+	const elem = document.getElementById(elemId);
+	elem.style.display = "none";
+}
+
 export async function setLobbyView(contentContainer, roomID = "") {
 	let response;
 	let userData
@@ -16,23 +21,24 @@ export async function setLobbyView(contentContainer, roomID = "") {
 		return;
 	}
 	contentContainer.innerHTML = `
-    <div id="game-lobby" style="text-align: center;">
-        <h1>Game Lobby</h1>
-        <p>Select an option below to get started:</p>
-        <div>
-            <button id="create-match">Create Private Match</button>
-            <button id="join-match">Join Match</button>
-            <button id="ready-button" style="display:none;">Ready</button>
-			<button id="invite-button" style="display:none;">Invite Player</button>
-            <div id="player-info-container" style="display: flex; justify-content: space-between; margin-top: 20px;">
-                <div id="user-info-left" style="text-align: left; flex: 1; padding: 10px;"></div>
-                <div id="user-info-right" style="text-align: left; flex: 1; padding: 10px;"></div>
-            </div>
-            <div id="game-info">Loading...</div>
-            <div id="player-status" class="player-status"></div>
-            <canvas id="game" width="800" height="600"></canvas>
-        </div>
-    </div>
+		<div class="gamelobby-view">
+		<!-- <h2>Game Lobby</h2> -->
+		<div id="game-lobby" class="gamelobby-view">
+			<!-- <p>Select an option below to get started:</p> -->
+			<div>
+				<button id="create-match">Create Private Match</button>
+				<button id="join-match">Join Match</button>
+				<button id="ready-button" style="display:none;">Ready</button>
+				<button id="invite-button" style="display:none;"> > Invite a Player </button>
+				<div id="player-info-container" style="display: flex; justify-content: space-between;">
+					<div id="user-info-left" style="text-align: left; flex: 1; padding: 10px;"></div>
+					<div id="user-info-right" style="text-align: left; flex: 1; padding: 10px;"></div>
+				</div>
+				<div id="game-info">Loading...</div>
+				<div id="player-status" class="player-status"></div>
+				<canvas id="game" width="800" height="600" style="display: none;"></canvas>
+			</div>
+		</div>
 	`;
 	const canvas = document.getElementById('game');
 	const token = getCookie("accessToken");
@@ -113,7 +119,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 			ws.onopen = function() {
 				console.log('WebSocket connected');
 				resolve();
-				gameInfo.textContent = 'Connected to game server...';
+				gameInfo.textContent = '• Connected';
 				if (wsReconnectTimer) {
 					clearTimeout(wsReconnectTimer);
 					wsReconnectTimer = null;
@@ -135,6 +141,8 @@ export async function setLobbyView(contentContainer, roomID = "") {
 								player1Data = await profileResponse.json();
 								profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.player2}`);
 								player2Data = await profileResponse.json();
+								hideElem("create-match");
+								hideElem("join-match");
 								renderUserInfo(player1Data.profile, "user-info-left");
 								renderUserInfo(player2Data.profile, "user-info-right");
 							} catch(error) {
@@ -152,8 +160,11 @@ export async function setLobbyView(contentContainer, roomID = "") {
 							let profileResponse;
 							profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.alias}`);
 							player1Data = await profileResponse.json();
+							hideElem("create-match");
+							hideElem("join-match");
 							renderUserInfo(player1Data.profile, "user-info-left");
-							data.playerId = 'player1'
+							renderEmptyUserInfo("user-info-right");
+							data.playerId = 'player1';
 							console.log("you are player1");
 							const inviteButton = document.getElementById("invite-button");
     						inviteButton.style.display = "inline-block";
@@ -417,9 +428,15 @@ export async function setLobbyView(contentContainer, roomID = "") {
 	
 
 	function renderUserInfo(user, targetId) {
+		if (targetId = "user-info-left") {
+			const num = "one";
+		} else {
+			const num = "two";
+		}
 		const userInfoDiv = document.getElementById(targetId);
-	
 		userInfoDiv.innerHTML = `
+			<hr>
+			<h4>Player one</h4>
 			<div style="display: flex; align-items: center; margin-bottom: 10px;">
 				<img src="${user.avatar}" alt="Avatar" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 10px;">
 				<div>
@@ -427,6 +444,23 @@ export async function setLobbyView(contentContainer, roomID = "") {
 					<p style="margin: 0;">MMR: ${user.mmr}</p>
 				</div>
 			</div>
+			<hr>
+		`;
+	}	
+
+	function renderEmptyUserInfo(targetId) {
+		const userInfoDiv = document.getElementById(targetId);
+	
+		userInfoDiv.innerHTML = `
+			<hr>
+			<h4 class="player-two">Player two</h4>
+			<div style="display: flex; align-items: center; margin-bottom: 10px;">
+				<div>
+					<p style="margin: 0; font-weight: bold;">Waiting...</p>
+				</div>
+				<img src="/media/default.jpg" alt="Avatar" style="width: 50px; height: 50px; border-radius: 50%; margin-left: 10px;">
+			</div>
+			<hr>
 		`;
 	}	
 
