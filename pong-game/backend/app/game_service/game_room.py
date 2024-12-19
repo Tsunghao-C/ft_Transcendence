@@ -33,11 +33,12 @@ class Ball():
         self.radius = BALL_RADIUS
 
 class GameRoom():
-    def __init__(self, room_id, user_data, consumer_data):
+    def __init__(self, room_id, user_data, consumer_data, is_local):
         self.room_id = "lobby_" + room_id
         self.connections = []
         self.left_player = user_data[0]
         self.right_player = user_data[1]
+        self.is_local = is_local
 
         # Adding AI player logic
         self.ai_player = None
@@ -63,6 +64,9 @@ class GameRoom():
     def get_room_name(self):
         return self.room_id
 
+    def is_local_game(self):
+        return self.is_local
+
     async def receive_player_input(self, player_id, input):
         logger.info("GameRoom: Received player input")
         if player_id in self.players:
@@ -74,6 +78,7 @@ class GameRoom():
             elif input == "move_stop":
                 player.speed = 0
             elif input == "idle":
+                logger.info(f"GameRoom: ID NOT FOUND, current players: {self.left_player} {self.right_player}")
                 pass
 
     def update_players(self):
