@@ -165,7 +165,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 			"is_ai_game": True
 		}))
 
-
 	async def create_private_lobby(self, room_name, player_alias):
 		self.assigned_room = room_name
 		self.assigned_player_alias = player_alias
@@ -174,12 +173,11 @@ class GameConsumer(AsyncWebsocketConsumer):
 		active_lobbies[room_name] = {
 				"players": players,
 				"connection": [],
-				"is_ai_game": is_ai_game
+                "local": False,
 				}
-		# self.current_group = f"lobby_{room_name}" are we using this ?
 		await self.send(json.dumps({
 			"type": "room_creation",
-			"message": f"Created  {game_type} Lobby {room_name}",
+			"message": f"Created Lobby {room_name}",
 			"room_name": room_name,
 			"is_ai_game": False
 			}))
@@ -190,12 +188,11 @@ class GameConsumer(AsyncWebsocketConsumer):
 				"players": [player_alias],
 				"connection": [self]
 				}
-#		self.current_group = f"lobby_{room_name}"
 		player_2 = str(uuid.uuid4())
 		active_lobbies[room_name]["players"].append(player_2)
 		active_lobbies[room_name]["ready"] = []
 		active_lobbies[room_name]["ready"].append(player_2)
-#		await self.channel_layer.group_add(self.current_group, self.channel_name)
+		active_lobbies["local"] = True
 		await self.send(json.dumps({
 			"type": "local_room_creation",
 			"message": f"Created local match Lobby {room_name}",
@@ -268,22 +265,28 @@ class GameConsumer(AsyncWebsocketConsumer):
 
 	async def launch_game(self, room_name):
 		try:
-			group_name = room_name
 			for connection in active_lobbies[room_name]["connection"]:
 				await connection.send(json.dumps({
 					"type": "notice",
 					"message": "Game is starting"
 					}))
-			logger.info(f"Starting game id: lobby_{room_name}")
+			logger.info(f"Starting game id: {room_name}")
 			game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"])
 			logger.info("GameRoom created")
-			active_online_games[group_name] = {
-				"room_data": game_room,
-				"player_data": {
+			if active_lobbies[room_name]["local"] == True:
+				active_local_games[room_name] = {
+					"room_data": game_room,
+					"player_data": {
+							"connection": active_lobbies[room_name]["connection"],
+						"ids": active_lobbies[room_name]["players"]
+					}}
+			else:
+				active_online_games[room_name] = {
+					"room_data": game_room,
+					"player_data": {
 						"connection": active_lobbies[room_name]["connection"],
-					"ids": active_lobbies[room_name]["players"]
-				}
-			}
+						"ids": active_lobbies[room_name]["players"]
+						}}
 			game_task = asyncio.create_task(game_room.run())
 			del active_lobbies[room_name]
 			logger.info("GameRoom task added")
