@@ -16,7 +16,7 @@ from .models import *
 class CreateTournamentView(APIView):
 	permission_classes = [IsAuthenticated]
 	def post(self, request):
-		serializer = CreateTournamentSerializer(data=request.data)
+		serializer = CreateTournamentSerializer(data=request.data, admin=request.user)
 		if not serializer.is_valid():
 			return Response(serializer.errors, status=400)
 		try:

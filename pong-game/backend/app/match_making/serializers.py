@@ -11,7 +11,7 @@ class CreateTournamentSerializer(serializers.Serializer):
 			raise serializers.ValidationError("Maximum players cannot exceed 20.")
 		return value
 
-	def create(self, validated_data):
+	def create(self, validated_data, admin):
 		tournament_admin = self.context['request'].user
 		return Tournament.objects.create(
 			tournament_admin=tournament_admin,
