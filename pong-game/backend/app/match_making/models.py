@@ -276,9 +276,18 @@ class LiveGames(models.Model):
 		self.p1.refresh_from_db()
 		self.p2.refresh_from_db()
 
+	def __save_results(self, outcome: int):
+		MatchResults.objects.create(
+			p1=self.p1.user,
+			p2=self.p2.user,
+			matchOutcome=outcome
+		)
+		MatchResults.save()
+
 	def matchEnd(self, outcome: int):
 		self.__update_mmrs(outcome)
 		self.__update_counters(outcome)
 		self.__update_tourney_standing(outcome)
+		self.__save_results(outcome)
 		# send message to chatroom here
 		self.delete()
