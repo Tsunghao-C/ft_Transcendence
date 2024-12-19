@@ -42,6 +42,8 @@ export function setGameMenu(contentContainer, menu = "main") {
 
 	function createMenu(menuKey) {
 		const menu = menus[menuKey];
+		const gameView = document.createElement("div");
+		gameView.className = "game-view";
 		const menuContainer = document.createElement("div");
 		menuContainer.className = "menu-container";
 
@@ -58,8 +60,8 @@ export function setGameMenu(contentContainer, menu = "main") {
 
 			menuContainer.appendChild(button);
 		});
-
-		return menuContainer;
+		gameView.appendChild(menuContainer);
+		return gameView;
 	}
 
 	const menuView = createMenu(menu);

@@ -1,25 +1,102 @@
 import { fetchWithToken } from "./fetch_request.js";
 import { getLanguageCookie } from './fetch_request.js';
+import { translations } from "./language_pack.js";
 
-export function setHomePage(contentContainer) {
-	// contentContainer.innerHTML = `
-	// 	<div class="home-view">
-	// 		<label for="profilePictureInput" class="form-label" data-i18n="profilePicture">Profile Picture</label>
-	// 		<input type="file" class="form-control" id="profilePictureInput" accept=".jpg, .jpeg, .png">
-	// 		<small class="form-text text-muted" data-i18n="profilePictureHint">Only .jpg and .png files are allowed.</small>
-	// 		<button type="button" id="test" class="btn btn-light" data-i18n="loginButton">Test Stuff</button>
-	// 	</div>
-	// `;
+export async function setHomePage(contentContainer, userdata) {
+
+	let response;
+	let data;
+
+	const usernameInHash = userdata.alias;
+
+	try {
+		response = await fetchWithToken(`/api/user/get-profile/?alias=${usernameInHash}`);
+		data = await response.json();
+	} catch(error) {
+		console.log(error);
+		window.location.hash = "login";
+		return;
+	}
+
+	const currentLanguage = getLanguageCookie() ||  "en";
 	contentContainer.innerHTML = `
 		<div class="home-view">
-			<h2>Welcome, [Username] !</h2>
-			<p style="font-size: 1rem;">We can fill this welcome page with :</p>
-			<ul>
-				<li>Current MMR</li>
-				<li>Last game played (opponent, result ...)</li>
-				<li>Last chatroom used</li>
-				<li>Unread messages</li>
-			</ul>
+			<h2>${translations[currentLanguage].welcome}, ${userdata.username} !</h2>
+			<div id="profile">
+			</div>
 		</div>
 	`;
+
+	const profileResult = document.getElementById("profile");
+
+	if (!response.ok && data.detail === "No CustomUser matches the given query.") {
+		profileResult.innerHTML = `<p data-i18n="userNotFound">User not found.</p>`;
+	} else {
+		displayProfile(data.profile);
+	}
+}
+
+function displayProfile(profile) {
+		const currentLanguage = getLanguageCookie() ||  "en";
+		const profileResult = document.getElementById("profile");
+		
+		profileResult.innerHTML = `
+		<div class="data-container">
+			<hr>
+			<h3>${translations[currentLanguage].currentStats}</h3>
+			<h4>${translations[currentLanguage].rank}: ${profile.rank || "Unranked"}</h4>
+			<h4>${translations[currentLanguage].mmr}: ${profile.mmr}</h4>
+			<h4>${translations[currentLanguage].winRate}: ${calculateWinRate(profile.wins, profile.losses)}%</h4>
+			<hr>
+			<h4 data-i18n="matchHistory">${translations[currentLanguage].matchHistory}</h4>
+			<p title="${translations[currentLanguage].wins}: ${profile.wins}, ${translations[currentLanguage].losses}: ${profile.losses}">
+				${profile.wins}${translations[currentLanguage].w} / ${profile.losses}${translations[currentLanguage].l}
+			</p>
+			<table class="table">
+				<thead>
+					<tr>
+						<th>${translations[currentLanguage].date}</th>
+						<th>${translations[currentLanguage].opponent}</th>
+						<th>${translations[currentLanguage].finalScore}</th>
+					</tr>
+				</thead>
+				<tbody id="matchHistoryTableBody">
+				</tbody>
+			</table>
+			<div class="match-history-scroll" style="max-height: 150px; overflow-y: auto;">
+				${
+					profile.matchHistory && profile.matchHistory.length > 0
+						? profile.matchHistory.map(match => {
+							const isP1 = match.p1 === profile.alias;
+							const p1Won = match.matchOutcome === "Player 1 Wins";
+							const isWin = (isP1 && p1Won) || (!isP1 && !p1Won);
+							const opponent = isP1 ? match.p2 : match.p1;
+							const outcomeText = isWin ? translations[currentLanguage].win : translations[currentLanguage].loss;
+							const matchDate = new Date(match.time).toLocaleString(currentLanguage);
+							return `
+								<p>
+									${matchDate} - <strong>${outcomeText}</strong> versus
+									<a href="#profile/${opponent}" class="opponent-link">${opponent}</a>
+								</p>
+							`;
+							}).join('')
+						: `<p class="text-muted" data-i18n="noMatchHistory">${translations[currentLanguage].noMatchHistory}</p>`
+				}
+			</div>
+		</div>
+		`;
+
+		const tableBody = document.getElementById("matchHistoryTableBody");
+		tableBody.innerHTML = "";
+		if (!profile.matchHistory || profile.matchHistory.length <= 0) {
+			tableBody.innerHTML = `<tr><td colspan="3" class="text-muted" data-i18n="noData">No data available</td></tr>`;
+			return;
+		}
+}
+
+function calculateWinRate(wins, losses) {
+	if (losses === 0) {
+		return (100.00);
+	}
+	return ((wins / (wins + losses)) * 100).toFixed(2);
 }

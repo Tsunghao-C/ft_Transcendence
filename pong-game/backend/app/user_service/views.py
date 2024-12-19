@@ -201,8 +201,9 @@ class changeEmailView(APIView):
 			return Response({"error": "invalid email format"}, status=400)
 		if CustomUser.objects.filter(email=newEmail).exists():
 			return Response({"error": "email is already in use"}, status=400)
-		sendOTP(newEmail, user.username, user.id, f"email_change_{user.id}")
-		return Response({"detail": "otp code sent"}, status=200)
+		user.email = newEmail
+		user.save()
+		return Response({"detail": "email change success"}, status=200)
 
 	def put(self, request):
 		user = request.user

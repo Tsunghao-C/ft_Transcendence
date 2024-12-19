@@ -24,8 +24,8 @@ export function setRegisterViewHtml(contentContainer) {
 						<label for="confirmPasswordInput" class="form-label" data-i18n="confirmPassword">Confirm Password</label>
 						<input type="password" class="form-control" id="confirmPasswordInput" placeholder="Re-enter your password" required>
 					<div>
-						<p id="errorMessage"></p>
-						<p id="successMessage"></p>
+						<p id="errorMessage" class="errorMessage"></p>
+						<p id="successMessage" class="successMessage"></p>
 					</div>
 					<button type="submit" class="btn btn-primary" data-i18n="registerButton">Register</button>
 				</form>
@@ -53,8 +53,8 @@ export function setLoginViewHtml(contentContainer) {
 						<label for="passwordInput" class="form-label" data-i18n="password">Password</label>
 						<input type="password" class="form-control" id="passwordInput" placeholder="Enter your password" required>
 					<div>
-						<p id="errorMessage"></p>
-						<p id="successMessage"></p>
+						<p id="errorMessage" class="errorMessage"></p>
+						<p id="successMessage" class="successMessage"></p>
 					</div>
 					<button type="submit" class="btn btn-light" data-i18n="loginButton">Log In</button>
 				</form>

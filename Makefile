@@ -70,6 +70,12 @@ check:
 	@chmod +x pong-game/tests/websocket_check.sh
 	@./pong-game/tests/websocket_check.sh localhost || { echo "\033[0;31mWebSocket health checks failed!\033[0m"; exit 1; }
 
+	# check WAF Modsecurity functionality
+	# Run Modsecurity test script
+	@echo "Checking Modsecurity functionality..."
+	@chmod +x pong-game/tests/modsec_test.sh
+	@./pong-game/tests/modsec_test.sh || { echo "\033[0;31mError: WAF is not functioning well!\033[0m"; exit 1; }
+
 clean:
 	docker volume prune --force
 	docker builder prune --force         # clear build cache
