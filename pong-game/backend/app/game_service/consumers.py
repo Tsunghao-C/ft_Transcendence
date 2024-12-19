@@ -83,7 +83,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 		if user is None:
 			await self.close()
 			return
-
 		self.user = user
 		print(user.id, user.alias, "is connected")
 		try:
@@ -122,8 +121,10 @@ class GameConsumer(AsyncWebsocketConsumer):
 		data = json.loads(text_data)
 		logger.info(f"Message received: {text_data}")
 		action = data.get("action")
+		logger.info(f"Action: {action}")
 		if action in self.receive_methods.keys():
-			self.receive_methods[action](data)
+			logger.info(f"Found receive_methods key, calling function {self.receive_methods[action]}")
+			await self.receive_methods[action](data)
 		else:
 			await self.send(json.dumps({
 				"type": "error",
@@ -133,6 +134,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 	async def receive_player_input(self, data):
 		roomID = data['game_roomID']
 		local_game = data['local']
+		logger.info("Receive_player_input called")
 		player_alias = self.user.alias
 		if local_game is False:
 			if roomID in active_online_games:
@@ -186,6 +188,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 		}))
 
 	async def create_private_lobby(self, data):
+		logger.info("Creating private lobby")
 		room_name = str(uuid.uuid4())
 		self.assigned_room = room_name
 		player_alias = self.user.alias
@@ -302,10 +305,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 					"message": "Game is starting"
 					}))
 			logger.info(f"Starting game id: lobby_{room_name}")
-#			if  active_lobbies[room_name]["is_ai_game"] == True:
-#				game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"], active_lobbies[room_name]["local"], active_lobbies[room_name]["difficulty"])
-#			else:
-			game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"], active_lobbies[room_name]["local"], active_lobbies[room_name]["difficulty"])
+			game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"], active_lobbies[room_name]["difficulty"])
 			logger.info("GameRoom created")
 			logger.info("Checking for local")
 			if active_lobbies[room_name]["local"] == True:
@@ -346,8 +346,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 			raise
 		finally:
 			room_name = task.get_name()
-			is_local_game = task.is_local_game()
-			if is_local_game is True and room_name in active_online_games:
+			if room_name in active_local_games.keys():
 				del active_local_games[room_name]
 			else:
 				del active_online_games[room_name]
@@ -375,7 +374,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 		token = query_params.get("token", [None])[0]
 		if not token:
 			return None
-
 		try:
 			payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
 			user = await self.get_user_from_payload(payload)
