@@ -23,7 +23,7 @@ create_index_pattern() {
 
   # echo "Creating index pattern for $pattern..."
   local PATTERN_RESPONSE
-  PATTERN_RESPONSE=$(curl -X POST "localhost:5601/kibana/api/saved_objects/index-pattern" \
+  PATTERN_RESPONSE=$(curl -X POST "localhost:5601/api/saved_objects/index-pattern" \
     -H "kbn-xsrf: true" \
     -H "Content-Type: application/json" \
     -d "{\"attributes\":{\"title\":\"$pattern\",\"timeFieldName\":\"$time_field\"}}")
@@ -38,7 +38,7 @@ create_index_pattern() {
   PATTERN_ID=$(echo "$PATTERN_RESPONSE" | grep -o '"id":"[^"]*' | cut -d'"' -f4)
   # echo "Created index pattern $pattern with ID: $PATTERN_ID"
   # Verify pattern exists
-  until curl -s "localhost:5601/kibana/api/saved_objects/index-pattern/$PATTERN_ID" | grep -q "$pattern"; do
+  until curl -s "localhost:5601/api/saved_objects/index-pattern/$PATTERN_ID" | grep -q "$pattern"; do
       sleep 1
   done
   echo "$PATTERN_ID"
@@ -90,7 +90,7 @@ for dashboard_dir in /usr/share/kibana/dashboards/*/ ; do
       sed "s#INDEX_PATTERN_ID#$CURRENT_ID#g" "$dashboard" > "$TMP_FILE"
 
       echo "Importing processed dashboard..."
-      curl -X POST "localhost:5601/kibana/api/saved_objects/_import?overwrite=true" \
+      curl -X POST "localhost:5601/api/saved_objects/_import?overwrite=true" \
         -H "kbn-xsrf: true" \
         -H "Content-Type: multipart/form-data" \
         -F "file=@$TMP_FILE"
@@ -103,7 +103,7 @@ done
 
 # # Set up default space view
 # echo "Setting up default space view..."
-# curl -X PUT "localhost:5601/kibana/api/spaces/space/default" \
+# curl -X PUT "localhost:5601/api/spaces/space/default" \
 #     -H "kbn-xsrf: true" \
 #     -H "Content-Type: application/json" \
 #     -d '{
@@ -116,7 +116,7 @@ done
 
 # # Create default view for Dashboards app
 # echo "Setting up default dashboard view..."
-# curl -X POST "localhost:5601/kibana/api/saved_objects/config/8.16.0" \
+# curl -X POST "localhost:5601/api/saved_objects/config/8.16.0" \
 #     -H "kbn-xsrf: true" \
 #     -H "Content-Type: application/json" \
 #     -d "{
