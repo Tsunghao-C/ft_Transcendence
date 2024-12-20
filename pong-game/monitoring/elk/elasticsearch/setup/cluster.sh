@@ -18,8 +18,8 @@ curl -X PUT -H "Content-Type: application/json" \
           }
         }
       },
-    "action.destructive_requires_name": true
-    "indices.lifecycle.poll_interval": "1m"
+      "action.destructive_requires_name": true,
+      "indices.lifecycle.poll_interval": "1m"
     }
   }'
 
