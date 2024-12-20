@@ -34,6 +34,8 @@ volumes:
   filebeat_registry: {}
   es_data:
     driver: local
+  kibana_certs:
+    driver: local
 
 services:
   # Security Layer
@@ -296,6 +298,7 @@ services:
     container_name: kibana
     image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
     volumes:
+      - ./monitoring/elk/certs:/usr/share/kibana/config/certs:ro
       - ./monitoring/elk/kibana/dashboards:/usr/share/kibana/dashboards
       - ./monitoring/elk/kibana/setup:/usr/share/kibana/setup
     ports:
@@ -316,6 +319,11 @@ services:
       - OPTIMIZATION_PROFILING=false
       # Other settings
       - TELEMETRY_ENABLED=false
+      # TLS related settings
+      - SERVER_SSL_ENABLED=true
+      - SERVER_SSL_CERTIFICATE=/usr/share/kibana/config/certs/kibana.crt
+      - SERVER_SSL_KEY=/usr/share/kibana/config/certs/kibana.key
+      - SERVER_SSL_REDIRECT=true
     networks:
       - monitoring_net
     depends_on:

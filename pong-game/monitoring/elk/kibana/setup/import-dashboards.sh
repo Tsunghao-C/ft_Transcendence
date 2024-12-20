@@ -7,7 +7,7 @@ until curl -s -u "kibana_system:${ELASTICSEARCH_PASSWORD}" http://elasticsearch:
 done
 
 # Wait for Kibana to be ready
-until curl -s "http://localhost:5601/api/status" | grep -q '"status":{"overall":{"level":"available"'; do
+until curl -k -s "https://localhost:5601/api/status" | grep -q '"status":{"overall":{"level":"available"'; do
     echo "Waiting for Kibana..."
     sleep 5
 done
@@ -26,7 +26,7 @@ create_index_pattern() {
 
   # echo "Creating index pattern for $pattern..."
   local PATTERN_RESPONSE
-  PATTERN_RESPONSE=$(curl -X POST "http://localhost:5601/api/saved_objects/index-pattern" \
+  PATTERN_RESPONSE=$(curl -k -X POST "https://localhost:5601/api/saved_objects/index-pattern" \
     -H "kbn-xsrf: true" \
     -H "Content-Type: application/json" \
     -u "elastic:${ELASTICSEARCH_PASSWORD}" \
@@ -90,7 +90,7 @@ for dashboard_dir in /usr/share/kibana/dashboards/*/ ; do
       sed "s#INDEX_PATTERN_ID#$CURRENT_ID#g" "$dashboard" > "$TMP_FILE"
 
       echo "Importing processed dashboard..."
-      curl -X POST "http://localhost:5601/api/saved_objects/_import?overwrite=true" \
+      curl -k -X POST "https://localhost:5601/api/saved_objects/_import?overwrite=true" \
         -H "kbn-xsrf: true" \
         -u "elastic:${ELASTICSEARCH_PASSWORD}" \
         -H "Content-Type: multipart/form-data" \
