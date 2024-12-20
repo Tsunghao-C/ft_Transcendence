@@ -5,6 +5,9 @@ import math, uuid, logging
 
 logger = logging.getLogger(__name__)
 
+def generate_uuid_without_hyphens():
+    return uuid.uuid4().hex
+
 # class TournamentManager:
 # 	@staticmethod
 # 	def get_players_in_round(bracket: int, num_players: int) -> int:
@@ -217,7 +220,7 @@ class LiveGames(models.Model):
 
 	gameUID = models.UUIDField(
 		primary_key=True,
-		default=uuid.uuid4,
+		default=generate_uuid_without_hyphens,
 		editable=False,
 		unique=True
 	)
