@@ -98,7 +98,6 @@ services:
     networks:
       - frontend_net
       - backend_net
-      # - monitoring_net
     env_file:
       - .env
     logging:
@@ -108,7 +107,6 @@ services:
         max-file: "3"
     depends_on:
       - django
-      # - kibana
     healthcheck:
       test: ["CMD", "curl", "-k", "https://localhost:443/health" ]
       interval: 2s
