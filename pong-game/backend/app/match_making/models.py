@@ -298,7 +298,7 @@ class MatchMakingQueue(models.Model):
 			player_mmr=F("player__mmr")
 		).order_by("-player_mmr", "-joined_at")
 		if queue.count() < 2:
-			return
+			return None
 		paired_players = list(queue)
 		for i in range(0, len(paired_players), 2):
 			if i + 1 >= len(paired_players):
@@ -306,20 +306,23 @@ class MatchMakingQueue(models.Model):
 			p1 = paired_players[i]
 			p2 = paired_players[i + 1]
 			cls._create_live_game(p1, p2)
+		return True
 	
 	@classmethod
 	def _create_live_game(cls, p1, p2):
 		try:
 			with transaction.atomic():
-				LiveGames.objects.create(
+				game = LiveGames.objects.create(
 					p1=p1,
 					p2=p2,
 					status=LiveGames.Status.not_started
 				)
 				# add redirect here to join live game
 				cls._remove_players_from_queue(p1, p2)
+				return game
 		except Exception as e:
 			logger.error(f"Error creating live game: {e}")
+			return None
 
 	@classmethod
 	def _remove_players_from_queue(cls, p1, p2):

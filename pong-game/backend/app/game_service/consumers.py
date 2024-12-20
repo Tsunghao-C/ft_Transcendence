@@ -9,9 +9,11 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.layers import get_channel_layer
 from .game_room import GameRoom
 from user_service.models import CustomUser
+from match_making.models import MatchMakingQueue, LiveGames
 from channels.db import database_sync_to_async
 from urllib.parse import parse_qs
 from django.conf import settings
+from django.db.utils import IntegrityError
 
 
 load_dotenv()
@@ -114,7 +116,9 @@ class GameConsumer(AsyncWebsocketConsumer):
 		logger.info(f"Message received: {text_data}")
 		action = data.get("action")
 		player_alias = self.user.alias
-		if action == "join_private_match":
+		if action == "join_queue":
+			await self.join_queue()
+		elif action == "join_private_match":
 			await self.join_lobby(data["room_name"], player_alias)
 		elif action == "create_local_match":
 			room_name = str(uuid.uuid4())
@@ -140,6 +144,46 @@ class GameConsumer(AsyncWebsocketConsumer):
 					"type": "error",
 					"message": f"Game room {data['game_roomID']} not found"
 					}))
+
+	async def join_queue(self):
+		#used for random match making
+		try:
+			queue_entry = MatchMakingQueue.objects.create(player=self.user)
+			await self.send(json.dumps({
+				"type":"notice",
+				"message":f"User {self.user.alias} added to queue"
+			}))
+		except IntegrityError:
+			await self.send(json.dumps({
+				"type": "error",
+				"message": "User is already in the queue"
+			}))
+	
+	async def check_queue_and_launch_games(self):
+		while True:
+			matched = await self.match_players_from_queue()
+			if matched:
+				games = LiveGames.objects.filter(status=LiveGames.Status.not_started)
+				for game in games:
+					self.create_random_game(game)
+			await asyncio.sleep(15) # check every 15 seconds
+	
+	@database_sync_to_async
+	def match_players_from_queue(self):
+		return MatchMakingQueue.match_players()
+	
+	async def create_random_game(self, LiveGame):
+		# start game for matched players
+		room_name = str(LiveGame.gameUID)
+		self.assigned_room = room_name
+		players = [LiveGame.p1.alias, LiveGame.p2.alias]
+		active_lobbies[room_name] = {
+			"players": players,
+			"connection": [],
+			"is_ai_game": False
+		}
+		LiveGame.status = LiveGames.Status.in_progress
+		LiveGame.save()
 
 	async def create_ai_lobby(self, room_name, player_alias, difficulty):
 		self.assigned_room = room_name
