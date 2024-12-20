@@ -346,22 +346,6 @@
 			}
 		}
 
-		function joinQuickMatch() {
-			try {
-				// Ensure WebSocket is created
-				createSocket();
-				// Send join_queue action to the server
-				data.socket.send(JSON.stringify({
-					action: 'join_queue',
-					player_id: data.playerId
-				}));
-				console.log('Request to join Quick Match queue sent.');
-			} catch (error) {
-				console.error('Error during Quick Match:', error);
-				alert('Failed to join Quick Match. Please try again.');
-			}
-		}
-
 		//const token = document.cookie('token'); //need to tokenize it manually ???
 		async function getPlayerInfo() {
 			try {
