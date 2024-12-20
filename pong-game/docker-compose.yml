@@ -242,11 +242,22 @@ services:
       - "cluster.routing.allocation.disk.watermark.low=85%"
       - "cluster.routing.allocation.disk.watermark.high=90%"
       - "cluster.routing.allocation.disk.watermark.flood_stage=95%"
-      # Security settings (for development)
+      # Security settings (Admin user)
       - xpack.security.enabled=true
       - xpack.security.authc.api_key.enabled=true
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      # Transport SSL settings
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.key=/usr/share/elasticsearch/config/certs/elastic-transport.key
+      - xpack.security.transport.ssl.certificate=/usr/share/elasticsearch/config/certs/elastic-transport.crt
+      - xpack.security.transport.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca.crt
+      # HTTP SSL settings
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.key=/usr/share/elasticsearch/config/certs/elastic-http.key
+      - xpack.security.http.ssl.certificate=/usr/share/elasticsearch/config/certs/elastic-http.crt
+      - xpack.security.http.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca.crt
     volumes:
+      - ./monitoring/elk/certs:/usr/share/elasticsearch/config/certs:ro
       - es_data:/usr/share/elasticsearch/data
       - ./monitoring/elk/elasticsearch/setup:/setup
     entrypoint: >
@@ -265,7 +276,7 @@ services:
     networks:
       - monitoring_net
     healthcheck:
-      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cat/health || exit 1"]
+      test: ["CMD-SHELL", "curl -k -s https://localhost:9200/_cat/health || exit 1"]
       interval: 10s
       timeout: 10s
       retries: 5
@@ -275,11 +286,16 @@ services:
     container_name: logstash
     image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
     volumes:
+      - ./monitoring/elk/certs:/usr/share/logstash/config/certs:ro
       - ./monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
     environment:
       - LS_JAVA_OPTS=-Xmx256m -Xms256m
       - ELASTIC_USER=elastic
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      # SSL / TLS setting
+      - ELASTIC_HOST=https://elasticsearch:9200
+      - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=/usr/share/logstash/config/certs/ca.crt
+      - ELASTICSEARCH_SSL_VERIFICATIONMODE=certificate
 
       # ELASTIC_HOST: elasticsearch
     networks:
@@ -305,9 +321,11 @@ services:
       - "5601:5601" # Only external access point for ELK
     environment:
       # Elasticsearch connection
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_HOSTS=https://elasticsearch:9200
       - ELASTICSEARCH_USERNAME=kibana_system
       - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}
+      - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=/usr/share/kibana/config/certs/ca.crt
+      - ELASTICSEARCH_SSL_VERIFICATIONMODE=certificate
       # Server settings
       - SERVER_HOST=0.0.0.0
       - SERVER_NAME=kibana
