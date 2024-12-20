@@ -218,7 +218,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 				"message": "player is already in lobby",
 				"player1": f"{active_lobbies[room_name]['players'][0]}",
 				"player2": f"{active_lobbies[room_name]['players'][1]}"
-				}))
+				})) 
 			return
 		if len(active_lobbies[room_name]["players"]) >= 2:
 			await self.send(json.dumps({"error": f"lobby {room_name} is full"}))
