@@ -8,17 +8,27 @@ done
 
 echo "Elasticsearch is up - initializing..."
 
+# Wait for security index to be created
+until curl -s -u "elastic:${ELASTIC_PASSWORD}" http://localhost:9200/.security-7/_alias >/dev/null; do
+    echo "Waiting for security index..."
+    sleep 2
+done
+
+
 echo "Setting up built-in users..."
 
 # Set up elastic superuser password
 echo "Setting elastic superuser password..."
 curl -X POST -H "Content-Type: application/json" \
+    -u "elastic:${ELASTIC_PASSWORD}" \
      "http://localhost:9200/_security/user/elastic/_password" \
      -d "{\"password\":\"${ELASTIC_PASSWORD}\"}"
 
+sleep 2
+
 # Verify elastic user credentials
 echo "Verifying elastic user..."
-if curl -s -u "elastic:${ELASTIC_PASSWORD}" http://localhost:9200/_security/_authenticate > /dev/null; then
+if curl -s -u "elastic:${ELASTIC_PASSWORD}" http://localhost:9200/_security/_authenticate; then
     echo "Elastic superuser verified successfully"
 else
     echo "Failed to verify elastic user"
