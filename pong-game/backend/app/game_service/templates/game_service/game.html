@@ -97,8 +97,104 @@
 	<canvas id="game" width="800" height="600"></canvas>
 
 	<script>
+
+		function getCookie(name) {
+			const cookies = document.cookie.split("; ").reduce((acc, cookie) => {
+				const [key, value] = cookie.split("=");
+				acc[key] = value;
+				return acc;
+			}, {});
+			return cookies[name];
+		}
+
+		async function fetchWithToken(url, body = null, method = 'GET', needForContent = true) {
+			let token = getCookie("accessToken");
+			if (!token) {
+				throw new Error("No access token available.");
+			}
+
+		let hasTriedRefresh = false;
+
+		const fetchWithAccessToken = async (token) => {
+			const options = {
+				method: method,
+				headers: {
+					'Authorization': `Bearer ${token}`,
+				},
+			};
+
+			// this is just a desperate attempt to get the token right, doesn't work, doesn't do anythin, we might not need it
+			// if (method === 'POST') {
+			//     const csrfToken = getCookie("csrftoken");
+			//     if (csrfToken) {
+			// 		console.log("pls tell me we go here i beg you");
+			//         options.headers['X-CSRFToken'] = csrfToken;
+			//     } else {
+			//         console.error("CSRF token is missing");
+			//     }
+			// }
+
+			if (needForContent) {
+				options.headers['Content-Type'] = 'application/json';
+			}
+
+			if (body) {
+				options.body = body;
+			}
+
+			console.log(options);
+
+			const response = await fetch(url, options);
+			if (response.status === 401 && !hasTriedRefresh) {
+				console.log("Access token expired, attempting to refresh...");
+				hasTriedRefresh = true;
+
+				const refreshToken = getCookie("refreshToken");
+				if (!refreshToken) {
+					throw new Error("No refresh token available for renewal.");
+				}
+
+				const refreshResponse = await fetch('/api/user/token/refresh/', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({ refresh: refreshToken }),
+				});
+
+				if (refreshResponse.ok) {
+					const refreshData = await refreshResponse.json();
+					document.cookie = `accessToken=${refreshData.access}; path=/; secure; SameSite=Strict`;
+					token = refreshData.access;
+
+					return fetchWithAccessToken(token);
+				} else {
+					console.error("Failed to refresh token:", await refreshResponse.text());
+					throw new Error("Failed to refresh token. Please log in again.");
+				}
+			} else if (response.status === 401 && hasTriedRefresh) {
+				throw new Error("Failed to refresh token. Please log in again.");
+			}
+			return response;
+		};
+
+		return fetchWithAccessToken(token);
+		}
+
+		var data = {
+			playerId: -1,
+			player2Id: -1,
+			socket: -1,
+			roomUID: -1
+		};
+
+		const async_wrapper = async() => {
+			const response = await fetchWithToken('/api/user/getuser/');
+			const response_data = await response.json();
+			data.playerId = response_data.alias
+		}
 		const canvas = document.getElementById('game');
-		const token = localStorage.getItem('token'); //Is this stored there or in cookies!!!!
+		const token = getCookie("accessToken");
 		const PADDLE_HEIGHT = 100;
 		const PADDLE_WIDTH = 15;
         const ctx = canvas.getContext('2d');
@@ -164,8 +260,8 @@
 				return new Promise((resolve, reject) => {
 				const gameId = 'test_game';
 				const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
-				const wsUrl = `${wsScheme}://${window.location.host}/ws/game-server/${gameId}/`;
-				
+				const wsUrl = `${wsScheme}://${window.location.host}/ws/game-server/${gameId}/?token=${encodeURIComponent(token)}`;
+
 				console.log('Connecting to WebSocket...')
 				ws = new WebSocket(wsUrl);
 				data.socket = ws
@@ -209,8 +305,8 @@
 								gameInfo.textContent = 'Error: ' + response.message;
 							}
 							else if (response.type == 'game_update') {
-								if (pendingGameUpdate) { 
-									pendingGameUpdate(response.payload) 
+								if (pendingGameUpdate) {
+									pendingGameUpdate(response.payload)
 									pendingGameUpdate = null;
 								}
 							}
@@ -271,8 +367,9 @@
 						type: 'player_input',
 						player_id: data.playerId,
 						input: playerEvent.type,
+						local: false,
 						game_roomID: data.roomUID
-					}));	
+					}));
 					playerEvent.pending = false;
 				}
 				else {
@@ -280,6 +377,7 @@
 						type: 'player_input',
 						player_id: data.playerId,
 						input: 'idle',
+						local: false,
 						game_roomID: data.roomUID
 					}));
 				}
@@ -513,7 +611,7 @@
 				console.error('Exception caught in startGame', error);
 			}
 		}
-	
+
 		async function join_match() {
 			try {
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -529,7 +627,7 @@
 				console.error('Exception caught in joinMatch.js', error)
 			}
 		}
-	
+
 		async function create_private_match() {
 			try {
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -549,11 +647,10 @@
 			try {
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
 				canvas.style.display = 'block';
-				data.playerId = 'player_1';
 				await data.socket.send(JSON.stringify({
-					action: 'create_private_match',
+					action: 'create_ai_match',
 					id: data.playerId,
-					is_ai_game: true
+					difficulty: 'hard'
 				}));
 
 				console.log("Started AI game session");
@@ -575,6 +672,7 @@
 			await connectWebSocket();
 		}
 
+		async_wrapper();
 		init();
 	</script>
 </body>
