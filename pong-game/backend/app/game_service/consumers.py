@@ -150,6 +150,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 	async def join_queue(self):
 		#used for random match making
 		try:
+			print("******* JOIN QUEUE TRIGGERED *******")
 			queue_entry = MatchMakingQueue.objects.create(player=self.user)
 			await self.send(json.dumps({
 				"type":"notice",
