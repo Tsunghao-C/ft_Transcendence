@@ -14,6 +14,8 @@ from channels.db import database_sync_to_async
 from urllib.parse import parse_qs
 from django.conf import settings
 from django.db.utils import IntegrityError
+from django.db.models import Q
+
 
 
 load_dotenv()
@@ -153,37 +155,33 @@ class GameConsumer(AsyncWebsocketConsumer):
 				"type":"notice",
 				"message":f"User {self.user.alias} added to queue"
 			}))
+			await self.get_matched()
 		except IntegrityError:
 			await self.send(json.dumps({
 				"type": "error",
 				"message": "User is already in the queue"
 			}))
 	
-	async def check_queue_and_launch_games(self):
+	async def get_matched(self):
 		while True:
-			matched = await self.match_players_from_queue()
+			matched = await self.match_players()
 			if matched:
-				games = LiveGames.objects.filter(status=LiveGames.Status.not_started)
-				for game in games:
-					self.create_random_game(game)
+				game = LiveGames.objects.filter(Q(p1=self.user) | Q(p2=self.user)).first()
+				if not game:
+					continue
+				if game.status != LiveGames.Status.not_started:
+					await self.send(json.dumps({
+						"type": "error",
+						"message": "this user is already in an active game"
+					}))
+					break
+				else:
+					if game.p1 == self.user:
+						await self.create_private_lobby(game)
+					await asyncio.sleep(5)
+					await self.join_lobby(str(game.gameUID), self.user.alias)
+					break
 			await asyncio.sleep(15) # check every 15 seconds
-	
-	@database_sync_to_async
-	def match_players_from_queue(self):
-		return MatchMakingQueue.match_players()
-	
-	async def create_random_game(self, LiveGame):
-		# start game for matched players
-		room_name = str(LiveGame.gameUID)
-		self.assigned_room = room_name
-		players = [LiveGame.p1.alias, LiveGame.p2.alias]
-		active_lobbies[room_name] = {
-			"players": players,
-			"connection": [],
-			"is_ai_game": False
-		}
-		LiveGame.status = LiveGames.Status.in_progress
-		LiveGame.save()
 
 	async def create_ai_lobby(self, room_name, player_alias, difficulty):
 		self.assigned_room = room_name
