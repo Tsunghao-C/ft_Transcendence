@@ -3,6 +3,7 @@ import { getLanguageCookie } from "./fetch_request.js";
 import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
 import { loadPage } from "./app.js";
+import { clearInput, hideElem, showElem } from "./utils.js";
 
 export async function setChatView(contentContainer, roomType = "", aliasOrRoomToJoin = "") {
 	let userRoomData;
@@ -21,48 +22,92 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 		return;
 	}
 
+	// contentContainer.innerHTML = `
+	// 	<div class="chat-view">
+	// 		<h2 data-i18n="leaderboard">Chat</h2>
+	// 		<div id="room-list" style="margin-bottom: 20px;"></div>
+	// 		<div style="margin-bottom: 20px;">
+	// 			<button id="join-room">Join Room</button>
+	// 			<button id="create-public-room">Create Public Room</button>
+	// 			<button id="send-private-message">Send Private Message</button>
+	// 		</div>
+	// 		<div id="chat-content" style="display:none;">
+	// 			<h3 id="chat-room-title"></h3>
+	// 			<div id="messages" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;"></div>
+	// 			<div>
+	// 				<input id="message-input" type="text" placeholder="Type your message">
+	// 				<button id="send-message">Send</button>
+	// 				<button id="send-invite">Send Invite</button>
+	// 			</div>
+	// 		</div>
+	// 	</div>
+	// `;
+
 	contentContainer.innerHTML = `
-		<div id="chat-container">
-			<h1>Chat Rooms</h1>
-			<div id="room-list" style="margin-bottom: 20px;"></div>
-			<div style="margin-bottom: 20px;">
-				<button id="join-room">Join Room</button>
-				<button id="create-public-room">Create Public Room</button>
-				<button id="send-private-message">Send Private Message</button>
-			</div>
-			<div id="chat-view" style="display:none;">
-				<h3 id="chat-room-title"></h3>
-				<div id="messages" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;"></div>
-				<div>
-					<input id="message-input" type="text" placeholder="Type your message">
-					<button id="send-message">Send</button>
-					<button id="send-invite">Send Invite</button>
+		<div class="chat-view">
+			<!-- <h2>Chat</h2> -->
+			<ul class="nav nav-tabs" id="chatBlockTabs" role="tablist">
+				<li class="nav-item">
+					<a class="nav-link active" id="private-message-tab" data-bs-toggle="tab" href="#private-message" role="tab" aria-controls="private-message" aria-selected="true">Private messages</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" id="join-room-tab" data-bs-toggle="tab" href="#join-room" role="tab" aria-controls="join-room" aria-selected="false">Join Room</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" id="create-room-tab" data-bs-toggle="tab" href="#create-room" role="tab" aria-controls="create-room" aria-selected="false">Create Room</a>
+				</li>
+			</ul>
+			<div class="tab-content">
+				<div class="tab-pane fade show active" id="private-message" role="tabpanel" aria-labelledby="private-message-tab">
+					<div id="pm-searchbar">
+						<input type="text" id="recipientUser" placeholder="Find a user to chat with">
+						<button id="start-private-chat">Start private chat</button>
+					</div>
+					<div id="chat-content" style="display:none;">
+						<div id="chat-content-top">
+							<h4 id="chat-room-title"></h4>
+							<button id="go-back">↵ Go Back</button>
+						</div>
+						<div id="messages" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;"></div>
+						<div id="chat-content-bottom">
+							<input id="message-input" type="text" placeholder="Type your message">
+							<button id="send-message">Send</button>
+							<button id="send-invite">Play</button>
+						</div>
+					</div>
+				</div>
+				<div class="tab-pane fade" id="join-room" role="tabpanel" aria-labelledby="join-room-tab">
+					<ul id="friendRequestList" class="list-group"></ul>
+					<div id="room-list" style="margin-bottom: 20px;"></div>
+				</div>
+				<div class="tab-pane fade" id="create-room" role="tabpanel" aria-labelledby="create-room-tab">
+					<button id="create-public-room">Create Public Room</button>
 				</div>
 			</div>
 		</div>
-	`;
+	`
 
 	const roomList = document.getElementById("room-list");
 
-roomList.innerHTML = roomData
-	.map(room => {
-		const roomType = room.is_private ? "private" : "public";
-		const aliasOrRoomName = room.is_private 
-			? room.other_member || "Unknown" 
-			: room.name;
+	roomList.innerHTML = roomData
+		.map(room => {
+			const roomType = room.is_private ? "private" : "public";
+			const aliasOrRoomName = room.is_private 
+				? room.other_member || "Unknown" 
+				: room.name;
 
-		const roomDisplayName = room.is_private
-			? `Private message with ${aliasOrRoomName}`
-			: room.name;
+			const roomDisplayName = room.is_private
+				? `Private messages with ${aliasOrRoomName}`
+				: room.name;
 
-		return `<div class="room-item" 
-					data-room-type="${roomType}" 
-					data-alias-or-room-name="${aliasOrRoomName}" 
-					style="cursor: pointer; margin: 5px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
-				${roomDisplayName}
-			</div>`;
-	})
-	.join("");
+			return `<div class="room-item" 
+						data-room-type="${roomType}" 
+						data-alias-or-room-name="${aliasOrRoomName}" 
+						style="cursor: pointer; margin: 5px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+					${roomDisplayName}
+				</div>`;
+		})
+		.join("");
 
 	document.querySelectorAll(".room-item").forEach(item => {
 		item.addEventListener("click", (event) => {
@@ -73,6 +118,11 @@ roomList.innerHTML = roomData
 		});
 	});
 
+	document.getElementById("go-back").addEventListener('click', async () => {
+		hideElem("chat-content");
+		clearInput("recipientUser");
+		showElem("pm-searchbar", "flex");
+	});
 
 	document.getElementById("join-room").addEventListener('click', async () => {
 		const roomName = prompt("Enter the room name to join:");
@@ -103,6 +153,19 @@ roomList.innerHTML = roomData
 		}
 	});
 
+	document.getElementById("start-private-chat").addEventListener("click", async () => {
+		const recipientUser = document.getElementById("recipientUser").value;
+		try {
+			if (recipientUser) {
+				console.log("Opening char with", recipientUser);
+				getOrCreatePrivateChatRoom(recipientUser);
+			}
+		} catch(error) {
+			console.log(error);
+			Window.location.hash = "login";
+		}
+	})
+
 	document.getElementById("send-private-message").addEventListener("click", async () => {
 		const alias = prompt("Enter the alias for the private message:");
 		if (alias) {
@@ -120,7 +183,7 @@ roomList.innerHTML = roomData
 			);
 			if (response.ok) {
 				const roomData = await response.json();
-				loadChatRoom(roomData.name, userAlias, `Private message with ${alias}`);
+				loadChatRoom(roomData.name, userAlias, `${alias}`);
 			} else {
 				const errorData = await response.json();
 				if (errorData.detail === "You are blocking this user") {
@@ -142,7 +205,6 @@ roomList.innerHTML = roomData
 		}
 	}
 
-	document.getElementById("send-message").addEventListener("click", sendMessage);
 	document.getElementById("send-invite").addEventListener("click", sendInvite);
 
 	async function sendInvite() {
@@ -162,20 +224,6 @@ roomList.innerHTML = roomData
 				alert("send help");
 				window.location.hash = "login";
 			}
-	}
-	function sendMessage() {
-		const input = document.getElementById("message-input");
-		if (input.value && state.chatSocket) {
-			const messageData = {
-				message: input.value,
-				alias: userAlias,
-				time: new Date().toLocaleTimeString(),
-			};
-			state.chatSocket.send(JSON.stringify(messageData));
-			input.value = "";
-		} else {
-			alert("Message input is empty or WebSocket is not connected.");
-		}
 	}
 
 	if (roomType === "public") {
@@ -197,6 +245,7 @@ async function loadChatRoom(roomName, userAlias, roomNameDisplay = roomName) {
 	console.log("we are here motherfukcer");
 	const messagesDiv = document.getElementById("messages");
 	const chatRoomTitle = document.getElementById("chat-room-title");
+
 	chatRoomTitle.textContent = `${roomNameDisplay}`;
 	messagesDiv.innerHTML = "<p>Loading messages...</p>";
 
@@ -220,11 +269,12 @@ async function loadChatRoom(roomName, userAlias, roomNameDisplay = roomName) {
 		addMessage(userAlias, messageData.alias, messageData.message, messageData.time, messageData.is_invite, messageData.game_room);
 	};
 
-	document.getElementById("chat-view").style.display = "block";
+	document.getElementById("chat-content").style.display = "block";
 
 	try {
 		const response = await fetchWithToken(`/api/chat/${roomName}/messages/`);
 		if (response.ok) {
+			hideElem("pm-searchbar");
 			const listMessageData = await response.json();
 			messagesDiv.innerHTML = "";
 			listMessageData.forEach(msg => {
@@ -237,6 +287,30 @@ async function loadChatRoom(roomName, userAlias, roomNameDisplay = roomName) {
 		console.error("Error fetching messages:", error);
 		messagesDiv.innerHTML = "<p>Error loading messages.</p>";
 	}
+
+	document.getElementById("send-message").addEventListener("click", async () => {
+		console.log("in SendMessage");
+		const input = document.getElementById("message-input");
+		if (input.value && state.chatSocket) {
+			const messageData = {
+				message: input.value,
+				alias: userAlias,
+				time: new Date().toLocaleTimeString(),
+			};
+			state.chatSocket.send(JSON.stringify(messageData));
+			input.value = "";
+		} else {
+			alert("Message input is empty or WebSocket is not connected.");
+		}
+	});
+
+	document.getElementById("message-input").addEventListener("keydown", (event) => {
+		if (event.key === "Enter") {
+			event.preventDefault(); // Empêche l'action par défaut du formulaire (si applicable)
+			document.getElementById("send-message").click(); // Simule un clic sur le bouton
+		}
+	});
+
 }
 
 function addMessage(userAlias, alias, message, time, isInvite = false, gameRoom = null) {

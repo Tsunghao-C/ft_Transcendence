@@ -2,16 +2,8 @@ import { fetchWithToken } from "./fetch_request.js";
 import { getLanguageCookie } from "./fetch_request.js";
 import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
-
-function hideElem(elemId) {
-	const elem = document.getElementById(elemId);
-	elem.style.display = "none";
-}
-
-function showElem(elemId) {
-	const elem = document.getElementById(elemId);
-	elem.style.display = "block";
-}
+import { hideElem } from "./utils.js";
+import { showElem } from "./utils.js";
 
 export async function setLobbyView(contentContainer, roomID = "") {
 	let response;
@@ -423,7 +415,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 		try {
 			destroyReadyButton();
 			hideElem("invite-button");
-			showElem("game");
+			showElem("game", "block");
 			if (textBox) {
 				textBox.remove();
 				textBox = null;

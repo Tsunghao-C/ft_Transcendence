@@ -25,13 +25,13 @@
  body {
 	margin: 0;
 	min-height: 100vh;
-	background-color: #FFFFFF; /* Fond principal blanc */
+	background-color: #FFFFFF;
 	background-image: 
-        radial-gradient(closest-side, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0)), /* Blanc */
-        radial-gradient(closest-side, rgba(220, 220, 220, 1), rgba(220, 220, 220, 0)), /* Gris clair */
-        radial-gradient(closest-side, rgba(180, 180, 180, 1), rgba(180, 180, 180, 0)), /* Gris moyen clair */
-        radial-gradient(closest-side, rgba(120, 120, 120, 1), rgba(120, 120, 120, 0)), /* Gris moyen foncé */
-        radial-gradient(closest-side, rgba(60, 60, 60, 1), rgba(60, 60, 60, 0)); /* Gris foncé */
+        radial-gradient(closest-side, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0)), 
+        radial-gradient(closest-side, rgba(220, 220, 220, 1), rgba(220, 220, 220, 0)), 
+        radial-gradient(closest-side, rgba(180, 180, 180, 1), rgba(180, 180, 180, 0)), 
+        radial-gradient(closest-side, rgba(120, 120, 120, 1), rgba(120, 120, 120, 0)), 
+        radial-gradient(closest-side, rgba(60, 60, 60, 1), rgba(60, 60, 60, 0)); 
     background-size: 
 	   130vmax 130vmax,
 	   80vmax 80vmax,
@@ -480,10 +480,6 @@ body {
 	align-items: center;
 }
 
-/* .game-view .menu-container {
-	background-color: red;
-} */
-
 .game-view button {
 	/* background-color: rgba(255, 255, 255, 0.05) !important; */
 	background-color: transparent !important;
@@ -612,39 +608,31 @@ table {
 }
 
 .profile-view .card {
-	/* color: red; */
 	background-color: transparent;
 	background-color: rgba(255, 255, 255, 0.7);
 	border: none;
 }
 
 .profile-view .card-body {
-	/* color: red; */
 	background-color: transparent;
-	/* background-color: rgba(150, 150, 150, 0.5); */
 }
 
 .profile-view h3 {
-	/* color: red; */
 	padding-top: 0 !important;
 	padding-left: 0 !important;
 }
 
 .profile-view p {
-	/* color: red; */
 	padding-top: 0 !important;
 	padding-left: 0 !important;
 	margin-bottom: 10px !important;
 }
 
 .profile-view h4 {
-	/* color: red; */
 	font-size: 1rem;
 }
 
 .profile-view .col-md-4 {
-	/* background-color: green; */
-	/* color: red; */
 	align-items: center;
 }
 
@@ -669,7 +657,24 @@ table {
 
 .friends-view .nav-link {
 	font-size: 0.7rem;
+	text-align: center;
+	color: rgba(0, 0, 0, 0.5)
 }
+
+.friends-view .nav-item {
+	font-size: 0.7rem;
+	width: 25%;
+}
+
+.friends-view .tab-content {
+	padding-top: 10px;
+}
+
+.friends-view button {
+	width: 50% !important;
+	align-items: center;
+}
+
 
 /**************************** Chat ****************************/
 
@@ -683,6 +688,85 @@ table {
 	overflow-y: auto;
 	box-sizing: border-box; 
 }
+
+.chat-view .nav-link {
+	font-size: 0.7rem;
+	text-align: center;
+	color: rgba(0, 0, 0, 0.5)
+}
+
+.chat-view .nav-item {
+	font-size: 0.7rem;
+	width: 33.33%;
+}
+
+.chat-view .tab-content {
+	padding-top: 10px;
+}
+
+.chat-view h4 {
+	background-color: transparent;
+	font-size: 1rem;
+	margin-bottom: 0px;
+}
+
+/****** Private messages ******/
+
+#pm-searchbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#recipientUser {
+	flex: 1; /* L'input prendra toute la largeur disponible */
+}
+
+#pm-searchbar button {
+	width: auto !important;
+	font-size: 0.7rem;
+}
+
+#chat-content-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+	padding: 5px 0 5px 0;
+}
+
+#chat-content-top button {
+	width: auto !important;
+	background-color: transparent !important;
+	margin-bottom: 0px !important;
+	font-size: 0.7rem;
+}
+
+#messages {
+	height: 360px !important;
+}
+
+#chat-content-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+	gap: 5px;
+	padding: 10px 0 5px 0;
+}
+
+#chat-content-bottom input {
+	margin: 0px;
+	box-sizing: border-box;
+}
+
+#chat-content-bottom button {
+	width: 50px !important;
+	margin-bottom: 0px !important;
+	font-size: 0.7rem;
+	margin: 0px;
+	box-sizing: border-box;
+	/* margin-left: 10px; */
+}
+
 
 /**************************** About ****************************/
 
