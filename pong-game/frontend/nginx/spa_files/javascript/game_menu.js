@@ -54,9 +54,14 @@ export function setGameMenu(contentContainer, menu = "main") {
 			button.style.display = "block";
 			button.style.margin = "10px auto";
 
-			button.addEventListener("click", () => {
-				window.location.hash = item.hash;
-			});
+			if (item.hash === "game/online/quickMatch") {
+				button.addEventListener("click", () => {
+					joinQuickMatch(); // Call the `joinQuickMatch` function
+			}); } else {
+				button.addEventListener("click", () => {
+					window.location.hash = item.hash;
+				});
+			}
 
 			menuContainer.appendChild(button);
 		});
