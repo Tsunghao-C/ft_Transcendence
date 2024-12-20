@@ -214,8 +214,10 @@ class GameConsumer(AsyncWebsocketConsumer):
 		self.current_group = f"lobby_{room_name}"
 		if player_alias in active_lobbies[room_name]["players"]:
 			await self.send(json.dumps({
-				"type": "error",
-				"message": "player is already in lobby"
+				"type": "rejoin",
+				"message": "player is already in lobby",
+				"player1": f"{active_lobbies[room_name]['players'][0]}",
+				"player2": f"{active_lobbies[room_name]['players'][1]}"
 				}))
 			return
 		if len(active_lobbies[room_name]["players"]) >= 2:

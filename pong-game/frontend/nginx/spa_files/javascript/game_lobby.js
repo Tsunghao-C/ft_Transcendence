@@ -8,6 +8,11 @@ function hideElem(elemId) {
 	elem.style.display = "none";
 }
 
+function showElem(elemId) {
+	const elem = document.getElementById(elemId);
+	elem.style.display = "block";
+}
+
 export async function setLobbyView(contentContainer, roomID = "") {
 	let response;
 	let userData
@@ -131,7 +136,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 						const response = JSON.parse(event.data);
 						if (response.type == 'notice') {
 							console.log('Server notice: ' + response.message);
-						} else if (response.type == 'join') {
+						} else if (response.type == 'join' || (response.type == 'rejoin')) {
 							let player1Data;
 							let player2Data;
 							let profileResponse;
@@ -143,8 +148,8 @@ export async function setLobbyView(contentContainer, roomID = "") {
 								player2Data = await profileResponse.json();
 								hideElem("create-match");
 								hideElem("join-match");
-								renderUserInfo(player1Data.profile, "user-info-left");
-								renderUserInfo(player2Data.profile, "user-info-right");
+								renderUserInfoLeft(player1Data.profile);
+								renderUserInfoRight(player2Data.profile);
 							} catch(error) {
 								console.log(error);
 								window.location.hash = "login";
@@ -162,8 +167,8 @@ export async function setLobbyView(contentContainer, roomID = "") {
 							player1Data = await profileResponse.json();
 							hideElem("create-match");
 							hideElem("join-match");
-							renderUserInfo(player1Data.profile, "user-info-left");
-							renderEmptyUserInfo("user-info-right");
+							renderUserInfoLeft(player1Data.profile);
+							renderEmptyUserInfoRight();
 							data.playerId = 'player1';
 							console.log("you are player1");
 							const inviteButton = document.getElementById("invite-button");
@@ -178,13 +183,13 @@ export async function setLobbyView(contentContainer, roomID = "") {
 										}), 'POST');
 										if (!response.ok) {
 											console.log(response);
-											alert("please get me out");
+											alert("Error: an error occured, please try again later");
 										} else {
-											alert("thank god");
+											alert("Invitation sent !");
 										}
 									} catch(error) {
 										console.log(error);
-										alert("send help");
+										alert("Error: an error occured, please try again later");
 										window.location.hash = "login";
 									}
 								}
@@ -390,6 +395,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 			console.error('Error adding button to DOM:', error);
 		}
 	}
+
 	function destroyReadyButton() {
 		console.log("Trying to destroy ready buttons");
 		if (readyButton) {
@@ -416,6 +422,8 @@ export async function setLobbyView(contentContainer, roomID = "") {
 	async function startGame() {
 		try {
 			destroyReadyButton();
+			hideElem("invite-button");
+			showElem("game");
 			if (textBox) {
 				textBox.remove();
 				textBox = null;
@@ -426,14 +434,8 @@ export async function setLobbyView(contentContainer, roomID = "") {
 		}
 	}
 	
-
-	function renderUserInfo(user, targetId) {
-		if (targetId = "user-info-left") {
-			const num = "one";
-		} else {
-			const num = "two";
-		}
-		const userInfoDiv = document.getElementById(targetId);
+	function renderUserInfoLeft(user) {
+		const userInfoDiv = document.getElementById("user-info-left");
 		userInfoDiv.innerHTML = `
 			<hr>
 			<h4>Player one</h4>
@@ -448,9 +450,24 @@ export async function setLobbyView(contentContainer, roomID = "") {
 		`;
 	}	
 
-	function renderEmptyUserInfo(targetId) {
-		const userInfoDiv = document.getElementById(targetId);
-	
+	function renderUserInfoRight(user) {
+		const userInfoDiv = document.getElementById("user-info-right");
+		userInfoDiv.innerHTML = `
+			<hr>
+			<h4 class="player-two">Player two</h4>
+			<div style="display: flex; align-items: center; margin-bottom: 10px;">
+				<div>
+					<p style="margin: 0; font-weight: bold;">${user.alias}</p>
+					<p style="margin: 0;">MMR: ${user.mmr}</p>
+				</div>
+				<img src="${user.avatar}" alt="Avatar" style="width: 50px; height: 50px; border-radius: 50%; margin-left: 10px;">
+			</div>
+			<hr>
+		`;
+	}	
+
+	function renderEmptyUserInfoRight() {
+		const userInfoDiv = document.getElementById("user-info-right");
 		userInfoDiv.innerHTML = `
 			<hr>
 			<h4 class="player-two">Player two</h4>
