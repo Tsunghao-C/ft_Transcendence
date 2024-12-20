@@ -1,20 +1,36 @@
 #!/bin/bash
 
 # Wait for Elasticsearch
-until curl -u "kibana_system:${ELASTIC_PASSWORD}" -s http://elasticsearch:9200 >/dev/null; do
+until curl -s -u "kibana_system:${ELASTIC_PASSWORD}" http://elasticsearch:9200/_cluster/health >/dev/null; do
     echo "Waiting for Elasticsearch..."
     sleep 5
 done
 
-# Wait for Kibana
-until curl -u "elastic:${ELASTIC_PASSWORD}" -s http://localhost:5601/api/status | grep -q '"status":{"overall":{"level":"available"'; do
-    echo "Waiting for Kibana..."
-    sleep 5
-done
+# # Wait for Kibana
+# until curl -s -u "elastic:${ELASTIC_PASSWORD}" "http://localhost:5601/api/status" | grep -q '"status":{"overall":{"level":"available"'; do
+#     echo "Waiting for Kibana..."
+#     sleep 5
+# done
 
 # Wait a bit more for Kibana to fully initialize
 sleep 10
 echo "Elasticsearch and Kibana are up!"
+
+echo "Starting Kibana setup script..."
+
+# # Verify elastic user authentication works
+# until curl -s -u "elastic:${ELASTIC_PASSWORD}" http://elasticsearch:9200/_security/_authenticate; do
+#     echo "Waiting for elastic user to be available..."
+#     sleep 5
+# done
+
+# # Verify kibana_system user authentication works
+# until curl -s -u "kibana_system:${ELASTIC_PASSWORD}" http://elasticsearch:9200/_security/_authenticate; do
+#     echo "Waiting for kibana_system user to be available..."
+#     sleep 5
+# done
+
+echo "Users verified successfully. Waiting for Kibana API..."
 
 # Function to create index pattern and return ID
 create_index_pattern() {
@@ -23,7 +39,7 @@ create_index_pattern() {
 
   # echo "Creating index pattern for $pattern..."
   local PATTERN_RESPONSE
-  PATTERN_RESPONSE=$(curl -X POST "localhost:5601/api/saved_objects/index-pattern" \
+  PATTERN_RESPONSE=$(curl -X POST "http://localhost:5601/api/saved_objects/index-pattern" \
     -H "kbn-xsrf: true" \
     -H "Content-Type: application/json" \
     -u "elastic:${ELASTIC_PASSWORD}" \
@@ -91,7 +107,7 @@ for dashboard_dir in /usr/share/kibana/dashboards/*/ ; do
       sed "s#INDEX_PATTERN_ID#$CURRENT_ID#g" "$dashboard" > "$TMP_FILE"
 
       echo "Importing processed dashboard..."
-      curl -X POST "localhost:5601/api/saved_objects/_import?overwrite=true" \
+      curl -X POST "http://localhost:5601/api/saved_objects/_import?overwrite=true" \
         -H "kbn-xsrf: true" \
         -u "elastic:${ELASTIC_PASSWORD}" \
         -H "Content-Type: multipart/form-data" \

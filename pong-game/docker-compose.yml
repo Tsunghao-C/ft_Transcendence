@@ -253,7 +253,7 @@ services:
       sh -c '
         /usr/local/bin/docker-entrypoint.sh &
         ELASTIC_PID=$!
-        sleep 10 &&
+        sleep 15 &&
         /setup/init.sh &
         wait $ELASTIC_PID'
     deploy:
@@ -324,7 +324,7 @@ services:
       elasticsearch:
         condition: service_healthy
     # healthcheck:
-    #   test: ["CMD-SHELL", "curl -s http://localhost:5601/api/status | grep -q '200 OK'"]
+    #   test: ["CMD-SHELL", "curl -s -I -u kibana_system:${ELASTIC_PASSWORD} http://localhost:5601/api/status | grep -q '200 OK'"]
     #   interval: 20s
     #   timeout: 10s
     #   retries: 3
