@@ -2,6 +2,7 @@ import math
 import json
 import asyncio
 import httpx
+import time
 import logging
 from .ai_player import PongAI
 
@@ -10,8 +11,11 @@ CANVAS_HEIGHT = 600
 PADDLE_HEIGHT = 100
 PADDLE_WIDTH = 15
 BALL_RADIUS = 10
+LEFT = 0
+RIGHT = 1
 
 logger = logging.getLogger(__name__)
+
 class Player():
     def __init__(self, side, canvas_width, canvas_height):
         if side == 'left':
@@ -39,6 +43,8 @@ class GameRoom():
         self.left_player = user_data[0]
         self.right_player = user_data[1]
         self.is_local = is_local
+        self.time_since_last_receive = {}
+        self.missing_player = True
 
         # Adding AI player logic
         self.ai_player = None
@@ -70,6 +76,7 @@ class GameRoom():
     async def receive_player_input(self, player_id, input):
         logger.info("GameRoom: Received player input")
         if player_id in self.players:
+            self.time_since_last_receive[player_id] = time.perf_counter()
             player = self.players[player_id]
             if input == "move_up":
                 player.speed = -5
@@ -208,6 +215,37 @@ class GameRoom():
                 'payload': game_state,
                 }))
 
+    def check_pulse(self):
+        current_time = time.perf_counter() 
+        for player_id in self.players:
+            if self.time_since_last_receive[player_id] - current_time > 1:
+                self.dropped_player = player_id
+                if player_id == self.left_player:
+                    self.dropped_side = LEFT
+                else:
+                    self.dropped_side = RIGHT
+                self.missing_player = True
+
+    def player_comeback(self, new_id):
+        if self.dropped_side == LEFT:
+            self.left_player = new_id
+        else:
+            self.right_player = new_id
+        self.missing_player = False
+        logger.info(f"Player has come back, new id: {new_id}")
+        
+    def wait_for_player_rejoin(self):
+        timeout_counter = time.perf_counter()
+        while True:
+            time.sleep(5)
+            if not self.missing_player:
+                logger.info("gameRoom has timed out!")
+                break
+            current_time = time.perf_counter()
+            if timeout_counter - current_time > 30:
+                logger.info("gameRoom has timed out!")
+                return 405
+
     async def run(self):
         logger.info('gameRoom starting')
         logger.info(f"Room_id: {self.room_id}")
@@ -217,7 +255,13 @@ class GameRoom():
                     'type': 'game_start',
                     'message': 'Game has started'
                     }))
+            for player_id in self.players:
+                self.time_since_last_receive[player_id] = time.perf_counter()
             while self.running:
+                logger.info('Checking pulse of players')
+                self.check_pulse()
+                if self.missing_player:
+                    self.wait_for_player_rejoin()
                 self.update_players()
                 logger.info('gameRoom updated players')
                 self.handle_player_collisions()

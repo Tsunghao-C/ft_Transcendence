@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import json
 import uuid
 import asyncio
+import time
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.layers import get_channel_layer
 from .game_room import GameRoom
@@ -68,6 +69,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 		self.channel_layer = get_channel_layer()
 		self.assigned_room = -1
 		self.player_alias = -1
+		self.last_receive_time = time.perf_counter()
 
 	async def connect(self):
 		logger.info(f"WebSocket connection attempt: {self.scope['path']}")
@@ -130,6 +132,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 		elif action == "player_ready":
 			await self.update_ready_status(data["room_name"], player_alias)
 		elif data.get('type') == "player_input":
+			current_receive_time = time.perf_counter()
 			roomID = data['game_roomID']
 			local_game = data['local']
 			if local_game is False:
@@ -286,6 +289,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 	async def launch_game(self, room_name):
 		try:
 			for connection in active_lobbies[room_name]["connection"]:
+				connection.last_receive_time = time.perf_counter()
 				await connection.send(json.dumps({
 					"type": "notice",
 					"message": "Game is starting"
@@ -297,7 +301,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 			game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"], active_lobbies[room_name]["local"], active_lobbies[room_name]["difficulty"])
 			logger.info("GameRoom created")
 			logger.info("Checking for local")
-			if active_lobbies[room_name]["local"] == True:
+			if active_lobbies[room_name]["local"]:
 				logger.info("Local is true")
 				active_local_games[room_name] = {
 					"room_data": game_room,
