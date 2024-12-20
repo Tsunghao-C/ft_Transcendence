@@ -308,7 +308,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 			game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"], active_lobbies[room_name]["difficulty"])
 			logger.info("GameRoom created")
 			logger.info("Checking for local")
-			if active_lobbies[room_name]["local"] == True:
+			if active_lobbies[room_name]["local"]:
 				logger.info("Local is true")
 				active_local_games[room_name] = {
 					"room_data": game_room,
@@ -326,7 +326,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 			game_task = asyncio.create_task(game_room.run())
 			del active_lobbies[room_name]
 			logger.info("GameRoom task added")
-			game_task.add_done_callback(self.handle_game_task_completion)
+			game_task.add_done_callback(lambda task: self.handle_game_task_completion(task, room_name))
 		except Exception as e:
 			logger.error(f"Failed to start the gameroom: {str(e)}")
 			await self.send(json.dumps({
@@ -335,7 +335,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 				}))
 				# add something to delete all invitation to this game
 
-	def handle_game_task_completion(self, task):
+	def handle_game_task_completion(self, task, room_name):
 		try:
 			logger.info("Game Room complete")
 			task.result()
@@ -345,10 +345,11 @@ class GameConsumer(AsyncWebsocketConsumer):
 			print(f"Game task encountered error: {e}")
 			raise
 		finally:
-			room_name = task.get_name()
 			if room_name in active_local_games.keys():
+				logger.info(f"Removing gameRoom from active_local_games")
 				del active_local_games[room_name]
 			else:
+				logger.info(f"Removing gameRoom from active_online_games")
 				del active_online_games[room_name]
 
 	def all_ready(self, room_name):
