@@ -284,7 +284,5 @@ class MatchMakingQueue(models.Model):
 
 	@classmethod
 	def _remove_players_from_queue(cls, p1, p2):
-		queue_pos1 = MatchMakingQueue.objects.get(player=p1)
-		queue_pos2 = MatchMakingQueue.objects.get(player=p2)
-		queue_pos1.delete()
-		queue_pos2.delete()
+		p1.delete()
+		p2.delete()
