@@ -206,9 +206,7 @@ async function loadChatRoom(roomName, userAlias, roomNameDisplay = roomName) {
 	document.getElementById("send-invite").addEventListener("click", sendInvite);
 
 	async function sendInvite() {
-		console.log("is this working at any point, pls make it work pls pls pls");
 		sendDuelRequestFromGameRoom(roomName);
-		console.log("why is this not working i don't get it ");
 	}
 
 	function sendMessage() {

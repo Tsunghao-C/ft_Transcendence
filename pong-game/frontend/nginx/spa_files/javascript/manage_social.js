@@ -10,62 +10,78 @@ import { state } from "./app.js";
 export async function sendDuelRequestFromGameRoom(roomName) {
 	const token = getCookie("accessToken");
 	const gameId = 'test_game';
+
 	return new Promise((resolve, reject) => {
-		const wsUrl = `wss://${window.location.host}/ws/game-server/${gameId}/?token=${encodeURIComponent(token)}`;
-		console.log("Connecting to WebSocket:", wsUrl);
-		state.gameSocket = new WebSocket(wsUrl);
-		state.gameSocket.onopen = async function () {
-			console.log("WebSocket connected.");
-			try {
-				await state.gameSocket.send(JSON.stringify({
+		try {
+			const wsUrl = `wss://${window.location.host}/ws/game-server/${gameId}/?token=${encodeURIComponent(token)}`;
+			console.log("Connecting to WebSocket:", wsUrl);
+			
+			const ws = new WebSocket(wsUrl);
+			state.gameSocket = ws;
+
+			// Gestionnaire d'erreur global
+			ws.onerror = (error) => {
+				console.error("WebSocket error:", error);
+				ws.close();
+				reject(error);
+			};
+
+			// Gestionnaire de messages
+			ws.onmessage = async (event) => {
+				try {
+					const response = JSON.parse(event.data);
+					console.log("Message received:", response);
+					
+					if (response.type === 'room_creation') {
+						console.log('Room creation notice received');
+						console.log('Room name: ' + response.room_name);
+						
+						try {
+							const inviteResponse = await fetchWithToken(
+								'/api/chat/create-invitation/',
+								JSON.stringify({
+									roomName: roomName,
+									roomId: response.room_name,
+								}),
+								'POST'
+							);
+
+							if (!inviteResponse.ok) {
+								console.error("Invitation creation failed:", await inviteResponse.text());
+								reject(new Error("Failed to create invitation"));
+							} else {
+								resolve(response.room_name);
+								window.location.hash = `lobby/${response.room_name}`;
+							}
+						} catch (error) {
+							console.error("Error creating invitation:", error);
+							reject(error);
+							window.location.hash = "login";
+						} finally {
+							ws.close();
+						}
+					}
+				} catch (error) {
+					console.error("Error parsing WebSocket message:", error);
+					ws.close();
+					reject(error);
+				}
+			};
+
+			// Attendre que la connexion soit établie avant d'envoyer le message
+			ws.onopen = () => {
+				console.log("WebSocket connected, sending room creation request");
+				ws.send(JSON.stringify({
 					action: 'create_private_match',
 				}));
-			} catch (error) {
-				console.error("Error sending message:", error);
-				reject(error);
-			}
-		};
-		state.gameSocket.onerror = function (error) {
-			console.error("WebSocket error:", error);
+			};
+			
+		} catch (error) {
+			console.error("Error setting up WebSocket:", error);
 			reject(error);
-		};
-		state.gameSocket.onmessage = async function (event) {
-			try {
-				const response = JSON.parse(event.data);
-				console.log("Message received:", response);
-				if (response.type == 'room_creation') {
-					console.log('Room creation notice received');
-					console.log('Room name: ' + response.room_name);
-					try {
-						const inviteResponse = await fetchWithToken('/api/chat/create-invitation/', JSON.stringify({
-							roomName: roomName,
-							roomId: response.room_name,
-						}), 'POST');
-						if (!inviteResponse.ok) {
-							console.log(inviteResponse);
-							alert("please get me out");
-							reject("Failed to create invitation");
-						} else {
-							resolve(response.room_name);
-							alert("thank god");
-							window.location.hash = `lobby/${response.room_name}`;
-						}
-					} catch(error) {
-						console.log(error);
-						reject(error);
-						alert("send help");
-						window.location.hash = "login";
-					}
-				}
-			} catch (error) {
-				console.error("Error parsing WebSocket message:", error);
-				reject(error);
-			} finally {
-				state.gameSocket.close();
-			}
-		};
+		}
 	});
-}
+	}
 
 
 export async function sendMessage(friendAlias) {
