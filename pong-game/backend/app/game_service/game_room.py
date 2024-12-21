@@ -63,19 +63,19 @@ class GameRoom():
 		self.game_over = False
 		self.winner = -1
 
-    async def receive_player_input(self, player_id, input):
-        logger.info("GameRoom: Received player input")
-        if player_id in self.players:
-            player = self.players[player_id]
-            if input == "move_up":
-                player.speed = -5
-            elif input == "move_down":
-                player.speed = 5
-            elif input == "move_stop":
-                player.speed = 0
-            elif input == "idle":
-                logger.info(f"GameRoom: ID NOT FOUND, current players: {self.left_player} {self.right_player}")
-                pass
+	async def receive_player_input(self, player_id, input):
+		logger.info("GameRoom: Received player input")
+		if player_id in self.players:
+			player = self.players[player_id]
+			if input == "move_up":
+				player.speed = -5
+			elif input == "move_down":
+				player.speed = 5
+			elif input == "move_stop":
+				player.speed = 0
+			elif input == "idle":
+				logger.info(f"GameRoom: ID NOT FOUND, current players: {self.left_player} {self.right_player}")
+				pass
 
 	def update_players(self):
 		for id in self.players:
@@ -172,7 +172,7 @@ class GameRoom():
 				'type': 'game_over',
 				'payload': game_report
 				}))
-#        await self.send_report_to_db(winner) # send json post with "p1ID" and "p2ID" and matchOutcome, set matchOutcome to 0 for p0 victory or 1 for p1 victory
+		await self.send_report_to_db(winner) # send json post with "p1ID" and "p2ID" and matchOutcome, set matchOutcome to 0 for p0 victory or 1 for p1 victory
 #        await asyncio.sleep(1)
 
 	def update_ball(self):
