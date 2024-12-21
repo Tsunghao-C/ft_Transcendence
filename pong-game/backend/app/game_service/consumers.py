@@ -298,7 +298,14 @@ class GameConsumer(AsyncWebsocketConsumer):
 #			if  active_lobbies[room_name]["is_ai_game"] == True:
 #				game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"], active_lobbies[room_name]["local"], active_lobbies[room_name]["difficulty"])
 #			else:
-			game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"], active_lobbies[room_name]["local"], active_lobbies[room_name]["difficulty"])
+			notification_queue = asyncio.Queue()
+			game_room = GameRoom(room_name,
+						active_lobbies[room_name]["players"],
+						active_lobbies[room_name]["connection"],
+						active_lobbies[room_name]["local"],
+						notification_queue,
+						active_lobbies[room_name]["difficulty"]
+						)
 			logger.info("GameRoom created")
 			logger.info("Checking for local")
 			if active_lobbies[room_name]["local"]:
@@ -317,6 +324,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 						"ids": active_lobbies[room_name]["players"]
 						}}
 			game_task = asyncio.create_task(game_room.run())
+			asyncio.create_task(self.monitor_gameRoom(notification_queue))
 			del active_lobbies[room_name]
 			logger.info("GameRoom task added")
 			game_task.add_done_callback(self.handle_game_task_completion)
@@ -327,6 +335,18 @@ class GameConsumer(AsyncWebsocketConsumer):
 				"error": f"Failed to start game: {str(e)}"
 				}))
 				# add something to delete all invitation to this game
+
+	async def monitor_gameRoom(self, notification_queue):
+		while True:
+			message = await notification_queue.get()
+			if message["type"] == "player_missing":
+				await self.handle_missing_player(message)
+
+	async def handle_missing_player(self, message):
+		logger.info(f"gameConsumer: Player {message['player_id']} reported missing by gameRoom")
+		await self.send(json.dumps({
+			"type": "player_missing",
+			}))
 
 	def handle_game_task_completion(self, task):
 		try:

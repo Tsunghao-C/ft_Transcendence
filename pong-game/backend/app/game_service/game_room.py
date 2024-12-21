@@ -37,7 +37,7 @@ class Ball():
         self.radius = BALL_RADIUS
 
 class GameRoom():
-    def __init__(self, room_id, user_data, consumer_data, is_local, daddyficulty= ""):
+    def __init__(self, room_id, user_data, consumer_data, is_local, notification_queue, daddyficulty= ""):
         self.room_id = "lobby_" + room_id
         self.connections = []
         self.left_player = user_data[0]
@@ -45,6 +45,7 @@ class GameRoom():
         self.is_local = is_local
         self.time_since_last_receive = {}
         self.missing_player = True
+        self.notification_queue = notification_queue
 
         # Adding AI player logic
         self.ai_player = None
@@ -232,23 +233,23 @@ class GameRoom():
         else:
             self.right_player = new_id
         self.missing_player = False
-        logger.info(f"Player has come back, new id: {new_id}")
+        logger.info(f"gameRoom: Player has come back, new id: {new_id}")
         
     def wait_for_player_rejoin(self):
         timeout_counter = time.perf_counter()
         while True:
             time.sleep(5)
             if not self.missing_player:
-                logger.info("gameRoom has timed out!")
+                logger.info("gameRoom: Resuming game")
                 break
             current_time = time.perf_counter()
             if timeout_counter - current_time > 30:
-                logger.info("gameRoom has timed out!")
+                logger.info("gameRoom: timing out!")
                 return 405
 
     async def run(self):
         logger.info('gameRoom starting')
-        logger.info(f"Room_id: {self.room_id}")
+        logger.info(f"gameRoom: room_id: {self.room_id}")
         try:
             for connection in self.connections:
                 await connection.send(json.dumps({
@@ -258,16 +259,16 @@ class GameRoom():
             for player_id in self.players:
                 self.time_since_last_receive[player_id] = time.perf_counter()
             while self.running:
-                logger.info('Checking pulse of players')
+                logger.info('gameRoom: Checking pulse of players')
                 self.check_pulse()
                 if self.missing_player:
                     self.wait_for_player_rejoin()
                 self.update_players()
-                logger.info('gameRoom updated players')
+                logger.info('gameRoom: updated players')
                 self.handle_player_collisions()
-                logger.info('gameRoom updated collisions')
+                logger.info('gameRoom: updated collisions')
                 self.update_ball()
-                logger.info('gameRoom updated ball')
+                logger.info('gameRoom: updated ball')
                 # Add AI logic
                 if self.ai_player:
                     ai_move = await self.ai_player.calculate_move(
@@ -279,14 +280,14 @@ class GameRoom():
                     await self.receive_player_input("ai_player", ai_move)
 
                 if self.game_over:
-                    logger.info('gameRoom preparing gameover')
+                    logger.info('gameRoom: preparing gameover')
                     await self.declare_winner(self.winner)
-                    logger.info('gameRoom done')
+                    logger.info('gameRoom: done')
                     return
                 await self.send_update()
-                logger.info('gameRoom sent update to clients')
+                logger.info('gameRoom: sent update to clients')
                 await asyncio.sleep(0.016)
 
         except Exception as e:
-            logger.error(f"GameRoom initial group send error: {e}")
+            logger.error(f"gameRoom: initial group send error: {e}")
             return
