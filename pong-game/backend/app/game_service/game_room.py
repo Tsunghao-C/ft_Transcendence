@@ -132,21 +132,36 @@ class GameRoom():
                     else:
                         self.ball.x = player.x - self.ball.radius
 
-    #need to write this with Ben
+    def _get_new_mmr(self, userMMR: int, oppMMR: int, match_outcome: int):
+        E = 1 / (1 + 10**((oppMMR - userMMR)/400))
+        return int(userMMR + 30 * (match_outcome - E))
 
     def record_match_result_sync(self, winner):
         try:
-            match_outcome = 1
+            match_outcome = 0 #rightplayer win
             if(winner == self.left_player):
-                match_outcome = 0
+                match_outcome = 1 #leftplayer win
             p1 = CustomUser.objects.get(alias=self.left_player)
             p2 = CustomUser.objects.get(alias=self.right_player)
+            if (winner == self.left_player):
+                match_outcome = 1
+                p1.winCount += 1
+                p2.lossCount += 1
+            else :
+                match_outcome = 0
+                p2.winCount += 1
+                p1.lossCount += 1
+            p1MMR = p1.mmr
+            p2mmr = p2.mmr
+            p1.mmr = self._get_new_mmr(p1MMR, p2mmr, match_outcome)
+            p2.mmr = self._get_new_mmr(p2mmr, p1MMR, 1 - match_outcome)
             match_result = MatchResults(
                 p1=p1,
                 p2=p2,
                 matchOutcome=match_outcome,
             )
-                
+            p1.save()
+            p2.save()
             match_result.save()
             print(f"Match result saved: {match_result}")
         except CustomUser.DoesNotExist:

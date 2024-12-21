@@ -167,7 +167,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 		room_name = str(uuid.uuid4())
 		self.assigned_room = room_name
 		player_alias = self.user.alias
-		difficulty = data['difficulty', 'medium']
+		difficulty = data.get('difficulty', 'medium')
 		players = [player_alias]
 		players.append("ai_player")
 		game_type = {
