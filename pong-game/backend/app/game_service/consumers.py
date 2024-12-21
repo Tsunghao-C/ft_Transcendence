@@ -168,23 +168,20 @@ class GameConsumer(AsyncWebsocketConsumer):
 		self.assigned_room = room_name
 		player_alias = self.user.alias
 		difficulty = data.get('difficulty', 'medium')
-		players = [player_alias]
-		players.append("ai_player")
 		game_type = {
 			"is_online": False,
 			"is_local": False,
 			"is_ai": True
 		}
 		active_lobbies[room_name] = {
-			"players": players,
+			"players": [player_alias],
+			"ready": [],
 			"connection": [self],
 			"local": False,
 			"is_ai_game": True,
 			"difficulty": difficulty,
 			"game_type": game_type
 		}
-		active_lobbies[room_name]["ready"] = []
-		active_lobbies[room_name]["ready"].append("ai_player")
 		self.current_group = f"lobby_{room_name}"
 		await self.channel_layer.group_add(self.current_group, self.channel_name)
 		game_type = "AI Game"
@@ -201,14 +198,14 @@ class GameConsumer(AsyncWebsocketConsumer):
 		self.assigned_room = room_name
 		player_alias = self.user.alias
 
-		players = []
 		game_type = {
 			"is_online": True,
 			"is_local": False,
 			"is_ai": False
 		}
 		active_lobbies[room_name] = {
-				"players": players,
+				"players": [],
+				"ready": [],
 				"connection": [],
 				"local": False,
 				"is_ai_game": False,
@@ -234,8 +231,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 			"is_ai": False
 		}
 		active_lobbies[room_name] = {
-			"players": [player_alias, player_2],
-			"ready": [player_2],
+			"players": [player_alias],
 			"connection": [self],
 			"local": True,
 			"is_ai_game": False,
@@ -246,7 +242,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 			"type": "local_room_creation",
 			"message": f"Created local match Lobby {room_name}",
 			"room_name": room_name,
-			"player2_id": player_2
+			"player2_id": player_alias + "_2"
 			}))
 
 	async def join_lobby(self, data):
@@ -310,7 +306,11 @@ class GameConsumer(AsyncWebsocketConsumer):
 						"type": "notice",
 						"message": f"Player {player_alias} is ready"
 						}))
-		if len(active_lobbies[room_name]["players"]) == 2 and self.all_ready(room_name):
+		if (
+			(len(active_lobbies[room_name]["players"]) == 2 and active_lobbies[room_name]["game_type"]["is_online"]) 
+			or 
+			(len(active_lobbies[room_name]["players"]) == 1)
+		) and self.all_ready(room_name):
 			try:
 				await self.launch_game(room_name)
 			except:

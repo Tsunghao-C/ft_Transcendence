@@ -39,21 +39,31 @@ class Ball():
 class GameRoom():
     def __init__(self, room_id, user_data, consumer_data, game_type, daddyficulty= ""):
         self.room_id = "lobby_" + room_id
-        self.connections = []
-        self.left_player = user_data[0]
-        self.right_player = user_data[1]
+        self.connections = consumer_data
         self.game_type = game_type
 
-        # Adding AI player logic
+        self.left_player = user_data[0]
         self.ai_player = None
-        if self.right_player == "ai_player":
+        if self.game_type["is_local"]:
+            self.right_player = self.left_player + "_2"
+        elif self.game_type["is_online"]:
+            self.right_player = user_data[1]
+        elif self.game_type["is_ai"]:
+            self.right_player = self.left_player + "_ai"
             self.ai_player = PongAI(
                 difficulty = daddyficulty,
                 canvas_width=CANVAS_WIDTH,
                 canvas_height=CANVAS_HEIGHT
             )
-        for consumer in consumer_data:
-            self.connections.append(consumer)
+        # # Adding AI player logic
+        # if self.right_player == "ai_player":
+        #     self.ai_player = PongAI(
+        #         difficulty = daddyficulty,
+        #         canvas_width=CANVAS_WIDTH,
+        #         canvas_height=CANVAS_HEIGHT
+        #     )
+        # for consumer in consumer_data:
+        #     self.connections.append(consumer)
         self.players = {
                 self.left_player: Player('left', CANVAS_WIDTH, CANVAS_HEIGHT),
                 self.right_player: Player('right', CANVAS_WIDTH, CANVAS_HEIGHT)
@@ -246,7 +256,7 @@ class GameRoom():
                         self.ball.speedX,
                         self.ball.speedY
                     )
-                    await self.receive_player_input("ai_player", ai_move)
+                    await self.receive_player_input(self.right_player, ai_move)
 
                 if self.game_over:
                     logger.info('gameRoom preparing gameover')
