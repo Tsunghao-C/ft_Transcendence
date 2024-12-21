@@ -63,21 +63,19 @@ class GameRoom():
 		self.game_over = False
 		self.winner = -1
 
-	def get_room_name(self):
-		return self.room_id
-
-	async def receive_player_input(self, player_id, input):
-		logger.info("GameRoom: Received player input")
-		if player_id in self.players:
-			player = self.players[player_id]
-			if input == "move_up":
-				player.speed = -5
-			elif input == "move_down":
-				player.speed = 5
-			elif input == "move_stop":
-				player.speed = 0
-			elif input == "idle":
-				pass
+    async def receive_player_input(self, player_id, input):
+        logger.info("GameRoom: Received player input")
+        if player_id in self.players:
+            player = self.players[player_id]
+            if input == "move_up":
+                player.speed = -5
+            elif input == "move_down":
+                player.speed = 5
+            elif input == "move_stop":
+                player.speed = 0
+            elif input == "idle":
+                logger.info(f"GameRoom: ID NOT FOUND, current players: {self.left_player} {self.right_player}")
+                pass
 
 	def update_players(self):
 		for id in self.players:
