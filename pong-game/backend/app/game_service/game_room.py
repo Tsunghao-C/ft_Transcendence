@@ -4,6 +4,10 @@ import asyncio
 import httpx
 import logging
 from .ai_player import PongAI
+from .models import MatchResults
+from asgiref.sync import sync_to_async
+from user_service.models import CustomUser
+
 
 CANVAS_WIDTH = 800 #original value is 800, change it in case I fucked it up for tests
 CANVAS_HEIGHT = 600
@@ -33,11 +37,12 @@ class Ball():
         self.radius = BALL_RADIUS
 
 class GameRoom():
-    def __init__(self, room_id, user_data, consumer_data, daddyficulty= ""):
+    def __init__(self, room_id, user_data, consumer_data, game_type, daddyficulty= ""):
         self.room_id = "lobby_" + room_id
         self.connections = []
         self.left_player = user_data[0]
         self.right_player = user_data[1]
+        self.game_type = game_type
 
         # Adding AI player logic
         self.ai_player = None
@@ -128,22 +133,24 @@ class GameRoom():
                         self.ball.x = player.x - self.ball.radius
 
     #need to write this with Ben
-    async def send_report_to_db(self, winner):
-        game_report = {
-                "p1ID": self.players[0],
-                "p2ID": self.players[1],
-                "matchOutcome": winner
-                }
-        backend_url = "http://the-backend-here"
+
+    def record_match_result_sync(self, winner):
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(backend_url, json=game_report)
-                response.raise_for_status()
-                print(f"Report succesfully sent. Reponse: {response.text}")
-        except httpx.HTTPStatusError as exc:
-            print(f"Error response {exc.response.status_code}: {exc.response.text}")
-        except Exception as e:
-            print(f"An error occurred: {e}")
+            match_outcome = 1
+            if(winner == self.left_player):
+                match_outcome = 0
+            p1 = CustomUser.objects.get(alias=self.left_player)
+            p2 = CustomUser.objects.get(alias=self.right_player)
+            match_result = MatchResults(
+                p1=p1,
+                p2=p2,
+                matchOutcome=match_outcome,
+            )
+                
+            match_result.save()
+            print(f"Match result saved: {match_result}")
+        except CustomUser.DoesNotExist:
+            print("Error: One or both players not found.")
 
     async def declare_winner(self, winner):
         game_report = {
@@ -156,9 +163,8 @@ class GameRoom():
                 'type': 'game_over',
                 'payload': game_report
                 }))
-#        await self.send_report_to_db(winner) # send json post with "p1ID" and "p2ID" and matchOutcome, set matchOutcome to 0 for p0 victory or 1 for p1 victory
-#        await asyncio.sleep(1)
-
+        if self.game_type["is_online"]:
+            await sync_to_async(self.record_match_result_sync)(winner)
     def update_ball(self):
         self.ball.x += self.ball.speedX
         self.ball.y += self.ball.speedY

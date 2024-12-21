@@ -167,16 +167,21 @@ class GameConsumer(AsyncWebsocketConsumer):
 		room_name = str(uuid.uuid4())
 		self.assigned_room = room_name
 		player_alias = self.user.alias
-		self.assigned_player_alias = player_alias
 		difficulty = data['difficulty', 'medium']
 		players = [player_alias]
 		players.append("ai_player")
+		game_type = {
+			"is_online": False,
+			"is_local": False,
+			"is_ai": True
+		}
 		active_lobbies[room_name] = {
 			"players": players,
 			"connection": [self],
 			"local": False,
 			"is_ai_game": True,
-			"difficulty": difficulty
+			"difficulty": difficulty,
+			"game_type": game_type
 		}
 		active_lobbies[room_name]["ready"] = []
 		active_lobbies[room_name]["ready"].append("ai_player")
@@ -195,15 +200,20 @@ class GameConsumer(AsyncWebsocketConsumer):
 		room_name = str(uuid.uuid4())
 		self.assigned_room = room_name
 		player_alias = self.user.alias
-		self.assigned_player_alias = player_alias
 
 		players = []
+		game_type = {
+			"is_online": True,
+			"is_local": False,
+			"is_ai": False
+		}
 		active_lobbies[room_name] = {
 				"players": players,
 				"connection": [],
 				"local": False,
 				"is_ai_game": False,
-				"difficulty": None
+				"difficulty": None,
+				"game_type": game_type
 				}
 #		game_type = "Private Game" # Where the fuck does this come from??
 		await self.send(json.dumps({
@@ -218,13 +228,19 @@ class GameConsumer(AsyncWebsocketConsumer):
 		self.assigned_room = room_name
 		player_alias = self.user.alias
 		player_2 = str(uuid.uuid4())
+		game_type = {
+			"is_online": False,
+			"is_local": True,
+			"is_ai": False
+		}
 		active_lobbies[room_name] = {
 			"players": [player_alias, player_2],
 			"ready": [player_2],
 			"connection": [self],
 			"local": True,
 			"is_ai_game": False,
-			"difficulty": None
+			"difficulty": None,
+			"game_type": game_type
 		}
 		await self.send(json.dumps({
 			"type": "local_room_creation",
@@ -263,7 +279,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 			}))
 			return
 		self.assigned_room = room_name
-		self.assigned_player_alias = player_alias
 		active_lobbies[room_name]["players"].append(player_alias)
 		active_lobbies[room_name]["connection"].append(self)
 		await self.channel_layer.group_add(self.current_group, self.channel_name)
@@ -310,7 +325,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 					"message": "Game is starting"
 					}))
 			logger.info(f"Starting game id: lobby_{room_name}")
-			game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"], active_lobbies[room_name]["difficulty"])
+			game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"], active_lobbies[room_name]["game_type"], active_lobbies[room_name]["difficulty"])
 			logger.info("GameRoom created")
 			logger.info("Checking for local")
 			if active_lobbies[room_name]["local"]:
