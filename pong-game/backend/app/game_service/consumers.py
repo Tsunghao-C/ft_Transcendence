@@ -224,7 +224,8 @@ class GameConsumer(AsyncWebsocketConsumer):
 					await self.create_quick_match_lobby(game)
 					return
 				await asyncio.sleep(5) # need to think of a better way to stagger p2
-				await self.join_lobby(str(game.gameUID), self.user.alias)
+				data = {"room_name":str(game.gameUID)}
+				await self.join_lobby(data)
 				break
 			await asyncio.sleep(15)
 
