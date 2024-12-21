@@ -91,6 +91,11 @@ class GameConsumer(AsyncWebsocketConsumer):
 		print(user.id, user.alias, "is connected")
 		try:
 			await self.accept()
+			for paused_rooms in paused_games:
+				if user.alias in paused_games[paused_rooms]["ids"]:
+					index = paused_games[paused_rooms]["ids"][user.alias].index()
+					paused_games[paused_rooms]["connection"][index] = self
+					self.offer_room_back()
 		except Exception as e:
 			logger.error(f"WebSocket connection error: {e}")
 		await self.send(json.dumps({
@@ -101,14 +106,19 @@ class GameConsumer(AsyncWebsocketConsumer):
 	async def disconnect(self, code):
 		logger.info("Websocket connection closed")
 		if self.in_game:
-			room = active_online_games.pop(self.assigned_room)
-			if paused_games[self.assigned_room] != room:
+			if self.assigned_room in paused_games.keys():
+				room = paused_games[self.assigned_room]
+				room["notification_queue"].put({
+					"order": "abort game",
+					})
+				del paused_games[self.assigned_room]
+			else:
+				room = active_online_games.pop(self.assigned_room)
 				paused_games[self.assigned_room] = room
 				room["notification_queue"].put({
-					"order": "pause_game",
+					"order": "pause game",
 					"id": self.user.alias
 					})
-			
 
 		if hasattr(self, 'current_group'):
 			await self.channel_layer.group_discard(self.current_group, self.channel_name)
@@ -338,12 +348,14 @@ class GameConsumer(AsyncWebsocketConsumer):
 					"notification_queue": notification_queue
 					}}
 			game_task = asyncio.create_task(game_room.run())
+			self.in_game = True
 			asyncio.create_task(self.monitor_gameRoom(notification_queue))
 			del active_lobbies[room_name]
 			logger.info("GameRoom task added")
 			game_task.add_done_callback(lambda task: self.handle_game_task_completion(task, room_name))
 		except Exception as e:
 			logger.error(f"Failed to start the gameroom: {str(e)}")
+			self.in_game = False
 			await self.send(json.dumps({
 				"type": "error",
 				"error": f"Failed to start game: {str(e)}"
@@ -386,6 +398,8 @@ class GameConsumer(AsyncWebsocketConsumer):
 			print(f"Game task encountered error: {e}")
 			raise
 		finally:
+			self.assigned_room = -1
+			self.in_game = False
 			if room_name in active_local_games.keys():
 				logger.info(f"Removing gameRoom {room_name} from active_local_games")
 				del active_local_games[room_name]
