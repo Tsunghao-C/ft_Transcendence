@@ -78,7 +78,8 @@ class GameConsumer(AsyncWebsocketConsumer):
 				"create_private_match": self.create_private_lobby,
 				"create_ai_match": self.create_ai_lobby,
 				"player_ready": self.update_ready_status,
-				"player_input": self.receive_player_input
+				"player_input": self.receive_player_input,
+				"rejoin_room": self.rejoin_room
 		}
 
 	async def connect(self):
@@ -95,14 +96,18 @@ class GameConsumer(AsyncWebsocketConsumer):
 				if user.alias in paused_games[paused_rooms]["ids"]:
 					index = paused_games[paused_rooms]["ids"][user.alias].index()
 					paused_games[paused_rooms]["connection"][index] = self
-					self.offer_room_back()
+					self.send(json.dumps({
+								"type": "notice",
+								"message": "Paused game room found, rejoin?",
+								"room_name": paused_rooms
+								}))
 		except Exception as e:
 			logger.error(f"WebSocket connection error: {e}")
 		await self.send(json.dumps({
 			"type": "notice",
 			"message": "Connection established"
 			}))
-
+	
 	async def disconnect(self, code):
 		logger.info("Websocket connection closed")
 		if self.in_game:
@@ -172,6 +177,16 @@ class GameConsumer(AsyncWebsocketConsumer):
 					"type": "error",
 					"message": f"Game room {data['game_roomID']} not found"
 					}))
+
+	async def rejoin_room(self, data):
+		if data["response"] is True:
+			room = paused_games.pop(data["room_name"])
+			active_online_games[data["room_name"]] = room
+			room["room_data"].player_back()
+		#check for yes or no response from client
+		#if no, kill game, send abort-game to the gameRoom
+		#if yes, pop the room from paused_games, add it back to active_online_games, then call player_back on gameRoom
+		pass
 
 	async def create_ai_lobby(self, data):
 		room_name = str(uuid.uuid4())
