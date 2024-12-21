@@ -17,6 +17,7 @@ from django.conf import settings
 
 load_dotenv()
 active_online_games = dict()
+paused_games = dict()
 active_local_games = dict()
 active_lobbies = {}
 logger = logging.getLogger(__name__)
@@ -66,7 +67,7 @@ class GameHealthConsumer(AsyncWebsocketConsumer):
 class GameConsumer(AsyncWebsocketConsumer):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		self.channel_layer = get_channel_layer()
+		self.channel_layer = get_channel_layer() #Unused? Marked for deletion
 		self.assigned_room = -1
 		self.player_alias = -1
 		self.last_receive_time = time.perf_counter()
@@ -325,15 +326,15 @@ class GameConsumer(AsyncWebsocketConsumer):
 				active_local_games[room_name] = {
 					"room_data": game_room,
 					"player_data": {
-						"connection": active_lobbies[room_name]["connection"],
-						"ids": active_lobbies[room_name]["players"]
+					"connection": active_lobbies[room_name]["connection"],
+					"ids": active_lobbies[room_name]["players"]
 					}}
 			else:
 				active_online_games[room_name] = {
 					"room_data": game_room,
 					"player_data": {
-						"connection": active_lobbies[room_name]["connection"],
-						"ids": active_lobbies[room_name]["players"]
+					"connection": active_lobbies[room_name]["connection"],
+					"ids": active_lobbies[room_name]["players"]
 						}}
 			game_task = asyncio.create_task(game_room.run())
 			asyncio.create_task(self.monitor_gameRoom(notification_queue))
@@ -353,12 +354,26 @@ class GameConsumer(AsyncWebsocketConsumer):
 			message = await notification_queue.get()
 			if message["type"] == "player_missing":
 				await self.handle_missing_player(message)
+			elif message["type"] == "room_timed_out":
+				await self.cleanup_timed_out_room(message)
 
 	async def handle_missing_player(self, message):
 		logger.info(f"gameConsumer: Player {message['player_id']} reported missing by gameRoom")
+		room_name = message['room_name']
+		room = active_online_games.pop(room_name)
+		paused_games[room_name] = room
+		logger.info(f"gameConsumer: added room {room_name} to paused_games")
 		await self.send(json.dumps({
 			"type": "player_missing",
 			}))
+
+	async def cleanup_timed_out_room(self, message):
+		rooms_to_remove = [
+				room_id for room_id, game_room in active_online_games.items()
+				if game_room.has_timed_out() #decide whether the consumer or the game_room will track the time
+				]
+		for room_id in rooms_to_remove:
+			del active_online_games[room_id]
 
 	def handle_game_task_completion(self, task, room_name):
 		try:
@@ -371,10 +386,10 @@ class GameConsumer(AsyncWebsocketConsumer):
 			raise
 		finally:
 			if room_name in active_local_games.keys():
-				logger.info(f"Removing gameRoom from active_local_games")
+				logger.info(f"Removing gameRoom {room_name} from active_local_games")
 				del active_local_games[room_name]
 			else:
-				logger.info(f"Removing gameRoom from active_online_games")
+				logger.info(f"Removing gameRoom {room_name} from active_online_games")
 				del active_online_games[room_name]
 
 	def all_ready(self, room_name):
@@ -384,14 +399,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 		ready_players = active_lobbies[room_name].get("ready", [])
 		return set(players) == set(ready_players)
 
-	#not implemented ahah
-	def cleanup_timed_out_rooms(self): #Potentially could be handled in handle_game_task_completion
-		rooms_to_remove = [
-				room_id for room_id, game_room in active_online_games.items()
-				if game_room.has_timed_out() #decide whether the consumer or the game_room will track the time
-				]
-		for room_id in rooms_to_remove:
-			del active_online_games[room_id]
+
 
 	async def authenticate_user(self):
 		query_string = self.scope["query_string"].decode("utf-8")

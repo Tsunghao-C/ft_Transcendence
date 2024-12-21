@@ -42,7 +42,6 @@ class GameRoom():
         self.connections = []
         self.left_player = user_data[0]
         self.right_player = user_data[1]
-        self.is_local = is_local
         self.time_since_last_receive = {}
         self.missing_player = True
         self.notification_queue = notification_queue
