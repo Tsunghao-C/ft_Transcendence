@@ -233,7 +233,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 	async function sendEvents(socket) {
 		if (playerEvent.pending == true) {
 			await state.gameSocket.send(JSON.stringify({
-				type: 'player_input',
+				action: 'player_input',
 				player_id: data.playerId,
 				input: playerEvent.type,
 				game_roomID: data.roomUID,
@@ -243,7 +243,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 		}
 		else {
 			await state.gameSocket.send(JSON.stringify({
-				type: 'player_input',
+				action: 'player_input',
 				player_id: data.playerId,
 				input: 'idle',
 				game_roomID: data.roomUID,
