@@ -19,14 +19,12 @@ export async function sendDuelRequestFromGameRoom(roomName) {
 			const ws = new WebSocket(wsUrl);
 			state.gameSocket = ws;
 
-			// Gestionnaire d'erreur global
 			ws.onerror = (error) => {
 				console.error("WebSocket error:", error);
 				ws.close();
 				reject(error);
 			};
 
-			// Gestionnaire de messages
 			ws.onmessage = async (event) => {
 				try {
 					const response = JSON.parse(event.data);
@@ -68,7 +66,6 @@ export async function sendDuelRequestFromGameRoom(roomName) {
 				}
 			};
 
-			// Attendre que la connexion soit établie avant d'envoyer le message
 			ws.onopen = () => {
 				console.log("WebSocket connected, sending room creation request");
 				ws.send(JSON.stringify({
