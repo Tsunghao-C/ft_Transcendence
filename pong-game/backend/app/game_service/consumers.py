@@ -69,6 +69,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 		super().__init__(*args, **kwargs)
 		self.channel_layer = get_channel_layer() #Unused? Marked for deletion
 		self.assigned_room = -1
+		self.in_game = False
 		self.player_alias = -1
 		self.last_receive_time = time.perf_counter()
 		self.receive_methods = {
@@ -99,17 +100,16 @@ class GameConsumer(AsyncWebsocketConsumer):
 
 	async def disconnect(self, code):
 		logger.info("Websocket connection closed")
-	#        if self.assigned_room in active_lobbies:
-	#            lobby = active_lobbies[self.assigned_room]
-	#            try:
-	#                lobby["connection"].remove(self)
-	#            except ValueError:
-	#                logger.warning(f"Consumer not found in connections for room {self.assigned_room}")
-	#            try:
-	#                player_index = lobby["connection"].index(self)
-	#                lobby["players"].pop(player_index)
-	#            except (ValueError, IndexError):
-	#                logger.warning(f"Could not remove player ID from room {self.assigned_room}")
+		if self.in_game:
+			room = active_online_games.pop(self.assigned_room)
+			if paused_games[self.assigned_room] != room:
+				paused_games[self.assigned_room] = room
+				room["notification_queue"].put({
+					"order": "pause_game",
+					"id": self.user.alias
+					})
+			
+
 		if hasattr(self, 'current_group'):
 			await self.channel_layer.group_discard(self.current_group, self.channel_name)
 
@@ -334,8 +334,9 @@ class GameConsumer(AsyncWebsocketConsumer):
 					"room_data": game_room,
 					"player_data": {
 					"connection": active_lobbies[room_name]["connection"],
-					"ids": active_lobbies[room_name]["players"]
-						}}
+					"ids": active_lobbies[room_name]["players"],
+					"notification_queue": notification_queue
+					}}
 			game_task = asyncio.create_task(game_room.run())
 			asyncio.create_task(self.monitor_gameRoom(notification_queue))
 			del active_lobbies[room_name]

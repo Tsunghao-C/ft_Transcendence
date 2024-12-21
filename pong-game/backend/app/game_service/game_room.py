@@ -219,6 +219,10 @@ class GameRoom():
                 else:
                     self.dropped_side = RIGHT
                 self.missing_player = True
+                asyncio.create_task(self.notification_queue.put({
+                    "type": "player_missing",
+                    "player_id": player_id
+                    }))
 
     def player_comeback(self, new_id):
         if self.dropped_side == LEFT:
