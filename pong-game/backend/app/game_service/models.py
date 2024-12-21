@@ -9,6 +9,16 @@ import os
 
 LDB_UPDATE_TIMER = int(os.environ.get("LDB_UPDATE_TIMER", 15))
 
+class Lobby(models.Model):
+	room_name = models.CharField(max_length=255, unique=True)
+	players = models.ManyToManyField(CustomUser, related_name="lobbies")
+	connections = models.JSONField(default=list)
+	ready_players = models.ManyToManyField(CustomUser, related_name="ready_lobbies", blank=True)
+	is_ai_game = models.BooleanField(default=False)
+	is_local_game = models.BooleanField(default=False)
+	difficulty = models.CharField(max_length=50, default='medium')
+	created_at = models.DateTimeField(auto_now_add=True)
+
 class MatchResults(models.Model):
 	p1 = models.ForeignKey(
 		CustomUser,
