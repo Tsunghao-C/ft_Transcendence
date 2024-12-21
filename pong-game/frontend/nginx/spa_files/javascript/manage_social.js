@@ -3,14 +3,107 @@ import { fetchWithToken } from "./fetch_request.js";
 import { getLanguageCookie } from './fetch_request.js';
 import { loadPage } from "./app.js";
 import { setChatView } from "./chat_view.js";
+import { getCookie } from "./fetch_request.js";
+import { state } from "./app.js";
 
-export async function sendMessage(friendAlias, contentContainer) {
+
+export async function sendDuelRequestFromGameRoom(roomName) {
+	const token = getCookie("accessToken");
+	const gameId = 'test_game';
+	return new Promise((resolve, reject) => {
+		const wsUrl = `wss://${window.location.host}/ws/game-server/${gameId}/?token=${encodeURIComponent(token)}`;
+		console.log("Connecting to WebSocket:", wsUrl);
+		state.gameSocket = new WebSocket(wsUrl);
+		state.gameSocket.onopen = async function () {
+			console.log("WebSocket connected.");
+			try {
+				await state.gameSocket.send(JSON.stringify({
+					action: 'create_private_match',
+				}));
+			} catch (error) {
+				console.error("Error sending message:", error);
+				reject(error);
+			}
+		};
+		state.gameSocket.onerror = function (error) {
+			console.error("WebSocket error:", error);
+			reject(error);
+		};
+		state.gameSocket.onmessage = async function (event) {
+			try {
+				const response = JSON.parse(event.data);
+				console.log("Message received:", response);
+				if (response.type == 'room_creation') {
+					console.log('Room creation notice received');
+					console.log('Room name: ' + response.room_name);
+					try {
+						const inviteResponse = await fetchWithToken('/api/chat/create-invitation/', JSON.stringify({
+							roomName: roomName,
+							roomId: response.room_name,
+						}), 'POST');
+						if (!inviteResponse.ok) {
+							console.log(inviteResponse);
+							alert("please get me out");
+							reject("Failed to create invitation");
+						} else {
+							resolve(response.room_name);
+							alert("thank god");
+							window.location.hash = `lobby/${response.room_name}`;
+						}
+					} catch(error) {
+						console.log(error);
+						reject(error);
+						alert("send help");
+						window.location.hash = "login";
+					}
+				}
+			} catch (error) {
+				console.error("Error parsing WebSocket message:", error);
+				reject(error);
+			} finally {
+				state.gameSocket.close();
+			}
+		};
+	});
+}
+
+
+export async function sendMessage(friendAlias) {
 	console.log(`Sending message to ${friendAlias}`);
 	window.location.hash = `chat/private/${friendAlias}`;
 }
 
-export function sendDuelRequest(friendUsername) {
-    console.log(`Requesting duel with ${friendUsername}`);
+
+
+export async function sendDuelRequestFromAlias(alias) {
+	try {
+		const response = await fetchWithToken(
+			'/api/chat/create-private/',
+			JSON.stringify({ alias: alias }),
+			'POST'
+		);
+		if (response.ok) {
+			const roomData = await response.json();
+			sendDuelRequestFromGameRoom(roomData.name);
+		} else {
+			const errorData = await response.json();
+			if (errorData.detail === "You are blocking this user") {
+				alert(`You are blocking this user`);
+			} else if (errorData.detail === "This user is blocking you") {
+				alert(`this user is blocking you`);
+			} else if (errorData.detail === "You cannot create a private room with yourself.") {
+				alert("You cannot create a private room with yourself.");
+			} else if (errorData.error === "User not found.") {
+				alert(`User not found`);
+			} else {
+				alert(`Failed to create private room for some mysterious reasons`);
+			}
+		}
+	} catch (error) {
+		console.log(error);
+		window.location.hash = "login";
+		return;
+	}
 }
 
 export function confirmRemoveFriend(friendAlias) {

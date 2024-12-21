@@ -12,6 +12,9 @@ from user_service.models import CustomUser
 from channels.db import database_sync_to_async
 from urllib.parse import parse_qs
 from django.conf import settings
+from chat.models import Message
+from django.db.models import Q
+from asgiref.sync import sync_to_async
 
 
 load_dotenv()
@@ -241,8 +244,10 @@ class GameConsumer(AsyncWebsocketConsumer):
 		self.current_group = f"lobby_{room_name}"
 		if player_alias in active_lobbies[room_name]["players"]:
 			await self.send(json.dumps({
-				"type": "error",
-				"message": "player is already in lobby"
+				"type": "rejoin",
+				"message": "player is already in lobby",
+				"player1": f"{active_lobbies[room_name]['players'][0]}",
+				"player2": f"{active_lobbies[room_name]['players'][1]}"
 				}))
 			return
 		if len(active_lobbies[room_name]["players"]) >= 2:
@@ -325,6 +330,8 @@ class GameConsumer(AsyncWebsocketConsumer):
 						}}
 			game_task = asyncio.create_task(game_room.run())
 			del active_lobbies[room_name]
+			deleted_count = await sync_to_async(Message.objects.filter(game_room=room_name).delete)()
+			logger.info(f"Deleted {deleted_count} invitation(s) for game_room {room_name}")
 			logger.info("GameRoom task added")
 			game_task.add_done_callback(lambda task: self.handle_game_task_completion(task, room_name))
 		except Exception as e:
