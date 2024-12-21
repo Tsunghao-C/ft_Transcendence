@@ -37,7 +37,7 @@ class Ball():
         self.radius = BALL_RADIUS
 
 class GameRoom():
-    def __init__(self, room_id, user_data, consumer_data, is_local, notification_queue, daddyficulty= ""):
+    def __init__(self, room_id, user_data, consumer_data, notification_queue, daddyficulty= ""):
         self.room_id = "lobby_" + room_id
         self.connections = []
         self.left_player = user_data[0]
@@ -67,12 +67,6 @@ class GameRoom():
         self.running = True
         self.game_over = False
         self.winner = -1
-
-    def get_room_name(self):
-        return self.room_id
-
-    def is_local_game(self):
-        return self.is_local
 
     async def receive_player_input(self, player_id, input):
         logger.info("GameRoom: Received player input")
@@ -217,7 +211,7 @@ class GameRoom():
                 }))
 
     def check_pulse(self):
-        current_time = time.perf_counter() 
+        current_time = time.perf_counter()
         for player_id in self.players:
             if self.time_since_last_receive[player_id] - current_time > 1:
                 self.dropped_player = player_id
@@ -234,7 +228,7 @@ class GameRoom():
             self.right_player = new_id
         self.missing_player = False
         logger.info(f"gameRoom: Player has come back, new id: {new_id}")
-        
+
     def wait_for_player_rejoin(self):
         timeout_counter = time.perf_counter()
         while True:
