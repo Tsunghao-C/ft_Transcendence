@@ -1,5 +1,4 @@
 import { setGameMenu } from './game_menu.js';
-import { closeGameWebSocket } from './game_menu.js';
 import { setLoginView } from './login_login.js';
 import { setRegisterView } from './login_register.js';
 import { set404View } from './404.js';
@@ -15,6 +14,8 @@ import { setAboutPage } from './about.js';
 import { setChatView } from './chat_view.js';
 import { translations } from './language_pack.js';
 import { setLobbyView } from './game_lobby.js';
+import { setTournamentView } from './game_tournament.js';
+
 
 export const state = {
 	chatSocket: null,
@@ -199,6 +200,9 @@ export async function loadPage(page) {
 					break;
 				case "chat":
 					setChatView(innerContent);
+					break;
+				case "tournament":
+					setTournamentView(innerContent);
 					break;
 				default:
 					if (page.startsWith("profile/")) {
