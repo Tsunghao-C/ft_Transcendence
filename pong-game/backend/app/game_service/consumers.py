@@ -10,12 +10,16 @@ from channels.layers import get_channel_layer
 from .game_room import GameRoom
 from user_service.models import CustomUser
 from match_making.models import MatchMakingQueue, LiveGames
+from match_making.models import MatchMakingQueue, LiveGames
 from channels.db import database_sync_to_async
 from urllib.parse import parse_qs
 from django.conf import settings
 from chat.models import Message
 from django.db.models import Q
 from asgiref.sync import sync_to_async
+from django.db.utils import IntegrityError
+from django.db.models import Q
+
 from django.db.utils import IntegrityError
 from django.db.models import Q
 
