@@ -1,7 +1,7 @@
 import math
 from .models import *
 
-def monitor_players():
-    TournamentManager.process_tournament_players()
+# def monitor_players():
+#     MatchMakingQueue.match_players()
 		
 			

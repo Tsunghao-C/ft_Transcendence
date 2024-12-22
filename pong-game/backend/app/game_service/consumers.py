@@ -9,9 +9,13 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.layers import get_channel_layer
 from .game_room import GameRoom
 from user_service.models import CustomUser
+from match_making.models import MatchMakingQueue, LiveGames
 from channels.db import database_sync_to_async
 from urllib.parse import parse_qs
 from django.conf import settings
+from django.db.utils import IntegrityError
+from django.db.models import Q
+
 
 
 load_dotenv()
@@ -72,9 +76,10 @@ class GameConsumer(AsyncWebsocketConsumer):
 				"join_private_match":self.join_lobby,
 				"create_local_match":self.create_local_match,
 				"create_private_match": self.create_private_lobby,
+				"join_queue": self.join_queue,
 				"create_ai_match": self.create_ai_lobby,
 				"player_ready": self.update_ready_status,
-				"player_input": self.receive_player_input
+				"player_input": self.receive_player_input,
 		}
 
 	async def connect(self):
@@ -186,6 +191,64 @@ class GameConsumer(AsyncWebsocketConsumer):
 			"room_name": room_name,
 			"is_ai_game": True
 		}))
+
+	async def join_queue(self):
+		logger.info("Joining quick match")
+		try:
+			queue_entry = MatchMakingQueue.objects.create(player=self.user)
+			await self.send(json.dumps({
+				"type":"notice",
+				"message":f"User {self.user.alias} added to queue"
+			}))
+			await self.get_matched(queue_entry)
+		except IntegrityError:
+			await self.send(json.dumps({
+				"type":"error",
+				"message":"User is already in the queue"
+			}))
+
+	async def get_matched(self, queue_entry):
+		while True:
+			matched = await queue_entry.match_players()
+			if matched:
+				game = LiveGames.objects.filter(Q(p1=self.user) | Q(p2=self.user)).first()
+				if not game:
+					continue
+				if game.status != LiveGames.Status.not_started:
+					await self.send(json.dumps({
+						"type":"error",
+						"message":"this user is already in an active game"
+					}))
+					break
+				if game.p1 == self.user:
+					await self.create_quick_match_lobby(game)
+					return
+				await asyncio.sleep(5) # need to think of a better way to stagger p2
+				data = {"room_name":str(game.gameUID)}
+				await self.join_lobby(data)
+				break
+			await asyncio.sleep(15)
+
+	async def create_quick_match_lobby(self, game):
+		logger.info("Creating quickmatch lobby")
+		room_name = str(game.gameUID)
+		self.assigned_room = room_name
+		self.assigned_player_alias = self.user.alias
+		players = [self.user.alias]
+		active_lobbies[room_name] = {
+			"players": players,
+			"connection": [],
+			"local": False,
+			"is_ai_game": False,
+			"difficulty": None
+		}
+		await self.send(json.dumps({
+			"type": "room_creation",
+			"message": f"Created Lobby {room_name}",
+			"room_name": room_name,
+			"is_ai_game": False
+		}))
+
 
 	async def create_private_lobby(self, data):
 		logger.info("Creating private lobby")
