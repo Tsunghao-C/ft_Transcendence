@@ -712,6 +712,7 @@ table {
 
 /****** Private messages ******/
 
+/* Search bar */
 #pm-searchbar {
     display: flex;
     align-items: center;
@@ -725,6 +726,11 @@ table {
 #pm-searchbar button {
 	width: auto !important;
 	font-size: 0.7rem;
+}
+
+/* Room list */
+.room-item p {
+	margin-bottom: 0px;
 }
 
 #chat-content-top {

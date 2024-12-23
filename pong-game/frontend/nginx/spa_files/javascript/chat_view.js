@@ -63,6 +63,7 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 						<input type="text" id="recipientUser" placeholder="Find a user to chat with">
 						<button id="start-private-chat">Start private chat</button>
 					</div>
+					<div id="pm-list" style="margin-bottom: 20px;"></div>
 					<div id="chat-content" style="display:none;">
 						<div id="chat-content-top">
 							<h4 id="chat-room-title"></h4>
@@ -87,9 +88,10 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 		</div>
 	`
 
+	const pmList = document.getElementById("pm-list");
 	const roomList = document.getElementById("room-list");
 
-	roomList.innerHTML = roomData
+	pmList.innerHTML = roomData // a changer, mettre uniquement room privees
 		.map(room => {
 			const roomType = room.is_private ? "private" : "public";
 			const aliasOrRoomName = room.is_private 
@@ -104,8 +106,28 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 						data-room-type="${roomType}" 
 						data-alias-or-room-name="${aliasOrRoomName}" 
 						style="cursor: pointer; margin: 5px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
-					${roomDisplayName}
-				</div>`;
+							<p>${roomDisplayName}</p>
+					</div>`;
+		})
+		.join("");
+		
+	roomList.innerHTML = roomData // a changer, mettre uniquement room publiques
+		.map(room => {
+			const roomType = room.is_private ? "private" : "public";
+			const aliasOrRoomName = room.is_private 
+				? room.other_member || "Unknown" 
+				: room.name;
+
+			const roomDisplayName = room.is_private
+				? `Private messages with ${aliasOrRoomName}`
+				: room.name;
+
+			return `<div class="room-item" 
+						data-room-type="${roomType}" 
+						data-alias-or-room-name="${aliasOrRoomName}" 
+						style="cursor: pointer; margin: 5px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+							<p>${roomDisplayName}</p>
+					</div>`;
 		})
 		.join("");
 
@@ -113,8 +135,9 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 		item.addEventListener("click", (event) => {
 			const roomType = event.currentTarget.getAttribute("data-room-type");
 			const aliasOrRoomName = event.currentTarget.getAttribute("data-alias-or-room-name");
-			
 			window.location.hash = `chat/${roomType}/${aliasOrRoomName}`;
+			getOrCreatePrivateChatRoom(aliasOrRoomName);
+			// setChatView("") // should we do it otherwise ?
 		});
 	});
 
@@ -122,6 +145,7 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 		hideElem("chat-content");
 		clearInput("recipientUser");
 		showElem("pm-searchbar", "flex");
+		showElem("pm-list", "block");
 	});
 
 	document.getElementById("join-room").addEventListener('click', async () => {
@@ -157,7 +181,7 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 		const recipientUser = document.getElementById("recipientUser").value;
 		try {
 			if (recipientUser) {
-				console.log("Opening char with", recipientUser);
+				console.log("Opening chat with", recipientUser);
 				getOrCreatePrivateChatRoom(recipientUser);
 			}
 		} catch(error) {
@@ -275,6 +299,7 @@ async function loadChatRoom(roomName, userAlias, roomNameDisplay = roomName) {
 		const response = await fetchWithToken(`/api/chat/${roomName}/messages/`);
 		if (response.ok) {
 			hideElem("pm-searchbar");
+			hideElem("pm-list");
 			const listMessageData = await response.json();
 			messagesDiv.innerHTML = "";
 			listMessageData.forEach(msg => {
