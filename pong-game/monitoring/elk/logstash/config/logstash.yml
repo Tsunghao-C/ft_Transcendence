@@ -5,4 +5,3 @@ xpack.monitoring.elasticsearch.password: ${XPACK_MONITORING_ELASTICSEARCH_PASSWO
 xpack.monitoring.elasticsearch.ssl.certificate_authority: /usr/share/logstash/config/certs/ca.crt
 xpack.monitoring.elasticsearch.username: ${XPACK_MONITORING_ELASTICSEARCH_USERNAME}
 xpack.monitoring.enabled: true
-# make this writable
