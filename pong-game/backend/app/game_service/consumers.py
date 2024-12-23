@@ -99,6 +99,10 @@ class GameConsumer(AsyncWebsocketConsumer):
 		print(user.id, user.alias, "is connected")
 		try:
 			await self.accept()
+			await self.send(json.dumps({
+				"type": "notice",
+				"message": "Connection established"
+			}))
 			logger.info("gameConsumer: accepted connection")
 			for paused_room_id, room_data in paused_games.items():
 				player_ids = room_data["player_data"]["ids"]
@@ -107,18 +111,16 @@ class GameConsumer(AsyncWebsocketConsumer):
 					logger.info(f"gameConsumer: Match found in paused game for user: {user.alias}")
 					index = player_ids.index(user.alias)
 					room_data["player_data"]["connection"][index] = self
+					self.assigned_room = paused_room_id
 					await self.send(json.dumps({
-								"type": "notice",
+								"type": "rejoin_room_query",
 								"message": "Paused game room found, rejoin?",
 								"room_name": paused_room_id
 								}))
 					logger.info("gameConsumer: sent rejoin notice to client")
 		except Exception as e:
 			logger.error(f"WebSocket connection error: {e}")
-		await self.send(json.dumps({
-			"type": "notice",
-			"message": "Connection established"
-			}))
+
 
 	async def disconnect(self, code):
 		logger.info("Websocket connection closed")
@@ -192,11 +194,12 @@ class GameConsumer(AsyncWebsocketConsumer):
 
 	async def rejoin_room(self, data):
 		if data["response"] is True:
-			room = paused_games.pop(data["room_name"])
-			active_online_games[data["room_name"]] = room
-			room["room_data"].player_rejoin(self.user.alias)
+			room = paused_games.pop(self.assigned_room)
+			active_online_games[self.assigned_room] = room
+			room["room_data"].player_rejoin(self.user.alias, self)
 		else:
-			room = paused_games.pop(data["room_name"])
+			self.in_game = False
+			room = paused_games.pop(self.assigned_room)
 			await room["notification_queue"].put({
 				"order": "abort game",
 				})
@@ -458,8 +461,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 			message = await notification_queue.get()
 			if message["type"] == "player_missing":
 				await self.handle_missing_player(message)
-			elif message["type"] == "room_timed_out":
-				await self.cleanup_timed_out_room(message)
 
 	async def handle_missing_player(self, message):
 		logger.info(f"gameConsumer: Player {message['player_id']} reported missing by gameRoom")

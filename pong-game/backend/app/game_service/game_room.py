@@ -84,8 +84,7 @@ class GameRoom():
 			elif input == "move_stop":
 				player.speed = 0
 			elif input == "idle":
-				logger.info(f"GameRoom: ID NOT FOUND, current players: {self.left_player} {self.right_player}")
-				pass
+				logger.info(f"GameRoom: player input is idle for player: {player_id}")
 
 	def update_players(self):
 		for id in self.players:
@@ -252,12 +251,16 @@ class GameRoom():
 				await asyncio.sleep(5)
 				logger.info("gameRoom: task creation finished")
 
-	def player_rejoin(self, new_id):
+	def player_rejoin(self, new_id, new_connection):
 		if self.dropped_side == LEFT:
 			self.left_player = new_id
+			self.connections[0] = new_connection
 		else:
 			self.right_player = new_id
+			self.connections[1] = new_connection
 		self.missing_player = False
+		self.time_since_last_receive[self.left_player] = time.perf_counter()
+		self.time_since_last_receive[self.right_player] = time.perf_counter()
 		logger.info(f"gameRoom: Player has come back, new id: {new_id}")
 
 	async def wait_for_player_rejoin(self):

@@ -148,6 +148,16 @@ export async function setLobbyView(contentContainer, roomID = "") {
 							console.log('Room creation notice received');
 							console.log('Room name: ' + data.roomUID);
 							window.location.hash = `lobby/${data.roomUID}`;
+						} else if (response.type == 'rejoin_room_query'){
+							console.log('Paused gameRoom found');
+							console.log('Rejoining room (Hardcoded rn XD)');
+							data.roomUID = response.room_name;
+							await state.gameSocket.send(JSON.stringify({
+								action: "rejoin_room",
+								response: true
+							}));
+							console.log("Starting gameLoop directly in rejoin_room_query branch")
+							await startGame();
 						} else if (response.type == 'set_player_1') {
 							let player1Data;
 							let profileResponse;
@@ -288,6 +298,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 	}
 
 	async function gameLoop(socket) {
+		console.log("gameLoop iteration")
 		gameState = await getGameState();
 		// console.log("gameState: ", gameState);
 		if (game_over) {
@@ -407,11 +418,15 @@ export async function setLobbyView(contentContainer, roomID = "") {
 
 	async function startGame() {
 		try {
+			console.log("Starting game in client...")
 			destroyReadyButton();
+			console.log("Done destorying ready buttons");
 			if (textBox) {
+				console.log("removing text box...")
 				textBox.remove();
 				textBox = null;
 			}
+			console.log("Done removing text box")
 			gameLoop(state.gameSocket, data);
 		} catch {
 			console.error('Exception caught in startGame', error);
