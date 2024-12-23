@@ -113,14 +113,14 @@ class GameConsumer(AsyncWebsocketConsumer):
 		if self.in_game:
 			if self.assigned_room in paused_games.keys():
 				room = paused_games[self.assigned_room]
-				room["notification_queue"].put({
+				await room["notification_queue"].put({
 					"order": "abort game",
 					})
 				del paused_games[self.assigned_room]
 			else:
 				room = active_online_games.pop(self.assigned_room)
 				paused_games[self.assigned_room] = room
-				room["notification_queue"].put({
+				await room["notification_queue"].put({
 					"order": "pause game",
 					"id": self.user.alias
 					})
@@ -183,6 +183,12 @@ class GameConsumer(AsyncWebsocketConsumer):
 			room = paused_games.pop(data["room_name"])
 			active_online_games[data["room_name"]] = room
 			room["room_data"].player_back()
+		else:
+			room = paused_games.pop(data["room_name"])
+			await room["notification_queue"].put({
+				"order": "abort game",
+				})
+
 		#check for yes or no response from client
 		#if no, kill game, send abort-game to the gameRoom
 		#if yes, pop the room from paused_games, add it back to active_online_games, then call player_back on gameRoom

@@ -13,6 +13,8 @@ PADDLE_WIDTH = 15
 BALL_RADIUS = 10
 LEFT = 0
 RIGHT = 1
+TIMEOUT = 1
+ABORTED = 2
 
 logger = logging.getLogger(__name__)
 
@@ -219,7 +221,7 @@ class GameRoom():
                 else:
                     self.dropped_side = RIGHT
                 self.missing_player = True
-                asyncio.create_task(self.notification_queue.put({
+                asyncio.create_task(self.notification_queue.put({ #check that this works properly ??
                     "type": "player_missing",
                     "player_id": player_id
                     }))
@@ -242,7 +244,14 @@ class GameRoom():
             current_time = time.perf_counter()
             if timeout_counter - current_time > 30:
                 logger.info("gameRoom: timing out!")
-                return 405
+                return TIMEOUT
+
+    async def listen_for_server_messages(self):
+        while True:
+            message = await self.notification_queue.get()
+            if message["type"] == "abort game":
+                self.runnning = False
+                return
 
     async def run(self):
         logger.info('gameRoom starting')
@@ -255,11 +264,13 @@ class GameRoom():
                     }))
             for player_id in self.players:
                 self.time_since_last_receive[player_id] = time.perf_counter()
+            asyncio.create_task(self.listen_for_server_messages())
             while self.running:
                 logger.info('gameRoom: Checking pulse of players')
                 self.check_pulse()
                 if self.missing_player:
-                    self.wait_for_player_rejoin()
+                    if (self.wait_for_player_rejoin() == TIMEOUT):
+                        return TIMEOUT
                 self.update_players()
                 logger.info('gameRoom: updated players')
                 self.handle_player_collisions()
@@ -284,6 +295,7 @@ class GameRoom():
                 await self.send_update()
                 logger.info('gameRoom: sent update to clients')
                 await asyncio.sleep(0.016)
+            return ABORTED
 
         except Exception as e:
             logger.error(f"gameRoom: initial group send error: {e}")
