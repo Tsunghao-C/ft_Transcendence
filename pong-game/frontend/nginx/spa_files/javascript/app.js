@@ -15,6 +15,8 @@ import { setAboutPage } from './about.js';
 import { setChatView } from './chat_view.js';
 import { translations } from './language_pack.js';
 import { setLobbyView } from './game_lobby.js';
+import { setSoloLobby } from './game_solo.js';
+import { setLocalLobby } from './game_local.js';
 
 export const state = {
 	chatSocket: null,
@@ -178,6 +180,12 @@ export async function loadPage(page) {
 					break;
 				case "friends":
 					setFriendsView(innerContent);
+					break;
+				case "solo":
+					setSoloLobby(innerContent);
+					break;
+				case "duel":
+					setLocalLobby(innerContent);
 					break;
 				case "chat":
 					setChatView(innerContent);

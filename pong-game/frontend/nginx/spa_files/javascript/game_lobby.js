@@ -7,7 +7,9 @@ import { showElem } from "./utils.js";
 
 export async function setLobbyView(contentContainer, roomID = "") {
 	let response;
-	let userData
+	let userData;
+	let roomId;
+	let gameState;
 	try {
 		response = await fetchWithToken('/api/user/getuser/');
 		userData = await response.json();
@@ -43,77 +45,34 @@ export async function setLobbyView(contentContainer, roomID = "") {
 	const PADDLE_WIDTH = 15;
 	const ctx = canvas.getContext('2d');
 	const gameInfo = document.getElementById('game-info');
-	const debugDiv = document.getElementById('debug');
-	const playerStatus = document.getElementById('player-status');
-	let playerId = null;
-	let lastGameState = null;
-	let ws = null;
 	let wsReconnectTimer = null;
 	let pendingGameUpdate = null;
-	let pendingGameOver = null;
 	let readyButton = null;
 	let textBox = null;
-
-	class Paddle {
-		constructor (id, color) {
-			this.id = id;
-			this.color = color;
-		}
-	}
-
-	class Player {
-		constructor (id, color) {
-			this.id = id;
-			this.color = color;
-			this.Paddle = new Paddle(id, color);
-			this.score = 0;
-		}
-	}
-
-	let	ball = {
-		x:canvas.width/2,
-		y:canvas.height/2,
-		color:'white',
-		speedX:6,
-		speedY:6,
-		radius:10
-	};
-
-	let gameState = {
-		ball: ball,
-		player1: Player,
-		player2: Player
-	};
 
 	let playerEvent = {
 		pending: false,
 		type: -1,
 	}
 	var game_over = false;
-	var data = {
-		playerId: "player2",
-		socket: -1,
-		roomUID: -1
-	};
 
 	async function connectWebSocket() {
 		if (state.gameSocket) {
 			return ;
 		}
-		if (ws && ws.readyState === WebSocket.CONNECTING) {
+		if (state.gameSocket && state.gameSocket.readyState === WebSocket.CONNECTING) {
 			console.log('Connection already in progress...');
 			return Promise.resolve();
 		}
 			return new Promise((resolve, reject) => {
 			const gameId = 'test_game';
-			const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws'; // to change to wss
+			const wsScheme = 'wss';
 			const wsUrl = `${wsScheme}://${window.location.host}/ws/game-server/${gameId}/?token=${encodeURIComponent(token)}`;
 
 			console.log('Connecting to WebSocket...')
-			ws = new WebSocket(wsUrl);
-			state.gameSocket = ws
+			state.gameSocket = new WebSocket(wsUrl);
 
-			ws.onopen = function() {
+			state.gameSocket.onopen = function() {
 				console.log('WebSocket connected');
 				resolve();
 				gameInfo.textContent = '• Connected';
@@ -148,10 +107,10 @@ export async function setLobbyView(contentContainer, roomID = "") {
 								return;
 							}
 						} else if (response.type == 'room_creation') {
-							data.roomUID = response.room_name;
+							roomId = response.room_name;
 							console.log('Room creation notice received');
-							console.log('Room name: ' + data.roomUID);
-							window.location.hash = `lobby/${data.roomUID}`;
+							console.log('Room name: ' + roomId);
+							window.location.hash = `lobby/${roomId}`;
 						} else if (response.type == 'set_player_1') {
 							let player1Data;
 							let profileResponse;
@@ -161,7 +120,6 @@ export async function setLobbyView(contentContainer, roomID = "") {
 							hideElem("join-match");
 							renderUserInfoLeft(player1Data.profile);
 							renderEmptyUserInfoRight();
-							data.playerId = 'player1';
 							console.log("you are player1");
 							const inviteButton = document.getElementById("invite-button");
     						inviteButton.style.display = "inline-block";
@@ -171,7 +129,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 									try {
 										const response = await fetchWithToken('/api/chat/create-invitation/', JSON.stringify({
 											alias: aliasToInvite,
-											roomId: data.roomUID,
+											roomId: roomId,
 										}), 'POST');
 										if (!response.ok) {
 											console.log(response);
@@ -181,7 +139,6 @@ export async function setLobbyView(contentContainer, roomID = "") {
 										}
 									} catch(error) {
 										console.log(error);
-										alert("Error: an error occured, please try again later");
 										window.location.hash = "login";
 									}
 								}
@@ -211,7 +168,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 					}
 				}
 				};
-				ws.onerror = function (error) {
+				state.gameSocket.onerror = function (error) {
 					console.error('Websocker error', error);
 					reject (new Error('Failed to connect Websocket'));
 
@@ -242,9 +199,8 @@ export async function setLobbyView(contentContainer, roomID = "") {
 		if (playerEvent.pending == true) {
 			await state.gameSocket.send(JSON.stringify({
 				action: 'player_input',
-				player_id: data.playerId,
 				input: playerEvent.type,
-				game_roomID: data.roomUID,
+				game_roomID: roomId,
 				local: false
 			}));
 			playerEvent.pending = false;
@@ -252,9 +208,8 @@ export async function setLobbyView(contentContainer, roomID = "") {
 		else {
 			await state.gameSocket.send(JSON.stringify({
 				action: 'player_input',
-				player_id: data.playerId,
 				input: 'idle',
-				game_roomID: data.roomUID,
+				game_roomID: roomId,
 				local: false
 			}));
 		}
@@ -306,18 +261,17 @@ export async function setLobbyView(contentContainer, roomID = "") {
 		let player_1 = gameState.players.player1;
 		let player_2 = gameState.players.player2;
 		drawElements(gameState.ball, player_1, player_2);
-		await sendEvents(socket, data.roomUID);
+		await sendEvents(socket, roomId);
 		requestAnimationFrame(gameLoop);
 	}
 
 	async function joinRoom(roomUID) {
 		try {
-			data.roomUID = roomUID;
+			roomId = roomUID;
 
 			await state.gameSocket.send(JSON.stringify({
 				action: 'join_private_match',
 				room_name: roomUID,
-				id: data.playerId
 			}));
 			console.log(`Request to join room ${roomUID} sent.`);
 			await showReadyButton();
@@ -357,8 +311,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 
 					state.gameSocket.send(JSON.stringify({
 						action: 'player_ready',
-						room_name: data.roomUID,
-						player_id: data.playerId
+						room_name: roomId,
 					}));
 					console.log('Ready signal sent.');
 				}
@@ -369,31 +322,11 @@ export async function setLobbyView(contentContainer, roomID = "") {
 				alert('Failed to send ready signal. Please try again.');
 			}
 		};
-
-		readyButton.addEventListener('click', function(event) {
-			console.log('addEventListener triggered');
-			console.log('Event:', event);
-		});
-
-		try {
-			document.body.appendChild(readyButton);
-			console.log('Ready button DEFINITELY added to DOM');
-
-			const button = document.getElementById('ready-button');
-			if (button) {
-				console.log('Button found in DOM');
-			} else {
-				console.error('Button NOT found in DOM');
-			}
-		} catch (error) {
-			console.error('Error adding button to DOM:', error);
-		}
+		document.body.appendChild(readyButton);
 	}
 
 	function destroyReadyButton() {
-		console.log("Trying to destroy ready buttons");
 		if (readyButton) {
-			console.log("Destroying ready buttons");
 			readyButton.parentNode.removeChild(readyButton);
 			readyButton.remove();
 			readyButton = null;
@@ -421,7 +354,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 				textBox.remove();
 				textBox = null;
 			}
-			gameLoop(state.gameSocket, data);
+			gameLoop(state.gameSocket);
 		} catch {
 			console.error('Exception caught in startGame', error);
 		}
@@ -484,10 +417,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 	}
 
 	async function init(){
-		gameState.player1 = new Player('0', 'green');
-		gameState.player2 = new Player('1', 'red');
 		await connectWebSocket();
-		console.log("abruti");
 	}
 
 	function getRoomIDInput() {
@@ -542,19 +472,6 @@ export async function setLobbyView(contentContainer, roomID = "") {
 
 	document.getElementById('create-match').addEventListener('click', async () => {
 		create_private_match();
-	});
-
-	document.getElementById('quick-match').addEventListener('click', async () => {
-		try {
-			console.log("Trying to join queue room")
-			await state.gameSocket.send(JSON.stringify({
-				action: 'join_queue',
-				id: data.playerId
-			}));
-			console.log("join queue attempt sent");
-		} catch (error) {
-			console.error('Exception caught in joinQueue', error);
-		}
 	});
 
 	document.getElementById('join-match').addEventListener('click', async () => {

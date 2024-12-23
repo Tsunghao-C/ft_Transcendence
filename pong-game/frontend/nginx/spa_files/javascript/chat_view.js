@@ -191,14 +191,6 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 		}
 	})
 
-	document.getElementById("send-private-message").addEventListener("click", async () => {
-		const alias = prompt("Enter the alias for the private message:");
-		if (alias) {
-			console.log("opening chat with", alias);
-			getOrCreatePrivateChatRoom(alias)
-		}
-	});
-
 	async function getOrCreatePrivateChatRoom(alias) {
 		try {
 			const response = await fetchWithToken(
