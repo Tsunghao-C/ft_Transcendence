@@ -182,7 +182,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 		if data["response"] is True:
 			room = paused_games.pop(data["room_name"])
 			active_online_games[data["room_name"]] = room
-			room["room_data"].player_back()
+			room["room_data"].player_rejoin(self.user.alias)
 		else:
 			room = paused_games.pop(data["room_name"])
 			await room["notification_queue"].put({

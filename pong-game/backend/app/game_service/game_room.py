@@ -226,7 +226,7 @@ class GameRoom():
                     "player_id": player_id
                     }))
 
-    def player_comeback(self, new_id):
+    def player_rejoin(self, new_id):
         if self.dropped_side == LEFT:
             self.left_player = new_id
         else:
