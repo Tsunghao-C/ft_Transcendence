@@ -269,7 +269,7 @@ class GameRoom():
 				break
 			current_time = time.perf_counter()
 			logger.info(f"gameRoom: Waiting for player to rejoin, time left: {30 - (current_time - timeout_counter)}")
-			if current_time - timeout_counter > 30:
+			if current_time - timeout_counter > 60:
 				logger.info('gameRoom: room has timed out, returning TIMEOUT')
 				return TIMEOUT
 

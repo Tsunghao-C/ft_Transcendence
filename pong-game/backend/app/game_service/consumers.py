@@ -99,15 +99,20 @@ class GameConsumer(AsyncWebsocketConsumer):
 		print(user.id, user.alias, "is connected")
 		try:
 			await self.accept()
-			for paused_rooms in paused_games:
-				if user.alias in paused_games[paused_rooms]["ids"]:
-					index = paused_games[paused_rooms]["ids"][user.alias].index()
-					paused_games[paused_rooms]["connection"][index] = self
-					self.send(json.dumps({
+			logger.info("gameConsumer: accepted connection")
+			for paused_room_id, room_data in paused_games.items():
+				player_ids = room_data["player_data"]["ids"]
+				logger.info(f"gameConsumer: searching for user in paused_games: {paused_games}")
+				if user.alias in player_ids:
+					logger.info(f"gameConsumer: Match found in paused game for user: {user.alias}")
+					index = player_ids.index(user.alias)
+					room_data["player_data"]["connection"][index] = self
+					await self.send(json.dumps({
 								"type": "notice",
 								"message": "Paused game room found, rejoin?",
-								"room_name": paused_rooms
+								"room_name": paused_room_id
 								}))
+					logger.info("gameConsumer: sent rejoin notice to client")
 		except Exception as e:
 			logger.error(f"WebSocket connection error: {e}")
 		await self.send(json.dumps({
