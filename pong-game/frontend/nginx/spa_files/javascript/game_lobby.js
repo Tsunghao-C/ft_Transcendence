@@ -507,7 +507,6 @@ export async function setLobbyView(contentContainer, roomID = "") {
 			console.log("Trying to join queue room")
 			await state.gameSocket.send(JSON.stringify({
 				action: 'join_queue',
-				id: data.playerId
 			}));
 			console.log("join queue attempt sent");
 		} catch (error) {

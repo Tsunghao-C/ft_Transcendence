@@ -201,10 +201,10 @@ class GameConsumer(AsyncWebsocketConsumer):
 			"is_ai_game": True
 		}))
 
-	async def join_queue(self):
+	async def join_queue(self, data):
 		logger.info("Joining quick match")
 		try:
-			queue_entry = MatchMakingQueue.objects.create(player=self.user)
+			queue_entry = await sync_to_async(MatchMakingQueue.objects.create)(player=self.user)
 			await self.send(json.dumps({
 				"type":"notice",
 				"message":f"User {self.user.alias} added to queue"
@@ -218,9 +218,13 @@ class GameConsumer(AsyncWebsocketConsumer):
 
 	async def get_matched(self, queue_entry):
 		while True:
-			matched = await queue_entry.match_players()
+			matched = await sync_to_async(queue_entry.match_players)()
 			if matched:
-				game = LiveGames.objects.filter(Q(p1=self.user) | Q(p2=self.user)).first()
+				game = await sync_to_async(
+				LiveGames.objects.filter(
+					Q(p1=self.user) | Q(p2=self.user)
+				).first
+			)()
 				if not game:
 					continue
 				if game.status != LiveGames.Status.not_started:
@@ -229,7 +233,8 @@ class GameConsumer(AsyncWebsocketConsumer):
 						"message":"this user is already in an active game"
 					}))
 					break
-				if game.p1 == self.user:
+				is_p1 = await sync_to_async(lambda: game.p1 == self.user)()
+				if is_p1 == self.user:
 					await self.create_quick_match_lobby(game)
 					return
 				await asyncio.sleep(5) # need to think of a better way to stagger p2
@@ -244,13 +249,20 @@ class GameConsumer(AsyncWebsocketConsumer):
 		self.assigned_room = room_name
 		self.assigned_player_alias = self.user.alias
 		players = [self.user.alias]
-		active_lobbies[room_name] = {
-			"players": players,
-			"connection": [],
-			"local": False,
-			"is_ai_game": False,
-			"difficulty": None
+		game_type = {
+			"is_online": True,
+			"is_local": False,
+			"is_ai": False
 		}
+		active_lobbies[room_name] = {
+				"players": [],
+				"ready": [],
+				"connection": [],
+				"local": False,
+				"is_ai_game": False,
+				"difficulty": None,
+				"game_type": game_type
+				}
 		await self.send(json.dumps({
 			"type": "room_creation",
 			"message": f"Created Lobby {room_name}",

@@ -305,7 +305,7 @@ class MatchMakingQueue(models.Model):
 				break
 			p1 = paired_players[i]
 			p2 = paired_players[i + 1]
-			cls._create_live_game(p1, p2)
+			cls._create_live_game(p1.player, p2.player)
 		return True
 	
 	@classmethod
@@ -326,7 +326,6 @@ class MatchMakingQueue(models.Model):
 
 	@classmethod
 	def _remove_players_from_queue(cls, p1, p2):
-		p1.delete()
-		p2.delete()
+		MatchMakingQueue.objects.filter(id__in=[p1.id, p2.id]).delete()
 
 	
