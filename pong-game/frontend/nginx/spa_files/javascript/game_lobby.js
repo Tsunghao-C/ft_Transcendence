@@ -20,6 +20,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
         <h1>Game Lobby</h1>
         <p>Select an option below to get started:</p>
         <div>
+			<button id="quick-match">Quick Match</button>
             <button id="create-match">Create Private Match</button>
             <button id="join-match">Join Match</button>
             <button id="ready-button" style="display:none;">Ready</button>
@@ -499,8 +500,21 @@ export async function setLobbyView(contentContainer, roomID = "") {
 	}
 
 	document.getElementById('create-match').addEventListener('click', async () => {
-	create_private_match()
-});
+		create_private_match();
+	});
+
+	document.getElementById('quick-match').addEventListener('click', async () => {
+		try {
+			console.log("Trying to join queue room")
+			await state.gameSocket.send(JSON.stringify({
+				action: 'join_queue',
+				id: data.playerId
+			}));
+			console.log("join queue attempt sent");
+		} catch (error) {
+			console.error('Exception caught in joinQueue', error);
+		}
+	});
 
 	document.getElementById('join-match').addEventListener('click', async () => {
 		try {

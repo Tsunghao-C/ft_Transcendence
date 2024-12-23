@@ -1,4 +1,8 @@
-all: go check
+all: certs go check
+
+certs:
+	chmod +x pong-game/monitoring/elk/create-certs.sh
+	./pong-game/monitoring/elk/create-certs.sh
 
 go: build run
 
@@ -84,6 +88,7 @@ clean:
 	docker compose -f pong-game/docker-compose.yml down -v --remove-orphans
 	- rm -rf pong-game/security/vault_debian/volumes/*
 	- rm -rf pong-game/tests/lib
+	rm -rf pong-game/monitoring/elk/certs
 	rm pong-game/.env
 
 re: clean all

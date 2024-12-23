@@ -31,3 +31,6 @@ pong-game/security/vault_debian/volumes/file/core
 pong-game/security/vault_debian/volumes/file/logical
 pong-game/security/vault_debian/volumes/file/sys
 pong-game/security/vault_debian/volumes/shared_data/root_token.txt
+
+# ELK certs
+pong-game/monitoring/elk/certs
