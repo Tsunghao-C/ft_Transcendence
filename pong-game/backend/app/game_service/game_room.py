@@ -260,10 +260,10 @@ class GameRoom():
 		self.missing_player = False
 		logger.info(f"gameRoom: Player has come back, new id: {new_id}")
 
-	def wait_for_player_rejoin(self):
+	async def wait_for_player_rejoin(self):
 		timeout_counter = time.perf_counter()
 		while True:
-			time.sleep(5)
+			await asyncio.sleep(5)
 			if not self.missing_player:
 				logger.info("gameRoom: Resuming game")
 				break
@@ -298,7 +298,7 @@ class GameRoom():
 				logger.info('gameRoom: Finished checking pulse of players')
 				if self.missing_player:
 					logger.info('gameRoom: Missing player detected, waiting for rejoin...')
-					if (self.wait_for_player_rejoin() == TIMEOUT):
+					if (await self.wait_for_player_rejoin() == TIMEOUT):
 						return TIMEOUT
 				self.update_players()
 				logger.info('gameRoom: updated players')
