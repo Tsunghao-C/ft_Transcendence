@@ -48,7 +48,7 @@ class GameRoom():
 		self.left_player = user_data[0]
 		self.right_player = user_data[1]
 		self.time_since_last_receive = {}
-		self.missing_player = True
+		self.missing_player = False
 		self.notification_queue = notification_queue
 
 		# Adding AI player logic
@@ -229,18 +229,24 @@ class GameRoom():
 
 	def check_pulse(self):
 		current_time = time.perf_counter()
+		logger.info("gameRoom: Took current_time")
 		for player_id in self.players:
+			logger.info("gameRoom: Iterating in check_pulse")
 			if self.time_since_last_receive[player_id] - current_time > 1:
+				logger.info(f"gameRoom: Player: {player_id} has dropped out!")
 				self.dropped_player = player_id
 				if player_id == self.left_player:
 					self.dropped_side = LEFT
 				else:
 					self.dropped_side = RIGHT
 				self.missing_player = True
+				logger.info("gameRoom: creating notification_queue put task")
 				asyncio.create_task(self.notification_queue.put({ #check that this works properly ??
 					"type": "player_missing",
 					"player_id": player_id
 					}))
+				logger.info("gameRoom: task creation finished")
+			return
 
 	def player_rejoin(self, new_id):
 		if self.dropped_side == LEFT:
@@ -253,14 +259,22 @@ class GameRoom():
 	def wait_for_player_rejoin(self):
 		timeout_counter = time.perf_counter()
 		while True:
+			logger.info("gameRoom: Entering waiting for player to rejoin....")
 			time.sleep(5)
 			if not self.missing_player:
 				logger.info("gameRoom: Resuming game")
 				break
 			current_time = time.perf_counter()
 			if timeout_counter - current_time > 30:
-				logger.info("gameRoom: timing out!")
+				logger.info('gameRoom: room has timed out, returning TIMEOUT')
 				return TIMEOUT
+
+	async def listen_for_server_messages(self):
+		while True:
+			message = await self.notification_queue.get()
+			if message["type"] == "abort game":
+				self.runnning = False
+				return
 
 	async def run(self):
 		logger.info('gameRoom starting')
@@ -277,7 +291,9 @@ class GameRoom():
 			while self.running:
 				logger.info('gameRoom: Checking pulse of players')
 				self.check_pulse()
+				logger.info('gameRoom: Finished checking pulse of players')
 				if self.missing_player:
+					logger.info('gameRoom: Missing player detected, waiting for rejoin...')
 					if (self.wait_for_player_rejoin() == TIMEOUT):
 						return TIMEOUT
 				self.update_players()
@@ -310,9 +326,3 @@ class GameRoom():
 			logger.error(f"GameRoom initial group send error: {e}")
 			return
 
-async def listen_for_server_messages(self):
-	while True:
-		message = await self.notification_queue.get()
-		if message["type"] == "abort game":
-			self.runnning = False
-			return

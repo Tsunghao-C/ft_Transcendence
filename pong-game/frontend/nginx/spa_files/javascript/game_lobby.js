@@ -503,18 +503,18 @@ export async function setLobbyView(contentContainer, roomID = "") {
 		create_private_match();
 	});
 
-	document.getElementById('quick-match').addEventListener('click', async () => {
-		try {
-			console.log("Trying to join queue room")
-			await state.gameSocket.send(JSON.stringify({
-				action: 'join_queue',
-				id: data.playerId
-			}));
-			console.log("join queue attempt sent");
-		} catch (error) {
-			console.error('Exception caught in joinQueue', error);
-		}
-	});
+//	document.getElementById('quick-match').addEventListener('click', async () => {
+//		try {
+//			console.log("Trying to join queue room")
+//			await state.gameSocket.send(JSON.stringify({
+//				action: 'join_queue',
+//				id: data.playerId
+//			}));
+//			console.log("join queue attempt sent");
+//		} catch (error) {
+//			console.error('Exception caught in joinQueue', error);
+//		}
+//	});
 
 	document.getElementById('join-match').addEventListener('click', async () => {
 		try {
