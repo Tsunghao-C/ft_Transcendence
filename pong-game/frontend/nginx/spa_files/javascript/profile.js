@@ -3,7 +3,7 @@
 import { translations } from "./language_pack.js";
 import { fetchWithToken } from "./fetch_request.js";
 import { sendMessage } from "./manage_social.js";
-import { sendDuelRequest } from "./manage_social.js";
+import { sendDuelRequestFromAlias } from "./manage_social.js";
 import { confirmRemoveFriend } from "./manage_social.js";
 import { addFriend } from "./manage_social.js";
 import { acceptFriendRequest } from "./manage_social.js";
@@ -142,7 +142,7 @@ export async function setProfileView(contentContainer, usernameInHash) {
 				setProfileView(contentContainer, profile.alias);
 			});
 			sendDuelRequestButton.addEventListener("click", () => {
-				sendDuelRequest(profile.alias);
+				sendDuelRequestFromAlias(profile.alias);
 				setProfileView(contentContainer, profile.alias);
 			});
 			addFriendButton.addEventListener('click', () => {

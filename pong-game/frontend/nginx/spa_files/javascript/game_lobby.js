@@ -405,7 +405,6 @@ export async function setLobbyView(contentContainer, roomID = "") {
 			console.log("Requesting room")
 			await state.gameSocket.send(JSON.stringify({
 				action: 'create_private_match',
-				id: data.playerId
 			}));
 			console.log("Room requested")
 		} catch (error) {

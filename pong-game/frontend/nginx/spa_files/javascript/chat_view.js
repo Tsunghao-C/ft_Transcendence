@@ -4,6 +4,7 @@ import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
 import { loadPage } from "./app.js";
 import { clearInput, hideElem, showElem } from "./utils.js";
+import { sendDuelRequestFromGameRoom } from "./manage_social.js";
 
 export async function setChatView(contentContainer, roomType = "", aliasOrRoomToJoin = "") {
 	let userRoomData;
@@ -229,27 +230,6 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 		}
 	}
 
-	document.getElementById("send-invite").addEventListener("click", sendInvite);
-
-	async function sendInvite() {
-			try {
-				const response = await fetchWithToken('/api/chat/create-invitation/', JSON.stringify({
-					roomName: aliasOrRoomToJoin,
-					roomId: "c9d2b188-a876-4349-a410-3bec27510ee6",
-				}), 'POST');
-				if (!response.ok) {
-					console.log(response);
-					alert("please get me out");
-				} else {
-					alert("thank god");
-				}
-			} catch(error) {
-				console.log(error);
-				alert("send help");
-				window.location.hash = "login";
-			}
-	}
-
 	if (roomType === "public") {
 		loadChatRoom(aliasOrRoomToJoin, userAlias);
 	} else if (roomType === "private"){
@@ -266,14 +246,13 @@ async function loadChatRoom(roomName, userAlias, roomNameDisplay = roomName) {
 		state.chatSocket.close();
 		state.chatSocket = null;
 	}
-	console.log("we are here motherfukcer");
 	const messagesDiv = document.getElementById("messages");
 	const chatRoomTitle = document.getElementById("chat-room-title");
 
 	chatRoomTitle.textContent = `${roomNameDisplay}`;
 	messagesDiv.innerHTML = "<p>Loading messages...</p>";
 
-	const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+	const wsScheme = 'wss'
 
 	const token = getCookie("accessToken");
 	const wsUrl = `${wsScheme}://${window.location.host}/ws/chat-server/${roomName}/?token=${encodeURIComponent(token)}`;
@@ -336,6 +315,28 @@ async function loadChatRoom(roomName, userAlias, roomNameDisplay = roomName) {
 		}
 	});
 
+
+
+	document.getElementById("send-invite").addEventListener("click", sendInvite);
+
+	async function sendInvite() {
+		sendDuelRequestFromGameRoom(roomName);
+	}
+
+	function sendMessage() {
+		const input = document.getElementById("message-input");
+		if (input.value && state.chatSocket) {
+			const messageData = {
+				message: input.value,
+				alias: userAlias,
+				time: new Date().toLocaleTimeString(),
+			};
+			state.chatSocket.send(JSON.stringify(messageData));
+			input.value = "";
+		} else {
+			alert("Message input is empty or WebSocket is not connected.");
+		}
+	}
 }
 
 function addMessage(userAlias, alias, message, time, isInvite = false, gameRoom = null) {
