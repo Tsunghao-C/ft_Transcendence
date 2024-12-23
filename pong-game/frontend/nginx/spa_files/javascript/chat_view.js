@@ -45,21 +45,17 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 
 	contentContainer.innerHTML = `
 		<div class="chat-view">
-			<!-- <h2>Chat</h2> -->
 			<ul class="nav nav-tabs" id="chatBlockTabs" role="tablist">
 				<li class="nav-item">
-					<a class="nav-link active" id="private-message-tab" data-bs-toggle="tab" href="#private-message" role="tab" aria-controls="private-message" aria-selected="true">Private messages</a>
+					<a class="nav-link" id="private-message-tab" data-bs-toggle="tab" href="#private-message" role="tab" aria-controls="private-message" aria-selected="true">Private messages</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" id="join-room-tab" data-bs-toggle="tab" href="#join-room" role="tab" aria-controls="join-room" aria-selected="false">Join Room</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" id="create-room-tab" data-bs-toggle="tab" href="#create-room" role="tab" aria-controls="create-room" aria-selected="false">Create Room</a>
+					<a class="nav-link active" id="chat-rooms-tab" data-bs-toggle="tab" href="#chat-rooms" role="tab" aria-controls="chat-rooms" aria-selected="false">Chat Rooms</a>
 				</li>
 			</ul>
 			<div class="tab-content">
-				<div class="tab-pane fade show active" id="private-message" role="tabpanel" aria-labelledby="private-message-tab">
-					<div id="pm-searchbar">
+				<div class="tab-pane fade" id="private-message" role="tabpanel" aria-labelledby="private-message-tab">
+					<div id="chat-views-searchbar">
 						<input type="text" id="recipientUser" placeholder="Find a user to chat with">
 						<button id="start-private-chat">Start private chat</button>
 					</div>
@@ -77,18 +73,26 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 						</div>
 					</div>
 				</div>
-				<div class="tab-pane fade" id="join-room" role="tabpanel" aria-labelledby="join-room-tab">
-					<ul id="friendRequestList" class="list-group"></ul>
+				<div class="tab-pane fade show active" id="chat-rooms" role="tabpanel" aria-labelledby="chat-rooms-tab">
+					<div id="chat-views-searchbar">
+						<input type="text" id="recipientUser" placeholder="Enter room name">
+						<button id="create-public-room">Create Public Room</button>
+					</div>
 					<div id="room-list" style="margin-bottom: 20px;"></div>
-				</div>
-				<div class="tab-pane fade" id="create-room" role="tabpanel" aria-labelledby="create-room-tab">
-					<button id="create-public-room">Create Public Room</button>
 				</div>
 			</div>
 		</div>
-	`
+		`
 
-	const pmList = document.getElementById("pm-list");
+				// <div class="tab-pane fade" id="join-room" role="tabpanel" aria-labelledby="join-room-tab">
+				// 	<ul id="friendRequestList" class="list-group"></ul>
+				// 	<div id="room-list" style="margin-bottom: 20px;"></div>
+				// </div>
+				// <div class="tab-pane fade" id="create-room" role="tabpanel" aria-labelledby="create-room-tab">
+				// 	<button id="create-public-room">Create Public Room</button>
+				// </div>
+
+const pmList = document.getElementById("pm-list");
 	const roomList = document.getElementById("room-list");
 
 	pmList.innerHTML = roomData // a changer, mettre uniquement room privees
@@ -144,7 +148,7 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 	document.getElementById("go-back").addEventListener('click', async () => {
 		hideElem("chat-content");
 		clearInput("recipientUser");
-		showElem("pm-searchbar", "flex");
+		showElem("chat-views-searchbar", "flex");
 		showElem("pm-list", "block");
 	});
 
@@ -298,7 +302,7 @@ async function loadChatRoom(roomName, userAlias, roomNameDisplay = roomName) {
 	try {
 		const response = await fetchWithToken(`/api/chat/${roomName}/messages/`);
 		if (response.ok) {
-			hideElem("pm-searchbar");
+			hideElem("chat-views-searchbar");
 			hideElem("pm-list");
 			const listMessageData = await response.json();
 			messagesDiv.innerHTML = "";
