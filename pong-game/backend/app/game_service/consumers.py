@@ -201,10 +201,11 @@ class GameConsumer(AsyncWebsocketConsumer):
 			"is_ai_game": True
 		}))
 
-	async def join_queue(self):
+	async def join_queue(self, data):
 		logger.info("Joining quick match")
 		try:
-			queue_entry = MatchMakingQueue.objects.create(player=self.user)
+			await sync_to_async(MatchMakingQueue.objects.filter(player=self.user).delete)() # we will have to delete this later jsut to test
+			queue_entry = await sync_to_async(MatchMakingQueue.objects.create)(player=self.user)
 			await self.send(json.dumps({
 				"type":"notice",
 				"message":f"User {self.user.alias} added to queue"
@@ -217,24 +218,54 @@ class GameConsumer(AsyncWebsocketConsumer):
 			}))
 
 	async def get_matched(self, queue_entry):
+		print(f"Starting get_matched for user {self.user.alias}") 
+		await sync_to_async(LiveGames.objects.filter(Q(p1=self.user) | Q(p2=self.user)).delete)() # we will have to delete that too
 		while True:
-			matched = await queue_entry.match_players()
+			is_matched = await sync_to_async(queue_entry.match_players)()
+			existing_game = await sync_to_async(
+				LiveGames.objects.filter(
+					Q(p1=self.user) | Q(p2=self.user),
+					status=LiveGames.Status.not_started
+				).exists
+			)()
+			matched = is_matched or existing_game
+			print(f"Matched result: {matched} for user {self.user.alias} ")  # Debug 1
+			
 			if matched:
-				game = LiveGames.objects.filter(Q(p1=self.user) | Q(p2=self.user)).first()
+				game = await sync_to_async(
+					LiveGames.objects.filter(
+						Q(p1=self.user) | Q(p2=self.user)
+					).first
+				)()
+				print(f"Game found: {game}")  # Debug 2
+				
 				if not game:
 					continue
+					
+				print(f"Game status: {game.status}")  # Debug 3
+				
 				if game.status != LiveGames.Status.not_started:
 					await self.send(json.dumps({
 						"type":"error",
 						"message":"this user is already in an active game"
 					}))
 					break
-				if game.p1 == self.user:
+					
+				is_p1 = await sync_to_async(lambda: game.p1 == self.user)()
+				print(f"Is P1: {is_p1}")  # Debug 4
+				if is_p1:
+					print("user one is creating the game ")
 					await self.create_quick_match_lobby(game)
 					return
 				await asyncio.sleep(5) # need to think of a better way to stagger p2
-				data = {"room_name":str(game.gameUID)}
-				await self.join_lobby(data)
+				room_name = str(game.gameUID)
+				print("user two is joining the game")
+				await self.send(json.dumps({
+					"type": "room_creation",
+					"message": f"Created Lobby {room_name}",
+					"room_name": room_name,
+					"is_ai_game": False
+					}))
 				break
 			await asyncio.sleep(15)
 
@@ -244,13 +275,20 @@ class GameConsumer(AsyncWebsocketConsumer):
 		self.assigned_room = room_name
 		self.assigned_player_alias = self.user.alias
 		players = [self.user.alias]
-		active_lobbies[room_name] = {
-			"players": players,
-			"connection": [],
-			"local": False,
-			"is_ai_game": False,
-			"difficulty": None
+		game_type = {
+			"is_online": True,
+			"is_local": False,
+			"is_ai": False
 		}
+		active_lobbies[room_name] = {
+				"players": [],
+				"ready": [],
+				"connection": [],
+				"local": False,
+				"is_ai_game": False,
+				"difficulty": None,
+				"game_type": game_type
+				}
 		await self.send(json.dumps({
 			"type": "room_creation",
 			"message": f"Created Lobby {room_name}",
@@ -279,7 +317,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 				"difficulty": None,
 				"game_type": game_type
 				}
-#		game_type = "Private Game" # Where the fuck does this come from??
 		await self.send(json.dumps({
 			"type": "room_creation",
 			"message": f"Created Lobby {room_name}",
@@ -320,6 +357,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 				"type": "error",
 				"message": f"lobby {room_name} does not exist"
 				}))
+			return
 		self.current_group = f"lobby_{room_name}"
 		if player_alias in active_lobbies[room_name]["players"]:
 			await self.send(json.dumps({
