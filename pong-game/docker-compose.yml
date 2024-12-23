@@ -335,7 +335,7 @@ services:
     image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
     volumes:
       - ./monitoring/elk/certs:/usr/share/logstash/config/certs:ro
-      - ./monitoring/elk/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./monitoring/elk/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:rw
       - ./monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
     environment:
       - LS_JAVA_OPTS=-Xmx256m -Xms256m
