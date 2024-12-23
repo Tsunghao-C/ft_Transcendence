@@ -43,7 +43,7 @@ class Ball():
 
 class GameRoom():
 	def __init__(self, room_id, user_data, consumer_data, notification_queue, daddyficulty= ""):
-		self.room_id = "lobby_" + room_id
+		self.room_id = room_id
 		self.connections = []
 		self.left_player = user_data[0]
 		self.right_player = user_data[1]
@@ -193,14 +193,14 @@ class GameRoom():
 		if self.ball.x - self.ball.radius < 0 or self.ball.x + self.ball.radius > CANVAS_WIDTH:
 			if self.ball.x - self.ball.radius < 0:
 				self.players[self.right_player].score += 1
-				if self.players[self.right_player].score == 5:
+				if self.players[self.right_player].score == 10:
 					self.winner = self.right_player
 					self.game_over = True
 				self.ball.x = CANVAS_WIDTH * 0.7
 				self.ball.y = CANVAS_WIDTH * 0.5
 			else:
 				self.players[self.left_player].score += 1
-				if self.players[self.left_player].score == 5:
+				if self.players[self.left_player].score == 10:
 					self.winner = self.left_player
 					self.game_over = True
 				self.ball.x = CANVAS_WIDTH * 0.3
@@ -221,18 +221,21 @@ class GameRoom():
 					'radius': self.ball.radius
 					}
 				}
-		for connection in self.connections:
-			await connection.send(json.dumps({
-				'type': 'game_update',
-				'payload': game_state,
-				}))
+		try:
+			for connection in self.connections:
+				await connection.send(json.dumps({
+					'type': 'game_update',
+					'payload': game_state,
+					}))
+		except Exception as e:
+			logger.error(f"gameRoom: Could not send update to players: {e}")
 
-	def check_pulse(self):
+	async def check_pulse(self):
 		current_time = time.perf_counter()
 		logger.info("gameRoom: Took current_time")
 		for player_id in self.players:
-			logger.info("gameRoom: Iterating in check_pulse")
-			if self.time_since_last_receive[player_id] - current_time > 1:
+			logger.info(f"gameRoom: {player_id} current_time: {current_time} time_since_last_receive: {self.time_since_last_receive[player_id]} ")
+			if current_time - self.time_since_last_receive[player_id] > 1:
 				logger.info(f"gameRoom: Player: {player_id} has dropped out!")
 				self.dropped_player = player_id
 				if player_id == self.left_player:
@@ -241,12 +244,13 @@ class GameRoom():
 					self.dropped_side = RIGHT
 				self.missing_player = True
 				logger.info("gameRoom: creating notification_queue put task")
-				asyncio.create_task(self.notification_queue.put({ #check that this works properly ??
+				await self.notification_queue.put({ #check that this works properly ??
 					"type": "player_missing",
-					"player_id": player_id
-					}))
+					"player_id": player_id,
+					"room_name": self.room_id
+					})
+				await asyncio.sleep(5)
 				logger.info("gameRoom: task creation finished")
-			return
 
 	def player_rejoin(self, new_id):
 		if self.dropped_side == LEFT:
@@ -259,13 +263,13 @@ class GameRoom():
 	def wait_for_player_rejoin(self):
 		timeout_counter = time.perf_counter()
 		while True:
-			logger.info("gameRoom: Entering waiting for player to rejoin....")
 			time.sleep(5)
 			if not self.missing_player:
 				logger.info("gameRoom: Resuming game")
 				break
 			current_time = time.perf_counter()
-			if timeout_counter - current_time > 30:
+			logger.info(f"gameRoom: Waiting for player to rejoin, time left: {30 - (current_time - timeout_counter)}")
+			if current_time - timeout_counter > 30:
 				logger.info('gameRoom: room has timed out, returning TIMEOUT')
 				return TIMEOUT
 
@@ -278,7 +282,7 @@ class GameRoom():
 
 	async def run(self):
 		logger.info('gameRoom starting')
-		logger.info(f"gameRoom: room_id: {self.room_id}")
+		logger.info(f"gameRoom: : {self.room_id}")
 		try:
 			for connection in self.connections:
 				await connection.send(json.dumps({
@@ -290,7 +294,7 @@ class GameRoom():
 			asyncio.create_task(self.listen_for_server_messages())
 			while self.running:
 				logger.info('gameRoom: Checking pulse of players')
-				self.check_pulse()
+				await self.check_pulse()
 				logger.info('gameRoom: Finished checking pulse of players')
 				if self.missing_player:
 					logger.info('gameRoom: Missing player detected, waiting for rejoin...')
@@ -323,6 +327,6 @@ class GameRoom():
 			return ABORTED
 
 		except Exception as e:
-			logger.error(f"GameRoom initial group send error: {e}")
+			logger.error(f"gameRoom: exception caught in run: {e}")
 			return
 

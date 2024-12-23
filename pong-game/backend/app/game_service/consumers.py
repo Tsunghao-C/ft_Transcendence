@@ -25,6 +25,8 @@ paused_games = dict()
 active_local_games = dict()
 active_lobbies = {}
 logger = logging.getLogger(__name__)
+TIMEOUT = 1
+ABORTED = 2
 
 ## Dedicated consumer for WS Health Check
 class GameHealthConsumer(AsyncWebsocketConsumer):
@@ -464,30 +466,25 @@ class GameConsumer(AsyncWebsocketConsumer):
 			"type": "player_missing",
 			}))
 
-	async def cleanup_timed_out_room(self, message):
-		rooms_to_remove = [
-				room_id for room_id, game_room in active_online_games.items()
-				if game_room.has_timed_out() #decide whether the consumer or the game_room will track the time
-				]
-		for room_id in rooms_to_remove:
-			del active_online_games[room_id]
-
 	def handle_game_task_completion(self, task, room_name):
 		try:
 			logger.info("Game Room complete")
-			task.result()
 		except asyncio.CancelledError:
 			print("Game task was cancelled")
 		except Exception as e:
 			print(f"Game task encountered error: {e}")
 			raise
 		finally:
+			result = task.result()
 			self.assigned_room = -1
 			self.in_game = False
 			if room_name in active_local_games.keys():
 				logger.info(f"Removing gameRoom {room_name} from active_local_games")
 				del active_local_games[room_name]
-			else:
+			elif result is TIMEOUT:
+				logger.info(f"Removing gameRoom {room_name} from paused_games")
+				del paused_games[room_name]
+			elif result is not ABORTED:
 				logger.info(f"Removing gameRoom {room_name} from active_online_games")
 				del active_online_games[room_name]
 
@@ -497,8 +494,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 		players = active_lobbies[room_name].get("players", [])
 		ready_players = active_lobbies[room_name].get("ready", [])
 		return set(players) == set(ready_players)
-
-
 
 	async def authenticate_user(self):
 		query_string = self.scope["query_string"].decode("utf-8")
