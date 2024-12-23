@@ -49,10 +49,28 @@ openssl x509 -req -days 365 -in $CERT_DIR/elastic-http.csr \
     -CA $CERT_DIR/ca.crt -CAkey $CERT_DIR/ca.key -CAcreateserial \
     -out $CERT_DIR/elastic-http.crt
 
+# Create Logstash certificates
+openssl genrsa -out $CERT_DIR/logstash.key 2048
+openssl req -new -key $CERT_DIR/logstash.key \
+    -out $CERT_DIR/logstash.csr \
+    -subj "/CN=logstash/O=Elastic/C=US"
+openssl x509 -req -days 365 -in $CERT_DIR/logstash.csr \
+    -CA $CERT_DIR/ca.crt -CAkey $CERT_DIR/ca.key -CAcreateserial \
+    -out $CERT_DIR/logstash.crt
+
+# Create Filebeat certificates
+openssl genrsa -out $CERT_DIR/filebeat.key 2048
+openssl req -new -key $CERT_DIR/filebeat.key \
+    -out $CERT_DIR/filebeat.csr \
+    -subj "/CN=filebeat/O=Elastic/C=US"
+openssl x509 -req -days 365 -in $CERT_DIR/filebeat.csr \
+    -CA $CERT_DIR/ca.crt -CAkey $CERT_DIR/ca.key -CAcreateserial \
+    -out $CERT_DIR/filebeat.crt
+
 rm $CERT_DIR/*.csr
 
 chmod 444 $CERT_DIR/*.key
-chmod 444 $CERT_DIR/*.crt
+chmod 644 $CERT_DIR/*.crt
 
 ## Auto ssl creation script
 # CERT_DIR="/usr/share/kibana/config/certs"
