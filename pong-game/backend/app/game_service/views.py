@@ -78,24 +78,6 @@ def recordMatch(p1, p2, matchOutcome):
 
 class getMatchHistoryView(APIView):
     permission_classes = [IsAuthenticated]
-
-    # def get(self, request):
-    #     matches = MatchResults.objects.all()
-    #     if not matches.exists():
-    #         return Response({"detail":"no match record."}, status=200)
-    #     matchData = [
-    #         {
-    #             "p1Alias": match.p1.alias,
-    #             "p2Alias": match.p2.alias,
-    #             "outcome": match.matchOutcome,
-    #             "time": match.time
-    #         }
-    #         for match in matches
-    #     ]
-    #     return Response({
-    #         "count": matches.count(),
-    #         "matchData": matchData
-    #     }, status=200)
     def get(self, request):
         matches = MatchResults.objects.all()
         if not matches.exists():

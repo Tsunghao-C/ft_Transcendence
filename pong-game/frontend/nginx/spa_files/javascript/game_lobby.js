@@ -108,7 +108,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 			const gameId = 'test_game';
 			const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws'; // to change to wss
 			const wsUrl = `${wsScheme}://${window.location.host}/ws/game-server/${gameId}/?token=${encodeURIComponent(token)}`;
-			
+
 			console.log('Connecting to WebSocket...')
 			ws = new WebSocket(wsUrl);
 			state.gameSocket = ws
@@ -192,8 +192,8 @@ export async function setLobbyView(contentContainer, roomID = "") {
 						} else if (response.type == 'error') {
 							console.error('Error received:', response.message);
 						} else if (response.type == 'game_update') {
-							if (pendingGameUpdate) { 
-								pendingGameUpdate(response.payload) 
+							if (pendingGameUpdate) {
+								pendingGameUpdate(response.payload)
 								pendingGameUpdate = null;
 							}
 						} else if (response.type == 'game_over') {
@@ -241,19 +241,21 @@ export async function setLobbyView(contentContainer, roomID = "") {
 	async function sendEvents(socket) {
 		if (playerEvent.pending == true) {
 			await state.gameSocket.send(JSON.stringify({
-				type: 'player_input',
+				action: 'player_input',
 				player_id: data.playerId,
 				input: playerEvent.type,
-				game_roomID: data.roomUID
-			}));	
+				game_roomID: data.roomUID,
+				local: false
+			}));
 			playerEvent.pending = false;
 		}
 		else {
 			await state.gameSocket.send(JSON.stringify({
-				type: 'player_input',
+				action: 'player_input',
 				player_id: data.playerId,
 				input: 'idle',
-				game_roomID: data.roomUID
+				game_roomID: data.roomUID,
+				local: false
 			}));
 		}
 	}
@@ -311,7 +313,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 	async function joinRoom(roomUID) {
 		try {
 			data.roomUID = roomUID;
-	
+
 			await state.gameSocket.send(JSON.stringify({
 				action: 'join_private_match',
 				room_name: roomUID,
@@ -328,11 +330,11 @@ export async function setLobbyView(contentContainer, roomID = "") {
 
 	async function showReadyButton() {
 		destroyReadyButton();
-	
+
 		readyButton = document.createElement('button');
 		readyButton.id = 'ready-button';
 		readyButton.textContent = 'Ready Up';
-		
+
 		readyButton.style.cssText = `
 			position: fixed;
 			bottom: 20px;
@@ -346,7 +348,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 			z-index: 1000;
 			border: 3px solid yellow;
 		`;
-	
+
 		readyButton.onclick = function(event) {
 			try {
 				if (readyButton.disabled == false) {
@@ -367,16 +369,16 @@ export async function setLobbyView(contentContainer, roomID = "") {
 				alert('Failed to send ready signal. Please try again.');
 			}
 		};
-	
+
 		readyButton.addEventListener('click', function(event) {
 			console.log('addEventListener triggered');
 			console.log('Event:', event);
 		});
-	
+
 		try {
 			document.body.appendChild(readyButton);
 			console.log('Ready button DEFINITELY added to DOM');
-			
+
 			const button = document.getElementById('ready-button');
 			if (button) {
 				console.log('Button found in DOM');
@@ -471,7 +473,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 			</div>
 			<hr>
 		`;
-	}	
+	}
 
 	async function create_private_match() {
 		try {
@@ -488,7 +490,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 		await connectWebSocket();
 		console.log("abruti");
 	}
-	
+
 	function getRoomIDInput() {
 		const modal = document.createElement('div');
 		modal.id = 'room-join-modal';
@@ -502,47 +504,60 @@ export async function setLobbyView(contentContainer, roomID = "") {
 		modal.style.backgroundColor = '#f9f9f9';
 		modal.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.1)';
 		modal.style.zIndex = '1000';
-	
+
 		modal.innerHTML = `
 			<h3>Join Game Room</h3>
-			<input 
-				type="text" 
-				id="room-uid-input" 
-				placeholder="Enter Room UID" 
+			<input
+				type="text"
+				id="room-uid-input"
+				placeholder="Enter Room UID"
 				style="width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box;"
 			>
-			<button 
-				id="join-room-btn" 
+			<button
+				id="join-room-btn"
 				style="width: 100%; padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;"
 			>
 				Join Room
 			</button>
 		`;
-	
+
 		document.body.appendChild(modal);
-	
+
 		const roomUidInput = modal.querySelector('#room-uid-input');
 		const joinRoomBtn = modal.querySelector('#join-room-btn');
-	
+
 		return new Promise((resolve, reject) => {
 			joinRoomBtn.addEventListener('click', () => {
 				const roomUID = roomUidInput.value.trim();
-	
+
 				if (!roomUID) {
 					alert('Please enter a valid Room UID.');
 					return;
 				}
-	
+
 				document.body.removeChild(modal);
 				resolve(roomUID);
 			});
 		});
-	}	
-	
+	}
+
 	document.getElementById('create-match').addEventListener('click', async () => {
-	create_private_match()
-});
-	
+		create_private_match();
+	});
+
+	document.getElementById('quick-match').addEventListener('click', async () => {
+		try {
+			console.log("Trying to join queue room")
+			await state.gameSocket.send(JSON.stringify({
+				action: 'join_queue',
+				id: data.playerId
+			}));
+			console.log("join queue attempt sent");
+		} catch (error) {
+			console.error('Exception caught in joinQueue', error);
+		}
+	});
+
 	document.getElementById('join-match').addEventListener('click', async () => {
 		try {
 			const roomID = await getRoomIDInput();
@@ -551,7 +566,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 			console.error('Error in join-match event listener:', error);
 		}
 	});
-	
+
 	await init();
 	if (roomID) {
 		ctx.clearRect(0, 0, canvas.width, canvas.height);

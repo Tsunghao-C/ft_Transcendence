@@ -106,6 +106,93 @@
 			}, {});
 			return cookies[name];
 		}
+
+		async function fetchWithToken(url, body = null, method = 'GET', needForContent = true) {
+			let token = getCookie("accessToken");
+			if (!token) {
+				throw new Error("No access token available.");
+			}
+
+		let hasTriedRefresh = false;
+
+		const fetchWithAccessToken = async (token) => {
+			const options = {
+				method: method,
+				headers: {
+					'Authorization': `Bearer ${token}`,
+				},
+			};
+
+			// this is just a desperate attempt to get the token right, doesn't work, doesn't do anythin, we might not need it
+			// if (method === 'POST') {
+			//     const csrfToken = getCookie("csrftoken");
+			//     if (csrfToken) {
+			// 		console.log("pls tell me we go here i beg you");
+			//         options.headers['X-CSRFToken'] = csrfToken;
+			//     } else {
+			//         console.error("CSRF token is missing");
+			//     }
+			// }
+
+			if (needForContent) {
+				options.headers['Content-Type'] = 'application/json';
+			}
+
+			if (body) {
+				options.body = body;
+			}
+
+			console.log(options);
+
+			const response = await fetch(url, options);
+			if (response.status === 401 && !hasTriedRefresh) {
+				console.log("Access token expired, attempting to refresh...");
+				hasTriedRefresh = true;
+
+				const refreshToken = getCookie("refreshToken");
+				if (!refreshToken) {
+					throw new Error("No refresh token available for renewal.");
+				}
+
+				const refreshResponse = await fetch('/api/user/token/refresh/', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({ refresh: refreshToken }),
+				});
+
+				if (refreshResponse.ok) {
+					const refreshData = await refreshResponse.json();
+					document.cookie = `accessToken=${refreshData.access}; path=/; secure; SameSite=Strict`;
+					token = refreshData.access;
+
+					return fetchWithAccessToken(token);
+				} else {
+					console.error("Failed to refresh token:", await refreshResponse.text());
+					throw new Error("Failed to refresh token. Please log in again.");
+				}
+			} else if (response.status === 401 && hasTriedRefresh) {
+				throw new Error("Failed to refresh token. Please log in again.");
+			}
+			return response;
+		};
+
+		return fetchWithAccessToken(token);
+		}
+
+		var data = {
+			playerId: -1,
+			player2Id: -1,
+			socket: -1,
+			roomUID: -1
+		};
+
+		const async_wrapper = async() => {
+			const response = await fetchWithToken('/api/user/getuser/');
+			const response_data = await response.json();
+			data.playerId = response_data.alias
+		}
 		const canvas = document.getElementById('game');
 		const token = getCookie("accessToken");
 		const PADDLE_HEIGHT = 100;
@@ -277,18 +364,20 @@
 			try {
 				if (playerEvent.pending == true) {
 					await data.socket.send(JSON.stringify({
-						type: 'player_input',
+						action: 'player_input',
 						player_id: data.playerId,
 						input: playerEvent.type,
+						local: false,
 						game_roomID: data.roomUID
 					}));
 					playerEvent.pending = false;
 				}
 				else {
 					await data.socket.send(JSON.stringify({
-						type: 'player_input',
+						action: 'player_input',
 						player_id: data.playerId,
 						input: 'idle',
+						local: false,
 						game_roomID: data.roomUID
 					}));
 				}
@@ -558,7 +647,6 @@
 			try {
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
 				canvas.style.display = 'block';
-				data.playerId = 'player_1';
 				await data.socket.send(JSON.stringify({
 					action: 'create_ai_match',
 					id: data.playerId,
@@ -584,6 +672,7 @@
 			await connectWebSocket();
 		}
 
+		async_wrapper();
 		init();
 	</script>
 </body>

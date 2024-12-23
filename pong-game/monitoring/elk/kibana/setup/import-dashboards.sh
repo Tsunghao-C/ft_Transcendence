@@ -1,20 +1,23 @@
 #!/bin/bash
 
 # Wait for Elasticsearch
-until curl -s http://elasticsearch:9200 >/dev/null; do
+until curl -s -u "kibana_system:${ELASTICSEARCH_PASSWORD}" http://elasticsearch:9200/_cluster/health >/dev/null; do
     echo "Waiting for Elasticsearch..."
     sleep 5
 done
 
-# Wait for Kibana
-until curl -s http://localhost:5601/api/status >/dev/null; do
+# Wait for Kibana to be ready
+until curl -k -s "https://localhost:5601/api/status" | grep -q '"status":{"overall":{"level":"available"'; do
     echo "Waiting for Kibana..."
     sleep 5
 done
 
 # Wait a bit more for Kibana to fully initialize
-sleep 10
+sleep 5
+
 echo "Elasticsearch and Kibana are up!"
+
+echo "Starting Kibana setup script..."
 
 # Function to create index pattern and return ID
 create_index_pattern() {
@@ -23,28 +26,25 @@ create_index_pattern() {
 
   # echo "Creating index pattern for $pattern..."
   local PATTERN_RESPONSE
-  PATTERN_RESPONSE=$(curl -X POST "localhost:5601/kibana/api/saved_objects/index-pattern" \
+  PATTERN_RESPONSE=$(curl -k -X POST "https://localhost:5601/api/saved_objects/index-pattern" \
     -H "kbn-xsrf: true" \
     -H "Content-Type: application/json" \
+    -u "elastic:${ELASTICSEARCH_PASSWORD}" \
     -d "{\"attributes\":{\"title\":\"$pattern\",\"timeFieldName\":\"$time_field\"}}")
   
   # Verify creation
-  if echo "$RESPONSE" | grep -q "error"; then
-      echo "Failed to create pattern: $RESPONSE" >&2
+  if echo "$PATTERN_RESPONSE" | grep -q "error"; then
+      echo "Failed to create pattern: $PATTERN_RESPONSE" >&2
       return 1
   fi
 
   local PATTERN_ID
   PATTERN_ID=$(echo "$PATTERN_RESPONSE" | grep -o '"id":"[^"]*' | cut -d'"' -f4)
-  # echo "Created index pattern $pattern with ID: $PATTERN_ID"
-  # Verify pattern exists
-  until curl -s "localhost:5601/kibana/api/saved_objects/index-pattern/$PATTERN_ID" | grep -q "$pattern"; do
-      sleep 1
-  done
   echo "$PATTERN_ID"
 }
 
 # Create and store pattern IDs
+echo "Creating index patterns..."
 WAF_PATTERN_ID=$(create_index_pattern "waf-*" "@timestamp")
 NGINX_PATTERN_ID=$(create_index_pattern "nginx-*" "@timestamp")
 # # Add more patterns as needed:
@@ -90,8 +90,9 @@ for dashboard_dir in /usr/share/kibana/dashboards/*/ ; do
       sed "s#INDEX_PATTERN_ID#$CURRENT_ID#g" "$dashboard" > "$TMP_FILE"
 
       echo "Importing processed dashboard..."
-      curl -X POST "localhost:5601/kibana/api/saved_objects/_import?overwrite=true" \
+      curl -k -X POST "https://localhost:5601/api/saved_objects/_import?overwrite=true" \
         -H "kbn-xsrf: true" \
+        -u "elastic:${ELASTICSEARCH_PASSWORD}" \
         -H "Content-Type: multipart/form-data" \
         -F "file=@$TMP_FILE"
       
@@ -103,7 +104,7 @@ done
 
 # # Set up default space view
 # echo "Setting up default space view..."
-# curl -X PUT "localhost:5601/kibana/api/spaces/space/default" \
+# curl -X PUT "localhost:5601/api/spaces/space/default" \
 #     -H "kbn-xsrf: true" \
 #     -H "Content-Type: application/json" \
 #     -d '{
@@ -116,7 +117,7 @@ done
 
 # # Create default view for Dashboards app
 # echo "Setting up default dashboard view..."
-# curl -X POST "localhost:5601/kibana/api/saved_objects/config/8.16.0" \
+# curl -X POST "localhost:5601/api/saved_objects/config/8.16.0" \
 #     -H "kbn-xsrf: true" \
 #     -H "Content-Type: application/json" \
 #     -d "{
