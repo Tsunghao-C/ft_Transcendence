@@ -197,9 +197,6 @@ export async function loadPage(page) {
 				case "personal-data":
 					setpersonalDataView(innerContent);
 					break;
-				case "chat":
-					setChatView(innerContent);
-					break;
 				default:
 					if (page.startsWith("profile/")) {
 						if (page.split("/").length > 2) {
