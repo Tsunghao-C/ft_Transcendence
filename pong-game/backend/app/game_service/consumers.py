@@ -9,9 +9,13 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.layers import get_channel_layer
 from .game_room import GameRoom
 from user_service.models import CustomUser
+from match_making.models import MatchMakingQueue, LiveGames
 from channels.db import database_sync_to_async
 from urllib.parse import parse_qs
 from django.conf import settings
+from django.db.utils import IntegrityError
+from django.db.models import Q
+
 
 
 load_dotenv()
@@ -68,6 +72,15 @@ class GameConsumer(AsyncWebsocketConsumer):
 		self.channel_layer = get_channel_layer()
 		self.assigned_room = -1
 		self.player_alias = -1
+		self.receive_methods = {
+				"join_private_match":self.join_lobby,
+				"create_local_match":self.create_local_match,
+				"create_private_match": self.create_private_lobby,
+				"join_queue": self.join_queue,
+				"create_ai_match": self.create_ai_lobby,
+				"player_ready": self.update_ready_status,
+				"player_input": self.receive_player_input,
+		}
 
 	async def connect(self):
 		logger.info(f"WebSocket connection attempt: {self.scope['path']}")
@@ -75,7 +88,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 		if user is None:
 			await self.close()
 			return
-
 		self.user = user
 		print(user.id, user.alias, "is connected")
 		try:
@@ -107,62 +119,60 @@ class GameConsumer(AsyncWebsocketConsumer):
 	# Tournaments
 	# Random match
 	# leave a lobby
-	# unready ?
+
 	async def receive(self, text_data=None, bytes_data=None):
 		if text_data is None:
 			return
 		data = json.loads(text_data)
 		logger.info(f"Message received: {text_data}")
 		action = data.get("action")
+		logger.info(f"Action: {action}")
+		if action in self.receive_methods.keys():
+			logger.info(f"Found receive_methods key, calling function {self.receive_methods[action]}")
+			await self.receive_methods[action](data)
+		else:
+			await self.send(json.dumps({
+				"type": "error",
+				"message": f"Unrecognized action {action}"
+				}))
+
+	async def receive_player_input(self, data):
+		roomID = data['game_roomID']
+		local_game = data['local']
+		logger.info("Receive_player_input called")
 		player_alias = self.user.alias
-		if action == "join_private_match":
-			await self.join_lobby(data["room_name"], player_alias)
-		elif action == "create_local_match":
-			room_name = str(uuid.uuid4())
-			await self.create_local_match(room_name, player_alias)
-		elif action == "create_private_match":
-			room_name = str(uuid.uuid4())
-			await self.create_private_lobby(room_name, player_alias)
-		elif action == "create_ai_match":
-			room_name = str(uuid.uuid4())
-			difficulty = data.get('difficulty', 'medium')
-			await self.create_ai_lobby(room_name, player_alias, difficulty)
-		elif action == "player_ready":
-			await self.update_ready_status(data["room_name"], player_alias)
-		elif data.get('type') == "player_input":
-			roomID = data['game_roomID']
-			local_game = data['local']
-			if local_game is False:
-				if roomID in active_online_games:
-					game_room = active_online_games[roomID]["room_data"]
-					logger.info("Consumer: Received player input")
-					await game_room.receive_player_input(player_alias, data['input'])
-					logger.info("Consumer: Forwarded player input")
-				else:
-					await self.send(json.dumps({
-						"type": "error",
-						"message": f"Game room {data['game_roomID']} not found"
-						}))
+		if local_game is False:
+			if roomID in active_online_games:
+				game_room = active_online_games[roomID]["room_data"]
+				logger.info("Consumer: Received player input")
+				await game_room.receive_player_input(player_alias, data['input'])
+				logger.info("Consumer: Forwarded player input")
 			else:
-				if roomID in active_local_games:
-					game_room = active_local_games[roomID]["room_data"]
-					player_id = data['player_id']
-					logger.info("Consumer: Received player input")
-					await game_room.receive_player_input(player_id, data['input'])
-					logger.info("Consumer: Forwarded player input")
-				else:
-					await self.send(json.dumps({
-						"type": "error",
-						"message": f"Game room {data['game_roomID']} not found"
-						}))
+				await self.send(json.dumps({
+					"type": "error",
+					"message": f"Game room {data['game_roomID']} not found"
+					}))
+		else:
+			if roomID in active_local_games:
+				game_room = active_local_games[roomID]["room_data"]
+				player_id = data['player_id']
+				logger.info("Consumer: Received player input")
+				await game_room.receive_player_input(player_id, data['input'])
+				logger.info("Consumer: Forwarded player input")
+			else:
+				await self.send(json.dumps({
+					"type": "error",
+					"message": f"Game room {data['game_roomID']} not found"
+					}))
 
-	async def create_ai_lobby(self, room_name, player_alias, difficulty):
+	async def create_ai_lobby(self, data):
+		room_name = str(uuid.uuid4())
 		self.assigned_room = room_name
+		player_alias = self.user.alias
 		self.assigned_player_alias = player_alias
-
+		difficulty = data['difficulty', 'medium']
 		players = [player_alias]
 		players.append("ai_player")
-
 		active_lobbies[room_name] = {
 			"players": players,
 			"connection": [self],
@@ -182,8 +192,69 @@ class GameConsumer(AsyncWebsocketConsumer):
 			"is_ai_game": True
 		}))
 
-	async def create_private_lobby(self, room_name, player_alias):
+	async def join_queue(self):
+		logger.info("Joining quick match")
+		try:
+			queue_entry = MatchMakingQueue.objects.create(player=self.user)
+			await self.send(json.dumps({
+				"type":"notice",
+				"message":f"User {self.user.alias} added to queue"
+			}))
+			await self.get_matched(queue_entry)
+		except IntegrityError:
+			await self.send(json.dumps({
+				"type":"error",
+				"message":"User is already in the queue"
+			}))
+
+	async def get_matched(self, queue_entry):
+		while True:
+			matched = await queue_entry.match_players()
+			if matched:
+				game = LiveGames.objects.filter(Q(p1=self.user) | Q(p2=self.user)).first()
+				if not game:
+					continue
+				if game.status != LiveGames.Status.not_started:
+					await self.send(json.dumps({
+						"type":"error",
+						"message":"this user is already in an active game"
+					}))
+					break
+				if game.p1 == self.user:
+					await self.create_quick_match_lobby(game)
+					return
+				await asyncio.sleep(5) # need to think of a better way to stagger p2
+				data = {"room_name":str(game.gameUID)}
+				await self.join_lobby(data)
+				break
+			await asyncio.sleep(15)
+
+	async def create_quick_match_lobby(self, game):
+		logger.info("Creating quickmatch lobby")
+		room_name = str(game.gameUID)
 		self.assigned_room = room_name
+		self.assigned_player_alias = self.user.alias
+		players = [self.user.alias]
+		active_lobbies[room_name] = {
+			"players": players,
+			"connection": [],
+			"local": False,
+			"is_ai_game": False,
+			"difficulty": None
+		}
+		await self.send(json.dumps({
+			"type": "room_creation",
+			"message": f"Created Lobby {room_name}",
+			"room_name": room_name,
+			"is_ai_game": False
+		}))
+
+
+	async def create_private_lobby(self, data):
+		logger.info("Creating private lobby")
+		room_name = str(uuid.uuid4())
+		self.assigned_room = room_name
+		player_alias = self.user.alias
 		self.assigned_player_alias = player_alias
 
 		players = []
@@ -202,8 +273,10 @@ class GameConsumer(AsyncWebsocketConsumer):
 			"is_ai_game": False
 			}))
 
-	async def create_local_match(self, room_name, player_alias):
+	async def create_local_match(self, data):
+		room_name = str(uuid.uuid4())
 		self.assigned_room = room_name
+		player_alias = self.user.alias
 		player_2 = str(uuid.uuid4())
 		active_lobbies[room_name] = {
 			"players": [player_alias, player_2],
@@ -220,7 +293,9 @@ class GameConsumer(AsyncWebsocketConsumer):
 			"player2_id": player_2
 			}))
 
-	async def join_lobby(self, room_name, player_alias):
+	async def join_lobby(self, data):
+		room_name = data["room_name"]
+		player_alias = self.user.alias
 		if room_name not in active_lobbies:
 			await self.send(json.dumps({
 				"type": "error",
@@ -258,7 +333,9 @@ class GameConsumer(AsyncWebsocketConsumer):
 				"player2": f"{active_lobbies[room_name]['players'][1]}"
 				}))
 
-	async def update_ready_status(self, room_name, player_alias):
+	async def update_ready_status(self, data):
+		room_name = data["room_name"]
+		player_alias = self.user.alias
 		if room_name not in active_lobbies:
 			await self.send(json.dumps({
 				"type": "error",
@@ -291,13 +368,10 @@ class GameConsumer(AsyncWebsocketConsumer):
 					"message": "Game is starting"
 					}))
 			logger.info(f"Starting game id: lobby_{room_name}")
-#			if  active_lobbies[room_name]["is_ai_game"] == True:
-#				game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"], active_lobbies[room_name]["local"], active_lobbies[room_name]["difficulty"])
-#			else:
-			game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"], active_lobbies[room_name]["local"], active_lobbies[room_name]["difficulty"])
+			game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"], active_lobbies[room_name]["difficulty"])
 			logger.info("GameRoom created")
 			logger.info("Checking for local")
-			if active_lobbies[room_name]["local"] == True:
+			if active_lobbies[room_name]["local"]:
 				logger.info("Local is true")
 				active_local_games[room_name] = {
 					"room_data": game_room,
@@ -315,7 +389,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 			game_task = asyncio.create_task(game_room.run())
 			del active_lobbies[room_name]
 			logger.info("GameRoom task added")
-			game_task.add_done_callback(self.handle_game_task_completion)
+			game_task.add_done_callback(lambda task: self.handle_game_task_completion(task, room_name))
 		except Exception as e:
 			logger.error(f"Failed to start the gameroom: {str(e)}")
 			await self.send(json.dumps({
@@ -324,7 +398,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 				}))
 				# add something to delete all invitation to this game
 
-	def handle_game_task_completion(self, task):
+	def handle_game_task_completion(self, task, room_name):
 		try:
 			logger.info("Game Room complete")
 			task.result()
@@ -334,11 +408,11 @@ class GameConsumer(AsyncWebsocketConsumer):
 			print(f"Game task encountered error: {e}")
 			raise
 		finally:
-			room_name = task.get_name()
-			is_local_game = task.is_local_game()
-			if is_local_game is True and room_name in active_online_games:
+			if room_name in active_local_games.keys():
+				logger.info(f"Removing gameRoom from active_local_games")
 				del active_local_games[room_name]
 			else:
+				logger.info(f"Removing gameRoom from active_online_games")
 				del active_online_games[room_name]
 
 	def all_ready(self, room_name):
@@ -364,7 +438,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 		token = query_params.get("token", [None])[0]
 		if not token:
 			return None
-
 		try:
 			payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
 			user = await self.get_user_from_payload(payload)

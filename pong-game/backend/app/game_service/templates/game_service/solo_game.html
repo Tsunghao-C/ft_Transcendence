@@ -325,7 +325,7 @@
 			for (const property in playerEvent) {
 				if (playerEvent[property].pending == true) {
 					await data.socket.send(JSON.stringify({
-						type: 'player_input',
+						action: 'player_input',
 						player_id: playerEvent[property].id,
 						input: playerEvent[property].type,
 						game_roomID: data.roomUID,
@@ -335,7 +335,7 @@
 				}
 				else {
 					await data.socket.send(JSON.stringify({
-						type: 'player_input',
+						action: 'player_input',
 						player_id: playerEvent[property].id,
 						input: 'idle',
 						game_roomID: data.roomUID,

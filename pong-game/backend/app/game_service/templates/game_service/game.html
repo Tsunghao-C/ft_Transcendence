@@ -364,7 +364,7 @@
 			try {
 				if (playerEvent.pending == true) {
 					await data.socket.send(JSON.stringify({
-						type: 'player_input',
+						action: 'player_input',
 						player_id: data.playerId,
 						input: playerEvent.type,
 						local: false,
@@ -374,7 +374,7 @@
 				}
 				else {
 					await data.socket.send(JSON.stringify({
-						type: 'player_input',
+						action: 'player_input',
 						player_id: data.playerId,
 						input: 'idle',
 						local: false,
