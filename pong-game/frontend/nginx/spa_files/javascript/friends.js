@@ -2,7 +2,7 @@ import { translations } from "./language_pack.js";
 import { fetchWithToken } from "./fetch_request.js";
 import { loadPage } from "./app.js";
 import { sendMessage } from "./manage_social.js";
-import { sendDuelRequest } from "./manage_social.js";
+import { sendDuelRequestFromAlias } from "./manage_social.js";
 import { confirmRemoveFriend } from "./manage_social.js";
 import { addFriend } from "./manage_social.js";
 import { acceptFriendRequest } from "./manage_social.js";
@@ -121,7 +121,7 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 				sendMessageButton.addEventListener("click", () => sendMessage(friend.alias, contentContainer));
 
 				const sendDuelRequestButton = friendItem.querySelector("button.btn-warning");
-				sendDuelRequestButton.addEventListener("click", () => sendDuelRequest(friend.alias));
+				sendDuelRequestButton.addEventListener("click", () => sendDuelRequestFromAlias(friend.alias));
 
 				const removeFriendButton = friendItem.querySelector("button.btn-danger");
 				removeFriendButton.addEventListener("click", () => {

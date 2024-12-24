@@ -306,7 +306,7 @@ async function loadChatRoom(roomName, userAlias, roomType, roomNameDisplay = roo
 	chatRoomTitle.textContent = `${roomNameDisplay}`;
 	messagesDiv.innerHTML = "<p>Loading messages...</p>";
 
-	const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+	const wsScheme = 'wss'
 
 	const token = getCookie("accessToken");
 	const wsUrl = `${wsScheme}://${window.location.host}/ws/chat-server/${roomName}/?token=${encodeURIComponent(token)}`;
@@ -410,6 +410,28 @@ async function getOrCreatePrivateChatRoom(alias, roomType) {
 			}
 	}
 
+
+
+	document.getElementById("send-invite").addEventListener("click", sendInvite);
+
+	async function sendInvite() {
+		sendDuelRequestFromGameRoom(roomName);
+	}
+
+	function sendMessage() {
+		const input = document.getElementById("message-input");
+		if (input.value && state.chatSocket) {
+			const messageData = {
+				message: input.value,
+				alias: userAlias,
+				time: new Date().toLocaleTimeString(),
+			};
+			state.chatSocket.send(JSON.stringify(messageData));
+			input.value = "";
+		} else {
+			alert("Message input is empty or WebSocket is not connected.");
+		}
+	}
 }
 
 function addMessage(userAlias, alias, message, time, isInvite = false, gameRoom = null, roomType) {
