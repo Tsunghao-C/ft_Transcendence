@@ -2,10 +2,14 @@ import { fetchWithToken } from "./fetch_request.js";
 import { getLanguageCookie } from "./fetch_request.js";
 import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
+import { hideElem } from "./utils.js";
+import { showElem } from "./utils.js";
 
 export async function setLobbyView(contentContainer, roomID = "") {
 	let response;
-	let userData
+	let userData;
+	let roomId;
+	let gameState;
 	try {
 		response = await fetchWithToken('/api/user/getuser/');
 		userData = await response.json();
@@ -16,24 +20,24 @@ export async function setLobbyView(contentContainer, roomID = "") {
 		return;
 	}
 	contentContainer.innerHTML = `
-    <div id="game-lobby" style="text-align: center;">
-        <h1>Game Lobby</h1>
-        <p>Select an option below to get started:</p>
-        <div>
-			<button id="quick-match">Quick Match</button>
-            <button id="create-match">Create Private Match</button>
-            <button id="join-match">Join Match</button>
-            <button id="ready-button" style="display:none;">Ready</button>
-			<button id="invite-button" style="display:none;">Invite Player</button>
-            <div id="player-info-container" style="display: flex; justify-content: space-between; margin-top: 20px;">
-                <div id="user-info-left" style="text-align: left; flex: 1; padding: 10px;"></div>
-                <div id="user-info-right" style="text-align: left; flex: 1; padding: 10px;"></div>
-            </div>
-            <div id="game-info">Loading...</div>
-            <div id="player-status" class="player-status"></div>
-            <canvas id="game" width="800" height="600"></canvas>
-        </div>
-    </div>
+		<div class="gamelobby-view">
+		<!-- <h2>Game Lobby</h2> -->
+		<div id="game-lobby" class="gamelobby-view">
+			<!-- <p>Select an option below to get started:</p> -->
+			<div>
+				<button id="create-match">Create Private Match</button>
+				<button id="join-match">Join Match</button>
+				<button id="ready-button" style="display:none;">Ready</button>
+				<button id="invite-button" style="display:none;"> > Invite a Player </button>
+				<div id="player-info-container" style="display: flex; justify-content: space-between;">
+					<div id="user-info-left" style="text-align: left; flex: 1; padding: 10px;"></div>
+					<div id="user-info-right" style="text-align: left; flex: 1; padding: 10px;"></div>
+				</div>
+				<div id="game-info">Loading...</div>
+				<div id="player-status" class="player-status"></div>
+				<canvas id="game" width="800" height="600" style="display: none;"></canvas>
+			</div>
+		</div>
 	`;
 	const canvas = document.getElementById('game');
 	const token = getCookie("accessToken");
@@ -41,80 +45,37 @@ export async function setLobbyView(contentContainer, roomID = "") {
 	const PADDLE_WIDTH = 15;
 	const ctx = canvas.getContext('2d');
 	const gameInfo = document.getElementById('game-info');
-	const debugDiv = document.getElementById('debug');
-	const playerStatus = document.getElementById('player-status');
-	let playerId = null;
-	let lastGameState = null;
-	let ws = null;
 	let wsReconnectTimer = null;
 	let pendingGameUpdate = null;
-	let pendingGameOver = null;
 	let readyButton = null;
 	let textBox = null;
-
-	class Paddle {
-		constructor (id, color) {
-			this.id = id;
-			this.color = color;
-		}
-	}
-
-	class Player {
-		constructor (id, color) {
-			this.id = id;
-			this.color = color;
-			this.Paddle = new Paddle(id, color);
-			this.score = 0;
-		}
-	}
-
-	let	ball = {
-		x:canvas.width/2,
-		y:canvas.height/2,
-		color:'white',
-		speedX:6,
-		speedY:6,
-		radius:10
-	};
-
-	let gameState = {
-		ball: ball,
-		player1: Player,
-		player2: Player
-	};
 
 	let playerEvent = {
 		pending: false,
 		type: -1,
 	}
 	var game_over = false;
-	var data = {
-		playerId: "player2",
-		socket: -1,
-		roomUID: -1
-	};
 
 	async function connectWebSocket() {
 		if (state.gameSocket) {
 			return ;
 		}
-		if (ws && ws.readyState === WebSocket.CONNECTING) {
+		if (state.gameSocket && state.gameSocket.readyState === WebSocket.CONNECTING) {
 			console.log('Connection already in progress...');
 			return Promise.resolve();
 		}
 			return new Promise((resolve, reject) => {
 			const gameId = 'test_game';
-			const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws'; // to change to wss
+			const wsScheme = 'wss';
 			const wsUrl = `${wsScheme}://${window.location.host}/ws/game-server/${gameId}/?token=${encodeURIComponent(token)}`;
 
 			console.log('Connecting to WebSocket...')
-			ws = new WebSocket(wsUrl);
-			state.gameSocket = ws
+			state.gameSocket = new WebSocket(wsUrl);
 
-			ws.onopen = function() {
+			state.gameSocket.onopen = function() {
 				console.log('WebSocket connected');
 				resolve();
-				gameInfo.textContent = 'Connected to game server...';
+				gameInfo.textContent = '• Connected';
 				if (wsReconnectTimer) {
 					clearTimeout(wsReconnectTimer);
 					wsReconnectTimer = null;
@@ -126,7 +87,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 						const response = JSON.parse(event.data);
 						if (response.type == 'notice') {
 							console.log('Server notice: ' + response.message);
-						} else if (response.type == 'join') {
+						} else if (response.type == 'join' || (response.type == 'rejoin')) {
 							let player1Data;
 							let player2Data;
 							let profileResponse;
@@ -136,25 +97,29 @@ export async function setLobbyView(contentContainer, roomID = "") {
 								player1Data = await profileResponse.json();
 								profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.player2}`);
 								player2Data = await profileResponse.json();
-								renderUserInfo(player1Data.profile, "user-info-left");
-								renderUserInfo(player2Data.profile, "user-info-right");
+								hideElem("create-match");
+								hideElem("join-match");
+								renderUserInfoLeft(player1Data.profile);
+								renderUserInfoRight(player2Data.profile);
 							} catch(error) {
 								console.log(error);
 								window.location.hash = "login";
 								return;
 							}
 						} else if (response.type == 'room_creation') {
-							data.roomUID = response.room_name;
+							roomId = response.room_name;
 							console.log('Room creation notice received');
-							console.log('Room name: ' + data.roomUID);
-							window.location.hash = `lobby/${data.roomUID}`;
+							console.log('Room name: ' + roomId);
+							window.location.hash = `lobby/${roomId}`;
 						} else if (response.type == 'set_player_1') {
 							let player1Data;
 							let profileResponse;
 							profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.alias}`);
 							player1Data = await profileResponse.json();
-							renderUserInfo(player1Data.profile, "user-info-left");
-							data.playerId = 'player1'
+							hideElem("create-match");
+							hideElem("join-match");
+							renderUserInfoLeft(player1Data.profile);
+							renderEmptyUserInfoRight();
 							console.log("you are player1");
 							const inviteButton = document.getElementById("invite-button");
     						inviteButton.style.display = "inline-block";
@@ -164,17 +129,16 @@ export async function setLobbyView(contentContainer, roomID = "") {
 									try {
 										const response = await fetchWithToken('/api/chat/create-invitation/', JSON.stringify({
 											alias: aliasToInvite,
-											roomId: data.roomUID,
+											roomId: roomId,
 										}), 'POST');
 										if (!response.ok) {
 											console.log(response);
-											alert("please get me out");
+											alert("Error: an error occured, please try again later");
 										} else {
-											alert("thank god");
+											alert("Invitation sent !");
 										}
 									} catch(error) {
 										console.log(error);
-										alert("send help");
 										window.location.hash = "login";
 									}
 								}
@@ -204,7 +168,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 					}
 				}
 				};
-				ws.onerror = function (error) {
+				state.gameSocket.onerror = function (error) {
 					console.error('Websocker error', error);
 					reject (new Error('Failed to connect Websocket'));
 
@@ -235,9 +199,8 @@ export async function setLobbyView(contentContainer, roomID = "") {
 		if (playerEvent.pending == true) {
 			await state.gameSocket.send(JSON.stringify({
 				action: 'player_input',
-				player_id: data.playerId,
 				input: playerEvent.type,
-				game_roomID: data.roomUID,
+				game_roomID: roomId,
 				local: false
 			}));
 			playerEvent.pending = false;
@@ -245,9 +208,8 @@ export async function setLobbyView(contentContainer, roomID = "") {
 		else {
 			await state.gameSocket.send(JSON.stringify({
 				action: 'player_input',
-				player_id: data.playerId,
 				input: 'idle',
-				game_roomID: data.roomUID,
+				game_roomID: roomId,
 				local: false
 			}));
 		}
@@ -299,18 +261,17 @@ export async function setLobbyView(contentContainer, roomID = "") {
 		let player_1 = gameState.players.player1;
 		let player_2 = gameState.players.player2;
 		drawElements(gameState.ball, player_1, player_2);
-		await sendEvents(socket, data.roomUID);
+		await sendEvents(socket, roomId);
 		requestAnimationFrame(gameLoop);
 	}
 
 	async function joinRoom(roomUID) {
 		try {
-			data.roomUID = roomUID;
+			roomId = roomUID;
 
 			await state.gameSocket.send(JSON.stringify({
 				action: 'join_private_match',
 				room_name: roomUID,
-				id: data.playerId
 			}));
 			console.log(`Request to join room ${roomUID} sent.`);
 			await showReadyButton();
@@ -350,8 +311,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 
 					state.gameSocket.send(JSON.stringify({
 						action: 'player_ready',
-						room_name: data.roomUID,
-						player_id: data.playerId
+						room_name: roomId,
 					}));
 					console.log('Ready signal sent.');
 				}
@@ -362,30 +322,11 @@ export async function setLobbyView(contentContainer, roomID = "") {
 				alert('Failed to send ready signal. Please try again.');
 			}
 		};
-
-		readyButton.addEventListener('click', function(event) {
-			console.log('addEventListener triggered');
-			console.log('Event:', event);
-		});
-
-		try {
-			document.body.appendChild(readyButton);
-			console.log('Ready button DEFINITELY added to DOM');
-
-			const button = document.getElementById('ready-button');
-			if (button) {
-				console.log('Button found in DOM');
-			} else {
-				console.error('Button NOT found in DOM');
-			}
-		} catch (error) {
-			console.error('Error adding button to DOM:', error);
-		}
+		document.body.appendChild(readyButton);
 	}
+
 	function destroyReadyButton() {
-		console.log("Trying to destroy ready buttons");
 		if (readyButton) {
-			console.log("Destroying ready buttons");
 			readyButton.parentNode.removeChild(readyButton);
 			readyButton.remove();
 			readyButton = null;
@@ -397,7 +338,6 @@ export async function setLobbyView(contentContainer, roomID = "") {
 			console.log("Requesting room")
 			await state.gameSocket.send(JSON.stringify({
 				action: 'create_private_match',
-				id: data.playerId
 			}));
 			console.log("Room requested")
 		} catch (error) {
@@ -408,21 +348,23 @@ export async function setLobbyView(contentContainer, roomID = "") {
 	async function startGame() {
 		try {
 			destroyReadyButton();
+			hideElem("invite-button");
+			showElem("game", "block");
 			if (textBox) {
 				textBox.remove();
 				textBox = null;
 			}
-			gameLoop(state.gameSocket, data);
+			gameLoop(state.gameSocket);
 		} catch {
 			console.error('Exception caught in startGame', error);
 		}
 	}
-
-
-	function renderUserInfo(user, targetId) {
-		const userInfoDiv = document.getElementById(targetId);
-
+	
+	function renderUserInfoLeft(user) {
+		const userInfoDiv = document.getElementById("user-info-left");
 		userInfoDiv.innerHTML = `
+			<hr>
+			<h4>Player one</h4>
 			<div style="display: flex; align-items: center; margin-bottom: 10px;">
 				<img src="${user.avatar}" alt="Avatar" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 10px;">
 				<div>
@@ -430,6 +372,38 @@ export async function setLobbyView(contentContainer, roomID = "") {
 					<p style="margin: 0;">MMR: ${user.mmr}</p>
 				</div>
 			</div>
+			<hr>
+		`;
+	}	
+
+	function renderUserInfoRight(user) {
+		const userInfoDiv = document.getElementById("user-info-right");
+		userInfoDiv.innerHTML = `
+			<hr>
+			<h4 class="player-two">Player two</h4>
+			<div style="display: flex; align-items: center; margin-bottom: 10px;">
+				<div>
+					<p style="margin: 0; font-weight: bold;">${user.alias}</p>
+					<p style="margin: 0;">MMR: ${user.mmr}</p>
+				</div>
+				<img src="${user.avatar}" alt="Avatar" style="width: 50px; height: 50px; border-radius: 50%; margin-left: 10px;">
+			</div>
+			<hr>
+		`;
+	}	
+
+	function renderEmptyUserInfoRight() {
+		const userInfoDiv = document.getElementById("user-info-right");
+		userInfoDiv.innerHTML = `
+			<hr>
+			<h4 class="player-two">Player two</h4>
+			<div style="display: flex; align-items: center; margin-bottom: 10px;">
+				<div>
+					<p style="margin: 0; font-weight: bold;">Waiting...</p>
+				</div>
+				<img src="/media/default.jpg" alt="Avatar" style="width: 50px; height: 50px; border-radius: 50%; margin-left: 10px;">
+			</div>
+			<hr>
 		`;
 	}
 
@@ -443,10 +417,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 	}
 
 	async function init(){
-		gameState.player1 = new Player('0', 'green');
-		gameState.player2 = new Player('1', 'red');
 		await connectWebSocket();
-		console.log("abruti");
 	}
 
 	function getRoomIDInput() {
@@ -501,19 +472,6 @@ export async function setLobbyView(contentContainer, roomID = "") {
 
 	document.getElementById('create-match').addEventListener('click', async () => {
 		create_private_match();
-	});
-
-	document.getElementById('quick-match').addEventListener('click', async () => {
-		try {
-			console.log("Trying to join queue room")
-			await state.gameSocket.send(JSON.stringify({
-				action: 'join_queue',
-				id: data.playerId
-			}));
-			console.log("join queue attempt sent");
-		} catch (error) {
-			console.error('Exception caught in joinQueue', error);
-		}
 	});
 
 	document.getElementById('join-match').addEventListener('click', async () => {

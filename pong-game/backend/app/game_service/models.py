@@ -9,6 +9,8 @@ import os
 
 LDB_UPDATE_TIMER = int(os.environ.get("LDB_UPDATE_TIMER", 15))
 
+
+
 class MatchResults(models.Model):
 	p1 = models.ForeignKey(
 		CustomUser,
