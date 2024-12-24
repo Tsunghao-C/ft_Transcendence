@@ -336,7 +336,6 @@ services:
     volumes:
       - ./monitoring/elk/logstash/docker-entrypoint.sh:/entrypoint.sh:ro
       - ./monitoring/elk/certs:/usr/share/logstash/config/certs:ro
-      # - ./monitoring/elk/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:rw
       - ./monitoring/elk/logstash/config/logstash.yml:/tmp/logstash.yml:ro
       - ./monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
     entrypoint: ["/bin/bash", "/entrypoint.sh"]
@@ -354,11 +353,11 @@ services:
     depends_on:
       elasticsearch:
         condition: service_healthy
-    # healthcheck:
-    #   test: ["CMD", "curl", "-f", "http://localhost:9600"]
-    #   interval: 10s
-    #   timeout: 10s
-    #   retries: 3
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9600"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
     restart: unless-stopped
 
   filebeat:
@@ -383,5 +382,5 @@ services:
       - monitoring_net
       - frontend_net
     depends_on:
-      - logstash
-        # condition: service_healthy
+      logstash:
+        condition: service_healthy
