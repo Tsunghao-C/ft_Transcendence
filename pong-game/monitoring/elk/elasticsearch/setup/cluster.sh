@@ -3,9 +3,9 @@
 echo "Configuring cluster settings..."
 
 # Configure cluster settings
-curl -X PUT -H "Content-Type: application/json" \
+curl -k -X PUT "https://localhost:9200/_cluster/settings" \
+  -H "Content-Type: application/json" \
   -u "elastic:${ELASTIC_PASSWORD}" \
-  "http://localhost:9200/_cluster/settings" \
   -d '{
     "persistent": {
       "cluster": {
@@ -24,9 +24,9 @@ curl -X PUT -H "Content-Type: application/json" \
   }'
 
 # Create test index to verify cluster is working
-curl -X PUT -H "Content-Type: application/json" \
+curl -k -X PUT "https://localhost:9200/test-index" \
+  -H "Content-Type: application/json" \
   -u "elastic:${ELASTIC_PASSWORD}" \
-  "http://localhost:9200/test-index" \
   -d '{
     "settings": {
       "number_of_shards": 1,
