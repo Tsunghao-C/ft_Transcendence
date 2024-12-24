@@ -490,4 +490,3 @@ export async function setLobbyView(contentContainer, roomID = "") {
 	}
 }
 
-
