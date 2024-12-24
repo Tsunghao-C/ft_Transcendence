@@ -4,7 +4,7 @@ import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
 import { loadPage } from "./app.js";
 import { clearInput, hideElem, showElem, hideClass, showClass } from "./utils.js";
-import { sendDuelRequestFromAlias } from "./manage_social.js";
+import { sendDuelRequestFromGameRoom } from "./manage_social.js";
 
 function showError(message, roomType) {
 	let errorMessage;
@@ -70,7 +70,7 @@ function setChatViewHtml(contentContainer) {
 						<div id="chat-content-bottom">
 							<input class="message-input" type="text" placeholder="Type your message">
 							<button class="send-message"">Send</button>
-							<button id="send-invite">Play</button>
+							<button id="send-private-invite">Play</button>
 						</div>
 					</div>
 				</div>
@@ -93,7 +93,7 @@ function setChatViewHtml(contentContainer) {
 						<div id="chat-content-bottom">
 							<input class="message-input" id="message-input" type="text" placeholder="Type your message">
 							<button class="send-message" id="send-message">Send</button>
-							<button id="send-invite">Play</button>
+							<button id="send-public-invite">Play</button>
 						</div>
 					</div>
 				</div>
@@ -288,6 +288,7 @@ function sendMessageEventListener(userAlias) {
 ////////////////////////////////// Get Chat Rooms //////////////////////////////////
 
 async function loadChatRoom(roomName, userAlias, roomType, roomNameDisplay = roomName) {
+	console.log("at loadChatRoom, user alias is :", userAlias);
 	if (state.chatSocket) {
 		console.log("Closing existing WebSocket connection.");
 		state.chatSocket.close();
@@ -353,9 +354,19 @@ async function loadChatRoom(roomName, userAlias, roomType, roomNameDisplay = roo
 	}
 
 	sendMessageEventListener(userAlias);
+
+	if (roomType == "private") {
+		document.getElementById("send-private-invite").addEventListener("click", sendInvite);
+	} else {
+		document.getElementById("send-public-invite").addEventListener("click", sendInvite);
+	}
+
+	async function sendInvite() {
+		sendDuelRequestFromGameRoom(roomName);
+	}
 }
 
-async function getOrCreatePrivateChatRoom(alias, roomType) {
+async function getOrCreatePrivateChatRoom(alias, userAlias, roomType) {
 
 	console.log("ZZZZZZ roomType is :", roomType);
 	try {
@@ -366,7 +377,7 @@ async function getOrCreatePrivateChatRoom(alias, roomType) {
 		);
 		if (response.ok) {
 			const roomData = await response.json();
-			loadChatRoom(roomData.name, alias, roomType, `${alias}`);
+			loadChatRoom(roomData.name, userAlias, roomType, `${alias}`);
 		} else {
 			const errorData = await response.json();
 			if (errorData.detail === "You are blocking this user") {
@@ -386,57 +397,14 @@ async function getOrCreatePrivateChatRoom(alias, roomType) {
 		window.location.hash = "login";
 		return;
 	}
-
-	document.getElementById("send-invite").addEventListener("click", sendInvite);
-
-	async function sendInvite() {
-			try {
-				console.log("TRYING TO SEND GAME INVITE");
-				sendDuelRequestFromAlias(alias);
-				// const response = await fetchWithToken('/api/chat/create-invitation/', JSON.stringify({
-				// 	roomName: aliasOrRoomToJoin,
-				// 	roomId: "-1",
-				// }), 'POST');
-				// if (!response.ok) {
-				// 	console.log(response);
-				// 	alert("please get me out");
-				// } else {
-				// 	alert("thank god");
-				// }
-			} catch(error) {
-				console.log(error);
-				alert("send help");
-				window.location.hash = "login";
-			}
-	}
-
-
-
-	document.getElementById("send-invite").addEventListener("click", sendInvite);
-
-	async function sendInvite() {
-		sendDuelRequestFromGameRoom(roomName);
-	}
-
-	function sendMessage() {
-		const input = document.getElementById("message-input");
-		if (input.value && state.chatSocket) {
-			const messageData = {
-				message: input.value,
-				alias: userAlias,
-				time: new Date().toLocaleTimeString(),
-			};
-			state.chatSocket.send(JSON.stringify(messageData));
-			input.value = "";
-		} else {
-			alert("Message input is empty or WebSocket is not connected.");
-		}
-	}
 }
 
 function addMessage(userAlias, alias, message, time, isInvite = false, gameRoom = null, roomType) {
 	console.log("adding message : ", message);
 	console.log("roomtype is : ", roomType);
+	console.log("is invite is : ", isInvite);
+	console.log("alias is  : ", alias);
+	console.log("userAlias is  : ", userAlias);
 
 	let messagesDiv;
 	if (roomType === "public") {
@@ -451,7 +419,7 @@ function addMessage(userAlias, alias, message, time, isInvite = false, gameRoom 
 		messageElement.innerHTML = `
 			<div style="display: inline-block; text-align: left; background-color: #e1f5fe; padding: 10px; border-radius: 10px; max-width: 70%;">
 				<em>${time}</em><br>
-				${isInvite && gameRoom ? `<a href="#lobby/${gameRoom}" style="text-decoration: none; color: #007bff;">${message}</a>` : message}
+				${isInvite && gameRoom ? `<a href="#lobby/${gameRoom}" style="text-decoration: none; color: #007bff;">You Sent an Invite</a>` : message}
 			</div>`;
 	} else {
 		messageElement.style.textAlign = "left";
@@ -478,6 +446,7 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 
 	// Fetch Chat Rooms Data
 	const { success, roomData, userAlias } = await fetchChatRoomsData();
+	console.log("at beginning, user alias is :", userAlias);
 	if (!success)
 		return;
 
@@ -502,7 +471,7 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 	} else if (roomType === "private"){
 		if (aliasOrRoomToJoin !== "") {
 			console.log("opening chat with", aliasOrRoomToJoin);
-			getOrCreatePrivateChatRoom(aliasOrRoomToJoin, roomType);
+			getOrCreatePrivateChatRoom(aliasOrRoomToJoin, userAlias, roomType);
 		}
 	}
 }
