@@ -334,9 +334,12 @@ services:
     container_name: logstash
     image: docker.elastic.co/logstash/logstash:${STACK_VERSION}
     volumes:
+      - ./monitoring/elk/logstash/docker-entrypoint.sh:/entrypoint.sh:ro
       - ./monitoring/elk/certs:/usr/share/logstash/config/certs:ro
-      - ./monitoring/elk/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:rw
+      # - ./monitoring/elk/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:rw
+      - ./monitoring/elk/logstash/config/logstash.yml:/tmp/logstash.yml:ro
       - ./monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
+    entrypoint: ["/bin/bash", "/entrypoint.sh"]
     environment:
       - LS_JAVA_OPTS=-Xmx256m -Xms256m
       - ELASTIC_USER=${ELASTIC_USER}
