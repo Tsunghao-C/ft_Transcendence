@@ -16,7 +16,7 @@ import { setChatView } from './chat_view.js';
 import { translations } from './language_pack.js';
 import { setLobbyView } from './game_lobby.js';
 import { setSoloLobby } from './game_solo.js';
-// import { setLocalLobby } from './game_local.js';
+import { setLocalLobby } from './game_local.js';
 import { setQuickMatchView } from './game_quickmatch.js';
 
 export const state = {
