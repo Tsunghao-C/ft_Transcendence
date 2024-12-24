@@ -3,9 +3,9 @@
 echo "Creating index templates..."
 
 # Create ILM policy first
-curl -X PUT -H "Content-Type: application/json" \
+curl -k -X PUT "https://localhost:9200/_ilm/policy/logs_lifecycle_policy" \
+  -H "Content-Type: application/json" \
   -u "elastic:${ELASTIC_PASSWORD}" \
-  "http://localhost:9200/_ilm/policy/logs_lifecycle_policy" \
   -d '{
     "policy": {
       "phases": {
@@ -39,9 +39,9 @@ curl -X PUT -H "Content-Type: application/json" \
   }'
 
 # Update your existing nginx template to include lifecycle settings
-curl -X PUT -H "Content-Type: application/json" \
+curl -k -X PUT "https://localhost:9200/_template/nginx_logs" \
+  -H "Content-Type: application/json" \
   -u "elastic:${ELASTIC_PASSWORD}" \
-  "http://localhost:9200/_template/nginx_logs" \
   -d '{
     "index_patterns": ["nginx-*"],
     "settings": {
@@ -69,9 +69,9 @@ curl -X PUT -H "Content-Type: application/json" \
   }'
 
 # Update WAF template similarly
-curl -X PUT -H "Content-Type: application/json" \
+curl -k -X PUT "https://localhost:9200/_template/waf_logs" \
+  -H "Content-Type: application/json" \
   -u "elastic:${ELASTIC_PASSWORD}" \
-  "http://localhost:9200/_template/waf_logs" \
   -d '{
     "index_patterns": ["waf-*"],
     "settings": {

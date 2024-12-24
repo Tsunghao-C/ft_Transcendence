@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Wait for Elasticsearch
-until curl -s -u "kibana_system:${ELASTICSEARCH_PASSWORD}" http://elasticsearch:9200/_cluster/health >/dev/null; do
+until curl -s -k -u "kibana_system:${ELASTICSEARCH_PASSWORD}" https://elasticsearch:9200/_cluster/health >/dev/null; do
     echo "Waiting for Elasticsearch..."
     sleep 5
 done

@@ -1,0 +1,7 @@
+pipeline.ordered: auto
+pipeline.workers: 4
+xpack.monitoring.elasticsearch.hosts: ${XPACK_MONITORING_ELASTICSEARCH_HOSTS}
+xpack.monitoring.elasticsearch.password: ${XPACK_MONITORING_ELASTICSEARCH_PASSWORD}
+xpack.monitoring.elasticsearch.ssl.certificate_authority: /usr/share/logstash/config/certs/ca.crt
+xpack.monitoring.elasticsearch.username: ${XPACK_MONITORING_ELASTICSEARCH_USERNAME}
+xpack.monitoring.enabled: true

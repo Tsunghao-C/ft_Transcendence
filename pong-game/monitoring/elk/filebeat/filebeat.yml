@@ -80,6 +80,15 @@ filebeat.inputs:
 
 output.logstash:
   hosts: ["logstash:5044"]
+  protocal: "ssl"
+  ssl:
+    enabled: true
+    verification_mode: "full"
+    certificate_authorities: ["/usr/share/filebeat/certs/ca.crt"]
+    certificate: "/usr/share/filebeat/certs/filebeat.crt"
+    key: "/usr/share/filebeat/certs/filebeat.key"
+
+beat.version: "7.17.0"
 
 logging:
   level: info
