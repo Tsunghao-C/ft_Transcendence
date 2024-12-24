@@ -713,7 +713,7 @@ table {
 /****** Private messages ******/
 
 /* Search bar */
-#chat-views-searchbar {
+.chat-views-searchbar {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -723,8 +723,10 @@ table {
 	flex: 1; /* L'input prendra toute la largeur disponible */
 }
 
-#chat-views-searchbar button {
-	width: auto !important;
+.chat-views-searchbar button {
+	/* width: auto !important; */
+	min-width: 160px !important;
+	width: 40%!important;
 	font-size: 0.7rem;
 }
 
@@ -747,7 +749,8 @@ table {
 	font-size: 0.7rem;
 }
 
-#messages {
+#messages,
+#chat-room-messages {
 	height: 360px !important;
 }
 
