@@ -6,6 +6,8 @@ import { loadPage } from "./app.js";
 import { clearInput, hideElem, showElem, hideClass, showClass } from "./utils.js";
 import { sendDuelRequestFromGameRoom } from "./manage_social.js";
 
+////////////////////////////////// Utils //////////////////////////////////
+
 function showError(message, roomType) {
 	let errorMessage;
 	let successMessage;
@@ -19,6 +21,8 @@ function showError(message, roomType) {
 	successMessage.textContent = "";
 	errorMessage.textContent = message;
 }
+
+////////////////////////////////// Fetch data //////////////////////////////////
 
 async function fetchChatRoomsData() {
 	try {
