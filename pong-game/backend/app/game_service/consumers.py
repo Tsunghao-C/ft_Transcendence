@@ -28,7 +28,6 @@ from django.db.models import Q
 
 load_dotenv()
 active_online_games = dict()
-stray_games = dict()
 active_local_games = dict()
 active_lobbies = {}
 logger = logging.getLogger(__name__)
@@ -111,18 +110,17 @@ class GameConsumer(AsyncWebsocketConsumer):
 				"message": "Connection established"
 			}))
 			logger.info("gameConsumer: accepted connection")
-			for paused_room_id, room_data in stray_games.items():
+			for stray_room_id, room_data in active_online_games.items():
 				player_ids = room_data["player_data"]["ids"]
-				logger.info(f"gameConsumer: searching for user in stray_games: {stray_games}")
 				if user.alias in player_ids:
-					logger.info(f"gameConsumer: Match found in paused game for user: {user.alias}")
+					logger.info(f"gameConsumer: Match found in active online games for user: {user.alias}")
 					index = player_ids.index(user.alias)
 					room_data["player_data"]["connection"][index] = self
-					self.assigned_room = paused_room_id
+					self.assigned_room = stray_room_id
 					await self.send(json.dumps({
 								"type": "rejoin_room_query",
-								"message": "Paused game room found, rejoin?",
-								"room_name": paused_room_id
+								"message": "stray game room found, rejoin?",
+								"room_name": stray_room_id
 								}))
 					logger.info("gameConsumer: sent rejoin notice to client")
 		except Exception as e:
@@ -131,14 +129,14 @@ class GameConsumer(AsyncWebsocketConsumer):
 	async def disconnect(self, code):
 		logger.info("Websocket connection closed")
 		if self.in_game:
-			if self.assigned_room in stray_games.keys():
-				room = stray_games[self.assigned_room]
+			if self.assigned_room in active_online_games.keys():
+				room = active_online_games[self.assigned_room]
 				logger.info(f"gameConsumer: sending abort order to gameRoom: {room}")
 				room["room_data"].set_server_order(ABORTED)
-				del stray_games[self.assigned_room]
+				del active_online_games[self.assigned_room]
 			elif self.assigned_room in active_online_games.keys():
 				room = active_online_games.pop(self.assigned_room)
-				stray_games[self.assigned_room] = room
+				active_online_games[self.assigned_room] = room
 				room["room_data"].missing_player += 1
 
 		self.in_game = False
@@ -154,11 +152,11 @@ class GameConsumer(AsyncWebsocketConsumer):
 		if text_data is None:
 			return
 		data = json.loads(text_data)
-		logger.info(f"Message received: {text_data}")
+		#logger.info(f"Message received: {text_data}")
 		action = data.get("action")
-		logger.info(f"Action: {action}")
+		#logger.info(f"Action: {action}")
 		if action in self.receive_methods.keys():
-			logger.info(f"Found receive_methods key, calling function {self.receive_methods[action]}")
+			#logger.info(f"Found receive_methods key, calling function {self.receive_methods[action]}")
 			await self.receive_methods[action](data)
 		else:
 			await self.send(json.dumps({
@@ -169,33 +167,20 @@ class GameConsumer(AsyncWebsocketConsumer):
 	async def receive_player_input(self, data):
 		roomID = data['game_roomID']
 		local_game = data['local']
-		logger.info("Receive_player_input called")
 		player_alias = self.user.alias
 		if local_game is False:
 			if roomID in active_online_games:
 				game_room = active_online_games[roomID]["room_data"]
-				logger.info("Consumer: Received player input")
+#				logger.info("Consumer: Received player input")
 				await game_room.receive_player_input(player_alias, data['input'])
-				logger.info("Consumer: Forwarded player input")
+#				logger.info("Consumer: Forwarded player input")
 			else:
 				await self.send(json.dumps({
 					"type": "error",
 					"message": f"Game room {data['game_roomID']} not found"
 					}))
 		else:
-			if roomID in stray_games.keys():
-				game_room = stray_games[roomID]["room_data"]
-				player_id = data['player_id']
-				logger.info("Consumer: Received player input")
-				await game_room.receive_player_input(player_id, data['input'])
-				logger.info("Consumer: Forwarded player input")
-			elif roomID in active_online_games.keys():
-				game_room = active_online_games[roomID]["room_data"]
-				player_id = data['player_id']
-				logger.info("Consumer: Received player input")
-				await game_room.receive_player_input(player_id, data['input'])
-				logger.info("Consumer: Forwarded player input")
-			elif roomID in active_local_games.keys():
+			if roomID in active_local_games.keys():
 				game_room = active_local_games[roomID]["room_data"]
 				player_id = data['player_id']
 				logger.info("Consumer: Received player input")
@@ -209,12 +194,11 @@ class GameConsumer(AsyncWebsocketConsumer):
 
 	async def rejoin_room(self, data):
 		if data["response"] is True:
-			room = stray_games.pop(self.assigned_room)
-			active_online_games[self.assigned_room] = room
+			room = active_online_games[self.assigned_room]
 			await room["room_data"].player_rejoin(self.user.alias, self)
 		else:
 			self.in_game = False
-			room = stray_games.pop(self.assigned_room)
+			room = active_online_games.pop(self.assigned_room)
 			room["room_data"].set_server_order(ABORTED)
 
 		#check for yes or no response from client
@@ -465,9 +449,9 @@ class GameConsumer(AsyncWebsocketConsumer):
 						"message": f"Player {player_alias} is ready"
 						}))
 		if (
-			(len(active_lobbies[room_name]["players"]) == 2 and active_lobbies[room_name]["game_type"]["is_online"])
+			(len(active_lobbies[room_name]["players"]) == 2)
 			or
-			(len(active_lobbies[room_name]["players"]) == 1)
+			(len(active_lobbies[room_name]["players"]) == 1 and active_lobbies[room_name]["game_type"]["is_local"])
 		) and self.all_ready(room_name):
 			try:
 				await self.launch_game(room_name)
@@ -536,13 +520,10 @@ class GameConsumer(AsyncWebsocketConsumer):
 			if message["type"] == "player_missing":
 				await self.handle_missing_player(message)
 
-	async def handle_missing_player(self, message):
+	async def handle_missing_player(self, message): #deprecated, to remove if front finds no use for this
 		room_name = message['room_name']
 		if room_name in active_online_games.keys():
 			logger.info(f"gameConsumer: Player {message['player_id']} reported missing by gameRoom")
-			room = active_online_games.pop(room_name)
-			stray_games[room_name] = room
-			logger.info(f"gameConsumer: added room {room_name} to stray_games")
 			await self.send(json.dumps({
 				"type": "player_missing",
 				}))
@@ -562,9 +543,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 			if room_name in active_local_games.keys():
 				logger.info(f"Removing gameRoom {room_name} from active_local_games")
 				del active_local_games[room_name]
-			elif result is TIMEOUT:
-				logger.info(f"Removing gameRoom {room_name} from stray_games")
-				del stray_games[room_name]
 			elif result is not ABORTED:
 				logger.info(f"Removing gameRoom {room_name} from active_online_games")
 				del active_online_games[room_name]

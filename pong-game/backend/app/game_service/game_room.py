@@ -95,7 +95,7 @@ class GameRoom():
 		self.server_order = new_order
 	
 	async def receive_player_input(self, player_id, input):
-		logger.info("GameRoom: Received player input")
+#		logger.info("GameRoom: Received player input")
 		if player_id in self.players:
 			self.time_since_last_receive[player_id] = time.perf_counter()
 			player = self.players[player_id]
@@ -106,7 +106,8 @@ class GameRoom():
 			elif input == "move_stop":
 				player.speed = 0
 			elif input == "idle":
-				logger.info(f"GameRoom: player input is idle for player: {player_id}")
+				pass
+#				logger.info(f"GameRoom: player input is idle for player: {player_id}")
 
 	def update_players(self):
 		for id in self.players:
@@ -218,14 +219,14 @@ class GameRoom():
 		if self.ball.x - self.ball.radius < 0 or self.ball.x + self.ball.radius > CANVAS_WIDTH:
 			if self.ball.x - self.ball.radius < 0:
 				self.players[self.right_player].score += 1
-				if self.players[self.right_player].score == 10:
+				if self.players[self.right_player].score == 100:
 					self.winner = self.right_player
 					self.game_over = True
 				self.ball.x = CANVAS_WIDTH * 0.7
 				self.ball.y = CANVAS_WIDTH * 0.5
 			else:
 				self.players[self.left_player].score += 1
-				if self.players[self.left_player].score == 10:
+				if self.players[self.left_player].score == 100:
 					self.winner = self.left_player
 					self.game_over = True
 				self.ball.x = CANVAS_WIDTH * 0.3
@@ -257,10 +258,10 @@ class GameRoom():
 
 	async def check_pulse(self):
 		current_time = time.perf_counter()
-		logger.info("gameRoom: Took current_time")
+#		logger.info("gameRoom: Took current_time")
 		for player_id in self.players:
-			logger.info(f"gameRoom: {player_id} current_time: {current_time} time_since_last_receive: {self.time_since_last_receive[player_id]} ")
-			if current_time - self.time_since_last_receive[player_id] > 1 and self.players[player_id].dropped is not True:
+#			logger.info(f"gameRoom: {player_id} current_time: {current_time} time_since_last_receive: {self.time_since_last_receive[player_id]} ")
+			if current_time - self.time_since_last_receive[player_id] > 1.5 and self.players[player_id].dropped is not True:
 				self.players[player_id].dropped = True
 				logger.info(f"gameRoom: Player: {player_id} has dropped out!")
 				self.dropped_player = player_id
@@ -305,20 +306,20 @@ class GameRoom():
 			for player_id in self.players:
 				self.time_since_last_receive[player_id] = time.perf_counter()
 			while self.running:
-				logger.info('gameRoom: Checking pulse of players')
+#				logger.info('gameRoom: Checking pulse of players')
 				await self.check_pulse()
-				logger.info('gameRoom: Finished checking pulse of players')
+#				logger.info('gameRoom: Finished checking pulse of players')
 				if self.missing_player:
 					if self.missing_player == 2 or self.server_order is ABORTED:
 						logger.info('gameRoom: No players left in room, aborting...')
 						return ABORTED
-					logger.info('gameRoom: Missing player detected')
+#					logger.info('gameRoom: Missing player detected')
 				self.update_players()
-				logger.info('gameRoom: updated players')
+#				logger.info('gameRoom: updated players')
 				self.handle_player_collisions()
-				logger.info('gameRoom: updated collisions')
+#				logger.info('gameRoom: updated collisions')
 				self.update_ball()
-				logger.info('gameRoom: updated ball')
+#				logger.info('gameRoom: updated ball')
 				# Add AI logic
 				if self.ai_player:
 					ai_move = await self.ai_player.calculate_move(
@@ -329,12 +330,12 @@ class GameRoom():
 					)
 					await self.receive_player_input(self.right_player, ai_move)
 				if self.game_over:
-					logger.info('gameRoom: preparing gameover')
+#					logger.info('gameRoom: preparing gameover')
 					await self.declare_winner(self.winner)
-					logger.info('gameRoom: done')
+#					logger.info('gameRoom: done')
 					return
 				await self.send_update()
-				logger.info('gameRoom: sent update to clients')
+#				logger.info('gameRoom: sent update to clients')
 				await asyncio.sleep(0.016)
 
 		except Exception as e:
