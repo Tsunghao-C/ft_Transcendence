@@ -114,7 +114,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 						} else if (response.type == 'rejoin_room_query'){
 							console.log('Paused gameRoom found');
 							console.log('Rejoining room (Hardcoded rn XD)');
-							data.roomUID = response.room_name;
+							roomId = response.room_name;
 							await state.gameSocket.send(JSON.stringify({
 								action: "rejoin_room",
 								response: true
@@ -224,7 +224,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 			}));
 		}
 	}
-
+	
 	function drawElements(ball, player_1, player_2) {
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		ctx.font = '48px serif';

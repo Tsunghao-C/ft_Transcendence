@@ -34,6 +34,7 @@ class Player():
 		self.y = canvas_height * 0.30
 		self.speed = 0
 		self.score = 0
+		self.dropped = False
 
 class Ball():
 	def __init__(self, canvas_width, canvas_height):
@@ -55,6 +56,7 @@ class GameRoom():
 		self.time_since_last_receive = {}
 		self.missing_player = False
 		self.notification_queue = notification_queue
+		self.server_order = -1
 
 		self.left_player = user_data[0]
 		self.ai_player = None
@@ -89,6 +91,9 @@ class GameRoom():
 		self.game_over = False
 		self.winner = -1
 
+	def set_server_order(self, new_order):
+		self.server_order = new_order
+	
 	async def receive_player_input(self, player_id, input):
 		logger.info("GameRoom: Received player input")
 		if player_id in self.players:
@@ -204,6 +209,7 @@ class GameRoom():
 				}))
 		if self.game_type["is_online"]:
 			await sync_to_async(self.record_match_result_sync)(winner)
+
 	def update_ball(self):
 		self.ball.x += self.ball.speedX
 		self.ball.y += self.ball.speedY
@@ -254,24 +260,27 @@ class GameRoom():
 		logger.info("gameRoom: Took current_time")
 		for player_id in self.players:
 			logger.info(f"gameRoom: {player_id} current_time: {current_time} time_since_last_receive: {self.time_since_last_receive[player_id]} ")
-			if current_time - self.time_since_last_receive[player_id] > 1:
+			if current_time - self.time_since_last_receive[player_id] > 1 and self.players[player_id].dropped is not True:
+				self.players[player_id].dropped = True
 				logger.info(f"gameRoom: Player: {player_id} has dropped out!")
 				self.dropped_player = player_id
 				if player_id == self.left_player:
 					self.dropped_side = LEFT
 				else:
 					self.dropped_side = RIGHT
-				self.missing_player = True
+				self.missing_player += 1
+				if self.missing_player == 2:
+					return
 				logger.info("gameRoom: creating notification_queue put task")
 				await self.notification_queue.put({ #check that this works properly ??
 					"type": "player_missing",
 					"player_id": player_id,
 					"room_name": self.room_id
 					})
-				await asyncio.sleep(5)
-				logger.info("gameRoom: task creation finished")
+				#await asyncio.sleep(5)
+				logger.info("gameRoom: notification creation finished")
 
-	def player_rejoin(self, new_id, new_connection):
+	async def player_rejoin(self, new_id, new_connection):
 		if self.dropped_side == LEFT:
 			self.left_player = new_id
 			self.connections[0] = new_connection
@@ -279,29 +288,10 @@ class GameRoom():
 			self.right_player = new_id
 			self.connections[1] = new_connection
 		self.missing_player = False
+		self.players[new_id].dropped = False
 		self.time_since_last_receive[self.left_player] = time.perf_counter()
 		self.time_since_last_receive[self.right_player] = time.perf_counter()
 		logger.info(f"gameRoom: Player has come back, new id: {new_id}")
-
-	async def wait_for_player_rejoin(self):
-		timeout_counter = time.perf_counter()
-		while True:
-			await asyncio.sleep(5)
-			if not self.missing_player:
-				logger.info("gameRoom: Resuming game")
-				break
-			current_time = time.perf_counter()
-			logger.info(f"gameRoom: Waiting for player to rejoin, time left: {30 - (current_time - timeout_counter)}")
-			if current_time - timeout_counter > 60:
-				logger.info('gameRoom: room has timed out, returning TIMEOUT')
-				return TIMEOUT
-
-	async def listen_for_server_messages(self):
-		while True:
-			message = await self.notification_queue.get()
-			if message["type"] == "abort game":
-				self.runnning = False
-				return
 
 	async def run(self):
 		logger.info('gameRoom starting')
@@ -314,15 +304,15 @@ class GameRoom():
 					}))
 			for player_id in self.players:
 				self.time_since_last_receive[player_id] = time.perf_counter()
-			asyncio.create_task(self.listen_for_server_messages())
 			while self.running:
 				logger.info('gameRoom: Checking pulse of players')
 				await self.check_pulse()
 				logger.info('gameRoom: Finished checking pulse of players')
 				if self.missing_player:
-					logger.info('gameRoom: Missing player detected, waiting for rejoin...')
-					if (await self.wait_for_player_rejoin() == TIMEOUT):
-						return TIMEOUT
+					if self.missing_player == 2 or self.server_order is ABORTED:
+						logger.info('gameRoom: No players left in room, aborting...')
+						return ABORTED
+					logger.info('gameRoom: Missing player detected')
 				self.update_players()
 				logger.info('gameRoom: updated players')
 				self.handle_player_collisions()
@@ -338,7 +328,6 @@ class GameRoom():
 						self.ball.speedY
 					)
 					await self.receive_player_input(self.right_player, ai_move)
-
 				if self.game_over:
 					logger.info('gameRoom: preparing gameover')
 					await self.declare_winner(self.winner)
@@ -347,7 +336,6 @@ class GameRoom():
 				await self.send_update()
 				logger.info('gameRoom: sent update to clients')
 				await asyncio.sleep(0.016)
-			return ABORTED
 
 		except Exception as e:
 			logger.error(f"gameRoom: exception caught in run: {e}")
