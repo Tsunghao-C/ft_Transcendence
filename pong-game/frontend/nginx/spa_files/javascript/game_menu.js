@@ -26,7 +26,7 @@ export function setGameMenu(contentContainer, menu = "main") {
 			{ text: `${translations[currentLanguage].back}`, hash: "game/multiplayer" },
 		],
 		online: [
-			{ text: `${translations[currentLanguage].quickMatch}`, hash: "game/online/quickMatch" },
+			{ text: `${translations[currentLanguage].quickMatch}`, hash: "quickmatch" },
 			{ text: `${translations[currentLanguage].duel}`, hash: "game/online/duel",},
 			{ text: `${translations[currentLanguage].tournament}`, hash: "game/online/tournament" },
 			{ text: `Join a room`, hash: "lobby" },
