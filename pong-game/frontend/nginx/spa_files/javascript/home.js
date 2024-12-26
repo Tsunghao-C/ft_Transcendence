@@ -53,13 +53,7 @@ function displayProfile(profile) {
 				${profile.wins}${translations[currentLanguage].w} / ${profile.losses}${translations[currentLanguage].l}
 			</p>
 			<table class="table">
-				<thead>
-					<tr>
-						<th>${translations[currentLanguage].date}</th>
-						<th>${translations[currentLanguage].opponent}</th>
-						<th>${translations[currentLanguage].finalScore}</th>
-					</tr>
-				</thead>
+				<hr style="color: white; background-color: white; margin: 0px;">
 				<tbody id="matchHistoryTableBody">
 				</tbody>
 			</table>
