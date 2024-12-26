@@ -2,8 +2,9 @@ import { fetchWithToken } from "./fetch_request.js";
 import { getLanguageCookie } from "./fetch_request.js";
 import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
-import { hideElem } from "./utils.js";
-import { showElem } from "./utils.js";
+import { hideElem, hideClass, showElem } from "./utils.js";
+import { drawElements, drawGameOverScreen } from "./game_utils.js";
+import { translations as trslt } from "./language_pack.js";
 
 export async function setLobbyView(contentContainer, roomID = "") {
 	let response;
@@ -19,30 +20,30 @@ export async function setLobbyView(contentContainer, roomID = "") {
 		window.location.hash = "login";
 		return;
 	}
+
+    const lng = localStorage.getItem("language");
+
 	contentContainer.innerHTML = `
 		<div class="gamelobby-view">
 		<!-- <h2>Game Lobby</h2> -->
 		<div id="game-lobby" class="gamelobby-view">
 			<!-- <p>Select an option below to get started:</p> -->
-			<div>
 				<button id="create-match">Create Private Match</button>
 				<button id="join-match">Join Match</button>
 				<button id="ready-button" style="display:none;">Ready</button>
 				<button id="invite-button" style="display:none;"> > Invite a Player </button>
 				<div id="player-info-container" style="display: flex; justify-content: space-between;">
-					<div id="user-info-left" style="text-align: left; flex: 1; padding: 10px;"></div>
-					<div id="user-info-right" style="text-align: left; flex: 1; padding: 10px;"></div>
+					<div class="user-info" id="user-info-left" style="text-align: left; flex: 1; padding: 10px;"></div>
+					<div class="user-info" id="user-info-right" style="text-align: left; flex: 1; padding: 10px;"></div>
 				</div>
 				<div id="game-info">Loading...</div>
 				<div id="player-status" class="player-status"></div>
 				<canvas id="game" width="800" height="600" style="display: none;"></canvas>
-			</div>
+				<button id="go-back-EOG" style="display: none;">${trslt[lng].back}</button>
 		</div>
 	`;
 	const canvas = document.getElementById('game');
 	const token = getCookie("accessToken");
-	const PADDLE_HEIGHT = 100;
-	const PADDLE_WIDTH = 15;
 	const ctx = canvas.getContext('2d');
 	const gameInfo = document.getElementById('game-info');
 	let wsReconnectTimer = null;
@@ -215,33 +216,6 @@ export async function setLobbyView(contentContainer, roomID = "") {
 		}
 	}
 
-	function drawElements(ball, player_1, player_2) {
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
-		ctx.font = '48px serif';
-		ctx.textBaseline = 'hanging';
-		ctx.fillStyle = 'white';
-		ctx.fillText(player_1.score + " : " + player_2.score, canvas.width * 0.45, canvas.height * 0.10);
-		ctx.fillStyle = player_1.color;
-		ctx.fillRect(player_1.x, player_1.y, PADDLE_WIDTH, PADDLE_HEIGHT);
-		ctx.fillStyle = player_2.color;
-		ctx.fillRect(player_2.x, player_2.y, PADDLE_WIDTH, PADDLE_HEIGHT);
-		ctx.beginPath();
-		ctx.arc(ball.x, ball.y, ball.radius, 0, 2 * Math.PI);
-		ctx.fillStyle = ball.color;
-		ctx.fill();
-		ctx.closePath();
-	}
-
-	function drawGameOverScreen(gameState) {
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
-		ctx.font = '48px serif';
-		ctx.textBaseline = 'hanging';
-		ctx.fillStyle = 'white';
-		ctx.fillText("Game Over", canvas.width * 0.5, canvas.height * 0.30);
-		ctx.fillText(gameState.score_left, canvas.width * 0.25, canvas.height * 0.50);
-		ctx.fillText(gameState.score_right, canvas.width * 0.75, canvas.height * 0.50);
-	}
-
 	async function getGameState()
 	{
 		return new Promise((resolve, reject) => {
@@ -251,7 +225,6 @@ export async function setLobbyView(contentContainer, roomID = "") {
 
 	async function gameLoop(socket) {
 		gameState = await getGameState();
-		// console.log("gameState: ", gameState);
 		if (game_over) {
 			console.log('Drawing game_over...');
 			drawGameOverScreen(gameState);
@@ -287,26 +260,12 @@ export async function setLobbyView(contentContainer, roomID = "") {
 
 		readyButton = document.createElement('button');
 		readyButton.id = 'ready-button';
-		readyButton.textContent = 'Ready Up';
-
-		readyButton.style.cssText = `
-			position: fixed;
-			bottom: 20px;
-			left: 50%;
-			transform: translateX(-50%);
-			padding: 10px 20px;
-			font-size: 16px;
-			cursor: pointer;
-			background-color: red;
-			color: white;
-			z-index: 1000;
-			border: 3px solid yellow;
-		`;
+		readyButton.textContent = 'Start Game';
 	
 		readyButton.onclick = function(event) {
 			try {
 				if (readyButton.disabled == false) {
-					readyButton.textContent = 'Waiting for game start...';
+					readyButton.textContent = 'Waiting...';
 					readyButton.disabled = true;
 
 					state.gameSocket.send(JSON.stringify({
@@ -322,7 +281,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 				alert('Failed to send ready signal. Please try again.');
 			}
 		};
-		document.body.appendChild(readyButton);
+		document.getElementById("game-lobby").appendChild(readyButton);
 	}
 
 	function destroyReadyButton() {
@@ -348,8 +307,11 @@ export async function setLobbyView(contentContainer, roomID = "") {
 	async function startGame() {
 		try {
 			destroyReadyButton();
-			hideElem("invite-button");
+			hideClass("hrs");
+			hideElem("game-info");
 			showElem("game", "block");
+			showElem("go-back-EOG", "block");
+			hideElem("invite-button");
 			if (textBox) {
 				textBox.remove();
 				textBox = null;
@@ -363,32 +325,32 @@ export async function setLobbyView(contentContainer, roomID = "") {
 	function renderUserInfoLeft(user) {
 		const userInfoDiv = document.getElementById("user-info-left");
 		userInfoDiv.innerHTML = `
-			<hr>
+			<hr class="hrs">
 			<h4>Player one</h4>
 			<div style="display: flex; align-items: center; margin-bottom: 10px;">
 				<img src="${user.avatar}" alt="Avatar" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 10px;">
 				<div>
 					<p style="margin: 0; font-weight: bold;">${user.alias}</p>
-					<p style="margin: 0;">MMR: ${user.mmr}</p>
+					<p style="margin: 0; font-size: 0.8rem;">MMR: ${user.mmr}</p>
 				</div>
 			</div>
-			<hr>
+			<hr class="hrs">
 		`;
 	}	
 
 	function renderUserInfoRight(user) {
 		const userInfoDiv = document.getElementById("user-info-right");
 		userInfoDiv.innerHTML = `
-			<hr>
+			<hr class="hrs">
 			<h4 class="player-two">Player two</h4>
 			<div style="display: flex; align-items: center; margin-bottom: 10px;">
 				<div>
 					<p style="margin: 0; font-weight: bold;">${user.alias}</p>
-					<p style="margin: 0;">MMR: ${user.mmr}</p>
+					<p style="margin: 0; font-size: 0.8rem;">MMR: ${user.mmr}</p>
 				</div>
 				<img src="${user.avatar}" alt="Avatar" style="width: 50px; height: 50px; border-radius: 50%; margin-left: 10px;">
 			</div>
-			<hr>
+			<hr class="hrs">
 		`;
 	}	
 
@@ -482,6 +444,10 @@ export async function setLobbyView(contentContainer, roomID = "") {
 			console.error('Error in join-match event listener:', error);
 		}
 	});
+
+    document.getElementById('go-back-EOG').addEventListener('click', async () => {
+        window.location.hash = "game/";
+    });
 
 	await init();
 	if (roomID) {
