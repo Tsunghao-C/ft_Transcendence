@@ -560,6 +560,7 @@ canvas {
 .user-info {
 	width: 50%;
 	padding: 0px 10px 0px 10px !important;
+	min-width: 120px;
 }
 
 .player-two {
@@ -583,12 +584,13 @@ canvas {
 
 #ready-button {
 	border: 1px solid black !important;
-	width: 200px !important;
+	width: 150px !important;
 	height: 50px !important;
 	border-radius: 25px !important;
 	padding: 0px !important;
 	margin: 0px !important;
 	margin-top: 50px !important;
+	font-size: 1rem !important;
 }
 
 #ready-button:hover {

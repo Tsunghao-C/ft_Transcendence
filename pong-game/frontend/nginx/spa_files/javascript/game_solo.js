@@ -4,6 +4,7 @@ import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
 import { hideElem, hideClass, showElem } from "./utils.js";
 import { translations as trslt } from "./language_pack.js";
+import { drawElements, drawGameOverScreen } from "./game_utils.js";
 
 export async function setSoloLobby(contentContainer) {
     let response;
@@ -41,8 +42,6 @@ export async function setSoloLobby(contentContainer) {
     `;
     const canvas = document.getElementById('game');
     const token = getCookie("accessToken");
-    const PADDLE_HEIGHT = 100;
-    const PADDLE_WIDTH = 15;
     const ctx = canvas.getContext('2d');
     const gameInfo = document.getElementById('game-info');
     let wsReconnectTimer = null;
@@ -161,47 +160,6 @@ export async function setSoloLobby(contentContainer) {
                 local: false
             }));
         }
-    }
-
-    function drawElements(ball, player_1, player_2) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.font = '48px Space Mono';
-        ctx.textBaseline = 'hanging';
-        ctx.fillStyle = 'black';
-
-        // Score
-        const scoreText = player_1.score + " : " + player_2.score;
-        const textWidth = ctx.measureText(scoreText).width;
-        ctx.fillText(scoreText, (canvas.width - textWidth) / 2, canvas.height * 0.10);
-
-        // Player 1
-        ctx.fillStyle = player_1.color;
-        ctx.fillRect(player_1.x, player_1.y, PADDLE_WIDTH, PADDLE_HEIGHT);
-        
-        // Player 2
-        ctx.fillStyle = player_2.color;
-        ctx.fillRect(player_2.x, player_2.y, PADDLE_WIDTH, PADDLE_HEIGHT);
-        
-        // Ball
-        ctx.fillStyle = ball.color;
-        ctx.fillRect(ball.x - ball.radius, ball.y - ball.radius, ball.radius * 2, ball.radius * 2);
-    }
-
-    function drawGameOverScreen(gameState) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.font = '48px Space Mono';
-        ctx.textBaseline = 'hanging';
-        ctx.fillStyle = 'black';
-
-        // Game Over
-        const gameoverText = "Game Over";
-        const gameoverTextWidth = ctx.measureText(gameoverText).width;
-        ctx.fillText(gameoverText, (canvas.width - gameoverTextWidth) / 2, canvas.height * 0.50);
-        
-        // Score
-        const scoreText = gameState.score_left + " : " + gameState.score_right;
-        const scoreTextWidth = ctx.measureText(scoreText).width;
-        ctx.fillText(scoreText, (canvas.width - scoreTextWidth) / 2, canvas.height * 0.10);
     }
 
     async function getGameState()
