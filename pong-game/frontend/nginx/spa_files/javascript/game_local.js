@@ -5,7 +5,7 @@ import { state } from "./app.js";
 import { hideElem } from "./utils.js";
 import { showElem } from "./utils.js";
 
-export async function setSoloLobby(contentContainer) {
+export async function setLocalLobby(contentContainer) {
     let response;
     let userData;
     let roomId;
@@ -23,9 +23,7 @@ export async function setSoloLobby(contentContainer) {
         <div class="gamelobby-view">
         <div id="game-lobby" class="gamelobby-view">
             <div>
-                <button id="easy">easy</button>
-                <button id="medium">medium</button>
-                <button id="hard">hard</button>
+                <button id="local">start local versus</button>
                 <button id="menu">Back To Menu</button>
                 <button id="ready-button" style="display:none;">Ready</button>
                 <div id="player-info-container" style="display: flex; justify-content: space-between;">
@@ -50,9 +48,18 @@ export async function setSoloLobby(contentContainer) {
     let textBox = null;
 
     let playerEvent = {
-        pending: false,
-        type: -1,
-    }
+        player_1: {
+            pending: false,
+            type: -1,
+            id: userData.alias,
+        },
+        player_2: {
+            pending: false,
+            type: -1,
+            id: -1,
+        }
+    };
+
     var game_over = false;
 
     async function connectWebSocket() {
@@ -84,10 +91,11 @@ export async function setSoloLobby(contentContainer) {
                         const response = JSON.parse(event.data);
                         if (response.type == 'notice') {
                             console.log('Server notice: ' + response.message);
-                        } else if (response.type == 'room_creation') {
-                            roomId = response.room_name;
-                            console.log('Room creation notice received');
-                            console.log('Room name: ' + roomId);
+                        } else if (response.type == 'local_room_creation') {
+								console.log('Local Room creation notice received');
+								console.log('Room name: ' + roomId);
+								roomId = response.room_name;
+								playerEvent.player_2.id = response.player2_id;
                         } else if (response.type == 'game_start') {
                             console.log(response.message);
                             startGame();
@@ -123,42 +131,57 @@ export async function setSoloLobby(contentContainer) {
 
     document.addEventListener('keydown', function(event) {
         if (event.code == 'ArrowUp') {
-            playerEvent.pending = true;
-            playerEvent.type = 'move_up';
+            playerEvent.player_2.pending = true;
+            playerEvent.player_2.type = 'move_up';
         }
         else if (event.code == 'ArrowDown') {
-            playerEvent.pending = true;
-            playerEvent.type = 'move_down';
+            playerEvent.player_2.pending = true;
+            playerEvent.player_2.type = 'move_down';
+        }
+        else if (event.code == 'KeyW') {
+            playerEvent.player_1.pending = true;
+            playerEvent.player_1.type = 'move_up';
+        }
+        else if (event.code == 'KeyS') {
+            playerEvent.player_1.pending = true;
+            playerEvent.player_1.type = 'move_down';
         }
     });
 
     document.addEventListener('keyup', function(event) {
         if (event.code == 'ArrowDown' || event.code == 'ArrowUp')
         {
-            playerEvent.pending = true;
-            playerEvent.type = 'move_stop'
+            playerEvent.player_1.pending = true;
+            playerEvent.player_1.type = 'move_stop';
+        }
+        else if(event.code == 'KeyW' || event.code == 'KeyS')
+        {
+            playerEvent.player_2.pending = true;
+            playerEvent.player_2.type = 'move_stop';
         }
     });
 
     async function sendEvents(socket) {
-        if (playerEvent.pending == true) {
-            await state.gameSocket.send(JSON.stringify({
-                action: 'player_input',
-                player_id: userData.alias,
-                input: playerEvent.type,
-                game_roomID: roomId,
-                local: false
-            }));
-            playerEvent.pending = false;
-        }
-        else {
-            await state.gameSocket.send(JSON.stringify({
-                action: 'player_input',
-                player_id: userData.alias,
-                input: 'idle',
-                game_roomID: roomId,
-                local: false
-            }));
+        for (const property in playerEvent) {
+            if (playerEvent[property].pending == true) {
+                await state.gameSocket.send(JSON.stringify({
+                    action: 'player_input',
+                    player_id: playerEvent[property].id,
+                    input: playerEvent[property].type,
+                    game_roomID: roomId,
+                    local: true
+                }));
+                playerEvent[property].pending = false;
+            }
+            else {
+                await state.gameSocket.send(JSON.stringify({
+                    action: 'player_input',
+                    player_id: playerEvent[property].id,
+                    input: 'idle',
+                    game_roomID: roomId,
+                    local: true
+                }));
+            }
         }
     }
 
@@ -242,7 +265,6 @@ export async function setSoloLobby(contentContainer) {
                     state.gameSocket.send(JSON.stringify({
                         action: 'player_ready',
                         room_name: roomId,
-                        player_id: userData.alias
                     }));
                     console.log('Ready signal sent.');
                 }
@@ -258,7 +280,9 @@ export async function setSoloLobby(contentContainer) {
     }
 
     function destroyReadyButton() {
+        console.log("Trying to destroy ready buttons");
         if (readyButton) {
+            console.log("Destroying ready buttons");
             readyButton.parentNode.removeChild(readyButton);
             readyButton.remove();
             readyButton = null;
@@ -268,18 +292,17 @@ export async function setSoloLobby(contentContainer) {
     async function startGame() {
         try {
             destroyReadyButton();
-            showElem("game", "block");
             if (textBox) {
                 textBox.remove();
                 textBox = null;
             }
             gameLoop(state.gameSocket);
         } catch (error) {
-            console.error('Exception caught in startGame', error);
+            console.error('Exception caught in startGame:', error);
         }
     }
     
-    function renderUsers(difficulty) {
+    function renderUsers() {
         const userInfoDiv = document.getElementById("user-info-left");
         userInfoDiv.innerHTML = `
             <hr>
@@ -300,31 +323,37 @@ export async function setSoloLobby(contentContainer) {
             <div style="display: flex; align-items: center; margin-bottom: 10px;">
                 <img src="${userData.avatar}" alt="Avatar" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 10px;">
                 <div>
-                    <p style="margin: 0; font-weight: bold;">${difficulty} AI</p>
+                    <p style="margin: 0; font-weight: bold;">COPAIN</p>
                 </div>
             </div>
             <hr>
         `;
     }
 
-    async function create_ai_match(difficulty) {
+    async function request_local_room() {
+        try {
+            console.log("Requesting room")
+            await state.gameSocket.send(JSON.stringify({
+                action: 'create_local_match',
+                id: userData.alias
+            }));
+            console.log("Room requested")
+        } catch (error) {
+            console.error('Error sending room creation request: ', error);
+        }
+    }
+
+    async function create_local_match() {
         try {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             canvas.style.display = 'block';
-            await state.gameSocket.send(JSON.stringify({
-                action: 'create_ai_match',
-                difficulty: difficulty
-            }));
-
-            console.log("Started AI game session");
-            console.log("Player_id: " + userData.alias);
-            renderUsers(difficulty);
-            await showReadyButton();
-
-            gameInfo.textContent = 'Playing against AI - Get Ready!';
+            await request_local_room();
+            await showReadyButton()
+            renderUsers();
+            gameInfo.textContent = 'Playing against your Friend - Get Ready!';
         } catch (error) {
-            console.error('Error starting AI game:', error);
-            gameInfo.textContent = 'Error starting AI game. Plase try again.';
+            console.error('Error starting Local game:', error);
+            gameInfo.textContent = 'Error starting Local game. Plase try again.';
         }
     }
 
@@ -332,41 +361,12 @@ export async function setSoloLobby(contentContainer) {
         await connectWebSocket();
     }
 
-    const easyButton = document.getElementById('easy');
-    const mediumButton = document.getElementById('medium');
-    const hardButton = document.getElementById('hard');
+    const localButton = document.getElementById('local');
 
-    easyButton.addEventListener('click', async () => {
+    localButton.addEventListener('click', async () => {
         try {
-            hideElem("easy");
-            hideElem("medium");
-            hideElem("hard");
-            hideElem("menu");
-            create_ai_match('easy');
-        } catch (error) {
-            console.error('Error in join-match event listener:', error);
-        }
-    });
-
-    mediumButton.addEventListener('click', async () => {
-        try {
-            hideElem("easy");
-            hideElem("medium");
-            hideElem("hard");
-            hideElem("menu");
-            create_ai_match('medium');
-        } catch (error) {
-            console.error('Error in join-match event listener:', error);
-        }
-    });
-
-    hardButton.addEventListener('click', async () => {
-        try {
-            hideElem("easy");
-            hideElem("medium");
-            hideElem("hard");
-            hideElem("menu");
-            create_ai_match('hard');
+            hideElem("local");
+            create_local_match();
         } catch (error) {
             console.error('Error in join-match event listener:', error);
         }

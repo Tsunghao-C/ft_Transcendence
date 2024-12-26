@@ -5,6 +5,10 @@ import httpx
 import time
 import logging
 from .ai_player import PongAI
+from .models import MatchResults
+from asgiref.sync import sync_to_async
+from user_service.models import CustomUser
+
 from match_making.models import LiveGames
 from user_service.models import CustomUser
 from django.db import transaction
@@ -42,25 +46,38 @@ class Ball():
 		self.radius = BALL_RADIUS
 
 class GameRoom():
-	def __init__(self, room_id, user_data, consumer_data, notification_queue, daddyficulty= ""):
+	def __init__(self, room_id, user_data, consumer_data, notification_queue, game_type, daddyficulty= ""):
 		self.room_id = room_id
-		self.connections = []
+		self.connections = consumer_data
+		self.game_type = game_type
 		self.left_player = user_data[0]
 		self.right_player = user_data[1]
 		self.time_since_last_receive = {}
 		self.missing_player = False
 		self.notification_queue = notification_queue
 
-		# Adding AI player logic
+		self.left_player = user_data[0]
 		self.ai_player = None
-		if self.right_player == "ai_player":
+		if self.game_type["is_local"]:
+			self.right_player = self.left_player + "_2"
+		elif self.game_type["is_online"]:
+			self.right_player = user_data[1]
+		elif self.game_type["is_ai"]:
+			self.right_player = self.left_player + "_ai"
 			self.ai_player = PongAI(
 				difficulty = daddyficulty,
 				canvas_width=CANVAS_WIDTH,
 				canvas_height=CANVAS_HEIGHT
 			)
-		for consumer in consumer_data:
-			self.connections.append(consumer)
+		# # Adding AI player logic
+		# if self.right_player == "ai_player":
+		#     self.ai_player = PongAI(
+		#         difficulty = daddyficulty,
+		#         canvas_width=CANVAS_WIDTH,
+		#         canvas_height=CANVAS_HEIGHT
+		#     )
+		# for consumer in consumer_data:
+		#     self.connections.append(consumer)
 		self.players = {
 				self.left_player: Player('left', CANVAS_WIDTH, CANVAS_HEIGHT),
 				self.right_player: Player('right', CANVAS_WIDTH, CANVAS_HEIGHT)
@@ -139,36 +156,40 @@ class GameRoom():
 					else:
 						self.ball.x = player.x - self.ball.radius
 
-	#need to write this with Ben
-	async def send_report_to_db(self, winner):
-		p1ID = self.players[0]
-		try:
-			user = CustomUser.objects.get(id=p1ID)
-			game = LiveGames.objects.get(p1=user)
-			if self.winner == self.left_player:
-				winner = 1
-			else:
-				winner = 0
-			await game.matchEnd(winner)
-		except Exception as e:
-			print(f"Error: could not retrieve game object: {e}")
+	def _get_new_mmr(self, userMMR: int, oppMMR: int, match_outcome: int):
+		E = 1 / (1 + 10**((oppMMR - userMMR)/400))
+		return int(userMMR + 30 * (match_outcome - E))
 
-	# async def send_report_to_db(self, winner):
-	# 	game_report = {
-	# 			"p1ID": self.players[0],
-	# 			"p2ID": self.players[1],
-	# 			"matchOutcome": winner
-	# 			}
-	# 	backend_url = "http://the-backend-here"
-	# 	try:
-	# 		async with httpx.AsyncClient() as client:
-	# 			response = await client.post(backend_url, json=game_report)
-	# 			response.raise_for_status()
-	# 			print(f"Report succesfully sent. Reponse: {response.text}")
-	# 	except httpx.HTTPStatusError as exc:
-	# 		print(f"Error response {exc.response.status_code}: {exc.response.text}")
-	# 	except Exception as e:
-	# 		print(f"An error occurred: {e}")
+	def record_match_result_sync(self, winner):
+		try:
+			match_outcome = 0 #rightplayer win
+			if(winner == self.left_player):
+				match_outcome = 1 #leftplayer win
+			p1 = CustomUser.objects.get(alias=self.left_player)
+			p2 = CustomUser.objects.get(alias=self.right_player)
+			if (winner == self.left_player):
+				match_outcome = 1
+				p1.winCount += 1
+				p2.lossCount += 1
+			else :
+				match_outcome = 0
+				p2.winCount += 1
+				p1.lossCount += 1
+			p1MMR = p1.mmr
+			p2mmr = p2.mmr
+			p1.mmr = self._get_new_mmr(p1MMR, p2mmr, match_outcome)
+			p2.mmr = self._get_new_mmr(p2mmr, p1MMR, 1 - match_outcome)
+			match_result = MatchResults(
+				p1=p1,
+				p2=p2,
+				matchOutcome=match_outcome,
+			)
+			p1.save()
+			p2.save()
+			match_result.save()
+			print(f"Match result saved: {match_result}")
+		except CustomUser.DoesNotExist:
+			print("Error: One or both players not found.")
 
 	async def declare_winner(self, winner):
 		game_report = {
@@ -181,9 +202,8 @@ class GameRoom():
 				'type': 'game_over',
 				'payload': game_report
 				}))
-		await self.send_report_to_db(winner) # send json post with "p1ID" and "p2ID" and matchOutcome, set matchOutcome to 0 for p0 victory or 1 for p1 victory
-#        await asyncio.sleep(1)
-
+		if self.game_type["is_online"]:
+			await sync_to_async(self.record_match_result_sync)(winner)
 	def update_ball(self):
 		self.ball.x += self.ball.speedX
 		self.ball.y += self.ball.speedY
@@ -317,7 +337,7 @@ class GameRoom():
 						self.ball.speedX,
 						self.ball.speedY
 					)
-					await self.receive_player_input("ai_player", ai_move)
+					await self.receive_player_input(self.right_player, ai_move)
 
 				if self.game_over:
 					logger.info('gameRoom: preparing gameover')

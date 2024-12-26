@@ -2,7 +2,7 @@ import { translations } from "./language_pack.js";
 import { fetchWithToken } from "./fetch_request.js";
 import { loadPage } from "./app.js";
 import { sendMessage } from "./manage_social.js";
-import { sendDuelRequest } from "./manage_social.js";
+import { sendDuelRequestFromAlias } from "./manage_social.js";
 import { confirmRemoveFriend } from "./manage_social.js";
 import { addFriend } from "./manage_social.js";
 import { acceptFriendRequest } from "./manage_social.js";
@@ -26,7 +26,6 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 
 
     contentContainer.innerHTML = `
-        <!-- Onglets Bootstrap -->
         <div class="friends-view">
             <ul class="nav nav-tabs" id="friendsBlockTabs" role="tablist">
                 <li class="nav-item">
@@ -44,20 +43,16 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
             </ul>
             <div class="tab-content">
                 <div class="tab-pane fade show active" id="friends" role="tabpanel" aria-labelledby="friends-tab">
-                    <h3>${translations[currentLanguage].friendList}</h3>
                     <button id="addFriendButton" class="btn btn-success mb-3">${translations[currentLanguage].addNewFriend}</button>
                     <ul id="friendsList" class="list-group"></ul>
                 </div>
                 <div class="tab-pane fade" id="friend-requests" role="tabpanel" aria-labelledby="friend-requests-tab">
-                    <h3>${translations[currentLanguage].friendRequests}</h3>
                     <ul id="friendRequestList" class="list-group"></ul>
                 </div>
                 <div class="tab-pane fade" id="sent-requests" role="tabpanel" aria-labelledby="sent-requests-tab">
-                    <h3>${translations[currentLanguage].sentRequests}</h3>
                     <ul id="sentFriendRequestList" class="list-group"></ul>
                 </div>
                 <div class="tab-pane fade" id="block" role="tabpanel" aria-labelledby="block-tab">
-                    <h3>${translations[currentLanguage].blockList}</h3>
                     <button id="addBlockButton" class="btn btn-success mb-3">${translations[currentLanguage].addBlock}</button>
                     <ul id="blockList" class="list-group"></ul>
                 </div>
@@ -70,7 +65,6 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 
         tabs.forEach(tabId => {
             const tabElement = document.getElementById(tabId);
-
             if (tabElement) {
                 if (tabId === tabToShowId) {
                     tabElement.classList.add('show', 'active');
@@ -99,7 +93,7 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
                 const friendItem = document.createElement("li");
                 friendItem.classList.add("list-group-item");
                 friendItem.innerHTML = `
-					<div class="row align-items-center">
+					<div class="row vcenter">
 						<div class="col-md-2 text-center">
 							<img
 								src="${friend.avatar || '/media/default.jpg'}"
@@ -107,12 +101,14 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 								class="img-fluid rounded-circle"
 								style="width: 50px; height: 50px; object-fit: cover;">
 						</div>
-						<div class="col-md-4">
+						<div class="col-md-6">
 							<a href="#profile/${friend.alias}" class="profile-link">${friend.alias}</a>
 							<p>
-								MMR: <span class="badge badge-primary">${friend.mmr}</span> |
-								Wins: <span class="badge badge-success">${friend.wins}</span> |
-								Losses: <span class="badge badge-danger">${friend.losses}</span>
+								MMR: <span>${friend.mmr}</span>
+								<br>
+								Wins: <span>${friend.wins}</span>
+								<br>
+								Losses: <span>${friend.losses}</span>
 							</p>
 						</div>
 						<div class="col-md-4 text-right">
@@ -127,7 +123,7 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 				sendMessageButton.addEventListener("click", () => sendMessage(friend.alias, contentContainer));
 
 				const sendDuelRequestButton = friendItem.querySelector("button.btn-warning");
-				sendDuelRequestButton.addEventListener("click", () => sendDuelRequest(friend.alias));
+				sendDuelRequestButton.addEventListener("click", () => sendDuelRequestFromAlias(friend.alias));
 
 				const removeFriendButton = friendItem.querySelector("button.btn-danger");
 				removeFriendButton.addEventListener("click", () => {
@@ -157,12 +153,13 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
                 requestItem.classList.add("list-group-item");
                 //We could use the time stamp later
                 requestItem.innerHTML = `
-                        <div class="col-md-6">
+                    <div class="row">
+                        <div class="col-md-6 vcenter">
                             <a href="#profile/${friendRequesto.from_user}" class="profile-link">${friendRequesto.from_user}</a>
                         </div>
-                        <div class="col-md-6 text-right">
-                            <button class="btn btn-success btn-sm">${translations[currentLanguage].accept}</button>
-                            <button class="btn btn-danger btn-sm">${translations[currentLanguage].cancel}</button>
+                        <div class="col-md-6 hright">
+                            <button class="btn btn-success btn-sm" style="width=50%;">${translations[currentLanguage].accept}</button>
+                            <button class="btn btn-danger btn-sm" style="width=50% !important;">${translations[currentLanguage].cancel}</button>
                         </div>
                     </div>
                 `;
@@ -193,10 +190,10 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
                 //we could use the timestamp as well
                 sentItem.innerHTML = `
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-6 vcenter">
                             <a href="#profile/${sentRequest.to_user}" class="profile-link">${sentRequest.to_user}</a>
                         </div>
-                        <div class="col-md-6 text-right">
+                        <div class="col-md-6 vcenter hright">
                             <button class="btn btn-danger btn-sm">${translations[currentLanguage].cancel}</button>
                         </div>
                     </div>
@@ -228,9 +225,13 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
                 const blockItem = document.createElement("li");
                 blockItem.classList.add("list-group-item");
                 blockItem.innerHTML = `
-                    <div class="d-flex justify-content-between align-items-center">
-                        <a href="#profile/${block.alias}" class="profile-link">${block.alias}</a>
-                        <button class="btn btn-danger btn-sm">${translations[currentLanguage].unblock}</button>
+                    <div class="row">
+                        <div class="col-md-6 vcenter">
+                            <a href="#profile/${block.alias}" class="profile-link">${block.alias}</a>
+                        </div>
+                        <div class="col-md-6 vcenter hright">
+                            <button class="btn btn-danger btn-sm">${translations[currentLanguage].unblock}</button>
+                        </div>
                     </div>
                 `;
                 blockItem.querySelector(".btn-danger").addEventListener("click", async() => {
