@@ -129,15 +129,15 @@ class GameConsumer(AsyncWebsocketConsumer):
 	async def disconnect(self, code):
 		logger.info("Websocket connection closed")
 		if self.in_game:
-			if self.assigned_room in active_online_games.keys():
+			if self.assigned_room in active_online_games.keys(): #this is probably useless garbo
 				room = active_online_games[self.assigned_room]
 				logger.info(f"gameConsumer: sending abort order to gameRoom: {room}")
-				room["room_data"].set_server_order(ABORTED)
-				del active_online_games[self.assigned_room]
-			elif self.assigned_room in active_online_games.keys():
-				room = active_online_games.pop(self.assigned_room)
-				active_online_games[self.assigned_room] = room
-				room["room_data"].missing_player += 1
+				if room["room_data"].missing_player == 1:
+					room["room_data"].set_server_order(ABORTED) #could be fixed by making this an actual methods with checks inside of the class
+					del active_online_games[self.assigned_room]
+				else:
+					active_online_games[self.assigned_room] = room
+					room["room_data"].missing_player += 1
 
 		self.in_game = False
 		if hasattr(self, 'current_group'):
