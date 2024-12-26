@@ -4,7 +4,7 @@ echo "Creating index templates..."
 
 # Create idividual ILM policies for each index
 for TYPE in nginx-access nginx-error waf-audit waf-debug; do
-  # Create index templates
+  # First create index templates, the rules of future indices should be organized
   curl -k -X PUT "https://localhost:9200/_template/${TYPE}" \
     -H "Content-Type: application/json" \
     -u "elastic:${ELASTIC_PASSWORD}" \
@@ -25,7 +25,7 @@ for TYPE in nginx-access nginx-error waf-audit waf-debug; do
       }
     }"
 
-  # Create initial indices with write aliases (always pointing to the newest index. Only one index can be the write at a time)
+  # Secondly, create initial write aliases to mark the "Current Active" index to apply rollover rule
   curl -k -X PUT "https://localhost:9200/${TYPE}-000001" \
     -H "Content-Type: application/json" \
     -u "elastic:${ELASTIC_PASSWORD}" \
@@ -37,7 +37,7 @@ for TYPE in nginx-access nginx-error waf-audit waf-debug; do
       }
     }"
   
-  # Create separate ILM policies for each log type
+  # Lastly, after rules and initial index with first section is marked, we create ILM polices, stating when to rollover and what to do with older ones
   curl -k -X PUT "https://localhost:9200/_ilm/policy/${TYPE}_policy" \
     -H "Content-Type: application/json" \
     -u "elastic:${ELASTIC_PASSWORD}" \
