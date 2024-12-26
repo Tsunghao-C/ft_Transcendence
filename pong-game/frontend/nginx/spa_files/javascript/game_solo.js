@@ -36,6 +36,7 @@ export async function setSoloLobby(contentContainer) {
                 <div id="player-status" class="player-status"></div>
                 <canvas id="game" width="800" height="600" style="display: none;"></canvas>
                 <button id="go-back">${trslt[lng].back}</button>
+                <button id="go-back-EOG" style="display: none;">${trslt[lng].back}</button>
         </div>
     `;
     const canvas = document.getElementById('game');
@@ -164,30 +165,43 @@ export async function setSoloLobby(contentContainer) {
 
     function drawElements(ball, player_1, player_2) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.font = '48px serif';
+        ctx.font = '48px Space Mono';
         ctx.textBaseline = 'hanging';
-        ctx.fillStyle = 'white';
-        ctx.fillText(player_1.score + " : " + player_2.score, canvas.width * 0.45, canvas.height * 0.10);
+        ctx.fillStyle = 'black';
+
+        // Score
+        const scoreText = player_1.score + " : " + player_2.score;
+        const textWidth = ctx.measureText(scoreText).width;
+        ctx.fillText(scoreText, (canvas.width - textWidth) / 2, canvas.height * 0.10);
+
+        // Player 1
         ctx.fillStyle = player_1.color;
         ctx.fillRect(player_1.x, player_1.y, PADDLE_WIDTH, PADDLE_HEIGHT);
+        
+        // Player 2
         ctx.fillStyle = player_2.color;
         ctx.fillRect(player_2.x, player_2.y, PADDLE_WIDTH, PADDLE_HEIGHT);
-        ctx.beginPath();
-        ctx.arc(ball.x, ball.y, ball.radius, 0, 2 * Math.PI);
+        
+        // Ball
         ctx.fillStyle = ball.color;
-        ctx.fill();
-        ctx.closePath();
+        ctx.fillRect(ball.x - ball.radius, ball.y - ball.radius, ball.radius * 2, ball.radius * 2);
     }
 
     function drawGameOverScreen(gameState) {
-        showElem("go-back", "block");
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.font = '48px serif';
+        ctx.font = '48px Space Mono';
         ctx.textBaseline = 'hanging';
-        ctx.fillStyle = 'white';
-        ctx.fillText("Game Over", canvas.width * 0.5, canvas.height * 0.30);
-        ctx.fillText(gameState.score_left, canvas.width * 0.25, canvas.height * 0.50);
-        ctx.fillText(gameState.score_right, canvas.width * 0.75, canvas.height * 0.50);
+        ctx.fillStyle = 'black';
+
+        // Game Over
+        const gameoverText = "Game Over";
+        const gameoverTextWidth = ctx.measureText(gameoverText).width;
+        ctx.fillText(gameoverText, (canvas.width - gameoverTextWidth) / 2, canvas.height * 0.50);
+        
+        // Score
+        const scoreText = gameState.score_left + " : " + gameState.score_right;
+        const scoreTextWidth = ctx.measureText(scoreText).width;
+        ctx.fillText(scoreText, (canvas.width - scoreTextWidth) / 2, canvas.height * 0.10);
     }
 
     async function getGameState()
@@ -255,11 +269,10 @@ export async function setSoloLobby(contentContainer) {
         try {
             console.log("we are in start game");
             destroyReadyButton();
-            document.getElementById("game-lobby").style.flexDirection = 'column';
-            document.getElementById("game-lobby").style.justifyContent = 'flex-start';
-            hideClass("hr-top");
+            hideClass("hrs");
             hideElem("game-info");
             showElem("game", "block");
+            showElem("go-back-EOG", "block");
             if (textBox) {
                 textBox.remove();
                 textBox = null;
@@ -273,7 +286,7 @@ export async function setSoloLobby(contentContainer) {
     function renderUsers(difficulty) {
         const userInfoDiv = document.getElementById("user-info-left");
         userInfoDiv.innerHTML = `
-            <hr class="hr-top">
+            <hr class="hrs">
             <h4>Player one</h4>
             <div style="display: flex; align-items: center; margin-bottom: 10px;">
                 <img src="${userData.avatar}" alt="Avatar" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 10px;">
@@ -282,11 +295,11 @@ export async function setSoloLobby(contentContainer) {
                     <p style="margin: 0; font-size: 0.8rem;">MMR: ${userData.mmr}</p>
                 </div>
             </div>
-            <hr>
+            <hr class="hrs">
         `;
         const aiInfoDiv = document.getElementById("user-info-right");
         aiInfoDiv.innerHTML = `
-            <hr class="hr-top">
+            <hr class="hrs">
             <h4 class="player-two">Player two</h4>
             <div style="display: flex; align-items: center; justify-content: right; margin-bottom: 10px;">
                 <div>
@@ -295,7 +308,7 @@ export async function setSoloLobby(contentContainer) {
                 </div>
                 <img src="${userData.avatar}" alt="Avatar" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 10px;">
             </div>
-            <hr>
+            <hr class="hrs">
         `;
         showElem("user-info-left", "block");
         showElem("user-info-right", "block");
@@ -366,6 +379,10 @@ export async function setSoloLobby(contentContainer) {
     });
 
     document.getElementById('go-back').addEventListener('click', async () => {
+        window.location.hash = "game/";
+    });
+
+    document.getElementById('go-back-EOG').addEventListener('click', async () => {
         window.location.hash = "game/";
     });
 

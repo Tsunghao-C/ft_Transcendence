@@ -566,7 +566,6 @@ canvas {
 	text-align: right;
 }
 
-
 #invite-button {
 	top: 100px;
 	right: 100px;
@@ -592,9 +591,21 @@ canvas {
 	margin-top: 50px !important;
 }
 
+#ready-button:hover {
+	border-color: white !important;
+}
+
 canvas {
+	margin-top: 10px !important;
 	width: 100%;
 	height: auto;
+	border: 10px solid black;
+	border-radius: 5px;
+}
+
+#go-back-EOG {
+	text-align: right !important;
+	font-size: 1rem !important;
 }
 
 /**************************** Leaderboard ****************************/
