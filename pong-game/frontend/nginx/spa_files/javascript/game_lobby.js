@@ -109,7 +109,6 @@ export async function setLobbyView(contentContainer, roomID = "") {
 						} else if (response.type == 'room_creation') {
 							roomId = response.room_name;
 							console.log('Room creation notice received');
-<<<<<<< HEAD
 							console.log('Room name: ' + data.roomUID);
 							window.location.hash = `lobby/${data.roomUID}`;
 						} else if (response.type == 'rejoin_room_query'){
@@ -122,10 +121,6 @@ export async function setLobbyView(contentContainer, roomID = "") {
 							}));
 							console.log("Starting gameLoop directly in rejoin_room_query branch")
 							await startGame();
-=======
-							console.log('Room name: ' + roomId);
-							window.location.hash = `lobby/${roomId}`;
->>>>>>> main
 						} else if (response.type == 'set_player_1') {
 							let player1Data;
 							let profileResponse;
@@ -365,23 +360,16 @@ export async function setLobbyView(contentContainer, roomID = "") {
 		try {
 			console.log("Starting game in client...")
 			destroyReadyButton();
-<<<<<<< HEAD
-			console.log("Done destorying ready buttons");
-=======
+			console.log("Done destroying ready buttons");
 			hideElem("invite-button");
 			showElem("game", "block");
->>>>>>> main
 			if (textBox) {
 				console.log("removing text box...")
 				textBox.remove();
 				textBox = null;
 			}
-<<<<<<< HEAD
 			console.log("Done removing text box")
-			gameLoop(state.gameSocket, data);
-=======
 			gameLoop(state.gameSocket);
->>>>>>> main
 		} catch {
 			console.error('Exception caught in startGame', error);
 		}
@@ -501,7 +489,6 @@ export async function setLobbyView(contentContainer, roomID = "") {
 		create_private_match();
 	});
 
-<<<<<<< HEAD
 //	document.getElementById('quick-match').addEventListener('click', async () => {
 //		try {
 //			console.log("Trying to join queue room")
@@ -515,8 +502,6 @@ export async function setLobbyView(contentContainer, roomID = "") {
 //		}
 //	});
 
-=======
->>>>>>> main
 	document.getElementById('join-match').addEventListener('click', async () => {
 		try {
 			const roomID = await getRoomIDInput();
