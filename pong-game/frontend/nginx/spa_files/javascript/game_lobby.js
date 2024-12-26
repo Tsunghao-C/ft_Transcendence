@@ -302,7 +302,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 			z-index: 1000;
 			border: 3px solid yellow;
 		`;
-
+	
 		readyButton.onclick = function(event) {
 			try {
 				if (readyButton.disabled == false) {
