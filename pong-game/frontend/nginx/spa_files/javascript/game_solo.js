@@ -2,8 +2,8 @@ import { fetchWithToken } from "./fetch_request.js";
 import { getLanguageCookie } from "./fetch_request.js";
 import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
-import { hideElem } from "./utils.js";
-import { showElem } from "./utils.js";
+import { hideElem, hideClass, showElem } from "./utils.js";
+import { translations as trslt } from "./language_pack.js";
 
 export async function setSoloLobby(contentContainer) {
     let response;
@@ -19,23 +19,23 @@ export async function setSoloLobby(contentContainer) {
         window.location.hash = "login";
         return;
     }
+
+    const lng = localStorage.getItem("language");
+
     contentContainer.innerHTML = `
         <div class="gamelobby-view">
         <div id="game-lobby" class="gamelobby-view">
-            <div>
-                <button id="easy">easy</button>
-                <button id="medium">medium</button>
-                <button id="hard">hard</button>
-                <button id="menu">Back To Menu</button>
-                <button id="ready-button" style="display:none;">Ready</button>
+                <button id="easy">${trslt[lng].easy}</button>
+                <button id="medium">${trslt[lng].medium}</button>
+                <button id="hard">${trslt[lng].hard}</button>
                 <div id="player-info-container" style="display: flex; justify-content: space-between;">
-                    <div id="user-info-left" style="text-align: left; flex: 1; padding: 10px;"></div>
-                    <div id="user-info-right" style="text-align: left; flex: 1; padding: 10px;"></div>
+                <div class="user-info" id="user-info-left" style="text-align: left; flex: 1; padding: 10px; display: none;"></div>
+                <div class="user-info" id="user-info-right" style="text-align: left; flex: 1; padding: 10px; display: none;"></div>
                 </div>
                 <div id="game-info">Loading...</div>
                 <div id="player-status" class="player-status"></div>
                 <canvas id="game" width="800" height="600" style="display: none;"></canvas>
-            </div>
+                <button id="go-back">${trslt[lng].back}</button>
         </div>
     `;
     const canvas = document.getElementById('game');
@@ -180,7 +180,7 @@ export async function setSoloLobby(contentContainer) {
     }
 
     function drawGameOverScreen(gameState) {
-        showElem("menu", "block");
+        showElem("go-back", "block");
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.font = '48px serif';
         ctx.textBaseline = 'hanging';
@@ -217,26 +217,12 @@ export async function setSoloLobby(contentContainer) {
 
         readyButton = document.createElement('button');
         readyButton.id = 'ready-button';
-        readyButton.textContent = 'Ready Up';
-
-        readyButton.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            background-color: red;
-            color: white;
-            z-index: 1000;
-            border: 3px solid yellow;
-        `;
+        readyButton.textContent = 'Start Game';
 
         readyButton.onclick = function(event) {
             try {
                 if (readyButton.disabled == false) {
-                    readyButton.textContent = 'Waiting for game start...';
+                    readyButton.textContent = 'Waiting...';
                     readyButton.disabled = true;
 
                     state.gameSocket.send(JSON.stringify({
@@ -254,7 +240,7 @@ export async function setSoloLobby(contentContainer) {
             }
         };
 
-        document.body.appendChild(readyButton);
+        document.getElementById("game-lobby").appendChild(readyButton);
     }
 
     function destroyReadyButton() {
@@ -267,7 +253,12 @@ export async function setSoloLobby(contentContainer) {
 
     async function startGame() {
         try {
+            console.log("we are in start game");
             destroyReadyButton();
+            document.getElementById("game-lobby").style.flexDirection = 'column';
+            document.getElementById("game-lobby").style.justifyContent = 'flex-start';
+            hideClass("hr-top");
+            hideElem("game-info");
             showElem("game", "block");
             if (textBox) {
                 textBox.remove();
@@ -282,35 +273,37 @@ export async function setSoloLobby(contentContainer) {
     function renderUsers(difficulty) {
         const userInfoDiv = document.getElementById("user-info-left");
         userInfoDiv.innerHTML = `
-            <hr>
+            <hr class="hr-top">
             <h4>Player one</h4>
             <div style="display: flex; align-items: center; margin-bottom: 10px;">
                 <img src="${userData.avatar}" alt="Avatar" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 10px;">
                 <div>
                     <p style="margin: 0; font-weight: bold;">${userData.alias}</p>
-                    <p style="margin: 0;">MMR: ${userData.mmr}</p>
+                    <p style="margin: 0; font-size: 0.8rem;">MMR: ${userData.mmr}</p>
                 </div>
             </div>
             <hr>
         `;
         const aiInfoDiv = document.getElementById("user-info-right");
         aiInfoDiv.innerHTML = `
-            <hr>
+            <hr class="hr-top">
             <h4 class="player-two">Player two</h4>
-            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                <img src="${userData.avatar}" alt="Avatar" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 10px;">
+            <div style="display: flex; align-items: center; justify-content: right; margin-bottom: 10px;">
                 <div>
-                    <p style="margin: 0; font-weight: bold;">${difficulty} AI</p>
+                    <p style="margin: 0; font-weight: bold; text-align: right;">AI</p>
+                    <p style="margin: 0; text-align: right; font-size: 0.8rem;">Mode: ${difficulty}</p>
                 </div>
+                <img src="${userData.avatar}" alt="Avatar" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 10px;">
             </div>
             <hr>
         `;
+        showElem("user-info-left", "block");
+        showElem("user-info-right", "block");
     }
 
     async function create_ai_match(difficulty) {
         try {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            canvas.style.display = 'block';
             await state.gameSocket.send(JSON.stringify({
                 action: 'create_ai_match',
                 difficulty: difficulty
@@ -321,7 +314,7 @@ export async function setSoloLobby(contentContainer) {
             renderUsers(difficulty);
             await showReadyButton();
 
-            gameInfo.textContent = 'Playing against AI - Get Ready!';
+            gameInfo.textContent = '• AI Connected';
         } catch (error) {
             console.error('Error starting AI game:', error);
             gameInfo.textContent = 'Error starting AI game. Plase try again.';
@@ -341,7 +334,7 @@ export async function setSoloLobby(contentContainer) {
             hideElem("easy");
             hideElem("medium");
             hideElem("hard");
-            hideElem("menu");
+            hideElem("go-back");
             create_ai_match('easy');
         } catch (error) {
             console.error('Error in join-match event listener:', error);
@@ -353,7 +346,7 @@ export async function setSoloLobby(contentContainer) {
             hideElem("easy");
             hideElem("medium");
             hideElem("hard");
-            hideElem("menu");
+            hideElem("go-back");
             create_ai_match('medium');
         } catch (error) {
             console.error('Error in join-match event listener:', error);
@@ -365,14 +358,14 @@ export async function setSoloLobby(contentContainer) {
             hideElem("easy");
             hideElem("medium");
             hideElem("hard");
-            hideElem("menu");
+            hideElem("go-back");
             create_ai_match('hard');
         } catch (error) {
             console.error('Error in join-match event listener:', error);
         }
     });
 
-    document.getElementById('menu').addEventListener('click', async () => {
+    document.getElementById('go-back').addEventListener('click', async () => {
         window.location.hash = "game/";
     });
 
