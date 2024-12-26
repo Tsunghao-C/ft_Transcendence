@@ -485,8 +485,8 @@ class GameConsumer(AsyncWebsocketConsumer):
 			game_room = GameRoom(room_name,
 						active_lobbies[room_name]["players"],
 						active_lobbies[room_name]["connection"],
-						active_lobbies[room_name]["game_type"],
 						notification_queue,
+						active_lobbies[room_name]["game_type"],
 						active_lobbies[room_name]["difficulty"]
 						)
 			logger.info("GameRoom created")

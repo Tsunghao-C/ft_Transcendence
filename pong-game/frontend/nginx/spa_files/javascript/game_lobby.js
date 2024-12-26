@@ -109,8 +109,8 @@ export async function setLobbyView(contentContainer, roomID = "") {
 						} else if (response.type == 'room_creation') {
 							roomId = response.room_name;
 							console.log('Room creation notice received');
-							console.log('Room name: ' + data.roomUID);
-							window.location.hash = `lobby/${data.roomUID}`;
+							console.log('Room name: ' + roomId);
+							window.location.hash = `lobby/${roomId}`;
 						} else if (response.type == 'rejoin_room_query'){
 							console.log('Paused gameRoom found');
 							console.log('Rejoining room (Hardcoded rn XD)');
