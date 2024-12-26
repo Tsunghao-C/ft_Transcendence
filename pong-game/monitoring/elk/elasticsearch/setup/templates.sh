@@ -13,7 +13,7 @@ curl -k -X PUT "https://localhost:9200/_ilm/policy/logs_lifecycle_policy" \
           "actions": {
             "rollover": {
               "max_age": "5d",
-              "max_size": "2GB"
+              "max_primary_shard_size": "2gb"
             }
           }
         },
@@ -37,6 +37,18 @@ curl -k -X PUT "https://localhost:9200/_ilm/policy/logs_lifecycle_policy" \
       }
     }
   }'
+
+# Create initial nginx index with write alias
+curl -k -X PUT "https://localhost:9200/nginx-logs-000001" \
+-H "Content-Type: application/json" \
+-u "elastic:${ELASTIC_PASSWORD}" \
+-d '{
+  "aliases": {
+    "nginx": {
+      "is_write_index": true
+    }
+  }
+}'
 
 # Update your existing nginx template to include lifecycle settings
 curl -k -X PUT "https://localhost:9200/_template/nginx_logs" \
@@ -67,6 +79,19 @@ curl -k -X PUT "https://localhost:9200/_template/nginx_logs" \
       }
     }
   }'
+
+
+# Create initial WAF index with write alias
+curl -k -X PUT "https://localhost:9200/waf-logs-000001" \
+-H "Content-Type: application/json" \
+-u "elastic:${ELASTIC_PASSWORD}" \
+-d '{
+  "aliases": {
+    "waf": {
+      "is_write_index": true
+    }
+  }
+}'
 
 # Update WAF template similarly
 curl -k -X PUT "https://localhost:9200/_template/waf_logs" \
