@@ -93,7 +93,7 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
                 const friendItem = document.createElement("li");
                 friendItem.classList.add("list-group-item");
                 friendItem.innerHTML = `
-					<div class="row align-items-center">
+					<div class="row vcenter">
 						<div class="col-md-2 text-center">
 							<img
 								src="${friend.avatar || '/media/default.jpg'}"
@@ -101,12 +101,14 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 								class="img-fluid rounded-circle"
 								style="width: 50px; height: 50px; object-fit: cover;">
 						</div>
-						<div class="col-md-4">
+						<div class="col-md-6">
 							<a href="#profile/${friend.alias}" class="profile-link">${friend.alias}</a>
 							<p>
-								MMR: <span class="badge badge-primary">${friend.mmr}</span> |
-								Wins: <span class="badge badge-success">${friend.wins}</span> |
-								Losses: <span class="badge badge-danger">${friend.losses}</span>
+								MMR: <span>${friend.mmr}</span>
+								<br>
+								Wins: <span>${friend.wins}</span>
+								<br>
+								Losses: <span>${friend.losses}</span>
 							</p>
 						</div>
 						<div class="col-md-4 text-right">
@@ -151,12 +153,13 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
                 requestItem.classList.add("list-group-item");
                 //We could use the time stamp later
                 requestItem.innerHTML = `
-                        <div class="col-md-6">
+                    <div class="row">
+                        <div class="col-md-6 vcenter">
                             <a href="#profile/${friendRequesto.from_user}" class="profile-link">${friendRequesto.from_user}</a>
                         </div>
-                        <div class="col-md-6 text-right">
-                            <button class="btn btn-success btn-sm">${translations[currentLanguage].accept}</button>
-                            <button class="btn btn-danger btn-sm">${translations[currentLanguage].cancel}</button>
+                        <div class="col-md-6 hright">
+                            <button class="btn btn-success btn-sm" style="width=50%;">${translations[currentLanguage].accept}</button>
+                            <button class="btn btn-danger btn-sm" style="width=50% !important;">${translations[currentLanguage].cancel}</button>
                         </div>
                     </div>
                 `;
@@ -187,10 +190,10 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
                 //we could use the timestamp as well
                 sentItem.innerHTML = `
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-6 vcenter">
                             <a href="#profile/${sentRequest.to_user}" class="profile-link">${sentRequest.to_user}</a>
                         </div>
-                        <div class="col-md-6 text-right">
+                        <div class="col-md-6 vcenter hright">
                             <button class="btn btn-danger btn-sm">${translations[currentLanguage].cancel}</button>
                         </div>
                     </div>
@@ -222,9 +225,13 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
                 const blockItem = document.createElement("li");
                 blockItem.classList.add("list-group-item");
                 blockItem.innerHTML = `
-                    <div class="d-flex justify-content-between align-items-center">
-                        <a href="#profile/${block.alias}" class="profile-link">${block.alias}</a>
-                        <button class="btn btn-danger btn-sm">${translations[currentLanguage].unblock}</button>
+                    <div class="row">
+                        <div class="col-md-6 vcenter">
+                            <a href="#profile/${block.alias}" class="profile-link">${block.alias}</a>
+                        </div>
+                        <div class="col-md-6 vcenter hright">
+                            <button class="btn btn-danger btn-sm">${translations[currentLanguage].unblock}</button>
+                        </div>
                     </div>
                 `;
                 blockItem.querySelector(".btn-danger").addEventListener("click", async() => {

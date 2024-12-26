@@ -258,6 +258,21 @@ body {
 	border-radius: 5px;
 }
 
+.vcenter {
+    display: flex;
+    align-items: center;
+}
+
+.hcenter {
+	display: flex;
+	justify-content: center;
+}
+
+.hright {
+	display: flex;
+	justify-content: right;
+}
+
 /**************************** Navbar ****************************/
 
 .bg-light {
@@ -288,6 +303,11 @@ body {
 .navbar-nav .nav-item {
     margin: 0;
 }
+
+
+/* .navbar-nav .nav-item .nav-link {
+	font-size: 0.9rem; 
+} */
 
 /* Div containing profile pic and user name on the right*/
 .align-items-center {
@@ -651,9 +671,9 @@ table {
 }
 
 /* Tab titles */
-.friends-view h3 {
+/* .friends-view h3 {
 	font-size: 1rem;
-}
+} */
 
 .friends-view .nav-link {
 	font-size: 0.7rem;
@@ -670,11 +690,39 @@ table {
 	padding-top: 10px;
 }
 
-.friends-view button {
-	width: 50% !important;
-	align-items: center;
+.profile-link {
+	color: black;
+	font-size: 1.3rem;
+	padding: 0px !important;
 }
 
+.friends-view p {
+	padding: 0px !important;
+}
+
+.list-group-item {
+	margin-top: 10px;
+	border-radius: 7px !important;
+}
+
+/* Friend Requests */
+#friendRequestList button {
+	margin: 0px !important;
+	margin-left: 10px !important;
+	width: 100px !important;
+}
+
+/* Sent Requests */
+#sentFriendRequestList button {
+	margin: 0px !important;
+	width: 100px !important;
+}
+
+/* Blocked List */
+#blockList button {
+	margin: 0px !important;
+	width: 100px !important;
+}
 
 /**************************** Chat ****************************/
 
@@ -697,7 +745,7 @@ table {
 
 .chat-view .nav-item {
 	font-size: 0.7rem;
-	width: 33.33%;
+	width: 50%;
 }
 
 .chat-view .tab-content {
@@ -713,7 +761,7 @@ table {
 /****** Private messages ******/
 
 /* Search bar */
-#pm-searchbar {
+.chat-views-searchbar {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -723,8 +771,10 @@ table {
 	flex: 1; /* L'input prendra toute la largeur disponible */
 }
 
-#pm-searchbar button {
-	width: auto !important;
+.chat-views-searchbar button {
+	/* width: auto !important; */
+	min-width: 160px !important;
+	width: 40%!important;
 	font-size: 0.7rem;
 }
 
@@ -747,7 +797,8 @@ table {
 	font-size: 0.7rem;
 }
 
-#messages {
+#messages,
+#chat-room-messages {
 	height: 360px !important;
 }
 
