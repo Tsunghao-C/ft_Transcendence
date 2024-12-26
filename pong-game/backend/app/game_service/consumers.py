@@ -392,6 +392,9 @@ class GameConsumer(AsyncWebsocketConsumer):
 				}))
 
 	async def update_ready_status(self, data):
+		print("************************")
+		print(data)
+		print("************************")
 		room_name = data["room_name"]
 		player_alias = self.user.alias
 		if room_name not in active_lobbies:
