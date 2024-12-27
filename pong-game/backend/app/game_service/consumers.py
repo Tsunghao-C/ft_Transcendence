@@ -129,7 +129,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 				room = active_online_games[self.assigned_room]
 				if room["room_data"].missing_player == 1:
 					logger.info(f"gameConsumer: sending abort order to gameRoom: {room}")
-					room["room_data"].set_server_order(ABORTED) #could be fixed by making this an actual methods with checks inside of the class
+					room["room_data"].set_server_order(ABORTED)
 				else:
 					room["room_data"].missing_player += 1
 
@@ -146,7 +146,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 		if text_data is None:
 			return
 		data = json.loads(text_data)
-		#logger.info(f"Message received: {text_data}")
 		action = data.get("action")
 		#logger.info(f"Action: {action}")
 		if action in self.receive_methods.keys():
@@ -193,15 +192,10 @@ class GameConsumer(AsyncWebsocketConsumer):
 			await room["room_data"].player_rejoin(self.user.alias, self)
 		else:
 			room = active_online_games[self.assigned_room]
-			logger.info(f"player {self.user.alias} declined rejoining gameRoom: {self.assigned_room}")
+			logger.info(f"player {self.user.alias} declined rejoining gameRoom: {self.assigned_room}\ngameRoom given CONCEDE order")
 			room["room_data"].set_server_order(CONCEDE)
 			self.assigned_room = -1
 			self.in_game = False
-
-		#check for yes or no response from client
-		#if no, kill game, send abort-game to the gameRoom
-		#if yes, pop the room from stray_games, add it back to active_online_games, then call player_back on gameRoom
-		pass
 
 	async def create_ai_lobby(self, data):
 		room_name = str(uuid.uuid4())
