@@ -226,33 +226,6 @@ export async function setLobbyView(contentContainer, roomID = "") {
 		}
 	}
 
-	function drawElements(ball, player_1, player_2) {
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
-		ctx.font = '48px serif';
-		ctx.textBaseline = 'hanging';
-		ctx.fillStyle = 'white';
-		ctx.fillText(player_1.score + " : " + player_2.score, canvas.width * 0.45, canvas.height * 0.10);
-		ctx.fillStyle = player_1.color;
-		ctx.fillRect(player_1.x, player_1.y, PADDLE_WIDTH, PADDLE_HEIGHT);
-		ctx.fillStyle = player_2.color;
-		ctx.fillRect(player_2.x, player_2.y, PADDLE_WIDTH, PADDLE_HEIGHT);
-		ctx.beginPath();
-		ctx.arc(ball.x, ball.y, ball.radius, 0, 2 * Math.PI);
-		ctx.fillStyle = ball.color;
-		ctx.fill();
-		ctx.closePath();
-	}
-
-	function drawGameOverScreen(gameState) {
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
-		ctx.font = '48px serif';
-		ctx.textBaseline = 'hanging';
-		ctx.fillStyle = 'white';
-		ctx.fillText("Game Over", canvas.width * 0.5, canvas.height * 0.30);
-		ctx.fillText(gameState.score_left, canvas.width * 0.25, canvas.height * 0.50);
-		ctx.fillText(gameState.score_right, canvas.width * 0.75, canvas.height * 0.50);
-	}
-
 	async function getGameState()
 	{
 		return new Promise((resolve, reject) => {
