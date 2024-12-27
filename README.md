@@ -49,16 +49,17 @@ make kill # It will kill every cached images even in ~/.docker/buildx
 
 #### External
 - Frontend (Nginx + WFA + SPA): https://localhost:8443
+![Alt text](image/login/Pong-game_login_page.png)
 - ELK Stack (Kibana UI): https://localhost:5601
+![Alt text](image/login/ELK_login_page.png)
 - Security (Vault UI): https://localhost:8200
+![Alt text](image/login/Vault_login_page.png)
 #### Internal access port
 - Backend (django and its services): 8004 (api), 8001 (ws)
 - Postgres DB: 5434
 - redis: 6379
-- Vault UI: 8200
 - Elasticsearch: 9200
 - Logstash: 5044
-- Kibana: 5601
 - Prometheus: 9090
 - Grafana: 3001
 
