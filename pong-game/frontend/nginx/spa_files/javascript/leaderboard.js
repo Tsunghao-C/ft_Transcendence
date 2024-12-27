@@ -1,15 +1,16 @@
 //// We may fuse this with the search bar of profile view so that we can search for someone in the leaderboard
 import { fetchWithToken, getLanguageCookie } from './fetch_request.js';
 import { loadPage } from './app.js';
-import { translations } from './language_pack.js';
+import { translations as trsl } from './language_pack.js';
 
 
 export async function setLeaderboardView(contentContainer) {
+	const cl = getLanguageCookie() ||  "en";
 	contentContainer.innerHTML = `
 		<div class="leaderboard-view">
 			<h2 data-i18n="leaderboard">Leaderboard</h2>
 			<div class="filter-bar">
-				<input type="text" id="leaderboardFilterInput" class="form-control" placeholder="Search by username..." />
+				<input type="text" id="leaderboardFilterInput" class="form-control" placeholder="${trsl[cl].searchByUsername}" />
 			</div>
 			<table class="table">
 				<thead>

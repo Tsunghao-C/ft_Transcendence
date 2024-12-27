@@ -1,4 +1,4 @@
-import { translations } from "./language_pack.js";
+import { translations as trsl } from "./language_pack.js";
 import { loadPage } from "./app.js";
 import { fetchWithToken } from "./fetch_request.js";
 import { getLanguageCookie } from './fetch_request.js';
@@ -39,11 +39,11 @@ export async function setpersonalDataView(contentContainer) {
         window.location.hash = "login";
     }
 
-    const cl = getLanguageCookie() ||  "en";
+    const lng = getLanguageCookie() ||  "en";
     
     contentContainer.innerHTML = `
         <div class="personal-data-view">
-            <h2 data-i18n="personalDataTitle">${translations[cl].personalData}</h2>
+            <h2 data-i18n="personalDataTitle">${trsl[lng].personalData}</h2>
             <div class="pp-and-login">
                 <div>
                     <img
@@ -62,21 +62,21 @@ export async function setpersonalDataView(contentContainer) {
                     >
                 </div>
                 <div class="ms-3">
-                    <label class="form-label" data-i18n="login">${translations[cl].username}</label>
+                    <label class="form-label" data-i18n="login">${trsl[lng].username}</label>
                     <input type="text" class="form-control" value="${personal.username}" readonly>
                 </div>
             </div>
             <form id="personalDataForm">
                 <hr>
                 <div class="mb-3">
-                    <label for="aliasInput" class="form-label" data-i18n="alias">${translations[cl].newAlias}</label>
+                    <label for="aliasInput" class="form-label" data-i18n="alias">${trsl[lng].newAlias}</label>
                     <div class="input-group">
                         <input type="text" class="form-control" id="aliasInput" value="${personal.alias}" required>
                         <div>
                             <p id="aliasError" class="errorMessage"></p>
                             <p id="aliasSuccess" class="successMessage"></p>
                         </div>
-                        <button class="btn btn-success" type="button" id="aliasChangeButton" data-i18n="confirm">Confirm</button>
+                        <button class="btn btn-success" type="button" id="aliasChangeButton" data-i18n="confirm">${trsl[lng].confirm}</button>
                     </div>
                 </div>
                 <hr>
@@ -88,36 +88,36 @@ export async function setpersonalDataView(contentContainer) {
                             <p id="emailError" class="errorMessage"></p>
                             <p id="emailSuccess" class="successMessage"></p>
                         </div>
-                        <button class="btn btn-success" type="button" id="emailChangeButton" data-i18n="confirm">Confirm</button>
+                        <button class="btn btn-success" type="button" id="emailChangeButton" data-i18n="confirm">${trsl[lng].confirm}</button>
                     </div>
                 </div>
                 <hr>
                 <div class="mb-3">
-                    <label for="aliasInput" class="form-label" data-i18n="password">${translations[cl].password}</label>
-                    <button type="button" class="btn btn-warning" id="changePasswordButton" data-i18n="changePassword">Change Password</button>
+                    <label for="aliasInput" class="form-label" data-i18n="password">${trsl[lng].password}</label>
+                    <button type="button" class="btn btn-warning" id="changePasswordButton" data-i18n="changePassword">${trsl[lng].changePassword}</button>
                 </div>
 
                 <div id="passwordChangeFields" style="display: none;">
                     <div class="mb-3">
-                        <label for="oldPasswordInput" class="form-label" data-i18n="oldPassword">Old Password</label>
+                        <label for="oldPasswordInput" class="form-label" data-i18n="oldPassword">${trsl[lng].oldPassword}</label>
                         <input type="password" class="form-control" id="oldPasswordInput" required>
                     </div>
                     <div class="mb-3">
-                        <label for="newPasswordInput" class="form-label" data-i18n="newPassword">New Password</label>
+                        <label for="newPasswordInput" class="form-label" data-i18n="newPassword">${trsl[lng].newPassword}</label>
                         <input type="password" class="form-control" id="newPasswordInput" required>
                     </div>
                     <div class="mb-3">
-                        <label for="confirmPasswordInput" class="form-label" data-i18n="confirmPassword">Confirm Password</label>
+                        <label for="confirmPasswordInput" class="form-label" data-i18n="confirmPassword">${trsl[lng].confirmNewPassword}</label>
                         <input type="password" class="form-control" id="confirmPasswordInput" required>
                     </div>
                     <div>
                         <p id="passwordError" class="errorMessage"></p>
                         <p id="passwordSuccess" class="successMessage"></p>
                     </div>
-                    <button type="button" class="btn btn-success" id="confirmPasswordChangeButton" data-i18n="confirmChange">Confirm Change</button>
+                    <button type="button" class="btn btn-success" id="confirmPasswordChangeButton" data-i18n="confirmChange">${trsl[lng].confirm}</button>
                 </div>
                 <hr>
-                <label for="aliasInput" class="form-label" data-i18n="language">${translations[cl].language}</label>
+                <label for="aliasInput" class="form-label" data-i18n="language">${trsl[lng].language}</label>
                 <select id="languageSelect">
 					<option value="en" data-i18n="english">English</option>
 					<option value="fr" data-i18n="francais">Français</option>
@@ -137,7 +137,7 @@ export async function setpersonalDataView(contentContainer) {
 
 		if (file) {
 			if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
-				alert(`${translations[currentLanguage].invalidFormat}`);
+				alert(`${trsl[lng].invalidFormat}`);
 				return;
 			}
 
