@@ -5,8 +5,8 @@ filebeat.inputs:
   enabled: true
   paths:
     - /var/log/nginx/access.log
-  json.keys_under_root: true
-  json.add_error_key: true
+  json.keys_under_root: true # key and values are not nested under "json"
+  json.add_error_key: true # add error messages when parsing fails
   fields:
     type: "nginx"
     source: "access"
