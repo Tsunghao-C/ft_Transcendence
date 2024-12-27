@@ -319,13 +319,8 @@ export async function setLobbyView(contentContainer, roomID = "") {
 		try {
 			console.log("Starting game in client...")
 			destroyReadyButton();
-<<<<<<< HEAD
-			console.log("Done destroying ready buttons");
-			hideElem("invite-button");
-=======
 			hideClass("hrs");
 			hideElem("game-info");
->>>>>>> main
 			showElem("game", "block");
 			showElem("go-back-EOG", "block");
 			hideElem("invite-button");
