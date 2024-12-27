@@ -11,7 +11,6 @@ import { fetchWithToken } from "./fetch_request.js";
 let game_over = false;
 let pendingGameUpdate = null;
 let roomId;
-let is_local = false;
 export let playerEvent = {
     player_1: {
         pending: false,
@@ -19,6 +18,10 @@ export let playerEvent = {
         id: null
     }
 };
+
+export function setRoomId(roomIdToJoin) {
+	roomId = roomIdToJoin;
+}
 
 const PADDLE_HEIGHT = 100;
 const PADDLE_WIDTH = 15;
@@ -76,14 +79,14 @@ export function destroyReadyButton(readyButton) {
 	}
 }
 
-async function getGameState(pendingGameUpdate) {
+async function getGameState() {
 	return new Promise((resolve, reject) => {
 		pendingGameUpdate = resolve;
 		});
 }
 
 export async function gameLoop() {
-	const gameState = await getGameState(pendingGameUpdate);
+	const gameState = await getGameState();
 	if (game_over) {
 		console.log('Drawing game_over...');
 		drawGameOverScreen(gameState);
@@ -130,11 +133,11 @@ export async function showReadyButton(roomId, alias) {
 	document.getElementById("game-lobby").appendChild(readyButton);
 }
 
-async function sendEvents(socket) {
+async function sendEvents() {
 	if (playerEvent.player_1.pending == true) {
 		await state.gameSocket.send(JSON.stringify({
 			action: 'player_input',
-			player_id: userData.alias,
+			player_id: playerEvent.player_1.id,
 			input: playerEvent.player_1.type,
 			game_roomID: roomId,
 			local: false
@@ -144,7 +147,7 @@ async function sendEvents(socket) {
 	else {
 		await state.gameSocket.send(JSON.stringify({
 			action: 'player_input',
-			player_id: userData.alias,
+			player_id: playerEvent.player_1.id,
 			input: 'idle',
 			game_roomID: roomId,
 			local: false
@@ -283,8 +286,6 @@ export async function connectWebSocket() {
 						player1Data = await profileResponse.json();
 						hideElem("create-match");
 						hideElem("join-match");
-						// renderUserInfoLeft(player1Data.profile);
-						// renderEmptyUserInfoRight();
 						renderUserInfo(player1Data.profile, null);
 						console.log("you are player1");
 						const inviteButton = document.getElementById("invite-button");

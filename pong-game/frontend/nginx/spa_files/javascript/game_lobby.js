@@ -1,7 +1,7 @@
 import { fetchWithToken } from "./fetch_request.js";
 import { getLanguageCookie } from "./fetch_request.js";
 import { state } from "./app.js";
-import { showReadyButton, handlePlayerEvent, connectWebSocket } from "./game_utils.js";
+import { showReadyButton, handlePlayerEvent, connectWebSocket, playerEvent, setRoomId } from "./game_utils.js";
 import { translations as trslt } from "./language_pack.js";
 
 export async function setLobbyView(contentContainer, roomID = "") {
@@ -11,6 +11,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 	try {
 		response = await fetchWithToken('/api/user/getuser/');
 		userData = await response.json();
+		playerEvent.player_1.id = userData.alias;
 		console.log("User data in lobby: ", userData);
 	} catch(error) {
 		console.log(error);
@@ -101,6 +102,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 	await connectWebSocket();
 	if (roomID) {
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		setRoomId(roomID);
 		await joinRoom(roomID);
 	}
 }
