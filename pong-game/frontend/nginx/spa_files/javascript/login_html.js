@@ -19,7 +19,7 @@ export function setRegisterViewHtml(contentContainer) {
 						<input type="text" class="form-control" id="newAlias" placeholder="Choose an alias" required>
 						<label for="newMailInput" class="form-label" data-i18n="newMail">Mail</label>
 						<input type="text" class="form-control" id="newMailInput" placeholder="Enter your mail" required>
-						<label for="newPasswordInput" class="form-label" data-i18n="newPassword">Password</label>
+						<label for="newPasswordInput" class="form-label" data-i18n="password">Password</label>
 						<input type="password" class="form-control" id="newPasswordInput" placeholder="Choose a password" required>
 						<label for="confirmPasswordInput" class="form-label" data-i18n="confirmPassword">Confirm Password</label>
 						<input type="password" class="form-control" id="confirmPasswordInput" placeholder="Re-enter your password" required>
