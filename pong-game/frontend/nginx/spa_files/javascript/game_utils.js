@@ -11,6 +11,7 @@ import { fetchWithToken } from "./fetch_request.js";
 let game_over = false;
 let pendingGameUpdate = null;
 let roomId;
+let typeOfGame;
 export let playerEvent = {
     player_1: {
         pending: false,
@@ -19,6 +20,9 @@ export let playerEvent = {
     }
 };
 
+export function setTypeOfGame(gameType) {
+	typeOfGame	= gameType;
+}
 export function setRoomId(roomIdToJoin) {
 	roomId = roomIdToJoin;
 }
@@ -279,6 +283,7 @@ export async function connectWebSocket() {
 						roomId = response.room_name;
 						console.log('Room creation notice received');
 						console.log('Room name: ' + roomId);
+						await showReadyButton(roomId, playerEvent.player_1.id);
 					} else if (response.type == 'set_player_1') {
 						let player1Data;
 						let profileResponse;
@@ -351,11 +356,40 @@ async function startGame() {
 		hideElem("game-info");
 		showElem("game", "block");
 		showElem("go-back-EOG", "block");
-		hideElem("invite-button");
-		gameLoop(roomId);
+		if (typeOfGame == "online") {
+			hideElem("invite-button");
+		}
+		gameLoop(roomId);	
 	} catch (error) {
 		console.error('Exception caught in startGame', error);
 	}
+}
+
+export function renderLocalUsers(user1, user2) {
+	const userInfoDiv = document.getElementById("user-info-left");
+	userInfoDiv.innerHTML = `
+		<hr class="hrs">
+		<h4>Player one</h4>
+		<div style="display: flex; align-items: center; margin-bottom: 10px;">
+			<div>
+				<p style="margin: 0; font-weight: bold;">${user1}</p>
+			</div>
+		</div>
+		<hr class="hrs">
+	`;
+	const aiInfoDiv = document.getElementById("user-info-right");
+	aiInfoDiv.innerHTML = `
+		<hr class="hrs">
+		<h4 class="player-two">Player two</h4>
+		<div style="display: flex; align-items: center; justify-content: right; margin-bottom: 10px;">
+			<div>
+				<p style="margin: 0; text-align: right; font-size: 0.8rem;">Mode: ${user2}</p>
+			</div>
+		</div>
+		<hr class="hrs">
+	`;
+	showElem("user-info-left", "block");
+	showElem("user-info-right", "block");
 }
 // AI game
 // async function startGame() {

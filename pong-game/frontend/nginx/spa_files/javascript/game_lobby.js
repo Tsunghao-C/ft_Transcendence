@@ -1,7 +1,7 @@
 import { fetchWithToken } from "./fetch_request.js";
 import { getLanguageCookie } from "./fetch_request.js";
 import { state } from "./app.js";
-import { showReadyButton, handlePlayerEvent, connectWebSocket, playerEvent, setRoomId } from "./game_utils.js";
+import { showReadyButton, handlePlayerEvent, connectWebSocket, playerEvent, setRoomId, setTypeOfGame } from "./game_utils.js";
 import { translations as trslt } from "./language_pack.js";
 
 export async function setLobbyView(contentContainer, roomID = "") {
@@ -99,6 +99,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
         window.location.hash = "game/";
     });
 
+	setTypeOfGame("online");
 	await connectWebSocket();
 	if (roomID) {
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
