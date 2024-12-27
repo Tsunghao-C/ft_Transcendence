@@ -552,13 +552,22 @@ canvas {
 	font-size: 0.8rem;
 }
 
+#player-info-container {
+	width: 100%;
+	padding-top: 10px;
+}
+
+.user-info {
+	width: 50%;
+	padding: 0px 10px 0px 10px !important;
+	min-width: 120px;
+}
+
 .player-two {
 	text-align: right;
 }
 
 #invite-button {
-	/* color:red !important; */
-	/* position: absolute; */
 	top: 100px;
 	right: 100px;
 	width: 100%;
@@ -573,9 +582,32 @@ canvas {
 	margin-top:  0;
 }
 
+#ready-button {
+	border: 1px solid black !important;
+	width: 150px !important;
+	height: 50px !important;
+	border-radius: 25px !important;
+	padding: 0px !important;
+	margin: 0px !important;
+	margin-top: 50px !important;
+	font-size: 1rem !important;
+}
+
+#ready-button:hover {
+	border-color: white !important;
+}
+
 canvas {
+	margin-top: 10px !important;
 	width: 100%;
 	height: auto;
+	border: 10px solid black;
+	border-radius: 5px;
+}
+
+#go-back-EOG {
+	text-align: right !important;
+	font-size: 1rem !important;
 }
 
 /**************************** Leaderboard ****************************/
