@@ -48,11 +48,12 @@ make kill # It will kill every cached images even in ~/.docker/buildx
 ## Development Access Points
 
 #### External
-- Frontend (Nginx + WFA + SPA): http://localhost:8443
+- Frontend (Nginx + WFA + SPA): https://localhost:8443
+- ELK Stack (Kibana UI): https://localhost:5601
+- Security (Vault UI): https://localhost:8200
 #### Internal access port
-- Backend Service: 8004
-- game_db: 5434
-- user_db: 5432
+- Backend (django and its services): 8004 (api), 8001 (ws)
+- Postgres DB: 5434
 - redis: 6379
 - Vault UI: 8200
 - Elasticsearch: 9200
@@ -63,29 +64,22 @@ make kill # It will kill every cached images even in ~/.docker/buildx
 
 ## Team Development Guidelines
 
-### Auth Team
-- Work in `auth-service/` directory
-- Database migrations in `auth-service/src/migrations/`
-- Access service at http://localhost:8001
-
-### User Management Team
-- Work in `user-service/` directory
-- Database migrations in `user-service/src/migrations/`
-- Access service at http://localhost:8002
-
-### Game Team
+### Backend (Game + User Management) Team
 - Work in `backend/` directory
-- Database migrations in `backend/src/migrations/`
-- Access service at http://localhost:8004
+- Access service at http://localhost:8004 for API request and 8001 for WS
 
 ### Frontend Team
 - Work in `frontend/` directory
-- Access development server at http://localhost:3000
+- Access development server at https://localhost:8443
 
 ### Monitoring Team
+- Work in `monitoring/` directory
 - Configure Prometheus in `monitoring/prometheus/`
 - Set up Grafana dashboards in `monitoring/grafana/`
 - Configure ELK stack in `monitoring/elk/`
+
+### Security Team
+- Work in `security/` directory
 
 ### Notes
 
