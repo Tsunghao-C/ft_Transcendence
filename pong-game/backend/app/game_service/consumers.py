@@ -24,15 +24,13 @@ from django.db.models import Q
 from django.db.utils import IntegrityError
 from django.db.models import Q
 
-
-
 load_dotenv()
 active_online_games = dict()
 active_local_games = dict()
 active_lobbies = {}
 logger = logging.getLogger(__name__)
-TIMEOUT = 1
-ABORTED = 2
+ABORTED = 1
+CONCEDE = 2
 
 ## Dedicated consumer for WS Health Check
 class GameHealthConsumer(AsyncWebsocketConsumer):
@@ -79,11 +77,9 @@ class GameHealthConsumer(AsyncWebsocketConsumer):
 class GameConsumer(AsyncWebsocketConsumer):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		self.channel_layer = get_channel_layer() #Unused? Marked for deletion
 		self.assigned_room = -1
 		self.in_game = False
 		self.player_alias = -1
-		self.last_receive_time = time.perf_counter()
 		self.receive_methods = {
 				"join_private_match":self.join_lobby,
 				"create_local_match":self.create_local_match,
@@ -131,12 +127,10 @@ class GameConsumer(AsyncWebsocketConsumer):
 		if self.in_game:
 			if self.assigned_room in active_online_games.keys(): #this is probably useless garbo
 				room = active_online_games[self.assigned_room]
-				logger.info(f"gameConsumer: sending abort order to gameRoom: {room}")
 				if room["room_data"].missing_player == 1:
+					logger.info(f"gameConsumer: sending abort order to gameRoom: {room}")
 					room["room_data"].set_server_order(ABORTED) #could be fixed by making this an actual methods with checks inside of the class
-					del active_online_games[self.assigned_room]
 				else:
-					active_online_games[self.assigned_room] = room
 					room["room_data"].missing_player += 1
 
 		self.in_game = False
@@ -194,12 +188,15 @@ class GameConsumer(AsyncWebsocketConsumer):
 
 	async def rejoin_room(self, data):
 		if data["response"] is True:
+			logger.info(f"player {self.user.alias} rejoining gameRoom: {self.assigned_room}")
 			room = active_online_games[self.assigned_room]
 			await room["room_data"].player_rejoin(self.user.alias, self)
 		else:
+			room = active_online_games[self.assigned_room]
+			logger.info(f"player {self.user.alias} declined rejoining gameRoom: {self.assigned_room}")
+			room["room_data"].set_server_order(CONCEDE)
+			self.assigned_room = -1
 			self.in_game = False
-			room = active_online_games.pop(self.assigned_room)
-			room["room_data"].set_server_order(ABORTED)
 
 		#check for yes or no response from client
 		#if no, kill game, send abort-game to the gameRoom

@@ -199,7 +199,7 @@ LOGGING = {
         },
         'root': {
             'handlers': ['console'],
-            'level': 'WARNING',  # Set to DEBUG for detailed logs
+            'level': 'INFO',  # Set to DEBUG for detailed logs
         },
         'loggers': {
             # 'django': {

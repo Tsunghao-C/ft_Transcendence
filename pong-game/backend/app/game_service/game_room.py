@@ -20,8 +20,8 @@ PADDLE_WIDTH = 15
 BALL_RADIUS = 10
 LEFT = 0
 RIGHT = 1
-TIMEOUT = 1
-ABORTED = 2
+ABORTED = 1
+CONCEDE = 2
 
 logger = logging.getLogger(__name__)
 
@@ -198,6 +198,12 @@ class GameRoom():
 			print("Error: One or both players not found.")
 
 	async def declare_winner(self, winner):
+		if self.server_order is CONCEDE:
+			if self.dropped_side is LEFT:
+				winner = self.right_player
+			else:
+				winner = self.left_player
+			logger.info(f"gameRoom: player conceding match, winner is: {winner}")
 		game_report = {
 				'score_left': self.players[self.left_player].score,
 				'score_right': self.players[self.right_player].score,
@@ -328,8 +334,8 @@ class GameRoom():
 						self.ball.speedY
 					)
 					await self.receive_player_input(self.right_player, ai_move)
-				if self.game_over:
-#					logger.info('gameRoom: preparing gameover')
+				if self.game_over or self.server_order is CONCEDE:
+					logger.info('gameRoom: preparing gameover')
 					await self.declare_winner(self.winner)
 #					logger.info('gameRoom: done')
 					return
