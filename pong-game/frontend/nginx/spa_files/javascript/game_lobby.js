@@ -120,7 +120,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 							roomId = response.room_name;
 							await state.gameSocket.send(JSON.stringify({
 								action: "rejoin_room",
-								response: false
+								response: true //change this from true to false and vice versa to test rejoining rooms
 							}));
 							console.log("Starting gameLoop directly in rejoin_room_query branch")
 							await startGame();
