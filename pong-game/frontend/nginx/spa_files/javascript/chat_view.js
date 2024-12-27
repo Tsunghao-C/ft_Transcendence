@@ -5,6 +5,7 @@ import { state } from "./app.js";
 import { loadPage } from "./app.js";
 import { clearInput, hideElem, showElem, hideClass, showClass } from "./utils.js";
 import { sendDuelRequestFromGameRoom } from "./manage_social.js";
+import { translations as trsl } from "./language_pack.js";
 
 ////////////////////////////////// Utils //////////////////////////////////
 
@@ -44,21 +45,22 @@ async function fetchChatRoomsData() {
 ////////////////////////////////// Setup Html //////////////////////////////////
 
 function setChatViewHtml(contentContainer) {
+	const lng = getLanguageCookie() || "en";
 	contentContainer.innerHTML = `
 		<div class="chat-view">
 			<ul class="nav nav-tabs" id="chatBlockTabs" role="tablist">
 				<li class="nav-item">
-					<a class="nav-link active" id="private-message-tab" data-bs-toggle="tab" href="#private-message" role="tab" aria-controls="private-message" aria-selected="true">Private messages</a>
+					<a class="nav-link active" id="private-message-tab" data-bs-toggle="tab" href="#private-message" role="tab" aria-controls="private-message" aria-selected="true">${trsl[lng].privateMessages}</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" id="chat-rooms-tab" data-bs-toggle="tab" href="#chat-rooms" role="tab" aria-controls="chat-rooms" aria-selected="false">Chat Rooms</a>
+					<a class="nav-link" id="chat-rooms-tab" data-bs-toggle="tab" href="#chat-rooms" role="tab" aria-controls="chat-rooms" aria-selected="false">${trsl[lng].chatRooms}</a>
 				</li>
 			</ul>
 			<div class="tab-content">
 				<div class="tab-pane fade show active" id="private-message" role="tabpanel" aria-labelledby="private-message-tab">
 					<div class="chat-views-searchbar">
-						<input type="text" id="recipientUser" placeholder="Find a user to chat with">
-						<button id="start-private-chat">Start private chat</button>
+						<input type="text" id="recipientUser" placeholder="${trsl[lng].searchByUsername}">
+						<button id="start-private-chat">${trsl[lng].searchButton}</button>
 					</div>
 					<div>
 						<p id="pmErrorMessage" class="errorMessage"></p>
@@ -80,8 +82,8 @@ function setChatViewHtml(contentContainer) {
 				</div>
 				<div class="tab-pane fade" id="chat-rooms" role="tabpanel" aria-labelledby="chat-rooms-tab">
 					<div class="chat-views-searchbar">
-						<input type="text" id="room-name" placeholder="Enter room name">
-						<button id="create-public-room">Create or join room</button>
+						<input type="text" id="room-name" placeholder="${trsl[lng].enterRoomName}">
+						<button id="create-public-room">${trsl[lng].createOrJoinRoom}</button>
 					</div>
 					<div>
 						<p id="chatRoomsErrorMessage" class="errorMessage"></p>
@@ -139,20 +141,13 @@ function handleTabs() {
 
 function setPmList(roomData) {
 	const pmList = document.getElementById("pm-list");
-
-	pmList.innerHTML = roomData // a changer, mettre uniquement room privees
+	pmList.innerHTML = roomData
 	.map(room => {
 		const roomType = room.is_private ? "private" : "public";
 		if (roomType === "private") {
-			const aliasOrRoomName = room.is_private 
-				? room.other_member || "Unknown" 
-				: room.name;
-	
-			const roomDisplayName = room.is_private
-				? `Private messages with ${aliasOrRoomName}`
-				: room.name;
-	
-			return `<div class="room-item" 
+			const aliasOrRoomName = room.other_member || "Unknown";	
+			const roomDisplayName = `${aliasOrRoomName}`;
+				return `<div class="room-item" 
 						data-room-type="${roomType}" 
 						data-alias-or-room-name="${aliasOrRoomName}" 
 						style="cursor: pointer; margin: 5px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
@@ -165,24 +160,16 @@ function setPmList(roomData) {
 
 function setRoomsList(roomData) {
 	const roomList = document.getElementById("public-room-list");
-
-	roomList.innerHTML = roomData // a changer, mettre uniquement room publiques
+	roomList.innerHTML = roomData
 	.map(room => {
 		const roomType = room.is_private ? "private" : "public";
 		if (roomType === "public") {
-			const aliasOrRoomName = room.is_private 
-				? room.other_member || "Unknown" 
-				: room.name;
-	
-			const roomDisplayName = room.is_private
-				? `Private messages with ${aliasOrRoomName}`
-				: room.name;
-	
+			const roomName = room.name;
 			return `<div class="room-item" 
 						data-room-type="${roomType}" 
-						data-alias-or-room-name="${aliasOrRoomName}" 
+						data-alias-or-room-name="${roomName}" 
 						style="cursor: pointer; margin: 5px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
-							<p>${roomDisplayName}</p>
+							<p>${roomName}</p>
 					</div>`;
 		}
 	})
