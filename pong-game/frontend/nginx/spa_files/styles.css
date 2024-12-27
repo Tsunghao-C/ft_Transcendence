@@ -804,10 +804,11 @@ table {
 }
 
 .chat-views-searchbar button {
-	/* width: auto !important; */
-	min-width: 160px !important;
-	width: 40%!important;
+	width: auto !important;
+	/* min-width: 100px !important; */
+	/* width: 40%!important; */
 	font-size: 0.7rem;
+	white-space: nowrap; /* Empêche le texte de passer à la ligne */
 }
 
 /* Room list */
