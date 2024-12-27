@@ -84,7 +84,7 @@ export async function setSoloLobby(contentContainer) {
                         const response = JSON.parse(event.data);
                         if (response.type == 'notice') {
                             console.log('Server notice: ' + response.message);
-                        } else if (response.type == 'room_creation') {
+                        } else if (response.type == 'ai_room_creation') {
                             roomId = response.room_name;
                             console.log('Room creation notice received');
                             console.log('Room name: ' + roomId);
@@ -296,45 +296,22 @@ export async function setSoloLobby(contentContainer) {
         await connectWebSocket();
     }
 
-    const easyButton = document.getElementById('easy');
-    const mediumButton = document.getElementById('medium');
-    const hardButton = document.getElementById('hard');
-
-    easyButton.addEventListener('click', async () => {
-        try {
-            hideElem("easy");
-            hideElem("medium");
-            hideElem("hard");
-            hideElem("go-back");
-            create_ai_match('easy');
-        } catch (error) {
-            console.error('Error in join-match event listener:', error);
-        }
-    });
-
-    mediumButton.addEventListener('click', async () => {
-        try {
-            hideElem("easy");
-            hideElem("medium");
-            hideElem("hard");
-            hideElem("go-back");
-            create_ai_match('medium');
-        } catch (error) {
-            console.error('Error in join-match event listener:', error);
-        }
-    });
-
-    hardButton.addEventListener('click', async () => {
-        try {
-            hideElem("easy");
-            hideElem("medium");
-            hideElem("hard");
-            hideElem("go-back");
-            create_ai_match('hard');
-        } catch (error) {
-            console.error('Error in join-match event listener:', error);
-        }
-    });
+    function setupButtonListener(difficultyLevel) {
+        const button = document.getElementById(difficultyLevel);
+        button.addEventListener('click', async () => {
+            try {
+                ["easy", "medium", "hard", "go-back"].forEach(hideElem);
+                create_ai_match(difficultyLevel);
+            } catch (error) {
+                console.error(`Error in ${difficultyLevel} event listener:`, error);
+            }
+        });
+    }
+    
+    setupButtonListener('easy');
+    setupButtonListener('medium');
+    setupButtonListener('hard');
+    
 
     document.getElementById('go-back').addEventListener('click', async () => {
         window.location.hash = "game/";

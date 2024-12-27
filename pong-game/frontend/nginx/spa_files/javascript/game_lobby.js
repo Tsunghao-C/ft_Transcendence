@@ -100,8 +100,9 @@ export async function setLobbyView(contentContainer, roomID = "") {
 								player2Data = await profileResponse.json();
 								hideElem("create-match");
 								hideElem("join-match");
-								renderUserInfoLeft(player1Data.profile);
-								renderUserInfoRight(player2Data.profile);
+								renderUserInfo(player1Data.profile, player2Data.profile);
+								// renderUserInfoLeft(player1Data.profile);
+								// renderUserInfoRight(player2Data.profile);
 							} catch(error) {
 								console.log(error);
 								window.location.hash = "login";
@@ -119,8 +120,9 @@ export async function setLobbyView(contentContainer, roomID = "") {
 							player1Data = await profileResponse.json();
 							hideElem("create-match");
 							hideElem("join-match");
-							renderUserInfoLeft(player1Data.profile);
-							renderEmptyUserInfoRight();
+							// renderUserInfoLeft(player1Data.profile);
+							// renderEmptyUserInfoRight();
+							renderUserInfo(player1Data.profile, null);
 							console.log("you are player1");
 							const inviteButton = document.getElementById("invite-button");
     						inviteButton.style.display = "inline-block";
@@ -352,7 +354,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 			</div>
 			<hr class="hrs">
 		`;
-	}	
+	}
 
 	function renderEmptyUserInfoRight() {
 		const userInfoDiv = document.getElementById("user-info-right");
@@ -369,6 +371,49 @@ export async function setLobbyView(contentContainer, roomID = "") {
 		`;
 	}
 
+	function renderUserInfo(user1, user2 = null) {
+		const userInfoLeftDiv = document.getElementById("user-info-left");
+		userInfoLeftDiv.innerHTML = `
+			<hr class="hrs">
+			<h4>Player one</h4>
+			<div style="display: flex; align-items: center; margin-bottom: 10px;">
+				<img src="${user1.avatar}" alt="Avatar" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 10px;">
+				<div>
+					<p style="margin: 0; font-weight: bold;">${user1.alias}</p>
+					<p style="margin: 0; font-size: 0.8rem;">MMR: ${user1.mmr}</p>
+				</div>
+			</div>
+			<hr class="hrs">
+		`;
+		const userInfoRightDiv = document.getElementById("user-info-right");
+		if (user2) {
+			userInfoRightDiv.innerHTML = `
+				<hr class="hrs">
+				<h4 class="player-two">Player two</h4>
+				<div style="display: flex; align-items: center; margin-bottom: 10px;">
+					<div>
+						<p style="margin: 0; font-weight: bold;">${user2.alias}</p>
+						<p style="margin: 0; font-size: 0.8rem;">MMR: ${user2.mmr}</p>
+					</div>
+					<img src="${user2.avatar}" alt="Avatar" style="width: 50px; height: 50px; border-radius: 50%; margin-left: 10px;">
+				</div>
+				<hr class="hrs">
+			`;
+		} else {
+			userInfoRightDiv.innerHTML = `
+				<hr>
+				<h4 class="player-two">Player two</h4>
+				<div style="display: flex; align-items: center; margin-bottom: 10px;">
+					<div>
+						<p style="margin: 0; font-weight: bold;">Waiting...</p>
+					</div>
+					<img src="/media/default.jpg" alt="Avatar" style="width: 50px; height: 50px; border-radius: 50%; margin-left: 10px;">
+				</div>
+				<hr>
+			`;
+		}
+	}	
+
 	async function create_private_match() {
 		try {
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -382,67 +427,15 @@ export async function setLobbyView(contentContainer, roomID = "") {
 		await connectWebSocket();
 	}
 
-	function getRoomIDInput() {
-		const modal = document.createElement('div');
-		modal.id = 'room-join-modal';
-		modal.style.position = 'fixed';
-		modal.style.top = '50%';
-		modal.style.left = '50%';
-		modal.style.transform = 'translate(-50%, -50%)';
-		modal.style.padding = '20px';
-		modal.style.border = '1px solid #ccc';
-		modal.style.borderRadius = '10px';
-		modal.style.backgroundColor = '#f9f9f9';
-		modal.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.1)';
-		modal.style.zIndex = '1000';
-
-		modal.innerHTML = `
-			<h3>Join Game Room</h3>
-			<input
-				type="text"
-				id="room-uid-input"
-				placeholder="Enter Room UID"
-				style="width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box;"
-			>
-			<button
-				id="join-room-btn"
-				style="width: 100%; padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;"
-			>
-				Join Room
-			</button>
-		`;
-
-		document.body.appendChild(modal);
-
-		const roomUidInput = modal.querySelector('#room-uid-input');
-		const joinRoomBtn = modal.querySelector('#join-room-btn');
-
-		return new Promise((resolve, reject) => {
-			joinRoomBtn.addEventListener('click', () => {
-				const roomUID = roomUidInput.value.trim();
-
-				if (!roomUID) {
-					alert('Please enter a valid Room UID.');
-					return;
-				}
-
-				document.body.removeChild(modal);
-				resolve(roomUID);
-			});
-		});
-	}
-
 	document.getElementById('create-match').addEventListener('click', async () => {
 		create_private_match();
 	});
 
 	document.getElementById('join-match').addEventListener('click', async () => {
-		try {
-			const roomID = await getRoomIDInput();
+		const roomID = prompt("enter room Id you want to join");
+		if (roomID) {
 			window.location.hash = `lobby/${roomID}`;
-		} catch (error) {
-			console.error('Error in join-match event listener:', error);
-		}
+		}			
 	});
 
     document.getElementById('go-back-EOG').addEventListener('click', async () => {
