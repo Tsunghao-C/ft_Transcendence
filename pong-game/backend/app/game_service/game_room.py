@@ -35,8 +35,8 @@ class Ball():
 		self.canvas_height = canvas_height
 		self.x = canvas_width * 0.5
 		self.y = canvas_height * 0.5
-		self.speedX = 5
-		self.speedY = 5
+		self.speedX = 6
+		self.speedY = 6
 		self.radius = BALL_RADIUS
 
 class GameRoom():
@@ -129,6 +129,8 @@ class GameRoom():
 			player = self.players[id]
 			collision = self.check_collisions(player)
 			if collision['hasCollision']:
+				self.ball.speedY += 1
+				self.ball.speedX += 1
 				if (collision['isVertical']):
 					self.ball.speedY *= -1
 					if collision['distanceY'] > 0:
@@ -193,22 +195,24 @@ class GameRoom():
 				}))
 		if self.game_type["is_online"]:
 			await sync_to_async(self.record_match_result_sync)(winner)
+
 	def update_ball(self):
 		self.ball.x += self.ball.speedX
 		self.ball.y += self.ball.speedY
 		if self.ball.y - self.ball.radius < 0 or self.ball.y + self.ball.radius > CANVAS_HEIGHT:
+			self.ball.y = self.ball.radius if self.ball.y - self.ball.radius < 0 else CANVAS_HEIGHT - self.ball.radius
 			self.ball.speedY *= -1
 		if self.ball.x - self.ball.radius < 0 or self.ball.x + self.ball.radius > CANVAS_WIDTH:
 			if self.ball.x - self.ball.radius < 0:
 				self.players[self.right_player].score += 1
-				if self.players[self.right_player].score == 5:
+				if self.players[self.right_player].score == 500:
 					self.winner = self.right_player
 					self.game_over = True
 				self.ball.x = CANVAS_WIDTH * 0.7
 				self.ball.y = CANVAS_WIDTH * 0.5
 			else:
 				self.players[self.left_player].score += 1
-				if self.players[self.left_player].score == 5:
+				if self.players[self.left_player].score == 500:
 					self.winner = self.left_player
 					self.game_over = True
 				self.ball.x = CANVAS_WIDTH * 0.3
@@ -251,6 +255,8 @@ class GameRoom():
 				logger.info('gameRoom updated collisions')
 				self.update_ball()
 				logger.info('gameRoom updated ball')
+				logger.info(f"Calculus would be: {6 * (self.ball.speedX > 0 - self.ball.speedX < 0)}")
+				logger.info(f"Calculus would be: {6 * (self.ball.speedY > 0 - self.ball.speedY < 0)}")
 				# Add AI logic
 				if self.ai_player:
 					ai_move = await self.ai_player.calculate_move(
