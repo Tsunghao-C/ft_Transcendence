@@ -342,61 +342,62 @@ export async function connectWebSocket() {
 		});
 }
 
-// async function startGame() {
-// 	try {
-// 		destroyReadyButton();
-// 		hideClass("hrs");
-// 		hideElem("game-info");
-// 		showElem("game", "block");
-// 		showElem("go-back-EOG", "block");
-// 		hideElem("invite-button");
-// 		gameLoop(roomId);
-// 	} catch (error) {
-// 		console.error('Exception caught in startGame', error);
-// 	}
-// }
-// AI game
+//online game
 async function startGame() {
 	try {
-		console.log("we are in start game");
 		destroyReadyButton();
 		hideClass("hrs");
 		hideElem("game-info");
 		showElem("game", "block");
 		showElem("go-back-EOG", "block");
-		if (textBox) {
-			textBox.remove();
-			textBox = null;
-		}
-		gameLoop(state.gameSocket);
+		hideElem("invite-button");
+		gameLoop(roomId);
 	} catch (error) {
 		console.error('Exception caught in startGame', error);
 	}
 }
+// AI game
+// async function startGame() {
+// 	try {
+// 		console.log("we are in start game");
+// 		destroyReadyButton();
+// 		hideClass("hrs");
+// 		hideElem("game-info");
+// 		showElem("game", "block");
+// 		showElem("go-back-EOG", "block");
+// 		if (textBox) {
+// 			textBox.remove();
+// 			textBox = null;
+// 		}
+// 		gameLoop(state.gameSocket);
+// 	} catch (error) {
+// 		console.error('Exception caught in startGame', error);
+// 	}
+// }
 
-function renderLocalUsers(user1, user2) {
-	const userInfoDiv = document.getElementById("user-info-left");
-	userInfoDiv.innerHTML = `
-		<hr class="hrs">
-		<h4>Player one</h4>
-		<div style="display: flex; align-items: center; margin-bottom: 10px;">
-			<div>
-				<p style="margin: 0; font-weight: bold;">${user1}</p>
-			</div>
-		</div>
-		<hr class="hrs">
-	`;
-	const aiInfoDiv = document.getElementById("user-info-right");
-	aiInfoDiv.innerHTML = `
-		<hr class="hrs">
-		<h4 class="player-two">Player two</h4>
-		<div style="display: flex; align-items: center; justify-content: right; margin-bottom: 10px;">
-			<div>
-				<p style="margin: 0; text-align: right; font-size: 0.8rem;">Mode: ${user2}</p>
-			</div>
-		</div>
-		<hr class="hrs">
-	`;
-	// showElem("user-info-left", "block");
-	// showElem("user-info-right", "block");
-}
+// function renderLocalUsers(user1, user2) {
+// 	const userInfoDiv = document.getElementById("user-info-left");
+// 	userInfoDiv.innerHTML = `
+// 		<hr class="hrs">
+// 		<h4>Player one</h4>
+// 		<div style="display: flex; align-items: center; margin-bottom: 10px;">
+// 			<div>
+// 				<p style="margin: 0; font-weight: bold;">${user1}</p>
+// 			</div>
+// 		</div>
+// 		<hr class="hrs">
+// 	`;
+// 	const aiInfoDiv = document.getElementById("user-info-right");
+// 	aiInfoDiv.innerHTML = `
+// 		<hr class="hrs">
+// 		<h4 class="player-two">Player two</h4>
+// 		<div style="display: flex; align-items: center; justify-content: right; margin-bottom: 10px;">
+// 			<div>
+// 				<p style="margin: 0; text-align: right; font-size: 0.8rem;">Mode: ${user2}</p>
+// 			</div>
+// 		</div>
+// 		<hr class="hrs">
+// 	`;
+// 	// showElem("user-info-left", "block");
+// 	// showElem("user-info-right", "block");
+// }
