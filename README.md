@@ -1,8 +1,17 @@
 # ft_Transcendence
-Developing a web game Pong from scratch
+
+## Project Objectives
+Developing a web game Pong from scratch including the following features:
+1. Had basic user management systems for users to register, 2FA validate id, customize user settings.
+2. Utilised Websocket to allow users to do live chat with other users and play games remotely.
+3. Supported different game modes like remote PVP, local PVP, single player vs computer(AI).
+4. Adopted Single page Access (SPA) for better UX in the frontend.
+5. Implemented WAF firewall ahead of Nginx to prevent malicious requests. Used Vault to store sensitive credentials like admin user keys.
+6. Pre-scripted ELK stack deployment in a isolated docker environment, including necessary TLS, SSL settings and logs lifetime management policies.
+7. Added automated unit tests at launch time to check key feature healthiness.
 
 
-# Pong Game Project
+## Pong Game Project System Diagram
 
 ![Alt text](image/monolithic_diagram3.png)
 
@@ -81,6 +90,9 @@ make kill # It will kill every cached images even in ~/.docker/buildx
 
 ### Security Team
 - Work in `security/` directory
+
+### tests
+- Put all the unit test scripts in `tests/` directory
 
 ### Notes
 
