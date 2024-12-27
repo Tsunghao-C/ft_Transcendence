@@ -397,8 +397,8 @@ class GameConsumer(AsyncWebsocketConsumer):
 			await self.send(json.dumps({
 				"type": "rejoin",
 				"message": "player is already in lobby",
-				"player1": f"{active_lobbies[room_name]['players'][0]}",
-				"player2": f"{active_lobbies[room_name]['players'][1]}"
+#				"player1": f"{active_lobbies[room_name]['players'][0]}",
+#				"player2": f"{active_lobbies[room_name]['players'][1]}"
 				}))
 			return
 		if len(active_lobbies[room_name]["players"]) >= 2:
@@ -538,12 +538,14 @@ class GameConsumer(AsyncWebsocketConsumer):
 			raise
 		finally:
 			result = task.result()
+			if result is ABORTED:
+				logger.info("gameConsumer: gameRoom was aborted")
 			self.assigned_room = -1
 			self.in_game = False
 			if room_name in active_local_games.keys():
 				logger.info(f"Removing gameRoom {room_name} from active_local_games")
 				del active_local_games[room_name]
-			elif result is not ABORTED:
+			else:
 				logger.info(f"Removing gameRoom {room_name} from active_online_games")
 				del active_online_games[room_name]
 

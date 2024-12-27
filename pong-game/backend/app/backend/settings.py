@@ -199,7 +199,7 @@ LOGGING = {
         },
         'root': {
             'handlers': ['console'],
-            'level': 'DEBUG',  # Set to DEBUG for detailed logs
+            'level': 'WARNING',  # Set to DEBUG for detailed logs
         },
         'loggers': {
             # 'django': {
@@ -207,15 +207,15 @@ LOGGING = {
             #     'level': 'DEBUG',
             #     'propagate': False,
             # },
-            'django.channels': {
-                'handlers': ['console'],
-                'level': 'DEBUG',  # Log WebSocket-related events
-                'propagate': False,
-            },
-            'channels': {
-                'handlers': ['console'],
-                'level': 'DEBUG',
-            }
+#            'django.channels': {
+#                'handlers': ['console'],
+#                'level': 'INFO',  # Log WebSocket-related events
+#                'propagate': False,
+#            },
+#            'channels': {
+#                'handlers': ['console'],
+#                'level': 'INFO',
+#            }
         }
 }
 

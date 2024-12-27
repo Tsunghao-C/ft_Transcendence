@@ -219,15 +219,14 @@ class GameRoom():
 		if self.ball.x - self.ball.radius < 0 or self.ball.x + self.ball.radius > CANVAS_WIDTH:
 			if self.ball.x - self.ball.radius < 0:
 				self.players[self.right_player].score += 1
-				if self.players[self.right_player].score == 100:
+				if self.players[self.right_player].score == 50:
 					self.winner = self.right_player
 					self.game_over = True
 				self.ball.x = CANVAS_WIDTH * 0.7
 				self.ball.y = CANVAS_WIDTH * 0.5
 			else:
 				self.players[self.left_player].score += 1
-				if self.players[self.left_player].score == 100:
-					self.winner = self.left_player
+				if self.players[self.left_player].score == 50:
 					self.game_over = True
 				self.ball.x = CANVAS_WIDTH * 0.3
 				self.ball.y = CANVAS_WIDTH * 0.5
