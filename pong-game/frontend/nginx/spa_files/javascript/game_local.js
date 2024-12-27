@@ -161,7 +161,7 @@ export async function setLocalLobby(contentContainer) {
         }
     });
 
-    async function sendEvents(socket) {
+    async function sendLocalEvents(socket) {
         for (const property in playerEvent) {
             if (playerEvent[property].pending == true) {
                 await state.gameSocket.send(JSON.stringify({
@@ -231,7 +231,7 @@ export async function setLocalLobby(contentContainer) {
         let player_1 = gameState.players.player1;
         let player_2 = gameState.players.player2;
         drawElements(gameState.ball, player_1, player_2);
-        await sendEvents(socket, roomId);
+        await sendLocalEvents(socket, roomId);
         requestAnimationFrame(gameLoop);
     }
 

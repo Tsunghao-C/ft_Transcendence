@@ -4,7 +4,8 @@ import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
 import { hideElem, hideClass, showElem } from "./utils.js";
 import { translations as trslt } from "./language_pack.js";
-import { drawElements, drawGameOverScreen } from "./game_utils.js";
+import { showReadyButton, handlePlayerEvent, connectWebSocket } from "./game_utils.js";
+
 
 export async function setSoloLobby(contentContainer) {
     let response;
@@ -140,7 +141,7 @@ export async function setSoloLobby(contentContainer) {
         }
     });
 
-    async function sendEvents(socket) {
+    async function sendEvents() {
         if (playerEvent.pending == true) {
             await state.gameSocket.send(JSON.stringify({
                 action: 'player_input',
@@ -220,24 +221,6 @@ export async function setSoloLobby(contentContainer) {
             readyButton.parentNode.removeChild(readyButton);
             readyButton.remove();
             readyButton = null;
-        }
-    }
-
-    async function startGame() {
-        try {
-            console.log("we are in start game");
-            destroyReadyButton();
-            hideClass("hrs");
-            hideElem("game-info");
-            showElem("game", "block");
-            showElem("go-back-EOG", "block");
-            if (textBox) {
-                textBox.remove();
-                textBox = null;
-            }
-            gameLoop(state.gameSocket);
-        } catch (error) {
-            console.error('Exception caught in startGame', error);
         }
     }
     
