@@ -112,7 +112,9 @@ export async function setLobbyView(contentContainer, roomID = "") {
 							console.log('Room creation notice received');
 							console.log('Room name: ' + roomId);
 							window.location.hash = `lobby/${roomId}`;
-						} else if (response.type == 'rejoin_room_query'){
+						}  
+						// For the purpose of testing, bad shit, refactor asap
+						else if (response.type == 'rejoin_room_query') {
 							console.log('Paused gameRoom found');
 							console.log('Rejoining room (Hardcoded rn XD)');
 							roomId = response.room_name;
@@ -122,7 +124,8 @@ export async function setLobbyView(contentContainer, roomID = "") {
 							}));
 							console.log("Starting gameLoop directly in rejoin_room_query branch")
 							await startGame();
-						} else if (response.type == 'set_player_1') {
+						} 
+						else if (response.type == 'set_player_1') {
 							let player1Data;
 							let profileResponse;
 							profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.alias}`);

@@ -5,9 +5,7 @@ from dotenv import load_dotenv
 import json
 import uuid
 import asyncio
-import time
 from channels.generic.websocket import AsyncWebsocketConsumer
-from channels.layers import get_channel_layer
 from .game_room import GameRoom
 from user_service.models import CustomUser
 from match_making.models import MatchMakingQueue, LiveGames
@@ -453,7 +451,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 	async def launch_game(self, room_name):
 		try:
 			for connection in active_lobbies[room_name]["connection"]:
-				connection.last_receive_time = time.perf_counter()
 				await connection.send(json.dumps({
 					"type": "notice",
 					"message": "Game is starting"
@@ -462,11 +459,9 @@ class GameConsumer(AsyncWebsocketConsumer):
 #			if  active_lobbies[room_name]["is_ai_game"] == True:
 #				game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"], active_lobbies[room_name]["local"], active_lobbies[room_name]["difficulty"])
 #			else:
-			notification_queue = asyncio.Queue()
 			game_room = GameRoom(room_name,
 						active_lobbies[room_name]["players"],
 						active_lobbies[room_name]["connection"],
-						notification_queue,
 						active_lobbies[room_name]["game_type"],
 						active_lobbies[room_name]["difficulty"]
 						)
@@ -486,11 +481,9 @@ class GameConsumer(AsyncWebsocketConsumer):
 					"player_data": {
 					"connection": active_lobbies[room_name]["connection"],
 					"ids": active_lobbies[room_name]["players"],
-					"notification_queue": notification_queue
 					}}
 			game_task = asyncio.create_task(game_room.run())
 			self.in_game = True
-			asyncio.create_task(self.monitor_gameRoom(notification_queue))
 			del active_lobbies[room_name]
 			deleted_count = await sync_to_async(Message.objects.filter(game_room=room_name).delete)()
 			logger.info(f"Deleted {deleted_count} invitation(s) for game_room {room_name}")
@@ -504,20 +497,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 				"error": f"Failed to start game: {str(e)}"
 				}))
 				# add something to delete all invitation to this game
-
-	async def monitor_gameRoom(self, notification_queue):
-		while True:
-			message = await notification_queue.get()
-			if message["type"] == "player_missing":
-				await self.handle_missing_player(message)
-
-	async def handle_missing_player(self, message): #deprecated, to remove if front finds no use for this
-		room_name = message['room_name']
-		if room_name in active_online_games.keys():
-			logger.info(f"gameConsumer: Player {message['player_id']} reported missing by gameRoom")
-			await self.send(json.dumps({
-				"type": "player_missing",
-				}))
 
 	def handle_game_task_completion(self, task, room_name):
 		try:

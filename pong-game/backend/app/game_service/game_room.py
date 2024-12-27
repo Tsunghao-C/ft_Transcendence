@@ -47,7 +47,7 @@ class Ball():
 		self.radius = BALL_RADIUS
 
 class GameRoom():
-	def __init__(self, room_id, user_data, consumer_data, notification_queue, game_type, daddyficulty= ""):
+	def __init__(self, room_id, user_data, consumer_data, game_type, daddyficulty= ""):
 		self.room_id = room_id
 		self.connections = consumer_data
 		self.game_type = game_type
@@ -55,7 +55,6 @@ class GameRoom():
 		self.right_player = user_data[1]
 		self.time_since_last_receive = {}
 		self.missing_player = False
-		self.notification_queue = notification_queue
 		self.server_order = -1
 
 		self.left_player = user_data[0]
@@ -91,6 +90,8 @@ class GameRoom():
 		self.game_over = False
 		self.winner = -1
 
+	#setter meant to be called by the server, right now used to concede games if the player refuses to rejoin
+	#Also can be used to cancel a game with ABORTED
 	def set_server_order(self, new_order):
 		self.server_order = new_order
 	
@@ -275,16 +276,6 @@ class GameRoom():
 				else:
 					self.dropped_side = RIGHT
 				self.missing_player += 1
-				if self.missing_player == 2:
-					return
-				logger.info("gameRoom: creating notification_queue put task")
-				await self.notification_queue.put({ #check that this works properly ??
-					"type": "player_missing",
-					"player_id": player_id,
-					"room_name": self.room_id
-					})
-				#await asyncio.sleep(5)
-				logger.info("gameRoom: notification creation finished")
 
 	async def player_rejoin(self, new_id, new_connection):
 		if self.dropped_side == LEFT:
