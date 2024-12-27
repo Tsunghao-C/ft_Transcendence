@@ -51,8 +51,6 @@ class GameRoom():
 		self.room_id = room_id
 		self.connections = consumer_data
 		self.game_type = game_type
-		self.left_player = user_data[0]
-		self.right_player = user_data[1]
 		self.time_since_last_receive = {}
 		self.missing_player = False
 		self.server_order = -1
@@ -276,6 +274,8 @@ class GameRoom():
 				else:
 					self.dropped_side = RIGHT
 				self.missing_player += 1
+				if self.game_type["is_ai"]:
+					self.missing_player = 2
 
 	async def player_rejoin(self, new_id, new_connection):
 		if self.dropped_side == LEFT:

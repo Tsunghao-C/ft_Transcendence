@@ -440,7 +440,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 		if (
 			(len(active_lobbies[room_name]["players"]) == 2)
 			or
-			(len(active_lobbies[room_name]["players"]) == 1 and active_lobbies[room_name]["game_type"]["is_local"])
+			(len(active_lobbies[room_name]["players"]) == 1 and not active_lobbies[room_name]["game_type"]["is_online"])
 		) and self.all_ready(room_name):
 			try:
 				await self.launch_game(room_name)
@@ -455,7 +455,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 					"type": "notice",
 					"message": "Game is starting"
 					}))
-			logger.info(f"Starting game id: lobby_{room_name}")
+			logger.info(f"Starting game id: lobby_{room_name}, room: {active_lobbies[room_name]}")
 #			if  active_lobbies[room_name]["is_ai_game"] == True:
 #				game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"], active_lobbies[room_name]["local"], active_lobbies[room_name]["difficulty"])
 #			else:
