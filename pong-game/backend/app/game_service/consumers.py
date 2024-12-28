@@ -218,7 +218,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 		await self.channel_layer.group_add(self.current_group, self.channel_name)
 		game_type = "AI Game"
 		await self.send(json.dumps({
-			"type": "room_creation",
+			"type": "ai_room_creation",
 			"message": f"Created {game_type} Lobby {room_name}",
 			"room_name": room_name,
 			"is_ai_game": True
