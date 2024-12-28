@@ -9,7 +9,6 @@ export async function setQuickMatchView(contentContainer, roomID = "") {
     let response;
     let userData;
     let roomId;
-    let gameState;
     try {
         response = await fetchWithToken('/api/user/getuser/');
         userData = await response.json();
