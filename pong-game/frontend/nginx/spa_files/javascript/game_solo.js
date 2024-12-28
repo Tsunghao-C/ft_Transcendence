@@ -56,7 +56,7 @@ export async function setSoloLobby(contentContainer) {
 
             console.log("Started AI game session");
             console.log("Player_id: " + userData.alias);
-            renderLocalUsers(userData.alias, difficulty);
+            renderLocalUsers(userData.alias, "Mode: " + difficulty);
             gameInfo.textContent = '• AI Connected';
         } catch (error) {
             console.error('Error starting AI game:', error);

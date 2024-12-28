@@ -383,7 +383,7 @@ export function renderLocalUsers(user1, user2) {
 		<h4 class="player-two">Player two</h4>
 		<div style="display: flex; align-items: center; justify-content: right; margin-bottom: 10px;">
 			<div>
-				<p style="margin: 0; text-align: right; font-size: 0.8rem;">Mode: ${user2}</p>
+				<p style="margin: 0; text-align: right; font-size: 0.8rem;">${user2}</p>
 			</div>
 		</div>
 		<hr class="hrs">
