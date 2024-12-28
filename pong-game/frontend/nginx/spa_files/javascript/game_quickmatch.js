@@ -39,20 +39,10 @@ export async function setQuickMatchView(contentContainer, roomID = "") {
     `;
     const canvas = document.getElementById('game');
     const token = getCookie("accessToken");
-    const PADDLE_HEIGHT = 100;
-    const PADDLE_WIDTH = 15;
-    const ctx = canvas.getContext('2d');
     const gameInfo = document.getElementById('game-info');
     let wsReconnectTimer = null;
-    let pendingGameUpdate = null;
-    let readyButton = null;
-    let textBox = null;
 
-    let playerEvent = {
-        pending: false,
-        type: -1,
-    }
-    var game_over = false;
+
 
     async function connectWebSocket() {
         if (state.gameSocket) {
@@ -79,8 +69,6 @@ export async function setQuickMatchView(contentContainer, roomID = "") {
                     wsReconnectTimer = null;
                 }
                 state.gameSocket.onmessage = async function (event) {
-                //	console.log('Ws message received', event);
-                //	console.log('Ws readyState:', state.gameSocket.readyState);
                     try {
                         const response = JSON.parse(event.data);
                         if (response.type == 'notice') {
@@ -89,6 +77,7 @@ export async function setQuickMatchView(contentContainer, roomID = "") {
                             roomId = response.room_name;
                             console.log('Room creation notice received');
                             console.log('Room name: ' + roomId);
+                            state.gameSocket.close();
                             window.location.hash = `lobby/${roomId}`;
                         } else if (response.type == 'error') {
                             console.error('Error received:', response.message);
@@ -121,11 +110,7 @@ export async function setQuickMatchView(contentContainer, roomID = "") {
         }
     });
 
-    async function init(){
-        await connectWebSocket();
-    }
-
-    await init();
+    await connectWebSocket();
 
 }
 

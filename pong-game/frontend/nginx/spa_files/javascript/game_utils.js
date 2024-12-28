@@ -348,13 +348,21 @@ export async function connectWebSocket() {
 							hideElem("create-match");
 							hideElem("join-match");
 							renderUserInfo(player1Data.profile, player2Data.profile);
-							// renderUserInfoLeft(player1Data.profile);
-							// renderUserInfoRight(player2Data.profile);
 						} catch(error) {
 							console.log(error);
 							window.location.hash = "login";
 							return;
 						}
+					} else if (response.type == 'rejoin_room_query') {
+							console.log('Paused gameRoom found');
+							console.log('Rejoining room (Hardcoded rn XD)');
+							roomId = response.room_name;
+							await state.gameSocket.send(JSON.stringify({
+								action: "rejoin_room",
+								response: true //change this from true to false and vice versa to test rejoining rooms
+							}));
+							console.log("Starting gameLoop directly in rejoin_room_query branch")
+							await startGame();
 					} else if (response.type == 'room_creation') {
 						roomId = response.room_name;
 						console.log('Room creation notice received');
