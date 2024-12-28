@@ -17,6 +17,11 @@ export let playerEvent = {
         pending: false,
         type: -1,
         id: null
+    },
+	player_2: {
+        pending: false,
+        type: -1,
+        id: null
     }
 };
 
@@ -100,7 +105,11 @@ export async function gameLoop() {
 	let player_1 = gameState.players.player1;
 	let player_2 = gameState.players.player2;
 	drawElements(gameState.ball, player_1, player_2);
-	await sendEvents();
+	if (typeOfGame === "local") {
+		await sendLocalEvents();
+	} else {
+		await sendEvents();
+	}
 	requestAnimationFrame(gameLoop);
 }
 
@@ -159,22 +168,94 @@ async function sendEvents() {
 	}
 }
 
-export function handlePlayerEvent(event) {
-	if (event.type === 'keydown') {
-		if (event.code === 'ArrowUp') {
-			playerEvent.player_1.pending = true;
-			playerEvent.player_1.type = 'move_up';
-		} else if (event.code === 'ArrowDown') {
-			playerEvent.player_1.pending = true;
-			playerEvent.player_1.type = 'move_down';
+async function sendLocalEvents() {
+	for (const property in playerEvent) {
+		if (playerEvent[property].pending == true) {
+			await state.gameSocket.send(JSON.stringify({
+				action: 'player_input',
+				player_id: playerEvent[property].id,
+				input: playerEvent[property].type,
+				game_roomID: roomId,
+				local: true
+			}));
+			playerEvent[property].pending = false;
 		}
-	} else if (event.type === 'keyup') {
-		if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
-			playerEvent.player_1.pending = true;
-			playerEvent.player_1.type = 'move_stop';
+		else {
+			await state.gameSocket.send(JSON.stringify({
+				action: 'player_input',
+				player_id: playerEvent[property].id,
+				input: 'idle',
+				game_roomID: roomId,
+				local: true
+			}));
 		}
 	}
-}	
+}
+
+// export function handlePlayerEvent(event) {
+// 	if (event.type === 'keydown') {
+// 		if (event.code === 'ArrowUp') {
+// 			playerEvent.player_1.pending = true;
+// 			playerEvent.player_1.type = 'move_up';
+// 		} else if (event.code === 'ArrowDown') {
+// 			playerEvent.player_1.pending = true;
+// 			playerEvent.player_1.type = 'move_down';
+// 		}
+// 	} else if (event.type === 'keyup') {
+// 		if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
+// 			playerEvent.player_1.pending = true;
+// 			playerEvent.player_1.type = 'move_stop';
+// 		}
+// 	}
+// }
+
+export function setUpOnePlayerControl() {
+    document.addEventListener('keydown', function(event) {
+        if (event.code === 'ArrowUp') {
+            playerEvent.player_1.pending = true;
+            playerEvent.player_1.type = 'move_up';
+        } else if (event.code === 'ArrowDown') {
+            playerEvent.player_1.pending = true;
+            playerEvent.player_1.type = 'move_down';
+        }
+    });
+
+    document.addEventListener('keyup', function(event) {
+        if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
+            playerEvent.player_1.pending = true;
+            playerEvent.player_1.type = 'move_stop';
+        }
+    });
+}
+
+export function setUpTwoPlayersControl() {
+    document.addEventListener('keydown', function(event) {
+        if (event.code === 'KeyW') {
+            playerEvent.player_1.pending = true;
+            playerEvent.player_1.type = 'move_up';
+        } else if (event.code === 'KeyS') {
+            playerEvent.player_1.pending = true;
+            playerEvent.player_1.type = 'move_down';
+        } else if (event.code === 'ArrowUp') {
+            playerEvent.player_2.pending = true;
+            playerEvent.player_2.type = 'move_up';
+        } else if (event.code === 'ArrowDown') {
+            playerEvent.player_2.pending = true;
+            playerEvent.player_2.type = 'move_down';
+        }
+    });
+
+    document.addEventListener('keyup', function(event) {
+        if (event.code === 'KeyW' || event.code === 'KeyS') {
+            playerEvent.player_1.pending = true;
+            playerEvent.player_1.type = 'move_stop';
+        } else if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
+            playerEvent.player_2.pending = true;
+            playerEvent.player_2.type = 'move_stop';
+        }
+    });
+}
+
 
 export function renderUserInfo(user1, user2 = null) {
 	const userInfoLeftDiv = document.getElementById("user-info-left");
@@ -284,6 +365,12 @@ export async function connectWebSocket() {
 						console.log('Room creation notice received');
 						console.log('Room name: ' + roomId);
 						await showReadyButton(roomId, playerEvent.player_1.id);
+					} else if (response.type == 'local_room_creation') {
+						console.log('Local Room creation notice received');
+						console.log('Room name: ' + roomId);
+						roomId = response.room_name;
+						playerEvent.player_2.id = response.player2_id;
+						await showReadyButton(roomId, playerEvent.player_1.id);
 					} else if (response.type == 'set_player_1') {
 						let player1Data;
 						let profileResponse;
@@ -348,16 +435,17 @@ export async function connectWebSocket() {
 		});
 }
 
-//online game
 async function startGame() {
 	try {
-		destroyReadyButton();
-		hideClass("hrs");
-		hideElem("game-info");
-		showElem("game", "block");
-		showElem("go-back-EOG", "block");
-		if (typeOfGame == "online") {
-			hideElem("invite-button");
+		if (typeOfGame !== "local") {
+			destroyReadyButton();
+			hideClass("hrs");
+			hideElem("game-info");
+			showElem("game", "block");
+			showElem("go-back-EOG", "block");
+			if (typeOfGame == "online") {
+				hideElem("invite-button");
+			}
 		}
 		gameLoop(roomId);	
 	} catch (error) {
@@ -391,48 +479,3 @@ export function renderLocalUsers(user1, user2) {
 	showElem("user-info-left", "block");
 	showElem("user-info-right", "block");
 }
-// AI game
-// async function startGame() {
-// 	try {
-// 		console.log("we are in start game");
-// 		destroyReadyButton();
-// 		hideClass("hrs");
-// 		hideElem("game-info");
-// 		showElem("game", "block");
-// 		showElem("go-back-EOG", "block");
-// 		if (textBox) {
-// 			textBox.remove();
-// 			textBox = null;
-// 		}
-// 		gameLoop(state.gameSocket);
-// 	} catch (error) {
-// 		console.error('Exception caught in startGame', error);
-// 	}
-// }
-
-// function renderLocalUsers(user1, user2) {
-// 	const userInfoDiv = document.getElementById("user-info-left");
-// 	userInfoDiv.innerHTML = `
-// 		<hr class="hrs">
-// 		<h4>Player one</h4>
-// 		<div style="display: flex; align-items: center; margin-bottom: 10px;">
-// 			<div>
-// 				<p style="margin: 0; font-weight: bold;">${user1}</p>
-// 			</div>
-// 		</div>
-// 		<hr class="hrs">
-// 	`;
-// 	const aiInfoDiv = document.getElementById("user-info-right");
-// 	aiInfoDiv.innerHTML = `
-// 		<hr class="hrs">
-// 		<h4 class="player-two">Player two</h4>
-// 		<div style="display: flex; align-items: center; justify-content: right; margin-bottom: 10px;">
-// 			<div>
-// 				<p style="margin: 0; text-align: right; font-size: 0.8rem;">Mode: ${user2}</p>
-// 			</div>
-// 		</div>
-// 		<hr class="hrs">
-// 	`;
-// 	// showElem("user-info-left", "block");
-// 	// showElem("user-info-right", "block");
-// }

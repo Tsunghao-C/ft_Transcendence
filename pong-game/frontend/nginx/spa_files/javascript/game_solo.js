@@ -4,7 +4,7 @@ import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
 import { hideElem, hideClass, showElem } from "./utils.js";
 import { translations as trslt } from "./language_pack.js";
-import { showReadyButton, handlePlayerEvent, connectWebSocket, playerEvent, setTypeOfGame, renderLocalUsers } from "./game_utils.js";
+import { setUpOnePlayerControl, connectWebSocket, playerEvent, setTypeOfGame, renderLocalUsers } from "./game_utils.js";
 
 
 
@@ -91,6 +91,5 @@ export async function setSoloLobby(contentContainer) {
     });
     
     await connectWebSocket();
-    document.addEventListener('keydown', handlePlayerEvent);
-	document.addEventListener('keyup', handlePlayerEvent);
+    setUpOnePlayerControl();
 }

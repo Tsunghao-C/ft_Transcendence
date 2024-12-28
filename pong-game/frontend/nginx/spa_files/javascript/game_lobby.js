@@ -1,7 +1,7 @@
 import { fetchWithToken } from "./fetch_request.js";
 import { getLanguageCookie } from "./fetch_request.js";
 import { state } from "./app.js";
-import { showReadyButton, handlePlayerEvent, connectWebSocket, playerEvent, setRoomId, setTypeOfGame } from "./game_utils.js";
+import { showReadyButton, setUpOnePlayerControl, connectWebSocket, playerEvent, setRoomId, setTypeOfGame } from "./game_utils.js";
 import { translations as trslt } from "./language_pack.js";
 
 export async function setLobbyView(contentContainer, roomID = "") {
@@ -43,9 +43,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 	const canvas = document.getElementById('game');
 	const ctx = canvas.getContext('2d');
 
-	document.addEventListener('keydown', handlePlayerEvent);
-	document.addEventListener('keyup', handlePlayerEvent);
-
+	setUpOnePlayerControl();
 	async function joinRoom(roomUID) {
 		try {
 			roomId = roomUID;
