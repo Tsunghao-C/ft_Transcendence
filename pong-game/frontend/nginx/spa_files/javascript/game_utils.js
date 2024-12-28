@@ -420,15 +420,45 @@ async function join_room(response) {
 }
 
 async function rejoin_room(response) {
-	console.log('Paused gameRoom found');
-	console.log('Rejoining room (Hardcoded rn XD)');
+	console.log('Rejoin room query received by server');
 	roomId = response.room_name;
-	await state.gameSocket.send(JSON.stringify({
-		action: "rejoin_room",
-		response: true //change this from true to false and vice versa to test rejoining rooms
-	}));
-	console.log("Starting gameLoop directly in rejoin_room_query branch")
-	await startGame();
+	const trueButton = document.createElement('button')
+	trueButton.id = 'rejoin-true-button'
+	trueButton.textContent = 'Yes'
+	const falseButton = document.createElement('button')
+	falseButton.id = 'rejoin-false-button'
+	falseButton.textContent = 'False'
+
+	trueButton.onclick = function(event) {
+		try {
+			console.log("Starting gameLoop directly in rejoin_room_query branch")
+			trueButton.disabled = true;
+			falseButton.disabled = true;
+			state.gameSocket.send(JSON.stringify({
+				action: "rejoin_room",
+				response: true
+			}));
+			startGame();
+		} catch (error) {
+			console.error('Error accepting to rejoin room:', error);
+		}
+	}
+	falseButton.onclick = function (event) {
+		try {
+			console.log("Refusing to rejoin ongoing gameRoom")
+			trueButton.disabled = true;
+			falseButton.disabled = true;
+			state.gameSocket.send(JSON.stringify({
+				action: "rejoin_room",
+				response: false
+			}));
+			//Put the client back into lobby?
+		} catch (error) {
+			console.error("Error when sending refusal to rejoin ongoing gameRoom: ", error);
+		}
+	}
+	document.getElementById("game-lobby").appendChild(trueButton);
+	document.getElementById("game-lobby").appendChild(falseButton);
 }
 
 export async function connectWebSocket() {
