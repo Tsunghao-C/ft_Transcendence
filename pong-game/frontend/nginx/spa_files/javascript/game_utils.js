@@ -427,7 +427,7 @@ async function rejoin_room(response) {
 	trueButton.textContent = 'Yes'
 	const falseButton = document.createElement('button')
 	falseButton.id = 'rejoin-false-button'
-	falseButton.textContent = 'False'
+	falseButton.textContent = 'No'
 
 	trueButton.onclick = function(event) {
 		try {
@@ -438,6 +438,10 @@ async function rejoin_room(response) {
 				action: "rejoin_room",
 				response: true
 			}));
+			trueButton.parentNode.removeChild(trueButton);
+			trueButton.remove();
+			falseButton.parentNode.removeChild(falseButton);
+			falseButton.remove();
 			startGame();
 		} catch (error) {
 			console.error('Error accepting to rejoin room:', error);
@@ -452,6 +456,10 @@ async function rejoin_room(response) {
 				action: "rejoin_room",
 				response: false
 			}));
+			trueButton.parentNode.removeChild(trueButton);
+			trueButton.remove();
+			falseButton.parentNode.removeChild(falseButton);
+			falseButton.remove();
 			//Put the client back into lobby?
 		} catch (error) {
 			console.error("Error when sending refusal to rejoin ongoing gameRoom: ", error);
