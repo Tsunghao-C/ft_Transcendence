@@ -135,6 +135,20 @@ export async function submitMatchResult(user1Id, user2Id, winner) {
 	}
 }
 
+function simulateMatch(difficulty1, difficulty2) {
+    const probabilities = {
+        'hard': { 'easy': 0.75, 'medium': 0.67, 'hard': 0.50 },
+        'medium': { 'easy': 0.67, 'medium': 0.50, 'hard': 0.33 },
+        'easy': { 'easy': 0.50, 'medium': 0.33, 'hard': 0.25 }
+    };
+
+    const chanceToWin = probabilities[difficulty1][difficulty2];
+
+    const randomValue = Math.random();
+    const winner = randomValue <= chanceToWin ? 'left' : 'right';
+
+    return winner;
+}
 
 async function showNextMatch() {
 	const matchContainer = document.getElementById("match-container");
@@ -151,28 +165,33 @@ async function showNextMatch() {
 		console.log(data);
 		if (data.next_game.next_match) {
 			const { player1, player2 } = data.next_game.next_match;
-			// get rid of the all ai part right here. then
-			if (player1.is_ai !== "human" && player2.is_ai === "human") {
-				TournamentPlayers.player2.id = player1.id;
-				TournamentPlayers.player2.alias = player1.alias;
-				TournamentPlayers.player1.id = player2.id;
-				TournamentPlayers.player1.alias = player2.alias;
+			if (player1.is_ai !== "human" && player2.is_ai != "human") {
+				const winner = simulateMatch(player1.is_ai, player2.is_ai);
+				submitMatchResult(player1.id, player2.id, winner);
+				alert("ai game happened at the speed of light");
 			} else {
-				TournamentPlayers.player1.id = player1.id;
-				TournamentPlayers.player1.alias = player1.alias;
-				TournamentPlayers.player2.id = player2.id;
-				TournamentPlayers.player2.alias = player2.alias;
-			}
-			if (player1.is_ai === "human" && player2.is_ai === "human") {
-				setLocalLobby(matchContainer, true);
-			} else {
-				let difficulty;
-				if (player1.is_ai === "human") {
-					difficulty = player2.is_ai;
+				if (player1.is_ai !== "human" && player2.is_ai === "human") {
+					TournamentPlayers.player2.id = player1.id;
+					TournamentPlayers.player2.alias = player1.alias;
+					TournamentPlayers.player1.id = player2.id;
+					TournamentPlayers.player1.alias = player2.alias;
 				} else {
-					difficulty = player1.is_ai;
+					TournamentPlayers.player1.id = player1.id;
+					TournamentPlayers.player1.alias = player1.alias;
+					TournamentPlayers.player2.id = player2.id;
+					TournamentPlayers.player2.alias = player2.alias;
 				}
-				setSoloLobby(matchContainer, difficulty);
+				if (player1.is_ai === "human" && player2.is_ai === "human") {
+					setLocalLobby(matchContainer, true);
+				} else {
+					let difficulty;
+					if (player1.is_ai === "human") {
+						difficulty = player2.is_ai;
+					} else {
+						difficulty = player1.is_ai;
+					}
+					setSoloLobby(matchContainer, difficulty);
+				}
 			}
 		} else if (data.next_game.message) {
 			matchContainer.innerHTML = `<p>${data.next_game.message}</p>`;
@@ -182,6 +201,8 @@ async function showNextMatch() {
 		matchContainer.innerHTML = `<p>Error fetching next match.</p>`;
 	}
 }
+
+
 
 
 function setupTournamentForm(contentContainer) {
