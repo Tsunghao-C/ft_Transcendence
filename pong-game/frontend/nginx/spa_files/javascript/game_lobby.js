@@ -112,7 +112,20 @@ export async function setLobbyView(contentContainer, roomID = "") {
 							console.log('Room creation notice received');
 							console.log('Room name: ' + roomId);
 							window.location.hash = `lobby/${roomId}`;
-						} else if (response.type == 'set_player_1') {
+						}  
+						// For the purpose of testing, bad shit, refactor asap
+						else if (response.type == 'rejoin_room_query') {
+							console.log('Paused gameRoom found');
+							console.log('Rejoining room (Hardcoded rn XD)');
+							roomId = response.room_name;
+							await state.gameSocket.send(JSON.stringify({
+								action: "rejoin_room",
+								response: true //change this from true to false and vice versa to test rejoining rooms
+							}));
+							console.log("Starting gameLoop directly in rejoin_room_query branch")
+							await startGame();
+						} 
+						else if (response.type == 'set_player_1') {
 							let player1Data;
 							let profileResponse;
 							profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.alias}`);
@@ -224,6 +237,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 	}
 
 	async function gameLoop(socket) {
+		console.log("gameLoop iteration")
 		gameState = await getGameState();
 		if (game_over) {
 			console.log('Drawing game_over...');
@@ -261,7 +275,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 		readyButton = document.createElement('button');
 		readyButton.id = 'ready-button';
 		readyButton.textContent = 'Start Game';
-	
+
 		readyButton.onclick = function(event) {
 			try {
 				if (readyButton.disabled == false) {
@@ -306,6 +320,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 
 	async function startGame() {
 		try {
+			console.log("Starting game in client...")
 			destroyReadyButton();
 			hideClass("hrs");
 			hideElem("game-info");
@@ -313,15 +328,17 @@ export async function setLobbyView(contentContainer, roomID = "") {
 			showElem("go-back-EOG", "block");
 			hideElem("invite-button");
 			if (textBox) {
+				console.log("removing text box...")
 				textBox.remove();
 				textBox = null;
 			}
+			console.log("Done removing text box")
 			gameLoop(state.gameSocket);
 		} catch {
 			console.error('Exception caught in startGame', error);
 		}
 	}
-	
+
 	function renderUserInfoLeft(user) {
 		const userInfoDiv = document.getElementById("user-info-left");
 		userInfoDiv.innerHTML = `
@@ -336,7 +353,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 			</div>
 			<hr class="hrs">
 		`;
-	}	
+	}
 
 	function renderUserInfoRight(user) {
 		const userInfoDiv = document.getElementById("user-info-right");
@@ -352,7 +369,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 			</div>
 			<hr class="hrs">
 		`;
-	}	
+	}
 
 	function renderEmptyUserInfoRight() {
 		const userInfoDiv = document.getElementById("user-info-right");
@@ -435,6 +452,19 @@ export async function setLobbyView(contentContainer, roomID = "") {
 	document.getElementById('create-match').addEventListener('click', async () => {
 		create_private_match();
 	});
+
+//	document.getElementById('quick-match').addEventListener('click', async () => {
+//		try {
+//			console.log("Trying to join queue room")
+//			await state.gameSocket.send(JSON.stringify({
+//				action: 'join_queue',
+//				id: data.playerId
+//			}));
+//			console.log("join queue attempt sent");
+//		} catch (error) {
+//			console.error('Exception caught in joinQueue', error);
+//		}
+//	});
 
 	document.getElementById('join-match').addEventListener('click', async () => {
 		try {
