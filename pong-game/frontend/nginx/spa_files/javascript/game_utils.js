@@ -2,6 +2,7 @@ import { hideElem, hideClass, showElem } from "./utils.js";
 import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
 import { fetchWithToken } from "./fetch_request.js";
+import { submitMatchResult } from "./game_tournament.js";
 
 
 // let readyButton = null;
@@ -12,6 +13,17 @@ let game_over = false;
 let pendingGameUpdate = null;
 let roomId;
 let typeOfGame;
+let isTournament;
+export let TournamentPlayers = {
+	player1: {
+		alias: "none",
+		id: -1
+	},
+	player2: {
+		alias: "none",
+		id: -1
+	}
+}
 export let playerEvent = {
     player_1: {
         pending: false,
@@ -24,6 +36,10 @@ export let playerEvent = {
         id: null
     }
 };
+
+export function setIsTournament(isTournamentValue) {
+	isTournament = isTournamentValue;
+}
 
 export function setTypeOfGame(gameType) {
 	typeOfGame	= gameType;
@@ -306,7 +322,8 @@ export async function connectWebSocket() {
 	let wsReconnectTimer = null;
 
 	if (state.gameSocket) {
-		return ;
+		state.gameSocket.close();
+		state.gameSocket = null;
 	}
 	if (state.gameSocket && state.gameSocket.readyState === WebSocket.CONNECTING) {
 		console.log('Connection already in progress...');
@@ -329,8 +346,6 @@ export async function connectWebSocket() {
 				wsReconnectTimer = null;
 			}
 			state.gameSocket.onmessage = async function (event) {
-			//	console.log('Ws message received', event);
-			//	console.log('Ws readyState:', state.gameSocket.readyState);
 				try {
 					const response = JSON.parse(event.data);
 					if (response.type == 'notice') {
@@ -372,12 +387,22 @@ export async function connectWebSocket() {
 						roomId = response.room_name;
 						console.log('Room creation notice received');
 						console.log('Room name: ' + roomId);
+						if (isTournament) {
+							renderLocalUsers(TournamentPlayers.player1.alias, TournamentPlayers.player2.alias);
+						} else {
+							renderLocalUsers(response.player1_alias, "Mode: " + response.difficulty);
+						}
 						await showReadyButton(roomId, playerEvent.player_1.id);
 					} else if (response.type == 'local_room_creation') {
 						console.log('Local Room creation notice received');
 						console.log('Room name: ' + roomId);
 						roomId = response.room_name;
 						playerEvent.player_2.id = response.player2_id;
+						if (isTournament) {
+							renderLocalUsers(TournamentPlayers.player1.alias, TournamentPlayers.player2.alias);
+						} else {
+							renderLocalUsers(response.player1_alias, response.player1_alias + " friend");
+						}
 						await showReadyButton(roomId, playerEvent.player_1.id);
 					} else if (response.type == 'set_player_1') {
 						let player1Data;
@@ -426,6 +451,9 @@ export async function connectWebSocket() {
 							pendingGameUpdate(response.payload);
 							game_over = true;
 							pendingGameUpdate = null;
+						}
+						if (isTournament) {
+							submitMatchResult(TournamentPlayers.player1.id, TournamentPlayers.player2.id, response.payload.winner)
 						}
 					} else if (response.error)
 						console.error(response.error);

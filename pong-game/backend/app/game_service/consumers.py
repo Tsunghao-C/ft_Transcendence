@@ -221,7 +221,9 @@ class GameConsumer(AsyncWebsocketConsumer):
 			"type": "ai_room_creation",
 			"message": f"Created {game_type} Lobby {room_name}",
 			"room_name": room_name,
-			"is_ai_game": True
+			"is_ai_game": True,
+			"difficulty": difficulty,
+			"player1_alias" : player_alias
 		}))
 
 	async def join_queue(self, data):
@@ -344,7 +346,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 			"type": "room_creation",
 			"message": f"Created Lobby {room_name}",
 			"room_name": room_name,
-			"is_ai_game": False
+			"is_ai_game": False,
 			}))
 
 	async def create_local_match(self, data):
@@ -369,6 +371,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 			"type": "local_room_creation",
 			"message": f"Created local match Lobby {room_name}",
 			"room_name": room_name,
+			"player1_alias" : player_alias,
 			"player2_id": player_alias + "_2"
 			}))
 

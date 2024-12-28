@@ -203,11 +203,17 @@ class GameRoom():
 			else:
 				winner = self.left_player
 			logger.info(f"gameRoom: player conceding match, winner is: {winner}")
+		else:
+			if self.players[self.left_player].score == 5:
+				winner = "left"
+			else:
+				winner = "right"
 		game_report = {
 				'score_left': self.players[self.left_player].score,
 				'score_right': self.players[self.right_player].score,
 				'winner': winner
 				}
+		print(game_report)
 		for connection in self.connections:
 			await connection.send(json.dumps({
 				'type': 'game_over',

@@ -192,11 +192,14 @@ class UpdateMatchResultView(APIView):
 
 		user1_id = request.data.get("user1_id")
 		user2_id = request.data.get("user2_id")
-		match_outcome = request.data.get("match_outcome")
+		winner = request.data.get("winner")
 
-		if not all([user1_id, user2_id, match_outcome]):
+		if not all([user1_id, user2_id, winner]):
 			return Response({"error": "Missing required fields."}, status=status.HTTP_400_BAD_REQUEST)
 
+		match_outcome = 1
+		if winner == "right":
+			match_outcome = 2
 		try:
 			user1 = get_object_or_404(TournamentPlayer, id=user1_id)
 			user2 = get_object_or_404(TournamentPlayer, id=user2_id)
