@@ -12,14 +12,8 @@ export function setGameMenu(contentContainer, menu = "main") {
 
 	const menus = {
 		main: [
-			{ text: `${translations[currentLanguage].solo}`, hash: "game/solo" },
+			{ text: `${translations[currentLanguage].solo}`, hash: "solo" },
 			{ text: `${translations[currentLanguage].multi}`, hash: "game/multiplayer" },
-		],
-		solo: [
-			{ text: `${translations[currentLanguage].easy}`, hash: "game/solo/easy" },
-			{ text: `${translations[currentLanguage].medium}`, hash: "game/solo/medium" },
-			{ text: `${translations[currentLanguage].hard}`, hash: "game/solo/hard" },
-			{ text: `${translations[currentLanguage].back}`, hash: "game/main" },
 		],
 		multiplayer: [
 			{ text: `${translations[currentLanguage].local}`, hash: "game/local" },
@@ -27,15 +21,13 @@ export function setGameMenu(contentContainer, menu = "main") {
 			{ text: `${translations[currentLanguage].back}`, hash: "game/main" },
 		],
 		local: [
-			{ text: `${translations[currentLanguage].duel}`, hash: "game/local/duel" },
+			{ text: `${translations[currentLanguage].duel}`, hash: "duel" },
 			{ text: `${translations[currentLanguage].tournament}`, hash: "tournament" },
 			{ text: `${translations[currentLanguage].back}`, hash: "game/multiplayer" },
 		],
 		online: [
-			{ text: `${translations[currentLanguage].quickMatch}`, hash: "game/online/quickMatch" },
-			{ text: `${translations[currentLanguage].duel}`, hash: "game/online/duel",},
-			{ text: `${translations[currentLanguage].tournament}`, hash: "game/online/tournament" },
-			{ text: `Join a room`, hash: "lobby" },
+			{ text: `${translations[currentLanguage].quickMatch}`, hash: "quickmatch" },
+			{ text: `${translations[currentLanguage].duel}`, hash: "lobby",},
 			{ text: `${translations[currentLanguage].back}`, hash: "game/multiplayer" },
 		],
 	};

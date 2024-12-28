@@ -16,6 +16,9 @@ import { translations } from './language_pack.js';
 import { setLobbyView } from './game_lobby.js';
 import { setTournamentView } from './game_tournament.js';
 
+import { setSoloLobby } from './game_solo.js';
+import { setLocalLobby } from './game_local.js';
+import { setQuickMatchView } from './game_quickmatch.js';
 
 export const state = {
 	chatSocket: null,
@@ -180,6 +183,15 @@ export async function loadPage(page) {
 				case "friends":
 					setFriendsView(innerContent);
 					break;
+				case "solo":
+					setSoloLobby(innerContent);
+					break;
+				case "quickmatch":
+					setQuickMatchView(innerContent);
+					break;
+				case "duel":
+					setLocalLobby(innerContent);
+					break;
 				case "chat":
 					setChatView(innerContent);
 					break;
@@ -197,9 +209,6 @@ export async function loadPage(page) {
 				// 	break;
 				case "personal-data":
 					setpersonalDataView(innerContent);
-					break;
-				case "chat":
-					setChatView(innerContent);
 					break;
 				case "tournament":
 					setTournamentView(innerContent);
@@ -266,8 +275,9 @@ export async function loadPage(page) {
 		} catch (error) {
 			console.log("Error in setView:", error);
 		}
-	changeLanguage(currentLanguage);
+		changeLanguage(currentLanguage);
 	}
+	// languageEventListener(page); // uncomment this and the select in index.html to facilitate language tests
 }
 
 function handleNavigation(event) {
@@ -306,3 +316,15 @@ document.addEventListener("DOMContentLoaded", function () {
 	attachNavigationListeners();
 });
 
+// for language test 
+function languageEventListener(page) { 
+    const languageSelect = document.getElementById("languageSelect");
+    languageSelect.value = getLanguageCookie() || "en";
+    languageSelect.addEventListener("change", async (event) => {
+        const selectedLanguage = event.target.value;
+        console.log("selected language is : " + selectedLanguage)
+        await fetchWithToken('/api/user/change-language/', JSON.stringify({ newLang: selectedLanguage }), 'POST');
+        setLanguageCookie(selectedLanguage);
+        loadPage(page);
+    });
+}

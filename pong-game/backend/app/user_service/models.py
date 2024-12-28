@@ -114,7 +114,7 @@ class OnlineUserActivity(models.Model):
             if user_record.last_activity >= timezone.now() - timedelta(minutes=15):
                 if "/api/game/game" in user_record.path: # can change this later after game added
                     return "in-game"
-                return "online"
+                return "• online"
         except:
             return "offline"
 

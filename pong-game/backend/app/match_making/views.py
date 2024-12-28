@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.db import IntegrityError
 from asgiref.sync import sync_to_async
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
@@ -83,3 +84,16 @@ class GetOpenTournamentsView(APIView):
 			"totalPages": paginator.num_pages,
 		}
 		return Response(response_data, status=200)
+	
+class JoinQueueView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def post(self, request):
+		user = request.user
+		try:
+			MatchMakingQueue.objects.create(
+				player=user
+			)
+		except IntegrityError as e:
+			return Response({"error":"This user is already in the queue."}, status=400)
+		return Response({"detail":"User successfully added to queue."}, status=200)

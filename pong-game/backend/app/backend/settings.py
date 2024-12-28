@@ -199,7 +199,7 @@ LOGGING = {
         },
         'root': {
             'handlers': ['console'],
-            'level': 'DEBUG',  # Set to DEBUG for detailed logs
+            'level': 'INFO',  # Set to DEBUG for detailed logs
         },
         'loggers': {
             # 'django': {
@@ -207,15 +207,15 @@ LOGGING = {
             #     'level': 'DEBUG',
             #     'propagate': False,
             # },
-            'django.channels': {
-                'handlers': ['console'],
-                'level': 'DEBUG',  # Log WebSocket-related events
-                'propagate': False,
-            },
-            'channels': {
-                'handlers': ['console'],
-                'level': 'DEBUG',
-            }
+#            'django.channels': {
+#                'handlers': ['console'],
+#                'level': 'INFO',  # Log WebSocket-related events
+#                'propagate': False,
+#            },
+#            'channels': {
+#                'handlers': ['console'],
+#                'level': 'INFO',
+#            }
         }
 }
 
@@ -230,7 +230,7 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD") # Env
 LDB_UPDATE_TIMER = os.environ.get("LDB_UPDATE_TIMER", 15)
 CRONJOBS = [
     (f'*/{LDB_UPDATE_TIMER} * * * *', 'game_service.tasks.update_leaderboard'),
-	('*/1 * * * *', 'match_making.tasks.monitor_players'),
+	# ('*/1 * * * *', 'match_making.tasks.monitor_players'),
 ]
 
 DATETIME_FORMAT = 'd-m-Y H:i:s'

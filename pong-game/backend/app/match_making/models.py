@@ -1,9 +1,13 @@
 from django.db import models,transaction
 from user_service.models import CustomUser
+from game_service.models import MatchResults
 from django.db.models import F, Q
 import math, uuid, logging
 
 logger = logging.getLogger(__name__)
+
+def generate_uuid_without_hyphens():
+    return uuid.uuid4().hex
 
 class TournamentManager:
 	@staticmethod
@@ -207,7 +211,7 @@ class TourneyParticipant(models.Model):
 
 	def __str__(self):
 		return f"{self.user.alias} in {self.tournament.name}"
-	
+
 class LiveGames(models.Model):
 	class Status(models.TextChoices):
 		not_started = "Not Started"
@@ -217,17 +221,17 @@ class LiveGames(models.Model):
 
 	gameUID = models.UUIDField(
 		primary_key=True,
-		default=uuid.uuid4,
+		default=generate_uuid_without_hyphens,
 		editable=False,
 		unique=True
 	)
-	p1 = models.ForeignKey(
-		TourneyParticipant,
+	p1 = models.OneToOneField(
+		CustomUser,
 		related_name="match_p1",
 		on_delete=models.CASCADE
 	)
-	p2 = models.ForeignKey(
-		TourneyParticipant,
+	p2 = models.OneToOneField(
+		CustomUser,
 		related_name="match_p2",
 		on_delete=models.CASCADE
 	)
@@ -242,4 +246,87 @@ class LiveGames(models.Model):
 			models.Index(fields=["p2"]),
 			models.Index(fields=["status"])
 		]
-		unique_together = (("p1", "gameUID"), ("p2", "gameUID"))
+	
+	@staticmethod
+	def __get_new_mmr(userMMR: int, oppMMR: int, matchOutcome: int) -> int:
+		# Calculate the 'expected score'
+		E = 1 / (1 + 10**((oppMMR - userMMR)/400))
+		return int(userMMR + 30 * (matchOutcome - E))
+
+	def __update_counters(self, matchOutcome: int):
+		if matchOutcome:
+			self.p1.winCount += 1
+			self.p2.lossCount += 1
+		else:
+			self.p1.lossCount += 1
+			self.p2.winCount += 1
+
+	def __update_mmrs(self, outcome: int):
+		p1MMR = self.p1.mmr
+		p2MMR = self.p2.mmr
+		self.p1.mmr = self.__get_new_mmr(p1MMR, p2MMR, outcome)
+		self.p1.save()
+		outcome = 1 - outcome
+		self.p2.mmr = self.__get_new_mmr(p2MMR, p1MMR, outcome)
+		self.p2.save()
+
+	def __save_results(self, outcome: int):
+		MatchResults.objects.create(
+			p1=self.p1,
+			p2=self.p2,
+			matchOutcome=outcome
+		)
+
+	def matchEnd(self, outcome: int):
+		self.__update_mmrs(outcome)
+		self.__update_counters(outcome)
+		self.__save_results(outcome)
+		self.delete()
+
+class MatchMakingQueue(models.Model):
+	player = models.OneToOneField(
+		CustomUser,
+		related_name="user_in_queue",
+		on_delete=models.CASCADE,
+		db_index=True
+	)
+	joined_at = models.DateTimeField(auto_now_add=True)
+
+	@classmethod
+	def match_players(cls):
+
+		queue = MatchMakingQueue.objects.annotate(
+			player_mmr=F("player__mmr")
+		).order_by("-player_mmr", "-joined_at")
+		if queue.count() < 2:
+			return False
+		paired_players = list(queue)
+		for i in range(0, len(paired_players), 2):
+			if i + 1 >= len(paired_players):
+				break
+			p1 = paired_players[i]
+			p2 = paired_players[i + 1]
+			cls._create_live_game(p1.player, p2.player)
+		return True
+	
+	@classmethod
+	def _create_live_game(cls, p1, p2):
+		try:
+			with transaction.atomic():
+				game = LiveGames.objects.create(
+					p1=p1,
+					p2=p2,
+					status=LiveGames.Status.not_started
+				)
+				# add redirect here to join live game
+				cls._remove_players_from_queue(p1, p2)
+				return game
+		except Exception as e:
+			logger.error(f"Error creating live game: {e}")
+			return None
+
+	@classmethod
+	def _remove_players_from_queue(cls, p1, p2):
+		MatchMakingQueue.objects.filter(id__in=[p1.id, p2.id]).delete()
+
+	
