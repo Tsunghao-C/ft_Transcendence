@@ -420,6 +420,8 @@ async function join_room(response) {
 }
 
 async function rejoin_room(response) {
+	hideElem("create-match");
+	hideElem("join-match");
 	console.log('Rejoin room query received by server');
 	roomId = response.room_name;
 	const trueButton = document.createElement('button')
@@ -456,11 +458,12 @@ async function rejoin_room(response) {
 				action: "rejoin_room",
 				response: false
 			}));
+			showElem("create-match", "none");
+			showElem("join-match", "none");
 			trueButton.parentNode.removeChild(trueButton);
 			trueButton.remove();
 			falseButton.parentNode.removeChild(falseButton);
 			falseButton.remove();
-			//Put the client back into lobby?
 		} catch (error) {
 			console.error("Error when sending refusal to rejoin ongoing gameRoom: ", error);
 		}
