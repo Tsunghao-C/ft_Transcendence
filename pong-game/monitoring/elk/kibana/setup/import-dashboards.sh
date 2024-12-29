@@ -45,13 +45,13 @@ create_index_pattern() {
 
 # Create and store pattern IDs
 echo "Creating index patterns..."
-WAF_PATTERN_ID=$(create_index_pattern "waf-*" "@timestamp")
+# WAF_PATTERN_ID=$(create_index_pattern "waf-*" "@timestamp")
 NGINX_PATTERN_ID=$(create_index_pattern "nginx-*" "@timestamp")
 # # Add more patterns as needed:
 # APP_PATTERN_ID=$(create_index_pattern "app-*" "@timestamp")
 
 # Debug: Verify stored IDs
-echo "Stored WAF ID: $WAF_PATTERN_ID"
+# echo "Stored WAF ID: $WAF_PATTERN_ID"
 echo "Stored NGINX ID: $NGINX_PATTERN_ID"
 
 # Process and import all dashboards
@@ -67,7 +67,8 @@ for dashboard_dir in /usr/share/kibana/dashboards/*/ ; do
     CURRENT_ID=""
     case $SERVICE_NAME in 
       "waf")
-        CURRENT_ID="$WAF_PATTERN_ID"
+        continue
+        # CURRENT_ID="$WAF_PATTERN_ID"
         ;;
       "nginx")
         CURRENT_ID="$NGINX_PATTERN_ID"
