@@ -46,38 +46,39 @@ create_index_pattern() {
 # Create and store pattern IDs
 echo "Creating index patterns..."
 # WAF_PATTERN_ID=$(create_index_pattern "waf-*" "@timestamp")
-NGINX_PATTERN_ID=$(create_index_pattern "nginx-*" "@timestamp")
+# NGINX_PATTERN_ID=$(create_index_pattern "nginx-*" "@timestamp")
 # # Add more patterns as needed:
 # APP_PATTERN_ID=$(create_index_pattern "app-*" "@timestamp")
 
 # Debug: Verify stored IDs
 # echo "Stored WAF ID: $WAF_PATTERN_ID"
-echo "Stored NGINX ID: $NGINX_PATTERN_ID"
+# echo "Stored NGINX ID: $NGINX_PATTERN_ID"
 
 # Process and import all dashboards
 TMP_DIR="/tmp/dashboards"
 mkdir -p "$TMP_DIR"
 
+# # [Important] If you create dashboard from kibana UI and export, then only update the following for loop
 for dashboard_dir in /usr/share/kibana/dashboards/*/ ; do
   if [ -d "$dashboard_dir" ]; then
     SERVICE_NAME=$(basename "$dashboard_dir")
     echo "Processing dashboards for service: $SERVICE_NAME"
 
-    # Select appropriate pattern ID based on service
-    CURRENT_ID=""
-    case $SERVICE_NAME in 
-      "waf")
-        continue
-        # CURRENT_ID="$WAF_PATTERN_ID"
-        ;;
-      "nginx")
-        CURRENT_ID="$NGINX_PATTERN_ID"
-        ;;
-      *)
-        echo "Unknown service type: $SERVICE_NAME"
-        continue
-        ;;
-    esac
+    # # Select appropriate pattern ID based on service
+    # CURRENT_ID=""
+    # case $SERVICE_NAME in 
+    #   "waf")
+    #     continue
+    #     # CURRENT_ID="$WAF_PATTERN_ID"
+    #     ;;
+    #   "nginx")
+    #     CURRENT_ID="$NGINX_PATTERN_ID"
+    #     ;;
+    #   *)
+    #     echo "Unknown service type: $SERVICE_NAME"
+    #     continue
+    #     ;;
+    # esac
 
     # Debug: Verify ID before sed
     echo "Using ID for $SERVICE_NAME: $CURRENT_ID"
@@ -87,7 +88,7 @@ for dashboard_dir in /usr/share/kibana/dashboards/*/ ; do
       echo "Processing $dashboard..."
       TMP_FILE="$TMP_DIR/temp_dashboard_${SERVICE_NAME}.ndjson"
 
-      # Fixed sed command using different delimiter
+      # Fixed sed command using different delimiter, write correct pattern ID to temp file
       sed "s#INDEX_PATTERN_ID#$CURRENT_ID#g" "$dashboard" > "$TMP_FILE"
 
       echo "Importing processed dashboard..."
