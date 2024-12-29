@@ -55,8 +55,21 @@ function displayTournament(tournament, container) {
 			<ul>
 				${bracket.players
 					.map(
-						(player) =>
-							`<li>${player.alias} (${player.is_ai === "human" ? "Human" : player.is_ai})</li>`
+						(player) =>		
+							`<li>
+								${player.alias} (${player.is_ai === "human" ? "Human" : player.is_ai})
+								<span style="color: ${
+									player.result === "win" ? "green" : player.result === "lose" ? "red" : "gray"
+								};">
+									${
+									player.result === "win"
+										? "Qualified"
+										: player.result === "lose"
+										? "Eliminated"
+										: "Not Played"
+									}
+								</span>
+							</li>`
 					)
 					.join("")}
 			</ul>

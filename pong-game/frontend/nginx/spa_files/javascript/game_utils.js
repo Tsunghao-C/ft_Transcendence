@@ -225,51 +225,66 @@ async function sendLocalEvents() {
 // 	}
 // }
 
-export function setUpOnePlayerControl() {
-    document.addEventListener('keydown', function(event) {
-        if (event.code === 'ArrowUp') {
-            playerEvent.player_1.pending = true;
-            playerEvent.player_1.type = 'move_up';
-        } else if (event.code === 'ArrowDown') {
-            playerEvent.player_1.pending = true;
-            playerEvent.player_1.type = 'move_down';
-        }
-    });
+function handleKeyDownOnePlayer(event) {
+    if (event.code === 'ArrowUp') {
+        playerEvent.player_1.pending = true;
+        playerEvent.player_1.type = 'move_up';
+    } else if (event.code === 'ArrowDown') {
+        playerEvent.player_1.pending = true;
+        playerEvent.player_1.type = 'move_down';
+    }
+}
 
-    document.addEventListener('keyup', function(event) {
-        if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
-            playerEvent.player_1.pending = true;
-            playerEvent.player_1.type = 'move_stop';
-        }
-    });
+function handleKeyUpOnePlayer(event) {
+    if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
+        playerEvent.player_1.pending = true;
+        playerEvent.player_1.type = 'move_stop';
+    }
+}
+
+function handleKeyDownTwoPlayers(event) {
+    if (event.code === 'KeyW') {
+        playerEvent.player_1.pending = true;
+        playerEvent.player_1.type = 'move_up';
+    } else if (event.code === 'KeyS') {
+        playerEvent.player_1.pending = true;
+        playerEvent.player_1.type = 'move_down';
+    } else if (event.code === 'ArrowUp') {
+        playerEvent.player_2.pending = true;
+        playerEvent.player_2.type = 'move_up';
+    } else if (event.code === 'ArrowDown') {
+        playerEvent.player_2.pending = true;
+        playerEvent.player_2.type = 'move_down';
+    }
+}
+
+function handleKeyUpTwoPlayers(event) {
+    if (event.code === 'KeyW' || event.code === 'KeyS') {
+        playerEvent.player_1.pending = true;
+        playerEvent.player_1.type = 'move_stop';
+    } else if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
+        playerEvent.player_2.pending = true;
+        playerEvent.player_2.type = 'move_stop';
+    }
+}
+
+function removeAllEventListeners() {
+    document.removeEventListener('keydown', handleKeyDownOnePlayer);
+    document.removeEventListener('keyup', handleKeyUpOnePlayer);
+    document.removeEventListener('keydown', handleKeyDownTwoPlayers);
+    document.removeEventListener('keyup', handleKeyUpTwoPlayers);
+}
+
+export function setUpOnePlayerControl() {
+    removeAllEventListeners();
+    document.addEventListener('keydown', handleKeyDownOnePlayer);
+    document.addEventListener('keyup', handleKeyUpOnePlayer);
 }
 
 export function setUpTwoPlayersControl() {
-    document.addEventListener('keydown', function(event) {
-        if (event.code === 'KeyW') {
-            playerEvent.player_1.pending = true;
-            playerEvent.player_1.type = 'move_up';
-        } else if (event.code === 'KeyS') {
-            playerEvent.player_1.pending = true;
-            playerEvent.player_1.type = 'move_down';
-        } else if (event.code === 'ArrowUp') {
-            playerEvent.player_2.pending = true;
-            playerEvent.player_2.type = 'move_up';
-        } else if (event.code === 'ArrowDown') {
-            playerEvent.player_2.pending = true;
-            playerEvent.player_2.type = 'move_down';
-        }
-    });
-
-    document.addEventListener('keyup', function(event) {
-        if (event.code === 'KeyW' || event.code === 'KeyS') {
-            playerEvent.player_1.pending = true;
-            playerEvent.player_1.type = 'move_stop';
-        } else if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
-            playerEvent.player_2.pending = true;
-            playerEvent.player_2.type = 'move_stop';
-        }
-    });
+    removeAllEventListeners();
+    document.addEventListener('keydown', handleKeyDownTwoPlayers);
+    document.addEventListener('keyup', handleKeyUpTwoPlayers);
 }
 
 
@@ -407,7 +422,7 @@ export async function connectWebSocket() {
 					} else if (response.type == 'set_player_1') {
 						let player1Data;
 						let profileResponse;
-						profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.alias}`);
+						profileResponse = await fetchWithToken(`/api/user/get-profile/?id=${response.id}`);
 						player1Data = await profileResponse.json();
 						hideElem("create-match");
 						hideElem("join-match");

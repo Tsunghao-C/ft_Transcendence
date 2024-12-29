@@ -58,11 +58,11 @@ class GameRoom():
 		self.left_player = user_data[0]
 		self.ai_player = None
 		if self.game_type["is_local"]:
-			self.right_player = self.left_player + "_2"
+			self.right_player = - self.left_player
 		elif self.game_type["is_online"]:
 			self.right_player = user_data[1]
 		elif self.game_type["is_ai"]:
-			self.right_player = self.left_player + "_ai"
+			self.right_player = - self.left_player
 			self.ai_player = PongAI(
 				difficulty = daddyficulty,
 				canvas_width=CANVAS_WIDTH,
@@ -170,8 +170,8 @@ class GameRoom():
 			match_outcome = 0 #rightplayer win
 			if(winner == self.left_player):
 				match_outcome = 1 #leftplayer win
-			p1 = CustomUser.objects.get(alias=self.left_player)
-			p2 = CustomUser.objects.get(alias=self.right_player)
+			p1 = CustomUser.objects.get(id=self.left_player)
+			p2 = CustomUser.objects.get(id=self.right_player)
 			if (winner == self.left_player):
 				match_outcome = 1
 				p1.winCount += 1

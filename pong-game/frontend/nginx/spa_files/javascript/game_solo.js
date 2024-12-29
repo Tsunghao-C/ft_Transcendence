@@ -16,7 +16,7 @@ export async function setSoloLobby(contentContainer, difficulty = "") {
         response = await fetchWithToken('/api/user/getuser/');
         userData = await response.json();
         console.log("User data in lobby: ", userData);
-		playerEvent.player_1.id = userData.alias;
+		playerEvent.player_1.id = userData.id;
     } catch(error) {
         console.log(error);
         window.location.hash = "login";

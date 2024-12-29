@@ -374,7 +374,18 @@ class getProfileView(APIView):
 	permission_classes = [IsAuthenticated]
 
 	def get(self, request):
-		profile = get_object_or_404(CustomUser, alias=request.query_params.get("alias"))
+		alias = request.query_params.get("alias")
+		user_id = request.query_params.get("id")
+
+		if user_id:
+			profile = get_object_or_404(CustomUser, id=user_id)
+		elif alias:
+			profile = get_object_or_404(CustomUser, alias=alias)
+		else:
+			return Response(
+				{"error": "Either 'id' or 'alias' must be provided."},
+				status=400
+			)
 		user = request.user
 		# Still to be added : match history, rank and a way to manage the button add friend, request sent, request pending but not necessary
 		profileData = {

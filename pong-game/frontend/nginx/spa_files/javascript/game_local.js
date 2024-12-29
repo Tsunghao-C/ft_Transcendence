@@ -15,7 +15,7 @@ export async function setLocalLobby(contentContainer, skip = false) {
         response = await fetchWithToken('/api/user/getuser/');
         userData = await response.json();
         console.log("User data in lobby: ", userData);
-		playerEvent.player_1.id = userData.alias;
+		playerEvent.player_1.id = userData.id;
 
     } catch(error) {
         console.log(error);
