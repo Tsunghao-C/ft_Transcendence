@@ -6,7 +6,6 @@ import json
 import uuid
 import asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer
-from channels.layers import get_channel_layer
 from .game_room import GameRoom
 from user_service.models import CustomUser
 from match_making.models import MatchMakingQueue, LiveGames
@@ -23,13 +22,13 @@ from django.db.models import Q
 from django.db.utils import IntegrityError
 from django.db.models import Q
 
-
-
 load_dotenv()
 active_online_games = dict()
 active_local_games = dict()
 active_lobbies = {}
 logger = logging.getLogger(__name__)
+ABORTED = 1
+CONCEDE = 2
 
 ## Dedicated consumer for WS Health Check
 class GameHealthConsumer(AsyncWebsocketConsumer):
@@ -76,8 +75,8 @@ class GameHealthConsumer(AsyncWebsocketConsumer):
 class GameConsumer(AsyncWebsocketConsumer):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		self.channel_layer = get_channel_layer()
 		self.assigned_room = -1
+		self.in_game = False
 		self.player_alias = -1
 		self.receive_methods = {
 				"join_private_match":self.join_lobby,
@@ -87,6 +86,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 				"create_ai_match": self.create_ai_lobby,
 				"player_ready": self.update_ready_status,
 				"player_input": self.receive_player_input,
+				"rejoin_room": self.rejoin_room,
 		}
 
 	async def connect(self):
@@ -99,26 +99,39 @@ class GameConsumer(AsyncWebsocketConsumer):
 		print(user.id, user.alias, "is connected")
 		try:
 			await self.accept()
+			await self.send(json.dumps({
+				"type": "notice",
+				"message": "Connection established"
+			}))
+			logger.info("gameConsumer: accepted connection")
+			for stray_room_id, room_data in active_online_games.items():
+				player_ids = room_data["player_data"]["ids"]
+				if user.alias in player_ids:
+					logger.info(f"gameConsumer: Match found in active online games for user: {user.alias}")
+					index = player_ids.index(user.alias)
+					room_data["player_data"]["connection"][index] = self
+					self.assigned_room = stray_room_id
+					await self.send(json.dumps({
+								"type": "rejoin_room_query",
+								"message": "stray game room found, rejoin?",
+								"room_name": stray_room_id
+								}))
+					logger.info("gameConsumer: sent rejoin notice to client")
 		except Exception as e:
 			logger.error(f"WebSocket connection error: {e}")
-		await self.send(json.dumps({
-			"type": "notice",
-			"message": "Connection established"
-			}))
 
 	async def disconnect(self, code):
 		logger.info("Websocket connection closed")
-	#        if self.assigned_room in active_lobbies:
-	#            lobby = active_lobbies[self.assigned_room]
-	#            try:
-	#                lobby["connection"].remove(self)
-	#            except ValueError:
-	#                logger.warning(f"Consumer not found in connections for room {self.assigned_room}")
-	#            try:
-	#                player_index = lobby["connection"].index(self)
-	#                lobby["players"].pop(player_index)
-	#            except (ValueError, IndexError):
-	#                logger.warning(f"Could not remove player ID from room {self.assigned_room}")
+		if self.in_game:
+			if self.assigned_room in active_online_games.keys(): #this is probably useless garbo
+				room = active_online_games[self.assigned_room]
+				if room["room_data"].missing_player == 1:
+					logger.info(f"gameConsumer: sending abort order to gameRoom: {room}")
+					room["room_data"].set_server_order(ABORTED)
+				else:
+					room["room_data"].missing_player += 1
+
+		self.in_game = False
 		if hasattr(self, 'current_group'):
 			await self.channel_layer.group_discard(self.current_group, self.channel_name)
 
@@ -131,11 +144,10 @@ class GameConsumer(AsyncWebsocketConsumer):
 		if text_data is None:
 			return
 		data = json.loads(text_data)
-		logger.info(f"Message received: {text_data}")
 		action = data.get("action")
-		logger.info(f"Action: {action}")
+		#logger.info(f"Action: {action}")
 		if action in self.receive_methods.keys():
-			logger.info(f"Found receive_methods key, calling function {self.receive_methods[action]}")
+			#logger.info(f"Found receive_methods key, calling function {self.receive_methods[action]}")
 			await self.receive_methods[action](data)
 		else:
 			await self.send(json.dumps({
@@ -146,21 +158,20 @@ class GameConsumer(AsyncWebsocketConsumer):
 	async def receive_player_input(self, data):
 		roomID = data['game_roomID']
 		local_game = data['local']
-		logger.info("Receive_player_input called")
 		player_alias = self.user.alias
 		if local_game is False:
 			if roomID in active_online_games:
 				game_room = active_online_games[roomID]["room_data"]
-				logger.info("Consumer: Received player input")
+#				logger.info("Consumer: Received player input")
 				await game_room.receive_player_input(player_alias, data['input'])
-				logger.info("Consumer: Forwarded player input")
+#				logger.info("Consumer: Forwarded player input")
 			else:
 				await self.send(json.dumps({
 					"type": "error",
 					"message": f"Game room {data['game_roomID']} not found"
 					}))
 		else:
-			if roomID in active_local_games:
+			if roomID in active_local_games.keys():
 				game_room = active_local_games[roomID]["room_data"]
 				player_id = data['player_id']
 				logger.info("Consumer: Received player input")
@@ -171,6 +182,18 @@ class GameConsumer(AsyncWebsocketConsumer):
 					"type": "error",
 					"message": f"Game room {data['game_roomID']} not found"
 					}))
+
+	async def rejoin_room(self, data):
+		if data["response"] is True:
+			logger.info(f"player {self.user.alias} rejoining gameRoom: {self.assigned_room}")
+			room = active_online_games[self.assigned_room]
+			await room["room_data"].player_rejoin(self.user.alias, self)
+		else:
+			room = active_online_games[self.assigned_room]
+			logger.info(f"player {self.user.alias} declined rejoining gameRoom: {self.assigned_room}\ngameRoom given CONCEDE order")
+			room["room_data"].set_server_order(CONCEDE)
+			self.assigned_room = -1
+			self.in_game = False
 
 	async def create_ai_lobby(self, data):
 		room_name = str(uuid.uuid4())
@@ -195,7 +218,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 		await self.channel_layer.group_add(self.current_group, self.channel_name)
 		game_type = "AI Game"
 		await self.send(json.dumps({
-			"type": "room_creation",
+			"type": "ai_room_creation",
 			"message": f"Created {game_type} Lobby {room_name}",
 			"room_name": room_name,
 			"is_ai_game": True
@@ -218,7 +241,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 			}))
 
 	async def get_matched(self, queue_entry):
-		print(f"Starting get_matched for user {self.user.alias}") 
+		print(f"Starting get_matched for user {self.user.alias}")
 		await sync_to_async(LiveGames.objects.filter(Q(p1=self.user) | Q(p2=self.user)).delete)() # we will have to delete that too
 		while True:
 			is_matched = await sync_to_async(queue_entry.match_players)()
@@ -230,7 +253,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 			)()
 			matched = is_matched or existing_game
 			print(f"Matched result: {matched} for user {self.user.alias} ")  # Debug 1
-			
+
 			if matched:
 				game = await sync_to_async(
 					LiveGames.objects.filter(
@@ -238,19 +261,19 @@ class GameConsumer(AsyncWebsocketConsumer):
 					).first
 				)()
 				print(f"Game found: {game}")  # Debug 2
-				
+
 				if not game:
 					continue
-					
+
 				print(f"Game status: {game.status}")  # Debug 3
-				
+
 				if game.status != LiveGames.Status.not_started:
 					await self.send(json.dumps({
 						"type":"error",
 						"message":"this user is already in an active game"
 					}))
 					break
-					
+
 				is_p1 = await sync_to_async(lambda: game.p1 == self.user)()
 				print(f"Is P1: {is_p1}")  # Debug 4
 				if is_p1:
@@ -363,8 +386,8 @@ class GameConsumer(AsyncWebsocketConsumer):
 			await self.send(json.dumps({
 				"type": "rejoin",
 				"message": "player is already in lobby",
-				"player1": f"{active_lobbies[room_name]['players'][0]}",
-				"player2": f"{active_lobbies[room_name]['players'][1]}"
+#				"player1": f"{active_lobbies[room_name]['players'][0]}",
+#				"player2": f"{active_lobbies[room_name]['players'][1]}"
 				}))
 			return
 		if len(active_lobbies[room_name]["players"]) >= 2:
@@ -415,9 +438,9 @@ class GameConsumer(AsyncWebsocketConsumer):
 						"message": f"Player {player_alias} is ready"
 						}))
 		if (
-			(len(active_lobbies[room_name]["players"]) == 2 and active_lobbies[room_name]["game_type"]["is_online"]) 
-			or 
-			(len(active_lobbies[room_name]["players"]) == 1)
+			(len(active_lobbies[room_name]["players"]) == 2)
+			or
+			(len(active_lobbies[room_name]["players"]) == 1 and not active_lobbies[room_name]["game_type"]["is_online"])
 		) and self.all_ready(room_name):
 			try:
 				await self.launch_game(room_name)
@@ -432,8 +455,16 @@ class GameConsumer(AsyncWebsocketConsumer):
 					"type": "notice",
 					"message": "Game is starting"
 					}))
-			logger.info(f"Starting game id: lobby_{room_name}")
-			game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"], active_lobbies[room_name]["game_type"], active_lobbies[room_name]["difficulty"])
+			logger.info(f"Starting game id: lobby_{room_name}, room: {active_lobbies[room_name]}")
+#			if  active_lobbies[room_name]["is_ai_game"] == True:
+#				game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"], active_lobbies[room_name]["local"], active_lobbies[room_name]["difficulty"])
+#			else:
+			game_room = GameRoom(room_name,
+						active_lobbies[room_name]["players"],
+						active_lobbies[room_name]["connection"],
+						active_lobbies[room_name]["game_type"],
+						active_lobbies[room_name]["difficulty"]
+						)
 			logger.info("GameRoom created")
 			logger.info("Checking for local")
 			if active_lobbies[room_name]["local"]:
@@ -441,17 +472,18 @@ class GameConsumer(AsyncWebsocketConsumer):
 				active_local_games[room_name] = {
 					"room_data": game_room,
 					"player_data": {
-						"connection": active_lobbies[room_name]["connection"],
-						"ids": active_lobbies[room_name]["players"]
+					"connection": active_lobbies[room_name]["connection"],
+					"ids": active_lobbies[room_name]["players"]
 					}}
 			else:
 				active_online_games[room_name] = {
 					"room_data": game_room,
 					"player_data": {
-						"connection": active_lobbies[room_name]["connection"],
-						"ids": active_lobbies[room_name]["players"]
-						}}
+					"connection": active_lobbies[room_name]["connection"],
+					"ids": active_lobbies[room_name]["players"],
+					}}
 			game_task = asyncio.create_task(game_room.run())
+			self.in_game = True
 			del active_lobbies[room_name]
 			deleted_count = await sync_to_async(Message.objects.filter(game_room=room_name).delete)()
 			logger.info(f"Deleted {deleted_count} invitation(s) for game_room {room_name}")
@@ -459,6 +491,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 			game_task.add_done_callback(lambda task: self.handle_game_task_completion(task, room_name))
 		except Exception as e:
 			logger.error(f"Failed to start the gameroom: {str(e)}")
+			self.in_game = False
 			await self.send(json.dumps({
 				"type": "error",
 				"error": f"Failed to start game: {str(e)}"
@@ -468,18 +501,22 @@ class GameConsumer(AsyncWebsocketConsumer):
 	def handle_game_task_completion(self, task, room_name):
 		try:
 			logger.info("Game Room complete")
-			task.result()
 		except asyncio.CancelledError:
 			print("Game task was cancelled")
 		except Exception as e:
 			print(f"Game task encountered error: {e}")
 			raise
 		finally:
+			result = task.result()
+			if result is ABORTED:
+				logger.info("gameConsumer: gameRoom was aborted")
+			self.assigned_room = -1
+			self.in_game = False
 			if room_name in active_local_games.keys():
-				logger.info(f"Removing gameRoom from active_local_games")
+				logger.info(f"Removing gameRoom {room_name} from active_local_games")
 				del active_local_games[room_name]
 			else:
-				logger.info(f"Removing gameRoom from active_online_games")
+				logger.info(f"Removing gameRoom {room_name} from active_online_games")
 				del active_online_games[room_name]
 
 	def all_ready(self, room_name):
@@ -488,15 +525,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 		players = active_lobbies[room_name].get("players", [])
 		ready_players = active_lobbies[room_name].get("ready", [])
 		return set(players) == set(ready_players)
-
-	#not implemented ahah
-	def cleanup_timed_out_rooms(self): #Potentially could be handled in handle_game_task_completion
-		rooms_to_remove = [
-				room_id for room_id, game_room in active_online_games.items()
-				if game_room.has_timed_out() #decide whether the consumer or the game_room will track the time
-				]
-		for room_id in rooms_to_remove:
-			del active_online_games[room_id]
 
 	async def authenticate_user(self):
 		query_string = self.scope["query_string"].decode("utf-8")
