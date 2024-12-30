@@ -122,7 +122,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 
 	async def disconnect(self, code):
 		logger.info("Websocket connection closed")
-		print("WE ARE IN DISCONNECT")
 		if self.in_game:
 			if self.assigned_room in active_online_games.keys(): #this is probably useless garbo
 				room = active_online_games[self.assigned_room]
@@ -141,6 +140,8 @@ class GameConsumer(AsyncWebsocketConsumer):
 				else:
 					room["players"].remove(self.user.id)
 					room["connection"].remove(self)
+					if self.user.id in room["ready"]:
+						room["ready"].remove(self.user.id)
 					await room["connection"][0].send(json.dumps({
 					"type": "set_player_1",
 					}))
