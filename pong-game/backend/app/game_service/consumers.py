@@ -259,7 +259,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 	async def join_queue(self, data):
 		logger.info("Joining quick match")
 		try:
-			# await sync_to_async(MatchMakingQueue.objects.filter(player=self.user).delete)() # we will have to delete this later jsut to test
 			queue_entry = await sync_to_async(MatchMakingQueue.objects.create)(player=self.user)
 			await self.send(json.dumps({
 				"type":"notice",
@@ -275,7 +274,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 
 	async def get_matched(self, queue_entry):
 		print(f"Starting get_matched for user {self.user.id}")
-		# await sync_to_async(LiveGames.objects.filter(Q(p1=self.user) | Q(p2=self.user)).delete)() # we will have to delete that too
 		while self.connected:
 			is_matched = await sync_to_async(queue_entry.match_players)()
 			existing_game = await sync_to_async(
@@ -313,8 +311,19 @@ class GameConsumer(AsyncWebsocketConsumer):
 					print("user one is creating the game ")
 					await self.create_quick_match_lobby(game)
 					return
-				await asyncio.sleep(5) # need to think of a better way to stagger p2
+				timeout = 15
+				elapsed = 0
 				room_name = str(game.gameUID)
+				while room_name not in active_lobbies:
+					print("room not created yet")
+					if elapsed >= timeout:
+						await self.send(json.dumps({
+							"type": "error",
+							"message": "Failed to join the lobby. Timeout exceeded."
+						}))
+						return
+					await asyncio.sleep(1)
+					elapsed += 1
 				print("user two is joining the game")
 				await self.send(json.dumps({
 					"type": "room_creation",
