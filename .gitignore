@@ -30,7 +30,7 @@ pong-game/tests/lib/
 pong-game/security/vault/volumes/file/core
 pong-game/security/vault/volumes/file/logical
 pong-game/security/vault/volumes/file/sys
-pong-game/security/vault/volumes/shared_data/root_token.txt
+pong-game/security/vault/volumes/shared_data/*
 
 # ELK certs
 pong-game/monitoring/elk/certs
