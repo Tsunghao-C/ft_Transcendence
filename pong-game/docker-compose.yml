@@ -10,19 +10,9 @@ networks:
 
 volumes:
   vault_shared_data:
-    name: vault_data
     driver: local
-    driver_opts:
-      device: ./security/vault/volumes/shared_data
-      o: bind
-      type: none
   vault_file:
-    name: vault_file
     driver: local
-    driver_opts:
-      device: ./security/vault/volumes/file
-      o: bind
-      type: none
   static_volume: {} # Added by Ben
   media_data: {} # docker volume for storing pictures
   logs_nginx: {}

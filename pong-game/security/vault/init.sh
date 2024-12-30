@@ -168,7 +168,7 @@ echo "${BLUE}-------------------------------------------------------------${DFT}
 echo "${BLUE}---------------------- saving tokens ---------------------${DFT}"
 mkdir -p /vault/shared_data/certs
 cp /vault/certs/selfsigned.crt /vault/shared_data/certs/
-echo $ROOT_TOKEN > /vault/shared_data/root_token.txt
+echo $ROOT_TOKEN > /vault/file/root_token.txt
 echo $DJANGO_TOKEN > /vault/shared_data/django_token.txt
 chmod 600 /vault/shared_data/*.txt
 chmod 644 /vault/shared_data/certs/selfsigned.crt
