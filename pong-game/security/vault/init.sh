@@ -63,17 +63,34 @@ echo "${BLUE}-------------------------------------------------------------${DFT}
 # Hard coded secret credentials here
 echo "${BLUE}---------------------- Adding initial secrets ---------------------${DFT}"
 vault kv put secret/data/pong-game/database \
-    postgres_user="transc_user" \
-    postgres_pass="transc_pass" \
+    postgres_engine="django.db.backends.postgresql" \
+    postgres_host="postgres" \
     postgres_db="transc_db" \
+    postgres_user="transc_user" \
+    postgres_pass="transc_pass"
+vault kv put secret/data/pong-game/email \
     email_host_user="42transcendental@gmail.com" \
     email_host_pass="zlywwbcyedhomdet"
+vault kv put secret/data/pong-game/jwt \
+    jwt_secret_key="foo"
 echo "${BLUE}-------------------------------------------------------------${DFT}"
 
 # Create policy that only allows reading database credentials
 echo "${BLUE}---------------------- creating policy ---------------------${DFT}"
-vault policy write django-policy - <<EOF
+vault policy write django-db-policy - <<EOF
 path "secret/data/pong-game/database" {
+    capabilities = ["read"]
+}
+EOF
+
+vault policy write django-email-policy - <<EOF
+path "secret/data/pong-game/email" {
+    capabilities = ["read"]
+}
+EOF
+
+vault policy write django-jwt-policy - <<EOF
+path "secret/data/pong-game/jwt" {
     capabilities = ["read"]
 }
 EOF
@@ -81,8 +98,11 @@ echo "${BLUE}-------------------------------------------------------------${DFT}
 
 # Create a token for Django with this limited policy
 echo "${BLUE}---------------------- Generating tokens ---------------------${DFT}"
-TOKEN_JSON=$(vault token create -policy=django-policy -format=json)
-DJANGO_TOKEN=$(echo $TOKEN_JSON | jq -r '.auth.client_token')
+DJANGO_TOKEN=$(vault token create \
+    -policy="django-db-policy" \
+    -policy="django-email-policy" \
+    -policy="django-jwt-policy" \
+    -format=json | jq -r '.auth.client_token')
 echo "${BLUE}-------------------------------------------------------------${DFT}"
 
 # Save tokens
