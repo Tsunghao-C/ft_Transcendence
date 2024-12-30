@@ -8,8 +8,8 @@ go: build run
 
 build:
 	cp pong-game/.env.example pong-game/.env
-	- mkdir -p pong-game/security/vault_debian/volumes/file
-	- mkdir -p pong-game/security/vault_debian/volumes/shared_data
+	- mkdir -p pong-game/security/vault/volumes/file
+	- mkdir -p pong-game/security/vault/volumes/shared_data
 	docker compose -f pong-game/docker-compose.yml build
 
 run:
@@ -86,7 +86,7 @@ clean:
 	docker image prune --force           # clear dangling images
 	docker system prune --force --volumes  # cleanup unused resources
 	docker compose -f pong-game/docker-compose.yml down -v --remove-orphans
-	- rm -rf pong-game/security/vault_debian/volumes/*
+	- rm -rf pong-game/security/vault/volumes/*
 	- rm -rf pong-game/tests/lib
 	rm -rf pong-game/monitoring/elk/certs
 	rm pong-game/.env

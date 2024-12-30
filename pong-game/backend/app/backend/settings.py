@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import os
-
+from vault_helper import VaultClient
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -109,14 +109,21 @@ ASGI_APPLICATION = 'backend.asgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# initialize and get credentials from Vault
+vault = VaultClient()
+db_credentials = vault.get_database_credentials()
+
 DATABASES = {
     "default": {
         "ENGINE": os.environ.get("POSTGRES_ENGINE", "django.db.backends.sqlite3"),
-        "NAME": os.environ.get("POSTGRES_DB", BASE_DIR / "db.sqlite3"),
-        "USER": os.environ.get("POSTGRES_USER", "transc_user"),
-        "PASSWORD": os.environ.get("POSTGRES_PASS", "transc_pass"),
+        # "NAME": os.environ.get("POSTGRES_DB", BASE_DIR / "db.sqlite3"),
+        # "USER": os.environ.get("POSTGRES_USER", "transc_user"),
+        # "PASSWORD": os.environ.get("POSTGRES_PASS", "transc_pass"),
+        "NAME": db_credentials['postgres_db'],
+        "USER": db_credentials['postgres_user'],
+        "PASSWORD": db_credentials['postgres_pass'],
         "HOST": os.environ.get("POSTGRES_HOST", "transc_host"),
-        "PORT": os.environ.get("POSTGRES_PORT", "5432"),
+        "PORT": os.environ.get("POSTGRES_PORT", "5434"),
     },
 }
 

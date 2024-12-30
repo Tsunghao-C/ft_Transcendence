@@ -62,7 +62,7 @@ echo "${BLUE}-------------------------------------------------------------${DFT}
 
 # Hard coded secret credentials here
 echo "${BLUE}---------------------- Adding initial secrets ---------------------${DFT}"
-vault kv put secret/pong-game/database \
+vault kv put secret/data/pong-game/database \
     postgres_user="transc_user" \
     postgres_pass="transc_pass" \
     postgres_db="transc_db"
