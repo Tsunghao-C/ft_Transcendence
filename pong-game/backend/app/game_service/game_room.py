@@ -94,7 +94,7 @@ class GameRoom():
 		self.server_order = new_order
 	
 	async def receive_player_input(self, player_id, input):
-#		logger.info("GameRoom: Received player input")
+		logger.info(f'{self.room_id}: Received player {player_id} input')
 		if player_id in self.players:
 			self.time_since_last_receive[player_id] = time.perf_counter()
 			player = self.players[player_id]
@@ -193,7 +193,9 @@ class GameRoom():
 			p2.save()
 			match_result.save()
 			print(f"Match result saved: {match_result}")
+			logger.info(f'{self.room_id}: Match result saved {match_result}')
 		except CustomUser.DoesNotExist:
+			logger.error(f'{self.room_id}: One or both players not found.')
 			print("Error: One or both players not found.")
 
 	async def declare_winner(self, winner):
@@ -202,7 +204,7 @@ class GameRoom():
 				winner = self.right_player
 			else:
 				winner = self.left_player
-			logger.info(f"gameRoom: player conceding match, winner is: {winner}")
+			logger.info(f"{self.room_id}: player conceding match, winner is {winner}")
 		game_report = {
 				'score_left': self.players[self.left_player].score,
 				'score_right': self.players[self.right_player].score,
@@ -223,6 +225,7 @@ class GameRoom():
 			self.ball.speedY *= -1
 		if self.ball.x - self.ball.radius < 0 or self.ball.x + self.ball.radius > CANVAS_WIDTH:
 			if self.ball.x - self.ball.radius < 0:
+				logger.info(f'{self.room_id}: player {self.right_player} scored')
 				self.players[self.right_player].score += 1
 				if self.players[self.right_player].score == 5: #Edit this to extend the score before gameover is called
 					self.winner = self.right_player
@@ -230,6 +233,7 @@ class GameRoom():
 				self.ball.x = CANVAS_WIDTH * 0.7
 				self.ball.y = CANVAS_WIDTH * 0.5
 			else:
+				logger.info(f'{self.room_id}: player {self.left_player} scored')
 				self.players[self.left_player].score += 1
 				if self.players[self.left_player].score == 5: #Same here
 					self.game_over = True
@@ -258,7 +262,7 @@ class GameRoom():
 					'payload': game_state,
 					}))
 		except Exception as e:
-			logger.error(f"gameRoom: Could not send update to players: {e}")
+			logger.error(f"{self.room_id}: Could not send update to players: {e}")
 
 	async def check_pulse(self):
 		current_time = time.perf_counter()
@@ -267,7 +271,7 @@ class GameRoom():
 #			logger.info(f"gameRoom: {player_id} current_time: {current_time} time_since_last_receive: {self.time_since_last_receive[player_id]} ")
 			if current_time - self.time_since_last_receive[player_id] > 1.5 and self.players[player_id].dropped is not True:
 				self.players[player_id].dropped = True
-				logger.info(f"gameRoom: Player: {player_id} has dropped out!")
+				logger.info(f"{self.room_id}: Player {player_id} has dropped out!")
 				self.dropped_player = player_id
 				if player_id == self.left_player:
 					self.dropped_side = LEFT
@@ -291,8 +295,7 @@ class GameRoom():
 		logger.info(f"gameRoom: Player has come back, new id: {new_id}")
 
 	async def run(self):
-		logger.info('gameRoom starting')
-		logger.info(f"gameRoom: : {self.room_id}")
+		logger.info(f'{self.room_id}: initialized')
 		try:
 			for connection in self.connections:
 				await connection.send(json.dumps({
@@ -302,20 +305,19 @@ class GameRoom():
 			for player_id in self.players:
 				self.time_since_last_receive[player_id] = time.perf_counter()
 			while self.running:
-#				logger.info('gameRoom: Checking pulse of players')
+				logger.info(f'{self.room_id}: Checking pulse of players')
 				await self.check_pulse()
-#				logger.info('gameRoom: Finished checking pulse of players')
 				if self.missing_player:
 					if self.missing_player == 2 or self.server_order is ABORTED:
-						logger.info('gameRoom: No players left in room, aborting...')
+						logger.info(f'{self.room_id}: No players left in room, aborting...')
 						return ABORTED
-#					logger.info('gameRoom: Missing player detected')
+					logger.info(f'{self.room_id}: Missing player detected')
 				self.update_players()
-#				logger.info('gameRoom: updated players')
+				logger.info(f'{self.room_id}: updated players')
 				self.handle_player_collisions()
-#				logger.info('gameRoom: updated collisions')
+				logger.info(f'{self.room_id}: updated collisions')
 				self.update_ball()
-#				logger.info('gameRoom: updated ball')
+				logger.info(f'{self.room_id}: updated ball')
 				# Add AI logic
 				if self.ai_player:
 					ai_move = await self.ai_player.calculate_move(
@@ -326,15 +328,15 @@ class GameRoom():
 					)
 					await self.receive_player_input(self.right_player, ai_move)
 				if self.game_over or self.server_order is CONCEDE:
-					logger.info('gameRoom: preparing gameover')
+					logger.info(f'{self.room_id}: preparing gameover')
 					await self.declare_winner(self.winner)
-#					logger.info('gameRoom: done')
+					logger.info(f'{self.room_id}: done')
 					return
 				await self.send_update()
-#				logger.info('gameRoom: sent update to clients')
+				logger.info(f'{self.room_id}: sent update to clients')
 				await asyncio.sleep(0.016)
 
 		except Exception as e:
-			logger.error(f"gameRoom: exception caught in run: {e}")
+			logger.error(f'{self.room_id}: exception caught in run: {e}')
 			return
 
