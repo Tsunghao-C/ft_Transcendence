@@ -5,8 +5,8 @@ filebeat.inputs:
   enabled: true
   paths:
     - /var/log/nginx/access.log
-  json.keys_under_root: true
-  json.add_error_key: true
+  json.keys_under_root: true # key and values are not nested under "json"
+  json.add_error_key: true # add error messages when parsing fails
   fields:
     type: "nginx"
     source: "access"
@@ -19,45 +19,43 @@ filebeat.inputs:
   fields:
     type: "nginx"
     source: "error"
-
-- type: filestream
-  id: modsecurity-audit-logs
-  enabled: true
-  paths:
-    - /var/log/modsec/audit.log
-  fields:
-    type: "waf"
-    source: "audit"
   multiline:
-    pattern: '^--[a-fA-F0-9]{8}-[A-Z]--$'
+    pattern: '^[0-9]{4}/[0-9]{2}/[0-9]{2}'
     negate: true
     match: after
 
-- type: filestream
-  id: modsecurity-debug-logs
-  enabled: true
-  paths:
-    - /var/log/modsec/debug.log
-  fields:
-    type: "waf"
-    source: "debug"
-  multiline:
-    pattern: '^\[[.*?\]'
-    negate: true
-    match: after
-
-## Other logs collection templates for future expansion
-# # Application Services Logs
+# # Temporary comment out WAF logs
 # - type: filestream
-#   id: auth-service-logs
+#   id: modsecurity-audit-logs
 #   enabled: true
 #   paths:
-#     - /var/log/auth/*.log
+#     - /var/log/modsec/audit.log
 #   fields:
-#     type: application
-#     service: auth
-#     category: security
+#     type: "waf"
+#     source: "audit"
+#   multiline:
+#     type: pattern
+#     pattern: '^---[A-Za-z0-9]{8}---[A-Z]--'
+#     negate: true
+#     match: after
+#   close_inactive: 5s
+#   ignore_older: 24h
 
+# - type: filestream
+#   id: modsecurity-debug-logs
+#   enabled: true
+#   paths:
+#     - /var/log/modsec/debug.log
+#   fields:
+#     type: "waf"
+#     source: "debug"
+#   multiline:
+#     pattern: '^\[[.*?\]'
+#     negate: true
+#     match: after
+
+# # Other logs collection templates for future expansion
+# # Application Services Logs
 # - type: filestream
 #   id: user-service-logs
 #   enabled: true
