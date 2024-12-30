@@ -296,20 +296,20 @@ services:
       - ELASTICSEARCH_HOSTS=https://elasticsearch:9200
       - ELASTICSEARCH_USERNAME=kibana_system
       - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}
-      - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=/usr/share/kibana/config/certs/ca.crt
-      - ELASTICSEARCH_SSL_VERIFICATIONMODE=certificate
       # Server settings
       - SERVER_HOST=0.0.0.0
       - SERVER_NAME=kibana
-      # Security settings
+      # Security settings (Internal Security Settings)
       - XPACK_SECURITY_ENABLED=true
       - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}
+      - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=/usr/share/kibana/config/certs/ca.crt
+      - ELASTICSEARCH_SSL_VERIFICATIONMODE=certificate
       # Performance settings
       - ELASTICSEARCH_REQUESTTIMEOUT=90000  # Added timeout
       - OPTIMIZATION_PROFILING=false
       # Other settings
       - TELEMETRY_ENABLED=false
-      # TLS related settings
+      # For External HTTPS access settings
       - SERVER_SSL_ENABLED=true
       - SERVER_SSL_CERTIFICATE=/usr/share/kibana/config/certs/kibana.crt
       - SERVER_SSL_KEY=/usr/share/kibana/config/certs/kibana.key
@@ -319,11 +319,6 @@ services:
     depends_on:
       elasticsearch:
         condition: service_healthy
-    # healthcheck:
-    #   test: ["CMD-SHELL", "curl -s -I -u kibana_system:${ELASTIC_PASSWORD} http://localhost:5601/api/status | grep -q '200 OK'"]
-    #   interval: 20s
-    #   timeout: 10s
-    #   retries: 3
     entrypoint: >
       sh -c '
         /usr/share/kibana/setup/import-dashboards.sh &
