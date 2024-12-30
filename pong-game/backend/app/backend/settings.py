@@ -192,9 +192,25 @@ CHANNEL_LAYERS = {
 LOGGING = {
         'version': 1,
         'disable_existing_loggers': False,
+        'formatters': {
+            'verbose': {
+                'format': '{levelname} {asctime} {module} {message}',
+                'style': '{',
+            },
+            'simple': {
+                'format': '{levelname} {message}',
+                'style': '{',
+            },
+        },
         'handlers': {
             'console': {
                 'class': 'logging.StreamHandler',
+            },
+            "gamerooms_file": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": "logs/gamerooms.log",
+                "formatter": "verbose",
             },
         },
         'root': {
@@ -202,21 +218,12 @@ LOGGING = {
             'level': 'INFO',  # Set to DEBUG for detailed logs
         },
         'loggers': {
-            # 'django': {
-            #     'handlers': ['console'],
-            #     'level': 'DEBUG',
-            #     'propagate': False,
-            # },
-#            'django.channels': {
-#                'handlers': ['console'],
-#                'level': 'INFO',  # Log WebSocket-related events
-#                'propagate': False,
-#            },
-#            'channels': {
-#                'handlers': ['console'],
-#                'level': 'INFO',
-#            }
-        }
+            'gamerooms': {
+                'handlers': ['gamerooms_file'],
+                'level': 'DEBUG',
+                'propagate': True,
+            },
+        },
 }
 
 # Alex add for Email host setup
