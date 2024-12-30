@@ -362,8 +362,13 @@ async function register_room(response) {
 
 async function register_ai_room(response) {
 	roomId = response.room_name;
-	console.log('Room creation notice received');
+	console.log('AI Room creation notice received');
 	console.log('Room name: ' + roomId);
+	if (isTournament) {
+		renderLocalUsers(TournamentPlayers.player1.alias, TournamentPlayers.player2.alias);
+	} else {
+		renderLocalUsers(response.player1_alias, "Mode: " + response.difficulty);
+	}
 	await showReadyButton(roomId, playerEvent.player_1.id);
 }
 
@@ -372,13 +377,18 @@ async function register_local_room(response) {
 	console.log('Room name: ' + roomId);
 	roomId = response.room_name;
 	playerEvent.player_2.id = response.player2_id;
+	if (isTournament) {
+		renderLocalUsers(TournamentPlayers.player1.alias, TournamentPlayers.player2.alias);
+	} else {
+		renderLocalUsers(response.player1_alias, response.player1_alias + " friend");
+	}
 	await showReadyButton(roomId, playerEvent.player_1.id);
 }
 
 async function set_player1(response) {
 	let player1Data;
 	let profileResponse;
-	profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.alias}`);
+	profileResponse = await fetchWithToken(`/api/user/get-profile/?own=yes`);
 	player1Data = await profileResponse.json();
 	hideElem("create-match");
 	hideElem("join-match");
@@ -427,6 +437,9 @@ async function set_game_over(response) {
 		game_over = true;
 		pendingGameUpdate = null;
 	}
+	if (isTournament) {
+		submitMatchResult(TournamentPlayers.player1.id, TournamentPlayers.player2.id, response.payload.winner)
+	}
 }
 
 async function log_error(response) {
@@ -439,9 +452,9 @@ async function join_room(response) {
 	let profileResponse;
 	console.log('player1 alias', response.player1, "and player2 alias", response.player2);
 	try {
-		profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.player1}`);
+		profileResponse = await fetchWithToken(`/api/user/get-profile/?uid=${response.player1}`);
 		player1Data = await profileResponse.json();
-		profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.player2}`);
+		profileResponse = await fetchWithToken(`/api/user/get-profile/?uid=${response.player2}`);
 		player2Data = await profileResponse.json();
 		hideElem("create-match");
 		hideElem("join-match");
