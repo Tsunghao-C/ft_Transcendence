@@ -211,6 +211,12 @@ LOGGING = {
                 "class": "logging.FileHandler",
                 "filename": "logs/gamerooms.log",
                 "formatter": "verbose",
+            }, 
+            "gameconsumers_file": {
+                "level": "DEBUG",
+                "class": "logging.FileHandler",
+                "filename": "logs/gameconsumers.log",
+                "formatter": "verbose",
             },
         },
         'root': {
@@ -220,6 +226,11 @@ LOGGING = {
         'loggers': {
             'gamerooms': {
                 'handlers': ['gamerooms_file'],
+                'level': 'DEBUG',
+                'propagate': True,
+            },
+            'gameconsumers': {
+                'handlers': ['gameconsumers_file'],
                 'level': 'DEBUG',
                 'propagate': True,
             },
