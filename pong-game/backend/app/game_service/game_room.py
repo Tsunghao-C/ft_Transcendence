@@ -23,7 +23,7 @@ RIGHT = 1
 ABORTED = 1
 CONCEDE = 2
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('gamerooms')
 
 class Player():
 	def __init__(self, side, canvas_width, canvas_height):
