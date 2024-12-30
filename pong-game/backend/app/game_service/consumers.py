@@ -122,15 +122,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 
 	async def disconnect(self, code):
 		logger.info("Websocket connection closed")
-		if self.in_game:
-			if self.assigned_room in active_online_games.keys(): #this is probably useless garbo
-				room = active_online_games[self.assigned_room]
-				if room["room_data"].missing_player == 1:
-					logger.info(f"gameConsumer: sending abort order to gameRoom: {room}")
-					room["room_data"].set_server_order(ABORTED)
-				else:
-					room["room_data"].missing_player += 1
-
 		self.in_game = False
 		if hasattr(self, 'current_group'):
 			await self.channel_layer.group_discard(self.current_group, self.channel_name)
