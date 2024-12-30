@@ -458,8 +458,8 @@ async function rejoin_room(response) {
 				action: "rejoin_room",
 				response: false
 			}));
-			showElem("create-match", "none");
-			showElem("join-match", "none");
+			showElem("create-match", "flex");
+			showElem("join-match", "flex");
 			trueButton.parentNode.removeChild(trueButton);
 			trueButton.remove();
 			falseButton.parentNode.removeChild(falseButton);
