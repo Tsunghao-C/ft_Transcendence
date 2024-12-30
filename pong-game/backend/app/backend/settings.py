@@ -30,7 +30,7 @@ email_credentials = vault_client.get_database_credentials("email")
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = jwt_credentials['jwt_secret_key']
+SECRET_KEY = jwt_credentials['JWT_SECRET_KEY']
 # SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -121,11 +121,11 @@ DATABASES = {
         # "USER": os.environ.get("POSTGRES_USER", "transc_user"),
         # "PASSWORD": os.environ.get("POSTGRES_PASS", "transc_pass"),
         # "HOST": os.environ.get("POSTGRES_HOST", "transc_host"),
-        "ENGINE": db_credentials['postgres_engine'],
-        "NAME": db_credentials['postgres_db'],
-        "USER": db_credentials['postgres_user'],
-        "PASSWORD": db_credentials['postgres_pass'],
-        "HOST": db_credentials['postgres_host'],
+        "ENGINE": db_credentials['POSTGRES_ENGINE'],
+        "NAME": db_credentials['POSTGRES_DB'],
+        "USER": db_credentials['POSTGRES_USER'],
+        "PASSWORD": db_credentials['POSTGRES_PASS'],
+        "HOST": db_credentials['POSTGRES_HOST'],
         "PORT": os.environ.get("POSTGRES_PORT", "5434"),
     },
 }
@@ -234,8 +234,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = email_credentials['email_host_user']
-EMAIL_HOST_PASSWORD = email_credentials['email_host_pass'] # Env
+EMAIL_HOST_USER = email_credentials['EMAIL_HOST_USER']
+EMAIL_HOST_PASSWORD = email_credentials['EMAIL_HOST_PASS'] # Env
 # EMAIL_HOST_USER = '42transcendental@gmail.com'
 # EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD") # Env
 

@@ -48,10 +48,6 @@ services:
       - IPC_LOCK
     ports:
       - "8200:8200"
-    # environment:
-    #   VAULT_ADDR: "https://127.0.0.1:8200"
-    #   VAULT_API_ADDR: "https://127.0.0.1:8200"
-    #   VAULT_SKIP_VERIFY: "true"
     volumes:
       - vault_shared_data:/vault/shared_data
       - vault_file:/vault/file
@@ -63,6 +59,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    configs:
+      - source: env_file
+        target: /vault/.env
+        mode: 0400
 
   ## [Alex] to finish WAF later after major modules are tested working
 
@@ -238,157 +238,161 @@ services:
   #     - monitoring_net
   #   restart: unless-stopped
 
-  elasticsearch:
-    container_name: elasticsearch
-    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_STACK_VERSION}
-    environment:
-      # Cluster configuration
-      - node.name=es01
-      - cluster.name=pong-game-logs
-      - discovery.type=single-node
-      - network.host=0.0.0.0
-      # Basic settings
-      - bootstrap.memory_lock=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      # Disk allocation setting
-      - "cluster.routing.allocation.disk.threshold_enabled=true"
-      - "cluster.routing.allocation.disk.watermark.low=85%"
-      - "cluster.routing.allocation.disk.watermark.high=90%"
-      - "cluster.routing.allocation.disk.watermark.flood_stage=95%"
-      # Security settings (Admin user)
-      - xpack.security.enabled=true
-      - xpack.security.authc.api_key.enabled=true
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-      # Transport SSL settings
-      - xpack.security.transport.ssl.enabled=true
-      - xpack.security.transport.ssl.key=/usr/share/elasticsearch/config/certs/elastic-transport.key
-      - xpack.security.transport.ssl.certificate=/usr/share/elasticsearch/config/certs/elastic-transport.crt
-      - xpack.security.transport.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca.crt
-      # HTTP SSL settings
-      - xpack.security.http.ssl.enabled=true
-      - xpack.security.http.ssl.key=/usr/share/elasticsearch/config/certs/elastic-http.key
-      - xpack.security.http.ssl.certificate=/usr/share/elasticsearch/config/certs/elastic-http.crt
-      - xpack.security.http.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca.crt
-    volumes:
-      - ./monitoring/elk/certs:/usr/share/elasticsearch/config/certs:ro
-      - es_data:/usr/share/elasticsearch/data
-      - ./monitoring/elk/elasticsearch/setup:/setup
-    entrypoint: >
-      sh -c '
-        /usr/local/bin/docker-entrypoint.sh &
-        ELASTIC_PID=$!
-        sleep 15 &&
-        /setup/init.sh &
-        wait $ELASTIC_PID'
-    deploy:
-      resources:
-        limits:
-          memory: 2G
-        reservations:
-          memory: 1G
-    networks:
-      - monitoring_net
-    healthcheck:
-      test: ["CMD-SHELL", "curl -k -s https://localhost:9200/_cat/health || exit 1"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-    restart: unless-stopped
+  # elasticsearch:
+  #   container_name: elasticsearch
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_STACK_VERSION}
+  #   environment:
+  #     # Cluster configuration
+  #     - node.name=es01
+  #     - cluster.name=pong-game-logs
+  #     - discovery.type=single-node
+  #     - network.host=0.0.0.0
+  #     # Basic settings
+  #     - bootstrap.memory_lock=false
+  #     - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+  #     # Disk allocation setting
+  #     - "cluster.routing.allocation.disk.threshold_enabled=true"
+  #     - "cluster.routing.allocation.disk.watermark.low=85%"
+  #     - "cluster.routing.allocation.disk.watermark.high=90%"
+  #     - "cluster.routing.allocation.disk.watermark.flood_stage=95%"
+  #     # Security settings (Admin user)
+  #     - xpack.security.enabled=true
+  #     - xpack.security.authc.api_key.enabled=true
+  #     - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+  #     # Transport SSL settings
+  #     - xpack.security.transport.ssl.enabled=true
+  #     - xpack.security.transport.ssl.key=/usr/share/elasticsearch/config/certs/elastic-transport.key
+  #     - xpack.security.transport.ssl.certificate=/usr/share/elasticsearch/config/certs/elastic-transport.crt
+  #     - xpack.security.transport.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca.crt
+  #     # HTTP SSL settings
+  #     - xpack.security.http.ssl.enabled=true
+  #     - xpack.security.http.ssl.key=/usr/share/elasticsearch/config/certs/elastic-http.key
+  #     - xpack.security.http.ssl.certificate=/usr/share/elasticsearch/config/certs/elastic-http.crt
+  #     - xpack.security.http.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca.crt
+  #   volumes:
+  #     - ./monitoring/elk/certs:/usr/share/elasticsearch/config/certs:ro
+  #     - es_data:/usr/share/elasticsearch/data
+  #     - ./monitoring/elk/elasticsearch/setup:/setup
+  #   entrypoint: >
+  #     sh -c '
+  #       /usr/local/bin/docker-entrypoint.sh &
+  #       ELASTIC_PID=$!
+  #       sleep 15 &&
+  #       /setup/init.sh &
+  #       wait $ELASTIC_PID'
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 2G
+  #       reservations:
+  #         memory: 1G
+  #   networks:
+  #     - monitoring_net
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "curl -k -s https://localhost:9200/_cat/health || exit 1"]
+  #     interval: 10s
+  #     timeout: 10s
+  #     retries: 5
+  #   restart: unless-stopped
 
-  kibana:
-    container_name: kibana
-    image: docker.elastic.co/kibana/kibana:${ELASTIC_STACK_VERSION}
-    volumes:
-      - ./monitoring/elk/certs:/usr/share/kibana/config/certs:ro
-      - ./monitoring/elk/kibana/dashboards:/usr/share/kibana/dashboards
-      - ./monitoring/elk/kibana/setup:/usr/share/kibana/setup
-    ports:
-      - "5601:5601" # Only external access point for ELK
-    environment:
-      # Elasticsearch connection
-      - ELASTICSEARCH_HOSTS=https://elasticsearch:9200
-      - ELASTICSEARCH_USERNAME=kibana_system
-      - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}
-      # Server settings
-      - SERVER_HOST=0.0.0.0
-      - SERVER_NAME=kibana
-      # Security settings (Internal Security Settings)
-      - XPACK_SECURITY_ENABLED=true
-      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${ELASTIC_PASSWORD}
-      - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=/usr/share/kibana/config/certs/ca.crt
-      - ELASTICSEARCH_SSL_VERIFICATIONMODE=certificate
-      # Performance settings
-      - ELASTICSEARCH_REQUESTTIMEOUT=90000  # Added timeout
-      - OPTIMIZATION_PROFILING=false
-      # Other settings
-      - TELEMETRY_ENABLED=false
-      # For External HTTPS access settings
-      - SERVER_SSL_ENABLED=true
-      - SERVER_SSL_CERTIFICATE=/usr/share/kibana/config/certs/kibana.crt
-      - SERVER_SSL_KEY=/usr/share/kibana/config/certs/kibana.key
-      - SERVER_SSL_REDIRECT=true
-    networks:
-      - monitoring_net
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
-    entrypoint: >
-      sh -c '
-        /usr/share/kibana/setup/import-dashboards.sh &
-        /usr/local/bin/kibana-docker'
-    restart: unless-stopped
+  # kibana:
+  #   container_name: kibana
+  #   image: docker.elastic.co/kibana/kibana:${ELASTIC_STACK_VERSION}
+  #   volumes:
+  #     - ./monitoring/elk/certs:/usr/share/kibana/config/certs:ro
+  #     - ./monitoring/elk/kibana/dashboards:/usr/share/kibana/dashboards
+  #     - ./monitoring/elk/kibana/setup:/usr/share/kibana/setup
+  #   ports:
+  #     - "5601:5601" # Only external access point for ELK
+  #   environment:
+  #     # Elasticsearch connection
+  #     - ELASTICSEARCH_HOSTS=https://elasticsearch:9200
+  #     - ELASTICSEARCH_USERNAME=kibana_system
+  #     - ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}
+  #     # Server settings
+  #     - SERVER_HOST=0.0.0.0
+  #     - SERVER_NAME=kibana
+  #     # Security settings (Internal Security Settings)
+  #     - XPACK_SECURITY_ENABLED=true
+  #     - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${ELASTIC_PASSWORD}
+  #     - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=/usr/share/kibana/config/certs/ca.crt
+  #     - ELASTICSEARCH_SSL_VERIFICATIONMODE=certificate
+  #     # Performance settings
+  #     - ELASTICSEARCH_REQUESTTIMEOUT=90000  # Added timeout
+  #     - OPTIMIZATION_PROFILING=false
+  #     # Other settings
+  #     - TELEMETRY_ENABLED=false
+  #     # For External HTTPS access settings
+  #     - SERVER_SSL_ENABLED=true
+  #     - SERVER_SSL_CERTIFICATE=/usr/share/kibana/config/certs/kibana.crt
+  #     - SERVER_SSL_KEY=/usr/share/kibana/config/certs/kibana.key
+  #     - SERVER_SSL_REDIRECT=true
+  #   networks:
+  #     - monitoring_net
+  #   depends_on:
+  #     elasticsearch:
+  #       condition: service_healthy
+  #   entrypoint: >
+  #     sh -c '
+  #       /usr/share/kibana/setup/import-dashboards.sh &
+  #       /usr/local/bin/kibana-docker'
+  #   restart: unless-stopped
 
-  logstash:
-    container_name: logstash
-    image: docker.elastic.co/logstash/logstash:${ELASTIC_STACK_VERSION}
-    volumes:
-      - ./monitoring/elk/logstash/docker-entrypoint.sh:/entrypoint.sh:ro
-      - ./monitoring/elk/certs:/usr/share/logstash/config/certs:ro
-      - ./monitoring/elk/logstash/config/logstash.yml:/tmp/logstash.yml:ro
-      - ./monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
-    entrypoint: ["/bin/bash", "/entrypoint.sh"]
-    environment:
-      - LS_JAVA_OPTS=-Xmx256m -Xms256m
-      - ELASTIC_USER=${ELASTIC_USER}
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-      # SSL / TLS setting
-      - XPACK_MONITORING_ELASTICSEARCH_HOSTS=https://elasticsearch:9200
-      - XPACK_MONITORING_ELASTICSEARCH_USERNAME=${ELASTIC_USER}
-      - XPACK_MONITORING_ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}
-      - XPACK_MONITROING_ELASTICSEARCH_SSL_CERTIFICATE_AUTHORITY=/usr/share/logstash/config/certs/ca.crt
-    networks:
-      - monitoring_net
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9600"]
-      interval: 10s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
+  # logstash:
+  #   container_name: logstash
+  #   image: docker.elastic.co/logstash/logstash:${ELASTIC_STACK_VERSION}
+  #   volumes:
+  #     - ./monitoring/elk/logstash/docker-entrypoint.sh:/entrypoint.sh:ro
+  #     - ./monitoring/elk/certs:/usr/share/logstash/config/certs:ro
+  #     - ./monitoring/elk/logstash/config/logstash.yml:/tmp/logstash.yml:ro
+  #     - ./monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
+  #   entrypoint: ["/bin/bash", "/entrypoint.sh"]
+  #   environment:
+  #     - LS_JAVA_OPTS=-Xmx256m -Xms256m
+  #     - ELASTIC_USER=${ELASTIC_USER}
+  #     - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+  #     # SSL / TLS setting
+  #     - XPACK_MONITORING_ELASTICSEARCH_HOSTS=https://elasticsearch:9200
+  #     - XPACK_MONITORING_ELASTICSEARCH_USERNAME=${ELASTIC_USER}
+  #     - XPACK_MONITORING_ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD}
+  #     - XPACK_MONITROING_ELASTICSEARCH_SSL_CERTIFICATE_AUTHORITY=/usr/share/logstash/config/certs/ca.crt
+  #   networks:
+  #     - monitoring_net
+  #   depends_on:
+  #     elasticsearch:
+  #       condition: service_healthy
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:9600"]
+  #     interval: 10s
+  #     timeout: 10s
+  #     retries: 3
+  #   restart: unless-stopped
 
-  filebeat:
-    container_name: filebeat
-    image: docker.elastic.co/beats/filebeat:${ELASTIC_STACK_VERSION}
-    user: root  # Required to read logs
-    volumes:
-      - ./monitoring/elk/certs:/usr/share/filebeat/certs:ro
-      - ./monitoring/elk/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
-      # Mount all log directories
-      - logs_nginx:/var/log/nginx
-      - logs_modsec:/var/log/modsec
-      - filebeat_registry:/usr/share/filebeat/data
-    environment:
-      - ELASTIC_USER=${ELASTIC_USER}
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-    entrypoint: >
-      sh -c '
-      chmod go-w /usr/share/filebeat/filebeat.yml &&
-      filebeat -e --strict.perms=false'
-    networks:
-      - monitoring_net
-      - frontend_net
-    depends_on:
-      logstash:
-        condition: service_healthy
+  # filebeat:
+  #   container_name: filebeat
+  #   image: docker.elastic.co/beats/filebeat:${ELASTIC_STACK_VERSION}
+  #   user: root  # Required to read logs
+  #   volumes:
+  #     - ./monitoring/elk/certs:/usr/share/filebeat/certs:ro
+  #     - ./monitoring/elk/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
+  #     # Mount all log directories
+  #     - logs_nginx:/var/log/nginx
+  #     - logs_modsec:/var/log/modsec
+  #     - filebeat_registry:/usr/share/filebeat/data
+  #   environment:
+  #     - ELASTIC_USER=${ELASTIC_USER}
+  #     - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+  #   entrypoint: >
+  #     sh -c '
+  #     chmod go-w /usr/share/filebeat/filebeat.yml &&
+  #     filebeat -e --strict.perms=false'
+  #   networks:
+  #     - monitoring_net
+  #     - frontend_net
+  #   depends_on:
+  #     logstash:
+  #       condition: service_healthy
+
+configs:
+  env_file:
+    file: ./.env

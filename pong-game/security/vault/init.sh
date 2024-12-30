@@ -1,10 +1,79 @@
 #!/bin/bash
 
+# Helper function to parse .env
 # Colors
 GREEN="\033[0;32m"
 BLUE="\033[0;34m"
 RED="\033[0;31m"
 DFT="\033[0m"
+
+# This function processes our .env file and stores secrets in Vault
+store_env_secrets() {
+    echo "${BLUE}Starting to process environment variables...${DFT}"
+    
+    # Create temporary files to store grouped secrets
+    temp_dir=$(mktemp -d)
+    
+    # Process each line in the .env file
+    while IFS= read -r line || [ -n "$line" ]; do
+        # Skip empty lines and comments
+        case "$line" in
+            ""|\#*) continue ;;
+        esac
+
+        case "$line" in
+            POSTGRES_*)
+                echo "$line" >> "$temp_dir/database"
+                ;;
+            EMAIL_*)
+                echo "$line" >> "$temp_dir/email"
+                ;;
+            ELASTIC_*)
+                echo "$line" >> "$temp_dir/elastic"
+                ;;
+            JWT_*)
+                echo "$line" >> "$temp_dir/jwt"
+                ;;
+        esac
+    done < "/vault/.env"
+    
+    # Process each service file
+    for service_file in "$temp_dir"/*; do
+        [ -f "$service_file" ] || continue
+        
+        service=$(basename "$service_file")
+        cmd="vault kv put secret/data/pong-game/$service"
+        
+        # Process each line and add to command
+        while IFS='=' read -r key value || [ -n "$key" ]; do
+            [ -z "$key" ] && continue
+            
+            # Clean up key and value
+            key=$(echo "$key" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+            value=$(echo "$value" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+            
+            # Handle empty or quoted empty values
+            case "$value" in
+                '""'|"''"|\"\"|'') value="" ;;
+                *) value=$(echo "$value" | sed -e 's/^["\x27]//' -e 's/["\x27]$//') ;;
+            esac
+            
+            # Add to command with proper quoting
+            cmd="$cmd $key='$value'"
+        done < "$service_file"
+        
+        # echo "Debug: Executing command: $cmd"
+        if eval "$cmd"; then
+            echo "${GREEN}Successfully stored secrets for $service${DFT}"
+        else
+            echo "${RED}Failed to store secrets for $service${DFT}"
+        fi
+    done
+    
+    # Clean up temporary files
+    rm -rf "$temp_dir"
+    echo "${GREEN}Environment variables have been processed and stored in Vault${DFT}"
+}
 
 # Set environment variables for Vault
 export VAULT_ADDR="https://127.0.0.1:8200"
@@ -60,19 +129,9 @@ echo "${BLUE}---------------------- Enabling secrets ---------------------${DFT}
 vault secrets enable -address=${VAULT_ADDR} -path=secret kv
 echo "${BLUE}-------------------------------------------------------------${DFT}"
 
-# Hard coded secret credentials here
+# Use helper function to parse env file and add them to secrets categorized by prefix
 echo "${BLUE}---------------------- Adding initial secrets ---------------------${DFT}"
-vault kv put secret/data/pong-game/database \
-    postgres_engine="django.db.backends.postgresql" \
-    postgres_host="postgres" \
-    postgres_db="transc_db" \
-    postgres_user="transc_user" \
-    postgres_pass="transc_pass"
-vault kv put secret/data/pong-game/email \
-    email_host_user="42transcendental@gmail.com" \
-    email_host_pass="zlywwbcyedhomdet"
-vault kv put secret/data/pong-game/jwt \
-    jwt_secret_key="foo"
+store_env_secrets
 echo "${BLUE}-------------------------------------------------------------${DFT}"
 
 # Create policy that only allows reading database credentials
