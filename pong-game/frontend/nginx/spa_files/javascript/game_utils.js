@@ -79,12 +79,15 @@ function drawElements(ball, player_1, player_2) {
 
 function drawGameOverScreen(gameState) {
 	const canvas = document.getElementById('game');
+	if (!canvas)
+		return;
 	const ctx = canvas.getContext('2d');
+	if (!ctx)
+		return;
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	ctx.font = '48px Space Mono';
 	ctx.textBaseline = 'hanging';
 	ctx.fillStyle = 'black';
-
 	// Game Over
 	const gameoverText = "Game Over";
 	const gameoverTextWidth = ctx.measureText(gameoverText).width;
