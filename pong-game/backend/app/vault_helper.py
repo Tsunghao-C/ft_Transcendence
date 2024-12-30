@@ -7,21 +7,40 @@ class VaultClient:
     This class handles authentication and retrieval of secrets in vault
     while using caching to imporve performance.
     """
-    def __init__(self):
-        with open(os.environ['VAULT_TOKEN_FILE']) as f:
-            token = f.read().strip()
-        # Initialize connection to Vault
-        self.client = hvac.Client(
-            url=os.environ['VAULT_ADDR'],
-            token=token,
-            verify=os.environ['VAULT_CACERT']
-        )
-        if self.client.is_authenticated():
-            print("Successfully authenticated with Vault")
-        else:
-            print("Failed to authenticate with Vault")
+    _instance = None
+    _initialized = False
+    _client = None
 
-    @lru_cache(maxsize=1)
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    
+    def __init__(self):
+        # only initialize once
+        if not self._initialized:
+            try:
+                with open(os.environ['VAULT_TOKEN_FILE']) as f:
+                    token = f.read().strip()
+                # Initialize connection to Vault
+                self._client = hvac.Client(
+                    url=os.environ['VAULT_ADDR'],
+                    token=token,
+                    verify=os.environ['VAULT_CACERT']
+                )
+                if self._client.is_authenticated():
+                    print("Successfully authenticated with Vault")
+                else:
+                    print("Failed to authenticate with Vault")
+            except Exception as e:
+                print(f"Error initializing Vault client: {e}")
+                raise
+            self._initialized = True
+    @property
+    def client(self):
+        return self._client
+
+    @lru_cache(maxsize=None)
     def get_database_credentials(self, cre_type):
         """
         Retrieve database credentials from vault
@@ -37,3 +56,6 @@ class VaultClient:
         except Exception as e:
             print(f"Failed to read from Vault:  {e}")
             return ""
+
+# Create a single instance to be used throughout the application
+vault_client = VaultClient()

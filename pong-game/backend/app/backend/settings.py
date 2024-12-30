@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import os
-from vault_helper import VaultClient
+from vault_helper import vault_client
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,10 +21,10 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = 'https://localhost:8443/media/'
 
 # Initialize and get credentials from Vault
-vault = VaultClient()
-db_credentials = vault.get_database_credentials("database")
-jwt_credentials = vault.get_database_credentials("jwt")
-email_credentials = vault.get_database_credentials("email")
+# vault = VaultClient()
+db_credentials = vault_client.get_database_credentials("database")
+jwt_credentials = vault_client.get_database_credentials("jwt")
+email_credentials = vault_client.get_database_credentials("email")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
