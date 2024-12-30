@@ -334,6 +334,137 @@ export function renderUserInfo(user1, user2 = null) {
 	}
 }
 
+const onmessage_methods = {
+	'notice': log_notice,
+	'room_creation': register_room,
+	'ai_room_creation': register_ai_room,
+	'local_room_creation': register_local_room,
+	'set_player_1': set_player1,
+	'join': join_room,
+	'rejoin': join_room,
+	'rejoin_room_query': rejoin_room,
+	'game_start': start_game,
+	'game_update': update_game,
+	'game_over': set_game_over,
+	'error': log_error
+}
+
+async function log_notice(response) {
+	console.log('Server notice: ' + response.message);
+}
+
+async function register_room(response) {
+	roomId = response.room_name;
+	console.log('Room creation notice received');
+	console.log('Room name: ' + roomId);
+	window.location.hash = `lobby/${roomId}`;
+}
+
+async function register_ai_room(response) {
+	roomId = response.room_name;
+	console.log('Room creation notice received');
+	console.log('Room name: ' + roomId);
+	await showReadyButton(roomId, playerEvent.player_1.id);
+}
+
+async function register_local_room(response) {
+	console.log('Local Room creation notice received');
+	console.log('Room name: ' + roomId);
+	roomId = response.room_name;
+	playerEvent.player_2.id = response.player2_id;
+	await showReadyButton(roomId, playerEvent.player_1.id);
+}
+
+async function set_player1(response) {
+	let player1Data;
+	let profileResponse;
+	profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.alias}`);
+	player1Data = await profileResponse.json();
+	hideElem("create-match");
+	hideElem("join-match");
+	renderUserInfo(player1Data.profile, null);
+	console.log("you are player1");
+	const inviteButton = document.getElementById("invite-button");
+	inviteButton.style.display = "inline-block";
+	inviteButton.addEventListener("click", async function() {
+		const aliasToInvite = prompt("Enter the alias of the player you want to invite:");
+		if (aliasToInvite) {
+			try {
+				const response = await fetchWithToken('/api/chat/create-invitation/', JSON.stringify({
+					alias: aliasToInvite,
+					roomId: roomId,
+				}), 'POST');
+				if (!response.ok) {
+					console.log(response);
+					alert("Error: an error occured, please try again later");
+				} else {
+					alert("Invitation sent !");
+				}
+			} catch(error) {
+				console.log(error);
+				window.location.hash = "login";
+			}
+		}
+	});
+}
+
+async function start_game(response) {
+	console.log(response.message);
+	startGame();
+}
+
+async function update_game(response) {
+	if (pendingGameUpdate) {
+			pendingGameUpdate(response.payload)
+			pendingGameUpdate = null;
+	}
+}
+
+async function set_game_over(response) {
+	console.log('game_over received: ', response.payload);
+	if (pendingGameUpdate) {
+		pendingGameUpdate(response.payload);
+		game_over = true;
+		pendingGameUpdate = null;
+	}
+}
+
+async function log_error(response) {
+	console.error('Error received:', response.message);
+}
+
+async function join_room(response) {
+	let player1Data;
+	let player2Data;
+	let profileResponse;
+	console.log('player1 alias', response.player1, "and player2 alias", response.player2);
+	try {
+		profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.player1}`);
+		player1Data = await profileResponse.json();
+		profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.player2}`);
+		player2Data = await profileResponse.json();
+		hideElem("create-match");
+		hideElem("join-match");
+		renderUserInfo(player1Data.profile, player2Data.profile);
+	} catch(error) {
+		console.log(error);
+		window.location.hash = "login";
+		return;
+	}
+}
+
+async function rejoin_room(response) {
+	console.log('Paused gameRoom found');
+	console.log('Rejoining room (Hardcoded rn XD)');
+	roomId = response.room_name;
+	await state.gameSocket.send(JSON.stringify({
+		action: "rejoin_room",
+		response: true //change this from true to false and vice versa to test rejoining rooms
+	}));
+	console.log("Starting gameLoop directly in rejoin_room_query branch")
+	await startGame();
+}
+
 export async function connectWebSocket() {
 	const token = getCookie("accessToken");
 	const gameInfo = document.getElementById('game-info');
@@ -366,114 +497,9 @@ export async function connectWebSocket() {
 			state.gameSocket.onmessage = async function (event) {
 				try {
 					const response = JSON.parse(event.data);
-					if (response.type == 'notice') {
-						console.log('Server notice: ' + response.message);
-					} else if (response.type == 'join' || (response.type == 'rejoin')) {
-						let player1Data;
-						let player2Data;
-						let profileResponse;
-						console.log('player1 alias', response.player1, "and player2 alias", response.player2);
-						try {
-							profileResponse = await fetchWithToken(`/api/user/get-profile/?uid=${response.player1}`);
-							player1Data = await profileResponse.json();
-							profileResponse = await fetchWithToken(`/api/user/get-profile/?uid=${response.player2}`);
-							player2Data = await profileResponse.json();
-							hideElem("create-match");
-							hideElem("join-match");
-							renderUserInfo(player1Data.profile, player2Data.profile);
-						} catch(error) {
-							console.log(error);
-							window.location.hash = "login";
-							return;
-						}
-					} else if (response.type == 'rejoin_room_query') {
-							console.log('Paused gameRoom found');
-							console.log('Rejoining room (Hardcoded rn XD)');
-							roomId = response.room_name;
-							await state.gameSocket.send(JSON.stringify({
-								action: "rejoin_room",
-								response: true //change this from true to false and vice versa to test rejoining rooms
-							}));
-							console.log("Starting gameLoop directly in rejoin_room_query branch")
-							await startGame();
-					} else if (response.type == 'room_creation') {
-						roomId = response.room_name;
-						console.log('Room creation notice received');
-						console.log('Room name: ' + roomId);
-						window.location.hash = `lobby/${roomId}`;
-					} else if (response.type == 'ai_room_creation') {
-						roomId = response.room_name;
-						console.log('Room creation notice received');
-						console.log('Room name: ' + roomId);
-						if (isTournament) {
-							renderLocalUsers(TournamentPlayers.player1.alias, TournamentPlayers.player2.alias);
-						} else {
-							renderLocalUsers(response.player1_alias, "Mode: " + response.difficulty);
-						}
-						await showReadyButton(roomId, playerEvent.player_1.id);
-					} else if (response.type == 'local_room_creation') {
-						console.log('Local Room creation notice received');
-						console.log('Room name: ' + roomId);
-						roomId = response.room_name;
-						playerEvent.player_2.id = response.player2_id;
-						if (isTournament) {
-							renderLocalUsers(TournamentPlayers.player1.alias, TournamentPlayers.player2.alias);
-						} else {
-							renderLocalUsers(response.player1_alias, response.player1_alias + " friend");
-						}
-						await showReadyButton(roomId, playerEvent.player_1.id);
-					} else if (response.type == 'set_player_1') {
-						let player1Data;
-						let profileResponse;
-						profileResponse = await fetchWithToken(`/api/user/get-profile/?own=yes`);
-						player1Data = await profileResponse.json();
-						hideElem("create-match");
-						hideElem("join-match");
-						renderUserInfo(player1Data.profile, null);
-						console.log("you are player1");
-						const inviteButton = document.getElementById("invite-button");
-						inviteButton.style.display = "inline-block";
-						inviteButton.addEventListener("click", async function() {
-							const aliasToInvite = prompt("Enter the alias of the player you want to invite:");
-							if (aliasToInvite) {
-								try {
-									const response = await fetchWithToken('/api/chat/create-invitation/', JSON.stringify({
-										alias: aliasToInvite,
-										roomId: roomId,
-									}), 'POST');
-									if (!response.ok) {
-										console.log(response);
-										alert("Error: an error occured, please try again later");
-									} else {
-										alert("Invitation sent !");
-									}
-								} catch(error) {
-									console.log(error);
-									window.location.hash = "login";
-								}
-							}
-						});
-					} else if (response.type == 'game_start') {
-						console.log(response.message);
-						startGame();
-					} else if (response.type == 'error') {
-						console.error('Error received:', response.message);
-					} else if (response.type == 'game_update') {
-						if (pendingGameUpdate) {
-							pendingGameUpdate(response.payload)
-							pendingGameUpdate = null;
-						}
-					} else if (response.type == 'game_over') {
-						console.log('game_over received: ', response.payload);
-						if (pendingGameUpdate) {
-							pendingGameUpdate(response.payload);
-							game_over = true;
-							pendingGameUpdate = null;
-						}
-						if (isTournament) {
-							submitMatchResult(TournamentPlayers.player1.id, TournamentPlayers.player2.id, response.payload.winner)
-						}
-					} else if (response.error)
+					if (response.type in onmessage_methods)
+						await onmessage_methods[response.type](response);
+					else if (response.error)
 						console.error(response.error);
 				}
 				catch (error) {
