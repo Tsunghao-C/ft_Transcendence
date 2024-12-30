@@ -122,6 +122,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 
 	async def disconnect(self, code):
 		logger.info("Websocket connection closed")
+		print("WE ARE IN DISCONNECT")
 		if self.in_game:
 			if self.assigned_room in active_online_games.keys(): #this is probably useless garbo
 				room = active_online_games[self.assigned_room]
@@ -130,6 +131,20 @@ class GameConsumer(AsyncWebsocketConsumer):
 					room["room_data"].set_server_order(ABORTED)
 				else:
 					room["room_data"].missing_player += 1
+		elif self.assigned_room != -1:
+			room = active_lobbies[self.assigned_room]
+			if room:
+				if room["game_type"]["is_local"] or len(room["players"]) == 1:
+					del room
+					deleted_count = await sync_to_async(Message.objects.filter(game_room=self.assigned_room).delete)()
+					logger.info(f"Deleted {deleted_count} invitation(s) for game_room {self.assigned_room}")
+				else:
+					room["players"].remove(self.user.id)
+					room["connection"].remove(self)
+					await room["connection"][0].send(json.dumps({
+					"type": "set_player_1",
+					}))
+				print("succesfull removal")
 
 		self.in_game = False
 		if hasattr(self, 'current_group'):
@@ -205,6 +220,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 			"is_local": False,
 			"is_ai": True
 		}
+		self.game_type = game_type
 		active_lobbies[room_name] = {
 			"players": [player_id],
 			"ready": [],
@@ -305,6 +321,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 			"is_local": False,
 			"is_ai": False
 		}
+		self.game_type = game_type
 		active_lobbies[room_name] = {
 				"players": [],
 				"ready": [],
@@ -325,7 +342,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 	async def create_private_lobby(self, data):
 		logger.info("Creating private lobby")
 		room_name = str(uuid.uuid4())
-		self.assigned_room = room_name
 		player_id = self.user.id
 
 		game_type = {
@@ -333,6 +349,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 			"is_local": False,
 			"is_ai": False
 		}
+		self.game_type = game_type
 		active_lobbies[room_name] = {
 				"players": [],
 				"ready": [],
@@ -398,12 +415,12 @@ class GameConsumer(AsyncWebsocketConsumer):
 			await self.send(json.dumps({"error": f"lobby {room_name} is full"}))
 			return
 		elif len(active_lobbies[room_name]["players"]) == 0:
+			self.assigned_room = room_name
 			active_lobbies[room_name]["players"].append(player_id)
 			active_lobbies[room_name]["connection"].append(self)
 			await self.channel_layer.group_add(self.current_group, self.channel_name)
 			await self.send(json.dumps({
 			"type": "set_player_1",
-			"id": player_id,
 			}))
 			return
 		self.assigned_room = room_name

@@ -371,9 +371,9 @@ export async function connectWebSocket() {
 						let profileResponse;
 						console.log('player1 alias', response.player1, "and player2 alias", response.player2);
 						try {
-							profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.player1}`);
+							profileResponse = await fetchWithToken(`/api/user/get-profile/?uid=${response.player1}`);
 							player1Data = await profileResponse.json();
-							profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.player2}`);
+							profileResponse = await fetchWithToken(`/api/user/get-profile/?uid=${response.player2}`);
 							player2Data = await profileResponse.json();
 							hideElem("create-match");
 							hideElem("join-match");
@@ -422,7 +422,7 @@ export async function connectWebSocket() {
 					} else if (response.type == 'set_player_1') {
 						let player1Data;
 						let profileResponse;
-						profileResponse = await fetchWithToken(`/api/user/get-profile/?id=${response.id}`);
+						profileResponse = await fetchWithToken(`/api/user/get-profile/?own=yes`);
 						player1Data = await profileResponse.json();
 						hideElem("create-match");
 						hideElem("join-match");

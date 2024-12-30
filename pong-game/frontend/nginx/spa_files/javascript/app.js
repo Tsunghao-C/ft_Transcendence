@@ -121,8 +121,7 @@ export async function loadPage(page) {
 		state.chatSocket = null;
 		console.log("closing chatting socket");
 	}
-	if (page !== "lobby" && page.startsWith("lobby/") && state.gameSocket) {
-		console.log("closing gaming socket");
+	if (state.gameSocket) {
 		state.gameSocket.close();
 		state.gameSocket = null;
 	}

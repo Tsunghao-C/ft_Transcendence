@@ -375,15 +375,17 @@ class getProfileView(APIView):
 
 	def get(self, request):
 		alias = request.query_params.get("alias")
-		user_id = request.query_params.get("id")
-
+		user_id = request.query_params.get("uid")
+		own_profile = request.query_params.get("own")
 		if user_id:
 			profile = get_object_or_404(CustomUser, id=user_id)
 		elif alias:
 			profile = get_object_or_404(CustomUser, alias=alias)
+		elif own_profile:
+			profile = request.user
 		else:
 			return Response(
-				{"error": "Either 'id' or 'alias' must be provided."},
+				{"error": "Either 'id' 'alias' or 'own' must be provided."},
 				status=400
 			)
 		user = request.user
