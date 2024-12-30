@@ -283,6 +283,7 @@ class LiveGames(models.Model):
 		self.__save_results(outcome)
 		self.delete()
 
+
 class MatchMakingQueue(models.Model):
 	player = models.OneToOneField(
 		CustomUser,
