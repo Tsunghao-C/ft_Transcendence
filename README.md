@@ -1,8 +1,17 @@
 # ft_Transcendence
-Developing a web game Pong from scratch
+
+## Project Objectives
+Developing a web game Pong from scratch including the following features:
+1. Had basic user management systems for users to register, 2FA validate id, customize user settings.
+2. Utilised Websocket to allow users to do live chat with other users and play games remotely.
+3. Supported different game modes like remote PVP, local PVP, single player vs computer(AI).
+4. Adopted Single page Access (SPA) for better UX in the frontend.
+5. Implemented WAF firewall ahead of Nginx to prevent malicious requests. Used Vault to store sensitive credentials like admin user keys.
+6. Pre-scripted ELK stack deployment in a isolated docker environment, including necessary TLS, SSL settings and logs lifetime management policies.
+7. Added automated unit tests at launch time to check key feature healthiness.
 
 
-# Pong Game Project
+## Pong Game Project System Diagram
 
 ![Alt text](image/monolithic_diagram3.png)
 
@@ -48,44 +57,42 @@ make kill # It will kill every cached images even in ~/.docker/buildx
 ## Development Access Points
 
 #### External
-- Frontend (Nginx + WFA + SPA): http://localhost:8443
+- Frontend (Nginx + WFA + SPA): https://localhost:8443
+![Alt text](image/login/Pong-game_login_page.png)
+- ELK Stack (Kibana UI): https://localhost:5601
+![Alt text](image/login/ELK_login_page.png)
+- Security (Vault UI): https://localhost:8200
+![Alt text](image/login/Vault_login_page.png)
 #### Internal access port
-- Backend Service: 8004
-- game_db: 5434
-- user_db: 5432
+- Backend (django and its services): 8004 (api), 8001 (ws)
+- Postgres DB: 5434
 - redis: 6379
-- Vault UI: 8200
 - Elasticsearch: 9200
 - Logstash: 5044
-- Kibana: 5601
 - Prometheus: 9090
 - Grafana: 3001
 
 ## Team Development Guidelines
 
-### Auth Team
-- Work in `auth-service/` directory
-- Database migrations in `auth-service/src/migrations/`
-- Access service at http://localhost:8001
-
-### User Management Team
-- Work in `user-service/` directory
-- Database migrations in `user-service/src/migrations/`
-- Access service at http://localhost:8002
-
-### Game Team
+### Backend (Game + User Management) Team
 - Work in `backend/` directory
-- Database migrations in `backend/src/migrations/`
-- Access service at http://localhost:8004
+- Access service at http://localhost:8004 for API request and 8001 for WS
 
 ### Frontend Team
 - Work in `frontend/` directory
-- Access development server at http://localhost:3000
+- Access development server at https://localhost:8443
 
 ### Monitoring Team
+- Work in `monitoring/` directory
 - Configure Prometheus in `monitoring/prometheus/`
 - Set up Grafana dashboards in `monitoring/grafana/`
 - Configure ELK stack in `monitoring/elk/`
+
+### Security Team
+- Work in `security/` directory
+
+### tests
+- Put all the unit test scripts in `tests/` directory
 
 ### Notes
 
