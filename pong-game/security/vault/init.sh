@@ -65,7 +65,9 @@ echo "${BLUE}---------------------- Adding initial secrets ---------------------
 vault kv put secret/data/pong-game/database \
     postgres_user="transc_user" \
     postgres_pass="transc_pass" \
-    postgres_db="transc_db"
+    postgres_db="transc_db" \
+    email_host_user="42transcendental@gmail.com" \
+    email_host_pass="zlywwbcyedhomdet"
 echo "${BLUE}-------------------------------------------------------------${DFT}"
 
 # Create policy that only allows reading database credentials
