@@ -7,6 +7,7 @@ import { validateProfilePicture } from './login_validations.js';
 import { getLanguageCookie } from './fetch_request.js';
 import { setLanguageCookie } from "./fetch_request.js";
 import { loadPage } from './app.js';
+import { isAlphanumeric } from './utils.js';
 ///////////////////// UI Helpers /////////////////////
 
 ///////////////////// API Calls /////////////////////
@@ -36,6 +37,9 @@ function setupRegisterFormEventHandler() {
 		event.preventDefault();
 		const username = document.getElementById('newUsername').value;
 		const alias = document.getElementById('newAlias').value;
+		if (!isAlphanumeric(alias)) {
+			return ;
+		}	
 		const email = document.getElementById('newMailInput').value;
 		const password = document.getElementById('newPasswordInput').value;
 		const formData = new FormData();

@@ -9,15 +9,18 @@ import { rejectFriendRequest } from "./manage_social.js";
 import { cancelFriendRequest } from "./manage_social.js";
 import { unblockUser } from "./manage_social.js";
 import { blockUser } from "./manage_social.js";
-import { loadPage } from "./app.js";
 import { getLanguageCookie } from './fetch_request.js';
-import { setContainerHtml } from './app.js';
+import { isAlphanumeric } from "./utils.js";
 
 export async function setProfileView(contentContainer, usernameInHash) {
 	let response;
 	let data;
 	try {
-		response = await fetchWithToken(`/api/user/get-profile/?alias=${usernameInHash}`);
+		if (!isAlphanumeric(usernameInHash)) {
+			response = await fetchWithToken(`/api/user/get-profile/?own=yes`);
+		} else {
+			response = await fetchWithToken(`/api/user/get-profile/?alias=${usernameInHash}`);
+		}
 		data = await response.json();
 	} catch(error) {
 		console.log(error);
@@ -48,6 +51,9 @@ export async function setProfileView(contentContainer, usernameInHash) {
 
 	searchButton.addEventListener("click", () => {
 		const searchQuery = searchInput.value.trim();
+		if (!isAlphanumeric(searchQuery)) {
+			return;
+		}
 		console.log("Searching for:", searchQuery);
 		if (!searchQuery) {
 			return;
@@ -58,12 +64,6 @@ export async function setProfileView(contentContainer, usernameInHash) {
 
 	function displayProfile(profile) {
 		const lng = getLanguageCookie() ||  "en";
-		// const statusClasses = {
-		// 	online: "text-success",
-		// 	offline: "text-secondary",
-		// 	ingame: "text-warning",
-		// };
-		// const statusText = trsl[lng][profile.status];
 		
 		profileResult.innerHTML = `
 		<div class="card">

@@ -5,6 +5,7 @@ import { loadPage } from "./app.js";
 import { setChatView } from "./chat_view.js";
 import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
+import { isAlphanumeric } from "./utils.js";
 
 
 export async function sendDuelRequestFromGameRoom(roomName) {
@@ -211,7 +212,9 @@ export async function unblockUser(blockedUser) {
 
 export async function blockUser(newBlockUsername) {
 	const currentLanguage = getLanguageCookie() ||  "en";
-
+	if (!isAlphanumeric(newBlockUsername)) {
+		return ;
+	}
 	let data;
 	let response;
 	try {
@@ -237,7 +240,9 @@ export async function blockUser(newBlockUsername) {
 
 export async function addFriend(newfriend) {
 	const currentLanguage = getLanguageCookie() ||  "en";
-
+	if (!isAlphanumeric(newfriend)) {
+		return ;
+	}
 	let data;
 	let response;
 	try {
