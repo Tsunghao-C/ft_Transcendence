@@ -253,23 +253,42 @@ function setupTournamentForm(contentContainer) {
 	});
 
 	const form = document.getElementById("tournament-form");
-	form.addEventListener("submit", async (event) => {
+	form.addEventListener("submit", async (event) => { 
 		event.preventDefault();
 		const formData = new FormData(form);
 		const players = [];
-
+		const aliasesSet = new Set();
+		let hasError = false;
+	
 		for (let i = 1; i <= playerCount; i++) {
-			players.push({
-				alias: formData.get(`player${i}`),
-				is_ai: formData.get(`type${i}`),
-			});
+			const alias = formData.get(`player${i}`).trim();
+			const is_ai = formData.get(`type${i}`);
+	
+			if (!/^[a-zA-Z0-9]+$/.test(alias)) {
+				alert(`${alias} must only contain alphanumeric characters.`);
+				hasError = true;
+				break;
+			}
+	
+			if (aliasesSet.has(alias)) {
+				alert(`${alias} is duplicated. Please choose unique names.`);
+				hasError = true;
+				break;
+			}
+	
+			aliasesSet.add(alias);
+			players.push({ alias, is_ai });
 		}
-
+	
+		if (hasError) {
+			return ;
+		} 
+	
 		const tournamentData = {
-			name: formData.get("tournamentName"),
+			name: formData.get("tournamentName").trim(),
 			players,
 		};
-
+	
 		try {
 			const response = await fetchWithToken("/api/game/create-tournament/", JSON.stringify(tournamentData), "POST");
 			if (!response.ok) {
@@ -277,7 +296,7 @@ function setupTournamentForm(contentContainer) {
 			} else {
 				const data = await response.json();
 				alert("Tournament created successfully!");
-
+	
 				setTournamentView(contentContainer);
 			}
 		} catch (error) {
@@ -285,7 +304,7 @@ function setupTournamentForm(contentContainer) {
 			window.location.hash = "login";
 		}
 	});
-}
+}	
 
 async function getUserTournament() {
 	try {
