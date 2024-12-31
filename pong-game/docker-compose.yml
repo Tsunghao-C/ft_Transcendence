@@ -54,30 +54,6 @@ services:
         target: /vault/.env
         mode: 0400
 
-  ## [Alex] to finish WAF later after major modules are tested working
-
-  # waf:
-  #   container_name: waf
-  #   build:
-  #     context: ./security/waf
-  #   ports:
-  #     - "8443:443"
-  #     - "8080:80"
-  #   volumes:
-  #     - ./security/waf/rules:/etc/modsecurity.d/rules
-  #     - ./security/waf/nginx:/etc/nginx/conf.d
-  #   depends_on:
-  #     nginx:
-  #       condition: service_healthy
-  #   networks:
-  #     - frontend_net
-  #   healthcheck:
-  #     test: ["CMD", "nginx", "-t"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 3
-  #   restart: unless-stopped
-
   # Frontend Layer
   ## [Theo] & [Alex]
   nginx:

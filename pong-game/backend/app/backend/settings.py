@@ -21,7 +21,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = 'https://localhost:8443/media/'
 
 # Initialize and get credentials from Vault
-# vault = VaultClient()
 db_credentials = vault_client.get_database_credentials("database")
 jwt_credentials = vault_client.get_database_credentials("jwt")
 email_credentials = vault_client.get_database_credentials("email")
@@ -31,7 +30,6 @@ email_credentials = vault_client.get_database_credentials("email")
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = jwt_credentials['JWT_SECRET_KEY']
-# SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.environ.get("DEBUG", default=0))
@@ -116,11 +114,6 @@ ASGI_APPLICATION = 'backend.asgi.application'
 
 DATABASES = {
     "default": {
-        # "ENGINE": os.environ.get("POSTGRES_ENGINE", "django.db.backends.sqlite3"),
-        # "NAME": os.environ.get("POSTGRES_DB", BASE_DIR / "db.sqlite3"),
-        # "USER": os.environ.get("POSTGRES_USER", "transc_user"),
-        # "PASSWORD": os.environ.get("POSTGRES_PASS", "transc_pass"),
-        # "HOST": os.environ.get("POSTGRES_HOST", "transc_host"),
         "ENGINE": db_credentials['POSTGRES_ENGINE'],
         "NAME": db_credentials['POSTGRES_DB'],
         "USER": db_credentials['POSTGRES_USER'],
@@ -236,8 +229,6 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = email_credentials['EMAIL_HOST_USER']
 EMAIL_HOST_PASSWORD = email_credentials['EMAIL_HOST_PASS'] # Env
-# EMAIL_HOST_USER = '42transcendental@gmail.com'
-# EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD") # Env
 
 LDB_UPDATE_TIMER = os.environ.get("LDB_UPDATE_TIMER", 15)
 CRONJOBS = [
