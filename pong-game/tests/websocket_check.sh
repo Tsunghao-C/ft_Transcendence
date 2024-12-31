@@ -22,7 +22,7 @@ check_websocket() {
     local socket_type=$3
     local max_retries=3
     local retry_count=0
-    local retry_delay=5
+    local retry_delay=10
 
     while [ $retry_count -lt $max_retries ]; do
         echo "Checking WebSocket endpoint: $endpoint (Attempt $((retry_count + 1))/$max_retries)"
