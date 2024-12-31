@@ -287,7 +287,7 @@ class acceptFriendRequestView(APIView):
 class deleteFriendView(APIView):
 	permission_classes = [IsAuthenticated]
 
-	def post(self, request):
+	def delete(self, request):
 		user = request.user
 		fr_user = get_object_or_404(CustomUser, alias=request.data.get("alias"))
 		if not user.is_friend(fr_user):
@@ -299,7 +299,7 @@ class deleteFriendView(APIView):
 class rejectFriendRequestView(APIView):
 	permission_classes = [IsAuthenticated]
 
-	def post(self, request):
+	def delete(self, request):
 		to_user = request.user
 		from_user = get_object_or_404(CustomUser, alias=request.data.get("fromAlias"))
 		frequest = get_object_or_404(FriendRequest, from_user=from_user, to_user=to_user)
@@ -309,7 +309,7 @@ class rejectFriendRequestView(APIView):
 class cancelFriendRequestView(APIView):
 	permission_classes = [IsAuthenticated]
 
-	def post(self, request):
+	def delete(self, request):
 		from_user = request.user
 		to_user = get_object_or_404(CustomUser, alias=request.data.get("toAlias"))
 		frequest = get_object_or_404(FriendRequest, from_user=from_user, to_user=to_user)

@@ -137,7 +137,7 @@ export async function removeFriend(friendAlias) {
 		const body = JSON.stringify({
 			alias : friendAlias
 			});
-		response = await fetchWithToken('/api/user/delete-friend/', body, 'POST');
+		response = await fetchWithToken('/api/user/delete-friend/', body, 'DELETE');
 		data = await response.json();
 	} catch(error) {
 		console.log(error);
@@ -169,7 +169,7 @@ export async function rejectFriendRequest(notFriendUsername) {
 		const body = JSON.stringify({
 			fromAlias: notFriendUsername,
 			});
-		response = await fetchWithToken('/api/user/reject-friend-request/', body, 'POST');
+		response = await fetchWithToken('/api/user/reject-friend-request/', body, 'DELETE');
 		data = await response.json();
 	} catch(error) {
 		console.log(error);
@@ -185,7 +185,7 @@ export async function cancelFriendRequest(friendAlias) {
 		const body = JSON.stringify({
 			toAlias: friendAlias
 			});
-		response = await fetchWithToken('/api/user/cancel-friend-request/', body, 'POST');
+		response = await fetchWithToken('/api/user/cancel-friend-request/', body, 'DELETE');
 		data = await response.json();
 	} catch(error) {
 		console.log(error);
