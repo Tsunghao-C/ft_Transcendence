@@ -28,7 +28,6 @@ export async function setLobbyView(contentContainer, roomID = "") {
 			<!-- <p>Select an option below to get started:</p> -->
 				<button id="create-match">Create Private Match</button>
 				<button id="join-match">Join Match</button>
-				<button id="ready-button" style="display:none;">Ready</button>
 				<button id="invite-button" style="display:none;"> > Invite a Player </button>
 				<div id="player-info-container" style="display: flex; justify-content: space-between;">
 					<div class="user-info" id="user-info-left" style="text-align: left; flex: 1; padding: 10px;"></div>
@@ -94,7 +93,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 	});
 
     document.getElementById('go-back-EOG').addEventListener('click', async () => {
-        window.location.hash = "game/";
+        window.location.hash = "lobby";
     });
 
 	setTypeOfGame("online");
