@@ -610,6 +610,64 @@ canvas {
 	font-size: 1rem !important;
 }
 
+/**************************** Tournament ****************************/
+
+.tournament-view {
+	padding-top: 10px;
+	padding-bottom: 10px;
+	width: 100%;
+	padding-left: 10%;
+	padding-right: 10%;
+	height: var(--inner-view-height);
+	overflow-y: auto;
+	box-sizing: border-box; 
+}
+
+.tournament-view h3 {
+	padding: 10px 0px 10px 0px !important;
+}
+
+.player-entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+	gap: 5px;
+	padding: 10px 0 5px 0;
+}
+
+.player-entry input {
+	margin: 0px !important;
+	box-sizing: border-box;
+}
+
+.player-entry select {
+	width: 100px;
+	height: 35px;
+	font-size: 0.8rem;
+	margin: 0px;
+	background-color: rgba(209, 209, 209, 0.1);
+	border: 1px solid rgba(0, 0, 0, 0.1);
+	border-radius: 5px;
+}
+
+#added-player { /* added player select */
+	width: 78px;
+}
+
+.player-entry button {
+	width: 20px !important;
+	height: 35px !important;
+	font-size: 0.8rem !important;
+	margin: 0px !important;
+	padding: 0px !important;
+	background-color: transparent !important;
+}
+
+/**Tournament integrated game view */
+#match-container .gamelobby-view {
+	padding: 0 !important;
+}
+
 /**************************** Leaderboard ****************************/
 
 .leaderboard-view {
