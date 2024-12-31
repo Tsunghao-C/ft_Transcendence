@@ -1,18 +1,17 @@
-import { fetchWithToken } from "./fetch_request.js";
+import { fetchWithToken, getLanguageCookie } from "./fetch_request.js";
 import { setLocalLobby } from "./game_local.js";
 import { setIsTournament } from "./game_utils.js";
 import { hideElem } from "./utils.js";
 import { TournamentPlayers } from "./game_utils.js";
 import { setSoloLobby } from "./game_solo.js";
+import { translations as trslt } from "./language_pack.js";
 
 
 export async function setTournamentView(contentContainer) {
 	setIsTournament(true);
 	contentContainer.innerHTML = `
-	<div id="tournament-view">
-		<h2>Tournament Dashboard</h2>
-		<div id="tournament-status">
-		</div>
+	<div class="tournament-view" id="tournament-view">
+		<div id="tournament-status"></div>
 		<button id="create-tournament-btn">Create New Tournament</button>
 		<div id="match-container">
 	</div>
@@ -35,13 +34,15 @@ export async function setTournamentView(contentContainer) {
 }
 
 function displayTournament(tournament, container) {
+	const lng = getLanguageCookie() ||  "en";
 	if (!container) return;
 
 	container.innerHTML = `
 		<h3>Tournament: ${tournament.name}</h3>
-		<p>Owner: ${tournament.user}</p>
+		<!-- <p>Owner: ${tournament.user}</p> -->
+		<button id="go-back-EOG" style="display: none;">${trslt[lng].back}</button>
 		<div id="brackets-container"></div>
-		<button id="next-match-btn">Afficher le prochain match</button>
+		<button id="next-match-btn">Start next game</button>
 		<div id="match-container"></div>
 	`;
 
@@ -86,16 +87,15 @@ function displayTournament(tournament, container) {
 
 function setTournamentViewForm(contentContainer) {
 	contentContainer.innerHTML = `
-	<div id="tournament-creation">
-		<h2>Create a Tournament</h2>
+	<div class="tournament-view" id="tournament-creation">
 		<form id="tournament-form">
 			<div>
-				<label for="tournament-name">Tournament Name:</label>
-				<input type="text" id="tournament-name" name="tournamentName" required />
+				<input type="text" id="tournament-name" name="tournamentName" placeholder="Enter tournament name" required />
 			</div>
+			<hr>
 			<div id="players-container">
 				<div class="player-entry">
-					<input type="text" placeholder="Alias" name="player1" required />
+					<input type="text" placeholder="Enter player 1 alias" name="player1" required />
 					<select name="type1">
 						<option value="human">Human</option>
 						<option value="easy">AI - Easy</option>
@@ -104,7 +104,7 @@ function setTournamentViewForm(contentContainer) {
 					</select>
 				</div>
 				<div class="player-entry">
-					<input type="text" placeholder="Alias" name="player2" required />
+					<input type="text" placeholder="Enter player 2 alias" name="player2" required />
 					<select name="type2">
 						<option value="human">Human</option>
 						<option value="easy">AI - Easy</option>
@@ -235,8 +235,8 @@ function setupTournamentForm(contentContainer) {
 		const playerEntry = document.createElement("div");
 		playerEntry.classList.add("player-entry");
 		playerEntry.innerHTML = `
-			<input type="text" placeholder="Alias" name="player${playerCount}" required />
-			<select name="type${playerCount}">
+			<input type="text" placeholder="Enter player ${playerCount} alias" name="player${playerCount}" required />
+			<select id="added-player" name="type${playerCount}">
 				<option value="human">Human</option>
 				<option value="easy">AI - Easy</option>
 				<option value="medium">AI - Medium</option>
