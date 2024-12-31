@@ -2,6 +2,7 @@ import { hideElem, hideClass, showElem } from "./utils.js";
 import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
 import { fetchWithToken } from "./fetch_request.js";
+import { submitMatchResult } from "./game_tournament.js";
 
 
 // let readyButton = null;
@@ -12,6 +13,17 @@ let game_over = false;
 let pendingGameUpdate = null;
 let roomId;
 let typeOfGame;
+let isTournament;
+export let TournamentPlayers = {
+	player1: {
+		alias: "none",
+		id: -1
+	},
+	player2: {
+		alias: "none",
+		id: -1
+	}
+}
 export let playerEvent = {
     player_1: {
         pending: false,
@@ -24,6 +36,10 @@ export let playerEvent = {
         id: null
     }
 };
+
+export function setIsTournament(isTournamentValue) {
+	isTournament = isTournamentValue;
+}
 
 export function setTypeOfGame(gameType) {
 	typeOfGame	= gameType;
@@ -63,12 +79,15 @@ function drawElements(ball, player_1, player_2) {
 
 function drawGameOverScreen(gameState) {
 	const canvas = document.getElementById('game');
+	if (!canvas)
+		return;
 	const ctx = canvas.getContext('2d');
+	if (!ctx)
+		return;
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	ctx.font = '48px Space Mono';
 	ctx.textBaseline = 'hanging';
 	ctx.fillStyle = 'black';
-
 	// Game Over
 	const gameoverText = "Game Over";
 	const gameoverTextWidth = ctx.measureText(gameoverText).width;
@@ -209,51 +228,66 @@ async function sendLocalEvents() {
 // 	}
 // }
 
-export function setUpOnePlayerControl() {
-    document.addEventListener('keydown', function(event) {
-        if (event.code === 'ArrowUp') {
-            playerEvent.player_1.pending = true;
-            playerEvent.player_1.type = 'move_up';
-        } else if (event.code === 'ArrowDown') {
-            playerEvent.player_1.pending = true;
-            playerEvent.player_1.type = 'move_down';
-        }
-    });
+function handleKeyDownOnePlayer(event) {
+    if (event.code === 'ArrowUp') {
+        playerEvent.player_1.pending = true;
+        playerEvent.player_1.type = 'move_up';
+    } else if (event.code === 'ArrowDown') {
+        playerEvent.player_1.pending = true;
+        playerEvent.player_1.type = 'move_down';
+    }
+}
 
-    document.addEventListener('keyup', function(event) {
-        if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
-            playerEvent.player_1.pending = true;
-            playerEvent.player_1.type = 'move_stop';
-        }
-    });
+function handleKeyUpOnePlayer(event) {
+    if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
+        playerEvent.player_1.pending = true;
+        playerEvent.player_1.type = 'move_stop';
+    }
+}
+
+function handleKeyDownTwoPlayers(event) {
+    if (event.code === 'KeyW') {
+        playerEvent.player_1.pending = true;
+        playerEvent.player_1.type = 'move_up';
+    } else if (event.code === 'KeyS') {
+        playerEvent.player_1.pending = true;
+        playerEvent.player_1.type = 'move_down';
+    } else if (event.code === 'ArrowUp') {
+        playerEvent.player_2.pending = true;
+        playerEvent.player_2.type = 'move_up';
+    } else if (event.code === 'ArrowDown') {
+        playerEvent.player_2.pending = true;
+        playerEvent.player_2.type = 'move_down';
+    }
+}
+
+function handleKeyUpTwoPlayers(event) {
+    if (event.code === 'KeyW' || event.code === 'KeyS') {
+        playerEvent.player_1.pending = true;
+        playerEvent.player_1.type = 'move_stop';
+    } else if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
+        playerEvent.player_2.pending = true;
+        playerEvent.player_2.type = 'move_stop';
+    }
+}
+
+function removeAllEventListeners() {
+    document.removeEventListener('keydown', handleKeyDownOnePlayer);
+    document.removeEventListener('keyup', handleKeyUpOnePlayer);
+    document.removeEventListener('keydown', handleKeyDownTwoPlayers);
+    document.removeEventListener('keyup', handleKeyUpTwoPlayers);
+}
+
+export function setUpOnePlayerControl() {
+    removeAllEventListeners();
+    document.addEventListener('keydown', handleKeyDownOnePlayer);
+    document.addEventListener('keyup', handleKeyUpOnePlayer);
 }
 
 export function setUpTwoPlayersControl() {
-    document.addEventListener('keydown', function(event) {
-        if (event.code === 'KeyW') {
-            playerEvent.player_1.pending = true;
-            playerEvent.player_1.type = 'move_up';
-        } else if (event.code === 'KeyS') {
-            playerEvent.player_1.pending = true;
-            playerEvent.player_1.type = 'move_down';
-        } else if (event.code === 'ArrowUp') {
-            playerEvent.player_2.pending = true;
-            playerEvent.player_2.type = 'move_up';
-        } else if (event.code === 'ArrowDown') {
-            playerEvent.player_2.pending = true;
-            playerEvent.player_2.type = 'move_down';
-        }
-    });
-
-    document.addEventListener('keyup', function(event) {
-        if (event.code === 'KeyW' || event.code === 'KeyS') {
-            playerEvent.player_1.pending = true;
-            playerEvent.player_1.type = 'move_stop';
-        } else if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
-            playerEvent.player_2.pending = true;
-            playerEvent.player_2.type = 'move_stop';
-        }
-    });
+    removeAllEventListeners();
+    document.addEventListener('keydown', handleKeyDownTwoPlayers);
+    document.addEventListener('keyup', handleKeyUpTwoPlayers);
 }
 
 
@@ -328,8 +362,13 @@ async function register_room(response) {
 
 async function register_ai_room(response) {
 	roomId = response.room_name;
-	console.log('Room creation notice received');
+	console.log('AI Room creation notice received');
 	console.log('Room name: ' + roomId);
+	if (isTournament) {
+		renderLocalUsers(TournamentPlayers.player1.alias, TournamentPlayers.player2.alias);
+	} else {
+		renderLocalUsers(response.player1_alias, "Mode: " + response.difficulty);
+	}
 	await showReadyButton(roomId, playerEvent.player_1.id);
 }
 
@@ -338,13 +377,18 @@ async function register_local_room(response) {
 	console.log('Room name: ' + roomId);
 	roomId = response.room_name;
 	playerEvent.player_2.id = response.player2_id;
+	if (isTournament) {
+		renderLocalUsers(TournamentPlayers.player1.alias, TournamentPlayers.player2.alias);
+	} else {
+		renderLocalUsers(response.player1_alias, response.player1_alias + " friend");
+	}
 	await showReadyButton(roomId, playerEvent.player_1.id);
 }
 
 async function set_player1(response) {
 	let player1Data;
 	let profileResponse;
-	profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.alias}`);
+	profileResponse = await fetchWithToken(`/api/user/get-profile/?own=yes`);
 	player1Data = await profileResponse.json();
 	hideElem("create-match");
 	hideElem("join-match");
@@ -393,6 +437,9 @@ async function set_game_over(response) {
 		game_over = true;
 		pendingGameUpdate = null;
 	}
+	if (isTournament) {
+		submitMatchResult(TournamentPlayers.player1.id, TournamentPlayers.player2.id, response.payload.winner)
+	}
 }
 
 async function log_error(response) {
@@ -405,9 +452,9 @@ async function join_room(response) {
 	let profileResponse;
 	console.log('player1 alias', response.player1, "and player2 alias", response.player2);
 	try {
-		profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.player1}`);
+		profileResponse = await fetchWithToken(`/api/user/get-profile/?uid=${response.player1}`);
 		player1Data = await profileResponse.json();
-		profileResponse = await fetchWithToken(`/api/user/get-profile/?alias=${response.player2}`);
+		profileResponse = await fetchWithToken(`/api/user/get-profile/?uid=${response.player2}`);
 		player2Data = await profileResponse.json();
 		hideElem("create-match");
 		hideElem("join-match");
@@ -437,7 +484,8 @@ export async function connectWebSocket() {
 	let wsReconnectTimer = null;
 
 	if (state.gameSocket) {
-		return ;
+		state.gameSocket.close();
+		state.gameSocket = null;
 	}
 	if (state.gameSocket && state.gameSocket.readyState === WebSocket.CONNECTING) {
 		console.log('Connection already in progress...');
@@ -460,8 +508,6 @@ export async function connectWebSocket() {
 				wsReconnectTimer = null;
 			}
 			state.gameSocket.onmessage = async function (event) {
-			//	console.log('Ws message received', event);
-			//	console.log('Ws readyState:', state.gameSocket.readyState);
 				try {
 					const response = JSON.parse(event.data);
 					if (response.type in onmessage_methods)

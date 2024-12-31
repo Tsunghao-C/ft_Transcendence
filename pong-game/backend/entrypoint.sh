@@ -14,6 +14,22 @@ echo "SQL_PORRT: ${POSTGRES_PORT}"
 wait-for-it --service postgres:${POSTGRES_PORT} -- echo "Game Database is ready!"
 # wait-for-it --service user_db:${SQL_PORT} -- echo "User Database is ready!"
 
+echo "Waiting for Vault token to be ready..."
+echo "Django access token file: ${VAULT_TOKEN_FILE}"
+timeout=0
+max_timeout=120
+
+until [ -f "${VAULT_TOKEN_FILE}" ] && [ -s "${VAULT_TOKEN_FILE}" ] && grep -q "[a-zA-Z0-9]" "${VAULT_TOKEN_FILE}"; do
+    if [ $timeout -ge $max_timeout ]; then
+        echo "Timeout waiting for Vault token file fater ${max_timeout} seconds"
+        exit 1
+    fi
+    echo "Waiting for Vault token file to be ready..."
+    sleep 5
+    timeout=$((timeout + 5))
+done
+echo "Vault token file is ready, proceeding with migrations"
+
 # echo "Making migrations..."
 # python manage.py makemigrations || { echo "makemigrations failed"; exit 1; }
 

@@ -13,20 +13,23 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import os
-
+from vault_helper import vault_client
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = 'https://localhost:8443/media/'
 
+# Initialize and get credentials from Vault
+db_credentials = vault_client.get_database_credentials("database")
+jwt_credentials = vault_client.get_database_credentials("jwt")
+email_credentials = vault_client.get_database_credentials("email")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("SECRET_KEY")
-# SECRET_KEY = "wowow321"
+SECRET_KEY = jwt_credentials['JWT_SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.environ.get("DEBUG", default=0))
@@ -111,12 +114,12 @@ ASGI_APPLICATION = 'backend.asgi.application'
 
 DATABASES = {
     "default": {
-        "ENGINE": os.environ.get("POSTGRES_ENGINE", "django.db.backends.sqlite3"),
-        "NAME": os.environ.get("POSTGRES_DB", BASE_DIR / "db.sqlite3"),
-        "USER": os.environ.get("POSTGRES_USER", "transc_user"),
-        "PASSWORD": os.environ.get("POSTGRES_PASS", "transc_pass"),
-        "HOST": os.environ.get("POSTGRES_HOST", "transc_host"),
-        "PORT": os.environ.get("POSTGRES_PORT", "5432"),
+        "ENGINE": db_credentials['POSTGRES_ENGINE'],
+        "NAME": db_credentials['POSTGRES_DB'],
+        "USER": db_credentials['POSTGRES_USER'],
+        "PASSWORD": db_credentials['POSTGRES_PASS'],
+        "HOST": db_credentials['POSTGRES_HOST'],
+        "PORT": os.environ.get("POSTGRES_PORT", "5434"),
     },
 }
 
@@ -242,8 +245,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = '42transcendental@gmail.com'
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD") # Env
+EMAIL_HOST_USER = email_credentials['EMAIL_HOST_USER']
+EMAIL_HOST_PASSWORD = email_credentials['EMAIL_HOST_PASS'] # Env
 
 LDB_UPDATE_TIMER = os.environ.get("LDB_UPDATE_TIMER", 15)
 CRONJOBS = [
