@@ -22,7 +22,7 @@ export function setGameMenu(contentContainer, menu = "main") {
 		],
 		local: [
 			{ text: `${translations[currentLanguage].duel}`, hash: "duel" },
-			{ text: `${translations[currentLanguage].tournament}`, hash: "game/local/tournament" },
+			{ text: `${translations[currentLanguage].tournament}`, hash: "tournament" },
 			{ text: `${translations[currentLanguage].back}`, hash: "game/multiplayer" },
 		],
 		online: [

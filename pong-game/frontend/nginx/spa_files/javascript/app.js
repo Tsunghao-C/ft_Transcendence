@@ -1,5 +1,4 @@
 import { setGameMenu } from './game_menu.js';
-import { closeGameWebSocket } from './game_menu.js';
 import { setLoginView } from './login_login.js';
 import { setRegisterView } from './login_register.js';
 import { set404View } from './404.js';
@@ -15,6 +14,8 @@ import { setAboutPage } from './about.js';
 import { setChatView } from './chat_view.js';
 import { translations } from './language_pack.js';
 import { setLobbyView } from './game_lobby.js';
+import { setTournamentView } from './game_tournament.js';
+import { setIsTournament } from "./game_utils.js";
 import { setSoloLobby } from './game_solo.js';
 import { setLocalLobby } from './game_local.js';
 import { setQuickMatchView } from './game_quickmatch.js';
@@ -43,7 +44,6 @@ export async function setContainerHtml(container, url) {
 			throw new Error(`Failed to load navbar.html: ${response.statusText}`);
 		}
 		const containerHtml = await response.text();
-		// console.log("navbarHtml  is : " + navbarHtml);
 		container.innerHTML = containerHtml;
 	} catch (error) {
 		console.error(error);
@@ -121,10 +121,12 @@ export async function loadPage(page) {
 		state.chatSocket = null;
 		console.log("closing chatting socket");
 	}
-	if (page !== "lobby" && page.startsWith("lobby/") && state.gameSocket) {
-		console.log("closing gaming socket");
+	if (state.gameSocket) {
 		state.gameSocket.close();
 		state.gameSocket = null;
+	}
+	if (page !== "tournament") {
+		setIsTournament(false);
 	}
 	try {
 		response = await fetchWithToken('/api/user/getuser/');
@@ -208,6 +210,9 @@ export async function loadPage(page) {
 				// 	break;
 				case "personal-data":
 					setpersonalDataView(innerContent);
+					break;
+				case "tournament":
+					setTournamentView(innerContent);
 					break;
 				default:
 					if (page.startsWith("profile/")) {

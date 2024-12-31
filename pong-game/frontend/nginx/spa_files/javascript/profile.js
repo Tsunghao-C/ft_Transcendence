@@ -94,7 +94,7 @@ export async function setProfileView(contentContainer, usernameInHash) {
 										const isWin = (isP1 && p1Won) || (!isP1 && !p1Won);
 										const opponent = isP1 ? match.p2 : match.p1;
 										const outcomeText = isWin ? trsl[lng].win : trsl[lng].loss;
-										const matchDate = new Date(match.time).toLocaleString(cl);
+										const matchDate = new Date(match.time).toLocaleString("fr-FR");
 										return `
 											<p>
 												${matchDate} - <strong>${outcomeText}</strong> versus

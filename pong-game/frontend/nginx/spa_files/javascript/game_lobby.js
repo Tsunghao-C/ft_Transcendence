@@ -11,7 +11,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 	try {
 		response = await fetchWithToken('/api/user/getuser/');
 		userData = await response.json();
-		playerEvent.player_1.id = userData.alias;
+		playerEvent.player_1.id = userData.id;
 		console.log("User data in lobby: ", userData);
 	} catch(error) {
 		console.log(error);
