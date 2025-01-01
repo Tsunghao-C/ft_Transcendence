@@ -92,7 +92,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 			await self.close()
 			return
 		self.user = user
-		logger.info(f"WebSocket connection attempt: {self.scope['path']} by user {self.user.id}")
+		logger.info(f"{self.user.id}: WebSocket connection attempt {self.scope['path']} by user {self.user.id}")
 		print(user.id, user.alias, "is connected")
 		self.connected = True
 		try:
