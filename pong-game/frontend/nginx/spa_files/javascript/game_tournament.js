@@ -1,8 +1,8 @@
 import { fetchWithToken, getLanguageCookie } from "./fetch_request.js";
 import { setLocalLobby } from "./game_local.js";
 import { setIsTournament } from "./game_utils.js";
-import { hideElem } from "./utils.js";
-import { TournamentPlayers } from "./game_utils.js";
+import { hideClass, hideElem, showElem } from "./utils.js";
+import { TournamentPlayers, goBackButtonEventListener } from "./game_utils.js";
 import { setSoloLobby } from "./game_solo.js";
 import { translations as trslt } from "./language_pack.js";
 
@@ -12,77 +12,173 @@ export async function setTournamentView(contentContainer) {
 	contentContainer.innerHTML = `
 	<div class="tournament-view" id="tournament-view">
 		<div id="tournament-status"></div>
-		<button id="create-tournament-btn">Create New Tournament</button>
-		<div id="match-container">
+		<div id="match-container"></div>
 	</div>
 	`;
-
 	const tournamentStatusContainer = document.getElementById("tournament-status");
-	const createTournamentButton = document.getElementById("create-tournament-btn");
-
 	const userTournament = await getUserTournament();
-
 	if (userTournament) {
 		displayTournament(userTournament, tournamentStatusContainer);
 	} else {
 		tournamentStatusContainer.innerHTML = `<p>No tournament in progress.</p>`;
 	}
-
-	createTournamentButton.addEventListener("click", () => {
-		setTournamentViewForm(contentContainer);
-	});
 }
 
 function displayTournament(tournament, container) {
 	const lng = getLanguageCookie() ||  "en";
 	if (!container) return;
-
 	container.innerHTML = `
-		<h3>Tournament: ${tournament.name}</h3>
-		<!-- <p>Owner: ${tournament.user}</p> -->
-		<button id="go-back-EOG" style="display: none;">${trslt[lng].back}</button>
+		<h3>The ${tournament.name} Tournament</h3>
+		<hr>
 		<div id="brackets-container"></div>
 		<button id="next-match-btn">Start next game</button>
+		<button id="create-tournament-btn">Create a new Tournament</button>
 		<div id="match-container"></div>
 	`;
-
-	const bracketsContainer = document.getElementById("brackets-container");
-
-	tournament.brackets.forEach((bracket, index) => {
-		const bracketDiv = document.createElement("div");
-		bracketDiv.classList.add("bracket");
-		bracketDiv.innerHTML = `
-			<h4>Bracket ${index + 1}</h4>
-			<ul>
-				${bracket.players
-					.map(
-						(player) =>		
-							`<li>
-								${player.alias} (${player.is_ai === "human" ? "Human" : player.is_ai})
-								<span style="color: ${
-									player.result === "win" ? "green" : player.result === "lose" ? "red" : "gray"
-								};">
-									${
-									player.result === "win"
-										? "Qualified"
-										: player.result === "lose"
-										? "Eliminated"
-										: "Not Played"
-									}
-								</span>
-							</li>`
-					)
-					.join("")}
-			</ul>
-		`;
-
-		bracketsContainer.appendChild(bracketDiv);
+	
+	const createTournamentButton = document.getElementById("create-tournament-btn");
+	createTournamentButton.addEventListener("click", () => {
+		const innerContent = document.getElementById("innerContent");
+		setTournamentViewForm(innerContent);
 	});
-
 	const nextMatchButton = document.getElementById("next-match-btn");
 	nextMatchButton.addEventListener("click", async () => {
 		await showNextMatch(tournament.id);
 	});
+
+	const bracketsContainer = document.getElementById("brackets-container");
+	const numOfBrackets = tournament.brackets.length; // for debugging 7 < odd | delete once fixed 
+	console.log("num of brackets is : ", numOfBrackets); // for debugging 7 < odd | delete once fixed
+	tournament.brackets.forEach((bracket, index) => {
+		console.log("index is : ", index); // for debugging 7 < odd | delete once fixed
+		const n = bracket.players.length;
+		const bracketDiv = document.createElement("div");
+		bracketDiv.classList.add("bracket");
+		const matchupHtml = getMatchupsHtml(bracket, index);
+		let roundTitle = `Round ${index + 1}`;
+		if (n % 2 != 0 && index == 0) {
+			roundTitle = "PLAYOFF";
+		}
+		bracketDiv.innerHTML = `
+			<h4>${roundTitle}</h4>
+			<ul>
+				${matchupHtml}
+			</ul>
+			<hr>
+		`;
+		bracketsContainer.appendChild(bracketDiv);
+	});
+}
+
+function getPlayoffHtml(bracket) {
+	const n = bracket.players.length;
+	const html = `
+		<li class="matchup">
+			<span class="left-player">
+				<span style="color: ${
+					bracket.players[n - 2].result === "win" ? "green" : bracket.players[n - 2].result === "lose" ? "red" : "gray"
+				};">
+					${
+						bracket.players[n - 2].result === "win"
+						? "[W]"
+						: bracket.players[n - 2].result === "lose"
+						? "[L]"
+						: ""
+					}
+				</span>
+				${bracket.players[n - 2].is_ai === "human" ? "" : "[CPU]"} ${bracket.players[n - 2].alias}
+			</span>	
+			<span class="vs">| vs |</span>
+			<span class="right-player">
+				${bracket.players[n - 1].alias} ${bracket.players[n - 1].is_ai === "human" ? "" : "[CPU]"}
+				<span style="color: ${
+					bracket.players[n - 1].result === "win" ? "green" : bracket.players[n - 1].result === "lose" ? "red" : "gray"
+				};">
+					${
+						bracket.players[n - 1].result === "win"
+						? " [W]"
+						: bracket.players[n - 1].result === "lose"
+						? " [L]"
+						: ""
+					}
+				</span>
+			</span>
+		</li>		
+	`;
+	return html;
+}
+
+function getLeftPlayerHtml(player) {
+	const html = `
+		<li class="matchup">
+			<span class="left-player">
+				<span style="color: ${
+					player.result === "win" ? "green" : player.result === "lose" ? "red" : "gray"
+				};">
+					${
+					player.result === "win"
+						? "[W] "
+						: player.result === "lose"
+						? "[L] "
+						: ""
+					}
+				</span>
+				${player.is_ai === "human" ? "" : "[CPU]"} ${player.alias}
+			</span>
+	`;
+	return html;
+}
+
+function getRightPlayerHtml(player) {
+	const html = `
+		<span class="vs">| vs |</span>
+		<span class="right-player">
+			${player.alias} ${player.is_ai === "human" ? "" : "[CPU]"}
+			<span style="color: ${
+				player.result === "win" ? "green" : player.result === "lose" ? "red" : "gray"
+			};">
+				${
+				player.result === "win"
+					? " [W]"
+					: player.result === "lose"
+					? " [L]"
+					: ""
+				}
+			</span>
+		</span>
+	</li>
+	`;
+	return html;
+}
+
+function getMatchupsHtml(bracket, index) {
+	let html = "";
+	const n = bracket.players.length;
+	console.log("number of player is : ", n);
+
+	// ODD < 7
+	// if we have an odd < 7 number of player in the bracket, for the first bracket, we just display a playoff between the two last players of the list
+	if (n % 2 != 0 && index == 0 && n < 7) {
+		console.log("WE HAVE AN ODD NUMBER OF PLAYERS BELOW 7");
+		html = getPlayoffHtml(bracket);
+		return html;
+	}
+
+	// EVEN
+	// if we have an even number of players in the bracket, we iterate through the players 
+	// and display the even players on the left and odd players on the right
+	bracket.players.forEach((player, i) => {
+		// left player
+		if (i % 2 == 0) {
+			html += getLeftPlayerHtml(player);
+		}
+		// right player
+		else {
+			html += getRightPlayerHtml(player);
+		}
+		console.log("player " + i + " is : ", player);
+	})
+	return html;
 }
 
 function setTournamentViewForm(contentContainer) {
@@ -171,7 +267,8 @@ async function showNextMatch() {
 		const response = await fetchWithToken(`/api/game/next-game/`);
 		if (!response.ok) {
 			console.log(response);
-			alert("nothing is working");
+			alert("Error: an unexpected error occured, please try again later");
+			return;
 		}
 
 		const data = await response.json();
@@ -194,6 +291,9 @@ async function showNextMatch() {
 					TournamentPlayers.player2.id = player2.id;
 					TournamentPlayers.player2.alias = player2.alias;
 				}
+				hideElem("brackets-container");
+				hideElem("next-match-btn");
+				hideElem("create-tournament-btn");
 				if (player1.is_ai === "human" && player2.is_ai === "human") {
 					setLocalLobby(matchContainer, true);
 				} else {
@@ -203,7 +303,7 @@ async function showNextMatch() {
 					} else {
 						difficulty = player1.is_ai;
 					}
-					setSoloLobby(matchContainer, difficulty);
+					setSoloLobby(matchContainer, difficulty, true);
 				}
 			}
 		} else if (data.next_game.message) {
@@ -214,9 +314,6 @@ async function showNextMatch() {
 		matchContainer.innerHTML = `<p>Error fetching next match.</p>`;
 	}
 }
-
-
-
 
 function setupTournamentForm(contentContainer) {
 	const maxPlayers = 16;
@@ -276,8 +373,6 @@ function setupTournamentForm(contentContainer) {
 				alert("Failed to create tournament. Please try again.");
 			} else {
 				const data = await response.json();
-				alert("Tournament created successfully!");
-
 				setTournamentView(contentContainer);
 			}
 		} catch (error) {
