@@ -50,17 +50,6 @@ export async function fetchWithToken(url, body = null, method = 'GET', needForCo
 			},
 		};
 
-		// this is just a desperate attempt to get the token right, doesn't work, doesn't do anythin, we might not need it
-		// if (method === 'POST') {
-        //     const csrfToken = getCookie("csrftoken");
-        //     if (csrfToken) {
-		// 		console.log("pls tell me we go here i beg you");
-        //         options.headers['X-CSRFToken'] = csrfToken;
-        //     } else {
-        //         console.error("CSRF token is missing");
-        //     }
-        // }
-
 		if (needForContent) {
 			options.headers['Content-Type'] = 'application/json';
 		}

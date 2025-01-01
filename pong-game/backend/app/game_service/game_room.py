@@ -167,12 +167,9 @@ class GameRoom():
 
 	def record_match_result_sync(self, winner):
 		try:
-			match_outcome = 0 #rightplayer win
-			if(winner == self.left_player):
-				match_outcome = 1 #leftplayer win
 			p1 = CustomUser.objects.get(id=self.left_player)
 			p2 = CustomUser.objects.get(id=self.right_player)
-			if (winner == self.left_player):
+			if (winner == "left"):
 				match_outcome = 1
 				p1.winCount += 1
 				p2.lossCount += 1
