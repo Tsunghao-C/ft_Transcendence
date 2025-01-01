@@ -60,7 +60,7 @@ function displayProfile(profile) {
 			<div class="match-history-scroll" style="max-height: 150px; overflow-y: auto;">
 				${
 					profile.matchHistory && profile.matchHistory.length > 0
-						? profile.matchHistory.map(match => {
+						? profile.matchHistory.slice().reverse().map(match => {
 							const isP1 = match.p1 === profile.alias;
 							const p1Won = match.matchOutcome === "Player 1 Wins";
 							const isWin = (isP1 && p1Won) || (!isP1 && !p1Won);
