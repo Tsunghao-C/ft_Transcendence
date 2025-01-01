@@ -2,10 +2,10 @@ import { fetchWithToken } from "./fetch_request.js";
 import { getLanguageCookie } from "./fetch_request.js";
 import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
-import { loadPage } from "./app.js";
 import { clearInput, hideElem, showElem, hideClass, showClass } from "./utils.js";
 import { sendDuelRequestFromGameRoom } from "./manage_social.js";
 import { translations as trsl } from "./language_pack.js";
+import { isAlphanumeric } from "./utils.js";
 
 ////////////////////////////////// Utils //////////////////////////////////
 
@@ -183,8 +183,10 @@ function startPrivateChatEventListener() {
 		const recipientUser = document.getElementById("recipientUser").value;
 		try {
 			if (recipientUser) {
-				console.log("Opening chat with", recipientUser);
-				window.location.hash = `chat/private/${recipientUser}`;
+				if (isAlphanumeric(recipientUser)) {
+					console.log("Opening chat with", recipientUser);
+					window.location.hash = `chat/private/${recipientUser}`;
+				}
 			}
 		} catch(error) {
 			console.log(error);
@@ -198,6 +200,9 @@ function createOrJoinRoomButtonEventListener() {
 		const roomName = document.getElementById("room-name").value;
 		if (roomName) {
 			try {
+				if (!isAlphanumeric("Room Name", roomName)) {
+					return;
+				}
 				const response = await fetchWithToken(
 					'/api/chat/create/',
 					JSON.stringify({ name: roomName, is_private: false }),
@@ -456,13 +461,15 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 
 	// Event listeners - In chat display
 	backButtonEventListener();
-
+	if (aliasOrRoomToJoin && !isAlphanumeric(aliasOrRoomToJoin, "Room Name and Alias")) {
+		aliasOrRoomToJoin = "";
+	}
 	if (roomType === "public") {
-		loadChatRoom(aliasOrRoomToJoin, userAlias, roomType);
+			loadChatRoom(aliasOrRoomToJoin, userAlias, roomType);
 	} else if (roomType === "private"){
 		if (aliasOrRoomToJoin !== "") {
-			console.log("opening chat with", aliasOrRoomToJoin);
-			getOrCreatePrivateChatRoom(aliasOrRoomToJoin, userAlias, roomType);
+				console.log("opening chat with", aliasOrRoomToJoin);
+				getOrCreatePrivateChatRoom(aliasOrRoomToJoin, userAlias, roomType);
 		}
 	}
 }
