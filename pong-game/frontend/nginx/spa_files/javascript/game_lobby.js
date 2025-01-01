@@ -23,9 +23,8 @@ export async function setLobbyView(contentContainer, roomID = "") {
 
 	contentContainer.innerHTML = `
 		<div class="gamelobby-view">
-		<!-- <h2>Game Lobby</h2> -->
-		<div id="game-lobby" class="gamelobby-view">
-			<!-- <p>Select an option below to get started:</p> -->
+			<div id="game-lobby" class="gamelobby-view">
+				<!-- <p>Select an option below to get started:</p> -->
 				<button id="create-match">Create Private Match</button>
 				<button id="join-match">Join Match</button>
 				<button id="invite-button" style="display:none;"> > Invite a Player </button>
@@ -37,6 +36,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 				<div id="player-status" class="player-status"></div>
 				<canvas id="game" width="800" height="600" style="display: none;"></canvas>
 				<button id="go-back-EOG" style="display: none;">${trslt[lng].back}</button>
+			</div>
 		</div>
 	`;
 	const canvas = document.getElementById('game');
