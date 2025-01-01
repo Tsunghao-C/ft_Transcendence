@@ -28,7 +28,6 @@ export async function setLocalLobby(contentContainer, skip = false) {
         <div class="gamelobby-view">
         <div id="game-lobby" class="gamelobby-view">
             <button id="local">Start local versus</button>
-            <button id="menu">${trslt[lng].back}</button>
             <div id="player-info-container" style="display: flex; justify-content: space-between;">
                 <div id="user-info-left" style="text-align: left; flex: 1; padding: 10px;"></div>
                 <div id="user-info-right" style="text-align: left; flex: 1; padding: 10px;"></div>
@@ -39,6 +38,12 @@ export async function setLocalLobby(contentContainer, skip = false) {
             <button id="go-back-EOG" style="display: none;">${trslt[lng].back}</button>
         </div>
     `;
+
+    if (skip == true) {
+        console.log("SKIP IS TRUE");
+        document.getElementById('go-back-EOG').textContent = "";
+        hideElem("go-back-EOG");
+    }
 
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
@@ -73,7 +78,6 @@ export async function setLocalLobby(contentContainer, skip = false) {
     localButton.addEventListener('click', async () => {
         try {
             hideElem("local");
-            hideElem("menu");
             create_local_match();
         } catch (error) {
             console.error('Error in join-match event listener:', error);
@@ -87,10 +91,6 @@ export async function setLocalLobby(contentContainer, skip = false) {
         create_local_match();
     }
     
-    document.getElementById('menu').addEventListener('click', async () => {
-        window.location.hash = "game/local";
-    });
-
     document.getElementById('go-back-EOG').addEventListener('click', async () => {
         window.location.hash = "game/local";
     });
