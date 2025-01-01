@@ -53,6 +53,13 @@ class getChatRoomsOfUserView(APIView):
 
 		filtered_chatrooms = []
 		for room in chatrooms:
+			if room.is_tournament:
+				filtered_chatrooms.append({
+					"name": room.name,
+					"is_private": True,
+					"is_tournament":True,
+					"other_member": None
+				})
 			if room.is_private:
 				other_members = room.members.exclude(id=user.id)
 
@@ -61,12 +68,14 @@ class getChatRoomsOfUserView(APIView):
 					filtered_chatrooms.append({
 						"name": room.name,
 						"is_private": True,
+						"is_tournament":False,
 						"other_member": other_member_name
 					})
 			else:
 				filtered_chatrooms.append({
 					"name": room.name,
 					"is_private": False,
+					"is_tournament":False,
 					"other_member": None
 				})
 
