@@ -104,7 +104,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 			logger.info(f"{self.user.id}: accepted connection")
 			for stray_room_id, room_data in active_online_games.items():
 				player_ids = room_data["player_data"]["ids"]
-					index = player_ids.index(user.alias)
+				index = player_ids.index(user.alias)
 				if user.id in player_ids:
 					logger.info(f"{self.user.id}: Match found in active online games for user")
 					index = player_ids.index(user.id)
