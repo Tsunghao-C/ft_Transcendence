@@ -312,7 +312,7 @@ export function renderUserInfo(user1, user2 = null) {
 		userInfoRightDiv.innerHTML = `
 			<hr class="hrs">
 			<h4 class="player-two">Player two</h4>
-			<div style="display: flex; align-items: center; margin-bottom: 10px;">
+			<div style="display: flex; align-items: center; justify-content: right; margin-bottom: 10px;">
 				<div>
 					<p style="margin: 0; font-weight: bold;">${user2.alias}</p>
 					<p style="margin: 0; font-size: 0.8rem;">MMR: ${user2.mmr}</p>
@@ -325,7 +325,7 @@ export function renderUserInfo(user1, user2 = null) {
 		userInfoRightDiv.innerHTML = `
 			<hr>
 			<h4 class="player-two">Player two</h4>
-			<div style="display: flex; align-items: center; margin-bottom: 10px;">
+			<div style="display: flex; align-items: center; justify-content: right; margin-bottom: 10px;">
 				<div>
 					<p style="margin: 0; font-weight: bold;">Waiting...</p>
 				</div>
@@ -574,4 +574,10 @@ export function renderLocalUsers(user1, user2) {
 	`;
 	showElem("user-info-left", "block");
 	showElem("user-info-right", "block");
+}
+
+export function goBackButtonEventListener(location) {
+	document.getElementById('go-back-EOG').addEventListener('click', async () => {
+        window.location.hash = location;
+    });
 }
