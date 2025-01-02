@@ -43,7 +43,7 @@ export async function setpersonalDataView(contentContainer) {
     
     contentContainer.innerHTML = `
         <div class="personal-data-view">
-            <h2 data-i18n="personalDataTitle">${trsl[lng].personalData}</h2>
+            <h2>${trsl[lng].personalData}</h2>
             <div class="pp-and-login">
                 <div>
                     <img
@@ -62,66 +62,66 @@ export async function setpersonalDataView(contentContainer) {
                     >
                 </div>
                 <div class="ms-3">
-                    <label class="form-label" data-i18n="login">${trsl[lng].username}</label>
+                    <label class="form-label">${trsl[lng].username}</label>
                     <input type="text" class="form-control" value="${personal.username}" readonly>
                 </div>
             </div>
             <form id="personalDataForm">
                 <hr>
                 <div class="mb-3">
-                    <label for="aliasInput" class="form-label" data-i18n="alias">${trsl[lng].newAlias}</label>
+                    <label for="aliasInput" class="form-label">${trsl[lng].alias}</label>
                     <div class="input-group">
                         <input type="text" class="form-control" id="aliasInput" value="${personal.alias}" required>
                         <div>
                             <p id="aliasError" class="errorMessage"></p>
                             <p id="aliasSuccess" class="successMessage"></p>
                         </div>
-                        <button class="btn btn-success" type="button" id="aliasChangeButton" data-i18n="confirm">${trsl[lng].confirm}</button>
+                        <button class="btn btn-success" type="button" id="aliasChangeButton">${trsl[lng].confirm}</button>
                     </div>
                 </div>
                 <hr>
                 <div class="mb-3">
-                    <label for="mailInput" class="form-label" data-i18n="email">Email</label>
+                    <label for="mailInput" class="form-label">${trsl[lng].mail}</label>
                     <div class="input-group">
                         <input type="email" class="form-control" id="mailInput" value="${personal.email}" required>
                         <div>
                             <p id="emailError" class="errorMessage"></p>
                             <p id="emailSuccess" class="successMessage"></p>
                         </div>
-                        <button class="btn btn-success" type="button" id="emailChangeButton" data-i18n="confirm">${trsl[lng].confirm}</button>
+                        <button class="btn btn-success" type="button" id="emailChangeButton">${trsl[lng].confirm}</button>
                     </div>
                 </div>
                 <hr>
                 <div class="mb-3">
-                    <label for="aliasInput" class="form-label" data-i18n="password">${trsl[lng].password}</label>
-                    <button type="button" class="btn btn-warning" id="changePasswordButton" data-i18n="changePassword">${trsl[lng].changePassword}</button>
+                    <label for="aliasInput" class="form-label">${trsl[lng].password}</label>
+                    <button type="button" class="btn btn-warning" id="changePasswordButton">${trsl[lng].changePassword}</button>
                 </div>
 
                 <div id="passwordChangeFields" style="display: none;">
                     <div class="mb-3">
-                        <label for="oldPasswordInput" class="form-label" data-i18n="oldPassword">${trsl[lng].oldPassword}</label>
+                        <label for="oldPasswordInput" class="form-label">${trsl[lng].oldPassword}</label>
                         <input type="password" class="form-control" id="oldPasswordInput" required>
                     </div>
                     <div class="mb-3">
-                        <label for="newPasswordInput" class="form-label" data-i18n="newPassword">${trsl[lng].newPassword}</label>
+                        <label for="newPasswordInput" class="form-label">${trsl[lng].newPassword}</label>
                         <input type="password" class="form-control" id="newPasswordInput" required>
                     </div>
                     <div class="mb-3">
-                        <label for="confirmPasswordInput" class="form-label" data-i18n="confirmPassword">${trsl[lng].confirmNewPassword}</label>
+                        <label for="confirmPasswordInput" class="form-label">${trsl[lng].confirmNewPassword}</label>
                         <input type="password" class="form-control" id="confirmPasswordInput" required>
                     </div>
                     <div>
                         <p id="passwordError" class="errorMessage"></p>
                         <p id="passwordSuccess" class="successMessage"></p>
                     </div>
-                    <button type="button" class="btn btn-success" id="confirmPasswordChangeButton" data-i18n="confirmChange">${trsl[lng].confirm}</button>
+                    <button type="button" class="btn btn-success" id="confirmPasswordChangeButton">${trsl[lng].confirm}</button>
                 </div>
                 <hr>
                 <label for="aliasInput" class="form-label" data-i18n="language">${trsl[lng].language}</label>
                 <select id="languageSelect">
-					<option value="en" data-i18n="english">English</option>
-					<option value="fr" data-i18n="francais">Français</option>
-					<option value="pt" data-i18n="Português">Português</option>
+					<option value="en">English</option>
+					<option value="fr">Français</option>
+					<option value="pt">Português</option>
 				</select>
             </form>
         </div>
@@ -155,7 +155,7 @@ export async function setpersonalDataView(contentContainer) {
 					loadPage("personal-data");
 				} else {
 					console.log("Error uploading avatar:", response);
-					alert("Error uploading profile picture");
+					alert(trsl[lng].errorUploading);
 				}
             } catch(error) {
                 console.log(error);
@@ -171,13 +171,17 @@ export async function setpersonalDataView(contentContainer) {
             const data = await response.json();
             if (response.ok && data.detail === "alias successfully changed") {
                 emptyMessage("aliasError");
-                showMessage("Success, alias has been changed.", "aliasSuccess");
+                showMessage(trsl[lng].aliasChanged, "aliasSuccess");
             } else {
                 emptyMessage("aliasSuccess");
                 if (data.error) {
-                    showMessage("Error: " + data.error, "aliasError");
+                    if (data.error === "alias is already in use") {
+                        showMessage(trsl[lng].aliasTaken, "aliasError");
+                    } else if (data.error === "this alias contains bad language") {
+                        showMessage(`${trsl[lng].alias} ${trsl[lng].badLanguage} `, "aliasError");
+                    }
                 } else {
-                    showMessage("Error, please enter a correct value.", "aliasError");
+                    showMessage(trsl[lng].IncorrectValue, "aliasError");
                 }
             }
         } catch(error) {
@@ -193,13 +197,17 @@ export async function setpersonalDataView(contentContainer) {
             const data = await response.json();
             if (response.ok && data.detail === "email change success") {
                 emptyMessage("emailError");
-                showMessage("Success, email has been changed.", "emailSuccess");
+                showMessage(trsl[lng].mailChanged, "emailSuccess");
             } else {
                 emptyMessage("emailSuccess");
                 if (data.error) {
-                    showMessage("Error: " + data.error, "emailError");
+                    if (data.error === "invalid email format") {
+                        showMessage(`${trsl[language].invalidMail}`, "emailError");
+                    } else if (data.error === "user with this email already exists.") {
+                        showMessage(`${trsl[language].emailTaken}`, "emailError");
+                    }
                 } else {
-                    showMessage("Error, please enter a correct value.", "emailError");
+                    showMessage(trsl[lng].IncorrectValue, "emailError");
                 }
             }
         } catch(error) {
@@ -220,7 +228,7 @@ export async function setpersonalDataView(contentContainer) {
 
         if (newPassword !== confirmPassword) {
             emptyMessage("passwordSuccess");
-            showMessage("Error: New passwords do not match.", "passwordError");
+            showMessage(trsl[lng].passwordMismatch, "passwordError");
             return;
         }
 
@@ -229,13 +237,13 @@ export async function setpersonalDataView(contentContainer) {
             const data = await response.json();
             if (response.ok && data.detail === "Password changed successfully") {
                 emptyMessage("passwordError");
-                showMessage("Success, password has been changed.", "passwordSuccess");
+                showMessage(trsl[language].passwordChanged, "passwordSuccess");
             } else {
                 emptyMessage("passwordSuccess");
                 if (data.error) {
-                    showMessage("Error: " + data.error, "passwordError");
+                    showMessage(trsl[language].passwordRule, "passwordError");
                 } else {
-                    showMessage("Error, please enter a correct value.", "passwordError");
+                    showMessage(trsl[lng].IncorrectValue, "passwordError");
                 }
             }
         } catch(error) {

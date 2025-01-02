@@ -5,6 +5,8 @@ import { showError } from "./login_validations.js";
 import { showSuccess } from "./login_validations.js";
 import { getLanguageCookie } from './fetch_request.js';
 import { setLanguageCookie } from "./fetch_request.js";
+import { translations as trsl } from "./language_pack.js";
+
 
 ///////////////////// UI Helpers /////////////////////
 
@@ -38,6 +40,7 @@ async function verify2FAInBackend(user_id, otpCode) {
 ///////////////////// Event Handlers /////////////////////
 
 function loginFormEventHandler() {
+	const language = getLanguageCookie() || "en";
 	const loginForm = document.getElementById("loginForm");
 	setCustomValidation("usernameInput");
 	setCustomValidation("passwordInput");
@@ -50,15 +53,15 @@ function loginFormEventHandler() {
 			const data = await response.json();
 			if (!response.ok) {
 				if (data.detail === "No active account found with the given credentials") {
-				   showError("Login failed: Invalid Login or Password");
+					showError(trsl[language].invalidCredential);
 				} else if (data.detail === "Invalid credentials") {
-					showError("Login failed: Invalid Login or Password");
-				 } else {
-					showError("Error: an inattended error occured.");
+					showError(trsl[language].invalidCredential);
+				} else {
+					showError(trsl[language].internalError);
 				}
 			} else if (response.ok && data.detail === "A 2FA code has been sent") {
 				localStorage.setItem("user_id", data.user_id);
-				showSuccess("Enter the 2FA code sent to your email.");
+				showSuccess(trsl[language].enter2FA);
 				show2FAInput();
 			}
 		} catch (error) {
@@ -78,19 +81,15 @@ function twoFAFormEventHandler() {
 				const response = await verify2FAInBackend(user_id, otpCode);
 				const data = await response.json();
 				if (data.detail === "2FA code validated") {
-					console.log("2FA code has been validated by backend");
-					console.log("trying to save the cookies");
 					document.cookie = `accessToken=${data.access}; path=/; secure; SameSite=Strict`;
 					document.cookie = `refreshToken=${data.refresh}; path=/; secure; SameSite=Strict`;
 					// here we should store that JWT token in a cookie it is safer i think
-					window.history.pushState({ page: "home" }, "home", "#home");
-					loadPage("home");
-					console.log("logged to home!");
+					window.location.hash = "home";
 				} else {
-					showError('2FA verification failed.');
+					showError(trsl[language].twoFactorFailed);
 				}
 			} catch (error) {
-				showError('An error occurred during 2FA verification.');
+				showError(trsl[language].internalError);
 			}
 		})
 	}

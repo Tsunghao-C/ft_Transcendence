@@ -8,6 +8,7 @@ import { getLanguageCookie } from './fetch_request.js';
 import { setLanguageCookie } from "./fetch_request.js";
 import { loadPage } from './app.js';
 import { isAlphanumeric } from './utils.js';
+import { translations as trsl } from "./language_pack.js";
 ///////////////////// UI Helpers /////////////////////
 
 ///////////////////// API Calls /////////////////////
@@ -51,24 +52,36 @@ function setupRegisterFormEventHandler() {
 			const response = await registerUserInBackend(formData);
 			const data = await response.json();
 			if (response.ok) {
-				showSuccess('Success! User profile has been created, you can now log in.');
+				showSuccess(trsl[language].registerSucceeded);
 			} else {
 				//translations to be made
 				if (data.username) {
-					showError(data.username);
+					if (data.username === "this username contains bad language") {
+						showError(`${trsl[language].login} ${trsl[language].badLanguage}`);
+					} else if (data.username == "A user with that username already exists.") {
+						showError(`${trsl[language].loginTaken}`);
+					}
 				}
 				else if (data.alias) {
-					showError(data.alias);
+					if (data.alias === "this alias contains bad language") {
+						showError(`${trsl[language].alias} ${trsl[language].badLanguage}`);
+					} else if (data.alias == "user with this alias already exists.") {
+						showError(`${trsl[language].aliasTaken}`);
+					}
 				}
 				else if (data.email) {
-					showError(data.email);
+					if (data.email === "Enter a valid email address.") {
+						showError(`${trsl[language].invalidMail}`);
+					} else if (data.alias == "user with this email already exists.") {
+						showError(`${trsl[language].emailTaken}`);
+					}
 				}
 				else {
-					showError("Register failed, please try again later.")
+					showError(trsl[language].registerFailed)
 				}
 			}
 		} catch (error) {
-			showError('An error occurred. Please try again later.');
+			showError(trsl[language].internalError);
 		}
 	});
 	languageSelect.addEventListener("change", async (event) => {
