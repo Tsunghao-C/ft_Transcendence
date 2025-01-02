@@ -20,7 +20,7 @@ export async function setTournamentView(contentContainer) {
 	if (userTournament) {
 		displayTournament(userTournament, tournamentStatusContainer);
 	} else {
-		tournamentStatusContainer.innerHTML = `<p>No tournament in progress.</p>`;
+		setTournamentViewForm(contentContainer);
 	}
 }
 
