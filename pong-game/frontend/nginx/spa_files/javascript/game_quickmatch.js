@@ -25,7 +25,6 @@ export async function setQuickMatchView(contentContainer, roomID = "") {
             <!-- <p>Select an option below to get started:</p> -->
             <div>
                 <button id="join-queue">Join Queue</button>
-                <button id="ready-button" style="display:none;">Ready</button>
                 <div id="player-info-container" style="display: flex; justify-content: space-between;">
                     <div id="user-info-left" style="text-align: left; flex: 1; padding: 10px;"></div>
                     <div id="user-info-right" style="text-align: left; flex: 1; padding: 10px;"></div>

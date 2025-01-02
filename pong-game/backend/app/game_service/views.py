@@ -7,6 +7,7 @@ import json
 from django.utils.safestring import mark_safe
 from .models import MatchResults, LeaderBoard
 from user_service.models import CustomUser
+from chat.models import ChatRoom
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -149,6 +150,7 @@ class CreateTournamentView(APIView):
 
 			existing_tournament = Tournament.objects.filter(user=user).first()
 			if existing_tournament:
+				existing_tournament.chat_room.delete()
 				existing_tournament.delete()
 
 			tournament = Tournament.objects.create(user=user, name=tournament_name)

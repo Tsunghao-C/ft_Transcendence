@@ -14,6 +14,7 @@ let pendingGameUpdate = null;
 let roomId;
 let typeOfGame;
 let isTournament;
+
 export let TournamentPlayers = {
 	player1: {
 		alias: "none",
@@ -44,6 +45,7 @@ export function setIsTournament(isTournamentValue) {
 export function setTypeOfGame(gameType) {
 	typeOfGame	= gameType;
 }
+
 export function setRoomId(roomIdToJoin) {
 	roomId = roomIdToJoin;
 }
@@ -310,7 +312,7 @@ export function renderUserInfo(user1, user2 = null) {
 		userInfoRightDiv.innerHTML = `
 			<hr class="hrs">
 			<h4 class="player-two">Player two</h4>
-			<div style="display: flex; align-items: center; margin-bottom: 10px;">
+			<div style="display: flex; align-items: center; justify-content: right; margin-bottom: 10px;">
 				<div>
 					<p style="margin: 0; font-weight: bold;">${user2.alias}</p>
 					<p style="margin: 0; font-size: 0.8rem;">MMR: ${user2.mmr}</p>
@@ -323,7 +325,7 @@ export function renderUserInfo(user1, user2 = null) {
 		userInfoRightDiv.innerHTML = `
 			<hr>
 			<h4 class="player-two">Player two</h4>
-			<div style="display: flex; align-items: center; margin-bottom: 10px;">
+			<div style="display: flex; align-items: center; justify-content: right; margin-bottom: 10px;">
 				<div>
 					<p style="margin: 0; font-weight: bold;">Waiting...</p>
 				</div>
@@ -367,7 +369,7 @@ async function register_ai_room(response) {
 	if (isTournament) {
 		renderLocalUsers(TournamentPlayers.player1.alias, TournamentPlayers.player2.alias);
 	} else {
-		renderLocalUsers(response.player1_alias, "Mode: " + response.difficulty);
+		renderLocalUsers(response.player1_alias, "CPU [" + response.difficulty + "]");
 	}
 	await showReadyButton(roomId, playerEvent.player_1.id);
 }
@@ -571,12 +573,13 @@ export async function connectWebSocket() {
 
 async function startGame() {
 	try {
+		destroyReadyButton();
+		hideElem("ready-button");
+		showElem("game", "block");
+		showElem("go-back-EOG", "block");
+		hideClass("hrs");
+		hideElem("game-info");
 		if (typeOfGame !== "local") {
-			destroyReadyButton();
-			hideClass("hrs");
-			hideElem("game-info");
-			showElem("game", "block");
-			showElem("go-back-EOG", "block");
 			if (typeOfGame == "online") {
 				hideElem("invite-button");
 			}
@@ -594,7 +597,7 @@ export function renderLocalUsers(user1, user2) {
 		<h4>Player one</h4>
 		<div style="display: flex; align-items: center; margin-bottom: 10px;">
 			<div>
-				<p style="margin: 0; font-weight: bold;">${user1}</p>
+				<p style="margin: 0; padding: 0; font-weight: bold;">${user1}</p>
 			</div>
 		</div>
 		<hr class="hrs">
@@ -605,11 +608,17 @@ export function renderLocalUsers(user1, user2) {
 		<h4 class="player-two">Player two</h4>
 		<div style="display: flex; align-items: center; justify-content: right; margin-bottom: 10px;">
 			<div>
-				<p style="margin: 0; text-align: right; font-size: 0.8rem;">${user2}</p>
+				<p style="margin: 0; padding: 0; font-weight: bold; text-align: right;">${user2}</p>
 			</div>
 		</div>
 		<hr class="hrs">
 	`;
 	showElem("user-info-left", "block");
 	showElem("user-info-right", "block");
+}
+
+export function goBackButtonEventListener(location) {
+	document.getElementById('go-back-EOG').addEventListener('click', async () => {
+        window.location.hash = location;
+    });
 }
