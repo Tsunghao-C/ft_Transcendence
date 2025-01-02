@@ -44,22 +44,17 @@ export async function setProfileView(contentContainer, usernameInHash) {
 	const profileResult = document.getElementById("profileResult");
 
 	if (!response.ok && data.detail === "No CustomUser matches the given query.") {
-		profileResult.innerHTML = `<p data-i18n="userNotFound">User not found.</p>`;
+		profileResult.innerHTML = `<p>${trsl[lng].userNotFound}</p>`;
 	} else {
 		displayProfile(data.profile);
 	}
 
 	searchButton.addEventListener("click", () => {
 		const searchQuery = searchInput.value.trim();
-		if (!isAlphanumeric(searchQuery)) {
-			return;
-		}
-		console.log("Searching for:", searchQuery);
-		if (!searchQuery) {
+		if (!searchQuery || !isAlphanumeric(searchQuery) ) {
 			return;
 		}
 		window.location.hash = `profile/${searchQuery}`;
-		console.log("Redirecting to profile", searchQuery);
 	});
 
 	function displayProfile(profile) {
@@ -76,12 +71,12 @@ export async function setProfileView(contentContainer, usernameInHash) {
 					<div class="col-md-4">
 						<h3>${profile.alias}</h3>
 						<p>${profile.onlineStatus || "offline"}</p>					
-						<h4>${trsl[lng].rank}: ${profile.rank || "Unranked"}</h4>
+						<h4>${trsl[lng].rank}: ${profile.rank || trsl[lng].unranked}</h4>
 						<h4>${trsl[lng].mmr}: ${profile.mmr}</h4>
 						<h4>${trsl[lng].winRate}: ${calculateWinRate(profile.wins, profile.losses)}%</h4>
 					</div>
 					<div class="col-md-4">
-						<h4 data-i18n="matchHistory">${trsl[lng].matchHistory}</h4>
+						<h4>${trsl[lng].matchHistory}</h4>
 						<p title="${trsl[lng].wins}: ${profile.wins}, ${trsl[lng].losses}: ${profile.losses}">
 							${profile.wins}${trsl[lng].w} / ${profile.losses}${trsl[lng].l}
 						</p>
@@ -102,7 +97,7 @@ export async function setProfileView(contentContainer, usernameInHash) {
 											</p>
 										`;
 									  }).join('')
-									: `<p class="text-muted" data-i18n="noMatchHistory">${trsl[lng].noMatchHistory}</p>`
+									: `<p class="text-muted">${trsl[lng].noMatchHistory}</p>`
 							}
 						</div>
 					</div>

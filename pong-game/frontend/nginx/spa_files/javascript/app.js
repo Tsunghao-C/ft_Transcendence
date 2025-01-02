@@ -12,7 +12,7 @@ import { setLanguageCookie } from './fetch_request.js';
 import { getLanguageCookie } from './fetch_request.js';
 import { setAboutPage } from './about.js';
 import { setChatView } from './chat_view.js';
-import { translations } from './language_pack.js';
+import { translations as trsl} from './language_pack.js';
 import { setLobbyView } from './game_lobby.js';
 import { setTournamentView } from './game_tournament.js';
 import { setIsTournament } from "./game_utils.js";
@@ -30,8 +30,8 @@ export function changeLanguage(language) {
 	const elements = document.querySelectorAll("[data-i18n]");
 	elements.forEach((el) => {
 		const key = el.getAttribute("data-i18n");
-		if (translations[language] && translations[language][key]) {
-			el.textContent = translations[language][key];
+		if (trsl[language] && trsl[language][key]) {
+			el.textContent = trsl[language][key];
 		}
 	});
 	attachNavigationListeners();
@@ -50,7 +50,7 @@ export async function setContainerHtml(container, url) {
 	}
 }
 
-function setNavbarHtml(container) {
+function setNavbarHtml(container, lng) {
 	container.innerHTML = `
 		<a class="navbar-brand" href="#home">Q</a>
 		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,22 +59,22 @@ function setNavbarHtml(container) {
 		<div class="collapse navbar-collapse" id="navbarNav">
 			<ul class="navbar-nav mx-auto">
 				<li class="nav-item">
-					<a class="nav-link" href="#game" data-i18n="game"><span data-i18n="game">Game</span></a>
+					<a class="nav-link" href="#game">${trsl[lng].game}</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" href="#leaderboard" data-i18n="leaderboard"><span data-i18n="leaderboard">Leaderboard</span></a>
+					<a class="nav-link" href="#leaderboard">${trsl[lng].leaderboard}</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" href="#profile" data-i18n="profile"><span data-i18n="profile">Profile</span></a>
+					<a class="nav-link" href="#profile">${trsl[lng].profile}</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" href="#friends" data-i18n="friends"><span data-i18n="friends">Friends</span></a>
+					<a class="nav-link" href="#friends">${trsl[lng].friends}</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" href="#chat" data-i18n="chat"><span data-i18n="chat">Chat</span></a>
+					<a class="nav-link" href="#chat">${trsl[lng].chat}</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" href="#about" data-i18n="about"><span data-i18n="about">About</span></a>
+					<a class="nav-link" href="#about">${trsl[lng].about}</a>
 				</li>
 			</ul>
 			<ul class="navbar-nav">
@@ -82,8 +82,8 @@ function setNavbarHtml(container) {
 					<img id="userAvatar" src="" alt="User Avatar" class="rounded-circle me-2" style="width: 30px; height: 30px; display: none;">
 					<a class="nav-link dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" role="button" tabindex="0">User</a>
 					<ul class="dropdown-menu" aria-labelledby="userDropdown" role="menu">
-						<li><a class="dropdown-item" href="#personal-data" data-i18n="personalData" role="menuitem" tabindex="0">My information</a></li>
-						<li><a class="dropdown-item" href="#" data-i18n="logout" id="logoutButton" role="menuitem" tabindex="0">Logout</a></li>
+						<li><a class="dropdown-item" href="#personal-data" role="menuitem" tabindex="0">${trsl[lng].personnalData}</a></li>
+						<li><a class="dropdown-item" href="#" id="logoutButton" role="menuitem" tabindex="0">${trsl[lng].logoutButton}</a></li>
 					</ul>
 				</li>
 			</ul>
@@ -148,7 +148,7 @@ export async function loadPage(page) {
 	}
 	const navbar = document.getElementById("mainNavBar");
 	const path = window.location.pathname;
-	setNavbarHtml(navbar);
+	setNavbarHtml(navbar, currentLanguage);
 	navbar.style.display = "flex";
 	const userDropdown = document.getElementById("userDropdown");
 	userDropdown.textContent = data.alias;
