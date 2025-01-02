@@ -287,7 +287,7 @@ class acceptFriendRequestView(APIView):
 class deleteFriendView(APIView):
 	permission_classes = [IsAuthenticated]
 
-	def post(self, request):
+	def delete(self, request):
 		user = request.user
 		fr_user = get_object_or_404(CustomUser, alias=request.data.get("alias"))
 		if not user.is_friend(fr_user):
@@ -299,7 +299,7 @@ class deleteFriendView(APIView):
 class rejectFriendRequestView(APIView):
 	permission_classes = [IsAuthenticated]
 
-	def post(self, request):
+	def delete(self, request):
 		to_user = request.user
 		from_user = get_object_or_404(CustomUser, alias=request.data.get("fromAlias"))
 		frequest = get_object_or_404(FriendRequest, from_user=from_user, to_user=to_user)
@@ -309,7 +309,7 @@ class rejectFriendRequestView(APIView):
 class cancelFriendRequestView(APIView):
 	permission_classes = [IsAuthenticated]
 
-	def post(self, request):
+	def delete(self, request):
 		from_user = request.user
 		to_user = get_object_or_404(CustomUser, alias=request.data.get("toAlias"))
 		frequest = get_object_or_404(FriendRequest, from_user=from_user, to_user=to_user)
@@ -374,7 +374,20 @@ class getProfileView(APIView):
 	permission_classes = [IsAuthenticated]
 
 	def get(self, request):
-		profile = get_object_or_404(CustomUser, alias=request.query_params.get("alias"))
+		alias = request.query_params.get("alias")
+		user_id = request.query_params.get("uid")
+		own_profile = request.query_params.get("own")
+		if user_id:
+			profile = get_object_or_404(CustomUser, id=user_id)
+		elif alias:
+			profile = get_object_or_404(CustomUser, alias=alias)
+		elif own_profile:
+			profile = request.user
+		else:
+			return Response(
+				{"error": "Either 'id' 'alias' or 'own' must be provided."},
+				status=400
+			)
 		user = request.user
 		# Still to be added : match history, rank and a way to manage the button add friend, request sent, request pending but not necessary
 		profileData = {

@@ -4,11 +4,11 @@ import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
 import { hideElem, hideClass, showElem } from "./utils.js";
 import { translations as trslt } from "./language_pack.js";
-import { setUpOnePlayerControl, connectWebSocket, playerEvent, setTypeOfGame, renderLocalUsers } from "./game_utils.js";
+import { setUpOnePlayerControl, connectWebSocket, playerEvent, setTypeOfGame } from "./game_utils.js";
 
 
 
-export async function setSoloLobby(contentContainer) {
+export async function setSoloLobby(contentContainer, difficulty = "") {
     let response;
     let userData;
     try {
@@ -16,7 +16,7 @@ export async function setSoloLobby(contentContainer) {
         response = await fetchWithToken('/api/user/getuser/');
         userData = await response.json();
         console.log("User data in lobby: ", userData);
-		playerEvent.player_1.id = userData.alias;
+		playerEvent.player_1.id = userData.id;
     } catch(error) {
         console.log(error);
         window.location.hash = "login";
@@ -56,7 +56,6 @@ export async function setSoloLobby(contentContainer) {
 
             console.log("Started AI game session");
             console.log("Player_id: " + userData.alias);
-            renderLocalUsers(userData.alias, "Mode: " + difficulty);
             gameInfo.textContent = '• AI Connected';
         } catch (error) {
             console.error('Error starting AI game:', error);
@@ -92,4 +91,8 @@ export async function setSoloLobby(contentContainer) {
     
     await connectWebSocket();
     setUpOnePlayerControl();
+    if (difficulty) {
+        ["easy", "medium", "hard", "go-back"].forEach(hideElem);
+        create_ai_match(difficulty);
+    }
 }

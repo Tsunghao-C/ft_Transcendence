@@ -4,10 +4,10 @@ import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
 import { hideElem } from "./utils.js";
 import { showElem } from "./utils.js";
-import { setUpTwoPlayersControl, connectWebSocket, playerEvent, setTypeOfGame, renderLocalUsers } from "./game_utils.js";
+import { setUpTwoPlayersControl, connectWebSocket, playerEvent, setTypeOfGame } from "./game_utils.js";
 
 
-export async function setLocalLobby(contentContainer) {
+export async function setLocalLobby(contentContainer, skip = false) {
     let response;
     let userData;
     try {
@@ -15,7 +15,7 @@ export async function setLocalLobby(contentContainer) {
         response = await fetchWithToken('/api/user/getuser/');
         userData = await response.json();
         console.log("User data in lobby: ", userData);
-		playerEvent.player_1.id = userData.alias;
+		playerEvent.player_1.id = userData.id;
 
     } catch(error) {
         console.log(error);
@@ -62,7 +62,6 @@ export async function setLocalLobby(contentContainer) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             canvas.style.display = 'block';
             await request_local_room();
-            renderLocalUsers(userData.alias, userData.alias + "friend");
             gameInfo.textContent = 'Playing against your Friend - Get Ready!';
         } catch (error) {
             console.error('Error starting Local game:', error);
@@ -87,4 +86,8 @@ export async function setLocalLobby(contentContainer) {
     });
     await connectWebSocket();
     setUpTwoPlayersControl();
+    if (skip) {
+        hideElem("local");
+        create_local_match();
+    }
 }

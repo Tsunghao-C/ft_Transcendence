@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
     vim \
     ca-certificates \
 	openssl \
+    jq \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Download and setup vault
@@ -24,7 +25,15 @@ RUN wget https://releases.hashicorp.com/vault/${VAULT_VERSION}/vault_${VAULT_VER
     && rm vault_${VAULT_VERSION}_linux_amd64.zip
 
 # Create non root user
-RUN useradd --no-create-home --shell /bin/false vault
+# RUN useradd --no-create-home --shell /bin/false vault
+RUN useradd -r -m -d /home/vault -s /bin/bash vault && \
+    touch /home/vault/.vault-token && \
+    chown -R vault:vault /home/vault/.vault-token && \
+    chmod 600 /home/vault/.vault-token
+
+ENV VAULT_ADDR="https://127.0.0.1:8200" \
+    VAULT_CACERT="/vault/certs/selfsigned.crt" \
+    HOME="/home/vault"
 
 # Add vault config dir
 RUN mkdir -p /etc/vault.d /var/lib/vault \
@@ -36,11 +45,27 @@ RUN chown vault:vault /etc/vault.d/vault.hcl
 
 # Generate ssl certificates
 RUN mkdir -p /vault/certs && \
+    # Create a config file for the certificate
+    echo "[req]" > /vault/certs/openssl.conf && \
+    echo "distinguished_name = req_distinguished_name" >> /vault/certs/openssl.conf && \
+    echo "x509_extensions = v3_req" >> /vault/certs/openssl.conf && \
+    echo "prompt = no" >> /vault/certs/openssl.conf && \
+    echo "[req_distinguished_name]" >> /vault/certs/openssl.conf && \
+    echo "CN = vault" >> /vault/certs/openssl.conf && \
+    echo "[v3_req]" >> /vault/certs/openssl.conf && \
+    echo "subjectAltName = @alt_names" >> /vault/certs/openssl.conf && \
+    echo "[alt_names]" >> /vault/certs/openssl.conf && \
+    echo "DNS.1 = vault" >> /vault/certs/openssl.conf && \
+    echo "DNS.2 = localhost" >> /vault/certs/openssl.conf && \
+    echo "IP.1 = 127.0.0.1" >> /vault/certs/openssl.conf && \
+    # Generate the certificate using the above config
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
     -keyout /vault/certs/selfsigned.key \
     -out /vault/certs/selfsigned.crt \
-    -subj "/C=US/ST=State/L=City/O=Organization/OU=Unit/CN=localhost" && \
-    chown -R vault:vault /vault/certs/selfsigned.crt /vault/certs/selfsigned.key
+    -config /vault/certs/openssl.conf && \
+    # -subj "/C=US/ST=State/L=City/O=Organization/OU=Unit/CN=vault" && \
+    chown -R vault:vault /vault/certs
+    # chown -R vault:vault /vault/certs/selfsigned.crt /vault/certs/selfsigned.key
 
 # Copy init script
 COPY init.sh /init.sh

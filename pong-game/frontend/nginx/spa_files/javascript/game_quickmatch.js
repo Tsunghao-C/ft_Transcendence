@@ -98,12 +98,36 @@ export async function setQuickMatchView(contentContainer, roomID = "") {
 
     document.getElementById('join-queue').addEventListener('click', async () => {
         try {
-            console.log("Trying to join queue room")
+            console.log("Trying to join queue room");
+    
+            const gameInfo = document.getElementById('game-info');
+            gameInfo.innerHTML = `
+                <p id="queue-timer">Time in queue: 0s</p>
+                <a id="cancel-button" href="#game/online">Cancel</a>
+            `;
+    
+            let timeInQueue = 0;
+            const timerInterval = setInterval(() => {
+                const queueTimerElement = document.getElementById('queue-timer');
+                if (queueTimerElement) {
+                    queueTimerElement.textContent = `Time in queue: ${timeInQueue}s`;
+                    timeInQueue += 1;
+                } else {
+                    clearInterval(timerInterval);
+                }
+            }, 1000);
+    
+            const cancelButton = document.getElementById('cancel-button');
+            cancelButton.addEventListener('click', () => {
+                clearInterval(timerInterval);
+            });
+    
             await state.gameSocket.send(JSON.stringify({
                 action: 'join_queue',
                 id: userData.alias
             }));
-            console.log("join queue attempt sent");
+            console.log("Join queue attempt sent");
+    
         } catch (error) {
             console.error('Exception caught in joinQueue', error);
         }

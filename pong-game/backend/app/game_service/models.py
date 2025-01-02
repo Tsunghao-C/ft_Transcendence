@@ -6,9 +6,155 @@ from datetime import timedelta
 from django.db.models import Q
 import uuid
 import os
+import random
+
 
 LDB_UPDATE_TIMER = int(os.environ.get("LDB_UPDATE_TIMER", 15))
 
+class TournamentIsAI(models.TextChoices):
+	HUMAN = 'human', 'Human'
+	EASY = 'easy', 'Easy'
+	MEDIUM = 'medium', 'Medium'
+	HARD = 'hard', 'Hard'
+
+class TournamentPlayer(models.Model):
+	alias = models.CharField(max_length=255)
+	is_ai =	models.CharField(
+		max_length=10,
+		choices=TournamentIsAI.choices,
+		default=TournamentIsAI.HUMAN
+	)
+	score = models.IntegerField(default=0)
+
+	def __str__(self):
+		return f"{self.alias} ({'AI' if self.is_ai else 'Human'}) - Score: {self.score}"
+
+class TournamentGameResult(models.TextChoices):
+	WIN = 'win', 'Win'
+	LOSE = 'lose', 'Lose'
+	NOT_PLAYED = 'notPlayed', 'Not Played'
+
+class Tournament(models.Model):
+	user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="tournament")
+	name = models.CharField(max_length=255)
+
+	def __str__(self):
+		return f"Tournament: {self.name} - Owner: {self.user.username}"
+
+	def create_first_bracket(self, players):
+		shuffled_players = players[:]
+		random.shuffle(shuffled_players)
+
+		num_players = len(shuffled_players)
+		next_power_of_two = 2 ** (num_players - 1).bit_length()
+		num_to_advance = next_power_of_two - num_players
+
+		first_bracket = Bracket.objects.create(tournament=self)
+
+		for i, player in enumerate(shuffled_players):
+			result = TournamentGameResult.WIN if i < num_to_advance else TournamentGameResult.NOT_PLAYED
+			BracketPlayer.objects.create(
+				bracket=first_bracket,
+				player=player,
+				result=result
+			)
+
+		return first_bracket
+	
+	def get_next_match_or_create_bracket(self):
+		last_bracket = self.brackets.all().order_by('-id').first()
+
+		if last_bracket:
+			not_played_players = list(last_bracket.bracket_players.filter(result=TournamentGameResult.NOT_PLAYED).order_by('id'))
+
+			if len(not_played_players) >= 2:
+				return {
+					"next_match": {
+						"player1": {
+							"id": not_played_players[0].player.id,
+							"alias": not_played_players[0].player.alias,
+							"is_ai": not_played_players[0].player.is_ai,
+						},
+						"player2": {
+							"id": not_played_players[1].player.id,
+							"alias": not_played_players[1].player.alias,
+							"is_ai": not_played_players[1].player.is_ai,
+						},
+					}
+				}
+
+			winners = last_bracket.bracket_players.filter(result=TournamentGameResult.WIN).select_related('player')
+
+			if winners.count() > 1:
+				with transaction.atomic():
+					new_bracket = Bracket.objects.create(tournament=self)
+					for winner in winners:
+						BracketPlayer.objects.create(bracket=new_bracket, player=winner.player, result=TournamentGameResult.NOT_PLAYED)
+				return self.get_next_match_or_create_bracket()
+
+			if winners.count() == 1:
+				return {
+					"message": f"The Tournament is finished! The winner is {winners[0].player.alias}."
+				}
+
+		return {"message": "The Tournament has no more matches or players to determine a winner."}
+
+
+	def update_match_result(self, user1, user2, match_outcome):
+		last_bracket = self.brackets.all().order_by('-id').first()
+		if not last_bracket:
+			raise ValueError("No brackets available in the tournament.")
+
+		player1_entry = last_bracket.bracket_players.filter(player=user1).first()
+		player2_entry = last_bracket.bracket_players.filter(player=user2).first()
+
+		if not player1_entry or not player2_entry:
+			raise ValueError("Both players must be part of the last bracket.")
+
+		if match_outcome == 1:
+			player1_entry.result = TournamentGameResult.WIN
+			player2_entry.result = TournamentGameResult.LOSE
+		elif match_outcome == 2:
+			player1_entry.result = TournamentGameResult.LOSE
+			player2_entry.result = TournamentGameResult.WIN
+		else:
+			raise ValueError("Invalid match_outcome. Use 1 for user1 win and 2 for user2 win.")
+
+		player1_entry.save()
+		player2_entry.save()
+
+
+
+class Bracket(models.Model):
+	tournament = models.ForeignKey(
+		Tournament,
+		on_delete=models.CASCADE,
+		related_name='brackets'
+	)
+
+	def __str__(self):
+		return f"Bracket in {self.tournament.name}"
+
+
+class BracketPlayer(models.Model):
+	bracket = models.ForeignKey(
+		Bracket,
+		on_delete=models.CASCADE,
+		related_name='bracket_players'
+	)
+	player = models.ForeignKey(
+		TournamentPlayer,
+		on_delete=models.CASCADE,
+		related_name='bracket_players'
+	)
+	result = models.CharField(
+		max_length=10,
+		choices=TournamentGameResult.choices,
+		default=TournamentGameResult.NOT_PLAYED
+	)
+
+	def __str__(self):
+		return f"{self.player.alias} in Bracket {self.bracket.id} - Result: {self.result}"
 
 
 class MatchResults(models.Model):
