@@ -24,6 +24,33 @@ filebeat.inputs:
     negate: true
     match: after
 
+# Django logs
+- type: filestream
+  id: game-consumer-logs
+  enabled: true
+  paths:
+    - /var/log/django/gameconsumers.log
+  fields:
+    type: "django"
+    source: "game_consumer"
+  multiline:
+    pattern: '^(INFO|WARNING|ERROR|DEBUG)'
+    negate: true
+    match: after
+
+- type: filestream
+  id: game-room-logs
+  enabled: true
+  paths:
+    - /var/log/django/gamerooms.log
+  fields:
+    type: "django"
+    source: "game_room"
+  multiline:
+    pattern: '^(INFO|WARNING|ERROR|DEBUG)'
+    negate: true
+    match: after
+
 # # Temporary comment out WAF logs
 # - type: filestream
 #   id: modsecurity-audit-logs
@@ -65,16 +92,6 @@ filebeat.inputs:
 #     type: application
 #     service: user
 #     category: user
-
-# - type: filestream
-#   id: game-service-logs
-#   enabled: true
-#   paths:
-#     - /var/log/game/*.log
-#   fields:
-#     type: application
-#     service: game
-#     category: gameplay
 
 output.logstash:
   hosts: ["logstash:5044"]

@@ -3,7 +3,7 @@
 echo "Creating index templates..."
 
 # Create idividual ILM policies for each index
-for TYPE in nginx-access nginx-error; do
+for TYPE in nginx-access nginx-error django-gameconsumer django-gameroom; do
   # First create index templates, the rules of future indices should be organized
   curl -k -X PUT "https://localhost:9200/_template/${TYPE}" \
     -H "Content-Type: application/json" \

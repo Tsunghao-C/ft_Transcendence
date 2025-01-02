@@ -7,8 +7,10 @@ echo "Starting entrypoint script..."
 mkdir -p /app/static #&& \
 chmod -R 755 /app/static
 
-echo "Waiting for database to be ready..."
-echo "SQL_PORT: ${POSTGRES_PORT}"
+# logs, update filebeat if changing this
+mkdir -p logs && chmod -R 755 logs
+
+echo "SQL_PORRT: ${POSTGRES_PORT}"
 wait-for-it --service postgres:${POSTGRES_PORT} -- echo "Game Database is ready!"
 # wait-for-it --service user_db:${SQL_PORT} -- echo "User Database is ready!"
 

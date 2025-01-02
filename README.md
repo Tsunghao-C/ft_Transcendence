@@ -13,7 +13,7 @@ Developing a web game Pong from scratch including the following features:
 
 ## Pong Game Project System Diagram
 
-![Alt text](image/monolithic_diagram3.png)
+![Alt text](image/monolithic_diagram4.png)
 
 ## Quick Start 
 
