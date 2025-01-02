@@ -131,32 +131,27 @@ class GameConsumer(AsyncWebsocketConsumer):
 			except asyncio.CancelledError:
 				pass
 		print(f"User {self.user.id} disconnected")
-		if self.in_game:
-			if self.assigned_room in active_online_games.keys(): #this is probably useless garbo
-				room = active_online_games[self.assigned_room]
-				if room["room_data"].missing_player == 1:
-					logger.info(f"gameConsumer: sending abort order to gameRoom: {room}")
-					room["room_data"].set_server_order(ABORTED)
-				else:
-					room["room_data"].missing_player += 1
-		elif self.assigned_room != -1:
-			room = active_lobbies[self.assigned_room]
-			if room:
-				if room["game_type"]["is_local"] or len(room["players"]) == 1:
-					del room
-					deleted_count = await sync_to_async(Message.objects.filter(game_room=self.assigned_room).delete)()
-					logger.info(f"Deleted {deleted_count} invitation(s) for game_room {self.assigned_room}")
-				else:
-					if self.user.id in room["players"]:
-						room["players"].remove(self.user.id)
-					if self in room["connection"]:
-						room["connection"].remove(self)
-					if self.user.id in room["ready"]:
-						room["ready"].remove(self.user.id)
-					await room["connection"][0].send(json.dumps({
-					"type": "set_player_1",
-					}))
-				print("succesfull removal")
+		logger.info(f"User self.assigned_room: {self.assigned_room}")
+		for lobby_id, lobby_data in active_lobbies.items():
+			players_ids = lobby_data["players"]
+			if self.user.id in players_ids:
+				lobby = active_lobbies[lobby_id]
+				if lobby:
+					if lobby["game_type"]["is_local"] or len(lobby["players"]) == 1:
+						del lobby
+						deleted_count = await sync_to_async(Message.objects.filter(game_room=lobby_id).delete)()
+						logger.info(f"Deleted {deleted_count} invitation(s) for game_lobby {self.assigned_room}")
+					else:
+						if self.user.id in lobby["players"]:
+							lobby["players"].remove(self.user.id)
+						if self in lobby["connection"]:
+							lobby["connection"].remove(self)
+						if self.user.id in lobby["ready"]:
+							lobby["ready"].remove(self.user.id)
+						await lobby["connection"][0].send(json.dumps({
+						"type": "set_player_1",
+						}))
+					print("succesfull removal")
 
 		self.in_game = False
 		if hasattr(self, 'current_group'):
@@ -532,6 +527,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 					}}
 			game_task = asyncio.create_task(game_room.run())
 			self.in_game = True
+			self.assigned_room = -1
 			del active_lobbies[room_name]
 			deleted_count = await sync_to_async(Message.objects.filter(game_room=room_name).delete)()
 			logger.info(f"Deleted {deleted_count} invitation(s) for game_room {room_name}")
@@ -558,7 +554,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 			result = task.result()
 			if result is ABORTED:
 				logger.info("gameConsumer: gameRoom was aborted")
-			self.assigned_room = -1
 			self.in_game = False
 			if room_name in active_local_games.keys():
 				logger.info(f"Removing gameRoom {room_name} from active_local_games")
