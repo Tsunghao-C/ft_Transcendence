@@ -554,7 +554,7 @@ canvas {
 
 #player-info-container {
 	width: 100%;
-	padding-top: 10px;
+	/* padding-top: 10px; */
 }
 
 .user-info {
@@ -608,6 +608,127 @@ canvas {
 #go-back-EOG {
 	text-align: right !important;
 	font-size: 1rem !important;
+	background-color: transparent !important;
+}
+
+/**************************** Tournament ****************************/
+
+.tournament-view {
+	padding-bottom: 10px;
+	width: 100%;
+	padding-left: 10%;
+	padding-right: 10%;
+	height: var(--inner-view-height);
+	overflow-y: auto;
+	box-sizing: border-box; 
+}
+
+.tournament-view h3 {
+	padding: 10px 0px 0px 0px !important;
+	text-align: center;
+}
+
+.player-entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+	gap: 5px;
+	padding: 10px 0 5px 0;
+}
+
+.player-entry input {
+	margin: 0px !important;
+	box-sizing: border-box;
+}
+
+.player-entry select {
+	width: 100px;
+	height: 35px;
+	font-size: 0.8rem;
+	margin: 0px;
+	background-color: rgba(209, 209, 209, 0.1);
+	border: 1px solid rgba(0, 0, 0, 0.1);
+	border-radius: 5px;
+}
+
+#added-player { /* added player select */
+	width: 78px;
+}
+
+.player-entry button {
+	width: 20px !important;
+	height: 35px !important;
+	font-size: 0.8rem !important;
+	margin: 0px !important;
+	padding: 0px !important;
+	background-color: transparent !important;
+}
+
+/** Tournament matchup display */
+
+.bracket h4 {
+	text-align: center;
+	padding-bottom: 0;
+}
+
+.bracket ul {
+	padding: 0 !important;
+}
+
+.matchup {
+    display: flex;
+    justify-content: space-between;
+	position: relative;
+    align-items: center;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+	margin-bottom: 10px;
+	font-size: 0.9rem;
+}
+
+.matchup .left-player,
+.matchup .right-player {
+    flex: 1;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+}
+
+.matchup .left-player {
+	justify-content: right;
+	text-align: right;
+	padding-right: 50px;
+}
+
+.matchup .right-player {
+	justify-content: left;
+	text-align: left;
+	padding-left: 50px;
+}
+
+.matchup span {
+	padding-left: 2px;
+	padding-right: 2px;
+}
+
+.vs {
+    font-weight: bold;
+    font-size: 1rem;
+    color: #555;
+	position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+}
+
+/**Tournament integrated game view */
+#match-container .gamelobby-view {
+	padding: 0 !important;
+	padding-left: 5% !important;
+	padding-right: 5% !important;
+	height: 450px !important;
+	overflow-y: hidden !important;
 }
 
 /**************************** Leaderboard ****************************/
