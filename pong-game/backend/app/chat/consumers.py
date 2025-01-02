@@ -190,7 +190,3 @@ class ChatConsumer(AsyncWebsocketConsumer):
 		result = user1.has_blocked(user2) or user2.has_blocked(user1)
 		print(f"Is {user1.alias} blocked by {user2.alias}: {result}")
 		return result
-
-
-
-
