@@ -70,41 +70,66 @@ function displayTournament(tournament, container) {
 	});
 }
 
+function isPowerOf2(n) {
+    return Number.isInteger(n) &&(n > 0) && (n & (n - 1)) === 0;
+}
+
 function getPlayoffHtml(bracket) {
 	const n = bracket.players.length;
-	const html = `
-		<li class="matchup">
-			<span class="left-player">
-				<span style="color: ${
-					bracket.players[n - 2].result === "win" ? "green" : bracket.players[n - 2].result === "lose" ? "red" : "gray"
-				};">
-					${
-						bracket.players[n - 2].result === "win"
-						? "[W]"
-						: bracket.players[n - 2].result === "lose"
-						? "[L]"
-						: ""
-					}
+	const players = bracket.players;
+
+	let numOfQualified = 0;
+	while(!isPowerOf2(numOfQualified + ((n - numOfQualified)/2))) {
+		numOfQualified++;
+	}
+	let qualified = "Qualified: ";
+	let i = 0;
+	while (i < numOfQualified) {
+		if (i > 0) {
+			qualified += ', ';
+		}
+		qualified += `${players[i].alias}`;
+		i++;
+	}
+	let html = `<p class="qualified">${qualified}</p>`;
+	while (i < n - 1) {
+		html += `
+			<li class="matchup">
+				<span class="left-player">
+					<span style="color: ${
+						players[i].result === "win" ? "green" : players[i].result === "lose" ? "red" : "gray"
+					};">
+						${
+							players[i].result === "win"
+							? "[W]"
+							: players[i].result === "lose"
+							? "[L]"
+							: ""
+						}
+					</span>
+					${players[i].is_ai === "human" ? "" : "[CPU]"} ${players[i].alias}
+				</span>	
+				<span class="vs">| vs |</span>
+				<span class="right-player">
+					${players[i + 1].alias} ${players[i + 1].is_ai === "human" ? "" : "[CPU]"}
+					<span style="color: ${
+						players[i + 1].result === "win" ? "green" : players[i + 1].result === "lose" ? "red" : "gray"
+					};">
+						${
+							players[i + 1].result === "win"
+							? " [W]"
+							: players[i + 1].result === "lose"
+							? " [L]"
+							: ""
+						}
+					</span>
 				</span>
-				${bracket.players[n - 2].is_ai === "human" ? "" : "[CPU]"} ${bracket.players[n - 2].alias}
-			</span>	
-			<span class="vs">| vs |</span>
-			<span class="right-player">
-				${bracket.players[n - 1].alias} ${bracket.players[n - 1].is_ai === "human" ? "" : "[CPU]"}
-				<span style="color: ${
-					bracket.players[n - 1].result === "win" ? "green" : bracket.players[n - 1].result === "lose" ? "red" : "gray"
-				};">
-					${
-						bracket.players[n - 1].result === "win"
-						? " [W]"
-						: bracket.players[n - 1].result === "lose"
-						? " [L]"
-						: ""
-					}
-				</span>
-			</span>
-		</li>		
-	`;
+			</li>		
+		`;
+		i++;
+		i++;
+	}
+
 	return html;
 }
 
@@ -156,27 +181,23 @@ function getMatchupsHtml(bracket, index) {
 	const n = bracket.players.length;
 	console.log("number of player is : ", n);
 
+	// /!\ debug print, delete when pushing
+	// bracket.players.forEach((player, i) => { 
+	// 	console.log("player " + i + " is : ", player);
+	// })
+
 	// ODD < 7
-	// if we have an odd < 7 number of player in the bracket, for the first bracket, we just display a playoff between the two last players of the list
-	if (n % 2 != 0 && index == 0 && n < 7) {
-		console.log("WE HAVE AN ODD NUMBER OF PLAYERS BELOW 7");
-		html = getPlayoffHtml(bracket);
-		return html;
+	if (n % 2 != 0 && index == 0) {
+		return getPlayoffHtml(bracket);
 	}
 
 	// EVEN
-	// if we have an even number of players in the bracket, we iterate through the players 
-	// and display the even players on the left and odd players on the right
 	bracket.players.forEach((player, i) => {
-		// left player
 		if (i % 2 == 0) {
 			html += getLeftPlayerHtml(player);
-		}
-		// right player
-		else {
+		} else {
 			html += getRightPlayerHtml(player);
 		}
-		console.log("player " + i + " is : ", player);
 	})
 	return html;
 }
