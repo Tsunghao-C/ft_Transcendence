@@ -54,6 +54,7 @@ class GameRoom():
 		self.time_since_last_receive = {}
 		self.missing_player = False
 		self.server_order = -1
+		self.dropped_side = -1
 
 		self.left_player = user_data[0]
 		self.ai_player = None
@@ -293,6 +294,7 @@ class GameRoom():
 			self.connections[1] = new_connection
 		self.missing_player = False
 		self.players[new_id].dropped = False
+		self.dropped_side = -1
 		self.time_since_last_receive[self.left_player] = time.perf_counter()
 		self.time_since_last_receive[self.right_player] = time.perf_counter()
 		logger.info(f"gameRoom: Player has come back, new id: {new_id}")
