@@ -1,5 +1,5 @@
 global:
-  scrape_internal: 15s
+  scrape_interval: 15s
   evaluation_interval: 15s
 
 rule_files:
