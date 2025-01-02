@@ -473,12 +473,18 @@ async function rejoin_room(response) {
 	hideElem("join-match");
 	console.log('Rejoin room query received by server');
 	roomId = response.room_name;
-	const trueButton = document.createElement('button')
-	trueButton.id = 'rejoin-true-button'
-	trueButton.textContent = 'Yes'
-	const falseButton = document.createElement('button')
-	falseButton.id = 'rejoin-false-button'
-	falseButton.textContent = 'No'
+	const promptText = document.createElement('p');
+	promptText.id = 'rejoin-prompt-text';
+	promptText.textContent = 'Ongoing game found, do you wish to rejoin?\n';
+	promptText.style.fontSize = '24px';
+    promptText.style.textAlign = 'center';
+    promptText.style.marginBottom = '20px';
+	const trueButton = document.createElement('button');
+	trueButton.id = 'rejoin-true-button';
+	trueButton.textContent = 'Rejoin game';
+	const falseButton = document.createElement('button');
+	falseButton.id = 'rejoin-false-button';
+	falseButton.textContent = 'Concede game';
 
 	trueButton.onclick = function(event) {
 		try {
@@ -489,6 +495,8 @@ async function rejoin_room(response) {
 				action: "rejoin_room",
 				response: true
 			}));
+            promptText.parentNode.removeChild(promptText);
+            promptText.remove();
 			trueButton.parentNode.removeChild(trueButton);
 			trueButton.remove();
 			falseButton.parentNode.removeChild(falseButton);
@@ -509,6 +517,8 @@ async function rejoin_room(response) {
 			}));
 			showElem("create-match", "block");
 			showElem("join-match", "block");
+            promptText.parentNode.removeChild(promptText);
+            promptText.remove();
 			trueButton.parentNode.removeChild(trueButton);
 			trueButton.remove();
 			falseButton.parentNode.removeChild(falseButton);
@@ -517,8 +527,10 @@ async function rejoin_room(response) {
 			console.error("Error when sending refusal to rejoin ongoing gameRoom: ", error);
 		}
 	}
-	document.getElementById("game-lobby").appendChild(trueButton);
-	document.getElementById("game-lobby").appendChild(falseButton);
+	const gameLobby = document.getElementById("game-lobby");
+	gameLobby.appendChild(promptText);
+	gameLobby.appendChild(trueButton);
+	gameLobby.appendChild(falseButton);
 }
 
 export async function connectWebSocket() {
