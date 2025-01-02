@@ -229,7 +229,7 @@ export async function loadPage(page) {
 							const roomType = page.split("/")[1];
 							if (roomType) {
 								const aliasOrRoomToJoin = page.split("/")[2];
-								if (!['public', 'private'].includes(roomType)) {
+								if (!['public', 'private', 'tournament'].includes(roomType)) {
 									set404View(innerContent);
 								} else if (aliasOrRoomToJoin) {
 									setChatView(innerContent, roomType, aliasOrRoomToJoin);

@@ -29,6 +29,7 @@ export function clearInput(inputId) {
 
 export function isAlphanumeric(content, name = "Alias", displayAlert = true) {
     const isValid = /^[a-zA-Z0-9]+$/.test(content);
+	
 	if (!isValid && displayAlert) {
 		alert(name + " can only be made of alphanumerical characters");
 	}

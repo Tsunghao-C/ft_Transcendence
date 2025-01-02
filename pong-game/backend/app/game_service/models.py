@@ -1,5 +1,6 @@
 from django.db import models, transaction
 from user_service.models import CustomUser
+from chat.models import ChatRoom, Message
 from django.db.models import F
 from django.utils.timezone import now
 from datetime import timedelta
@@ -37,6 +38,7 @@ class TournamentGameResult(models.TextChoices):
 class Tournament(models.Model):
 	user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="tournament")
 	name = models.CharField(max_length=255)
+	chat_room = models.OneToOneField(ChatRoom, on_delete=models.CASCADE, null=True, blank=True, related_name="tournament")
 
 	def __str__(self):
 		return f"Tournament: {self.name} - Owner: {self.user.username}"
@@ -44,7 +46,6 @@ class Tournament(models.Model):
 	def create_first_bracket(self, players):
 		shuffled_players = players[:]
 		random.shuffle(shuffled_players)
-
 		num_players = len(shuffled_players)
 		next_power_of_two = 2 ** (num_players - 1).bit_length()
 		num_to_advance = next_power_of_two - num_players
@@ -59,6 +60,16 @@ class Tournament(models.Model):
 				result=result
 			)
 
+		chat_room = ChatRoom.get_or_create_tournament_chat_room(self.name, self.user)
+		self.chat_room = chat_room
+		self.save()
+		next_match = self.get_next_match_or_create_bracket()
+		Message.objects.create(
+			room=self.chat_room,
+			sender=self.user,
+			is_tournament = True,
+			content=f'{next_match["next_match"]["player1"]["alias"]}/{next_match["next_match"]["player2"]["alias"]}'
+		)
 		return first_bracket
 	
 	def get_next_match_or_create_bracket(self):
@@ -94,7 +105,7 @@ class Tournament(models.Model):
 
 			if winners.count() == 1:
 				return {
-					"message": f"The Tournament is finished! The winner is {winners[0].player.alias}."
+					"message": f"{winners[0].player.alias}"
 				}
 
 		return {"message": "The Tournament has no more matches or players to determine a winner."}
@@ -122,6 +133,22 @@ class Tournament(models.Model):
 
 		player1_entry.save()
 		player2_entry.save()
+		next_match = self.get_next_match_or_create_bracket()
+		if next_match.get("next_match"):
+			Message.objects.create(
+				room=self.chat_room,
+				sender=self.user,
+				is_tournament = True,
+				content=f'{next_match["next_match"]["player1"]["alias"]}/{next_match["next_match"]["player2"]["alias"]}'
+			)
+		else :
+			Message.objects.create(
+				room=self.chat_room,
+				sender=self.user,
+				is_tournament = True,
+				content=f'{next_match["message"]}'
+			)
+
 
 
 
