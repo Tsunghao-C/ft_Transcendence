@@ -90,6 +90,8 @@ export const translations = {
 		friends: "Friends",
 		sendMessage: "Send Message",
 		requestDuel: "Send Duel Request",
+		//leaderboard
+		noData: "No data Available",
 		colorMode: "Color Mode",
 		lightMode: "Light",
 		darkMode: "Dark",

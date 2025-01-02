@@ -16,8 +16,8 @@ export async function setLeaderboardView(contentContainer) {
 				<thead>
 					<tr>
 						<th>#</th>
-						<th data-i18n="username">Username</th>
-						<th>MMR</th>
+						<th>${trsl[cl].alias}</th>
+						<th>${trsl[cl].mmr}</th>
 					</tr>
 				</thead>
 				<tbody id="leaderboardTableBody">
@@ -46,10 +46,11 @@ export async function setLeaderboardView(contentContainer) {
 	}
 
 	function populateLeaderboardTable(data) {
+		const lng = getLanguageCookie() || "en";
 		const tableBody = document.getElementById("leaderboardTableBody");
 		tableBody.innerHTML = "";
 		if (!data || data.length === 0) {
-			tableBody.innerHTML = `<tr><td colspan="3" class="text-muted" data-i18n="noData">No data available</td></tr>`;
+			tableBody.innerHTML = `<tr><td colspan="3" class="text-muted">${trsl[lng].noData}</td></tr>`;
 			return;
 		}
 		data.forEach((user) => {

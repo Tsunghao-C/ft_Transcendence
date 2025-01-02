@@ -30,7 +30,7 @@ export async function setHomePage(contentContainer, userdata) {
 	const profileResult = document.getElementById("profile");
 
 	if (!response.ok && data.detail === "No CustomUser matches the given query.") {
-		profileResult.innerHTML = `<p data-i18n="userNotFound">User not found.</p>`;
+		profileResult.innerHTML = `<p>User not found.</p>`;
 	} else {
 		displayProfile(data.profile);
 	}
@@ -48,7 +48,7 @@ function displayProfile(profile) {
 			<h4>${translations[currentLanguage].mmr}: ${profile.mmr}</h4>
 			<h4>${translations[currentLanguage].winRate}: ${calculateWinRate(profile.wins, profile.losses)}%</h4>
 			<hr>
-			<h4 data-i18n="matchHistory">${translations[currentLanguage].matchHistory}</h4>
+			<h4>${translations[currentLanguage].matchHistory}</h4>
 			<p title="${translations[currentLanguage].wins}: ${profile.wins}, ${translations[currentLanguage].losses}: ${profile.losses}">
 				${profile.wins}${translations[currentLanguage].w} / ${profile.losses}${translations[currentLanguage].l}
 			</p>
@@ -74,18 +74,12 @@ function displayProfile(profile) {
 								</p>
 							`;
 							}).join('')
-						: `<p class="text-muted" data-i18n="noMatchHistory">${translations[currentLanguage].noMatchHistory}</p>`
+						: `<p class="text-muted">${translations[currentLanguage].noMatchHistory}</p>`
 				}
 			</div>
 		</div>
 		`;
 
-		const tableBody = document.getElementById("matchHistoryTableBody");
-		tableBody.innerHTML = "";
-		if (!profile.matchHistory || profile.matchHistory.length <= 0) {
-			tableBody.innerHTML = `<tr><td colspan="3" class="text-muted" data-i18n="noData">No data available</td></tr>`;
-			return;
-		}
 }
 
 function calculateWinRate(wins, losses) {
