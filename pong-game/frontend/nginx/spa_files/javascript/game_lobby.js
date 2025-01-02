@@ -23,12 +23,10 @@ export async function setLobbyView(contentContainer, roomID = "") {
 
 	contentContainer.innerHTML = `
 		<div class="gamelobby-view">
-		<!-- <h2>Game Lobby</h2> -->
-		<div id="game-lobby" class="gamelobby-view">
-			<!-- <p>Select an option below to get started:</p> -->
+			<div id="game-lobby" class="gamelobby-view">
+				<!-- <p>Select an option below to get started:</p> -->
 				<button id="create-match">Create Private Match</button>
 				<button id="join-match">Join Match</button>
-				<button id="ready-button" style="display:none;">Ready</button>
 				<button id="invite-button" style="display:none;"> > Invite a Player </button>
 				<div id="player-info-container" style="display: flex; justify-content: space-between;">
 					<div class="user-info" id="user-info-left" style="text-align: left; flex: 1; padding: 10px;"></div>
@@ -38,6 +36,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 				<div id="player-status" class="player-status"></div>
 				<canvas id="game" width="800" height="600" style="display: none;"></canvas>
 				<button id="go-back-EOG" style="display: none;">${trslt[lng].back}</button>
+			</div>
 		</div>
 	`;
 	const canvas = document.getElementById('game');
@@ -94,7 +93,7 @@ export async function setLobbyView(contentContainer, roomID = "") {
 	});
 
     document.getElementById('go-back-EOG').addEventListener('click', async () => {
-        window.location.hash = "game/";
+        window.location.hash = "lobby";
     });
 
 	setTypeOfGame("online");
