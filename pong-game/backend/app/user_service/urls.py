@@ -15,7 +15,6 @@ urlpatterns = [
 	path("token/getToken", TokenObtainPairView.as_view(), name="get_token"), # can delete this later
 	path("token/refresh/", TokenRefreshView.as_view(), name="refresh"),
 	path("logout/", LogoutView.as_view(), name="logout-user"),
-	path("login_temp/", LoginView.as_view(template_name="user_service/login.html"), name="login-user"),
 
 	# game administration
 	path("save-match/", SaveMatchResults.as_view(), name="save-match"), # might move this to game_service
@@ -25,13 +24,6 @@ urlpatterns = [
 	# user profile
 	path("getuser/", CurrentUserView.as_view(), name="get_user"),
 	path("update-username/", updateUsernameView.as_view(), name="update_user"),
-	# path("change-password/", 
-	#   PasswordChangeView.as_view(
-	# 	  template_name="user_service/change_password.html",
-	# 	  success_url="/api/user/change-password-done/" 
-	#   ), 
-	#   name="update_password"),
-	# path("change-password-done/", PasswordChangeDoneView.as_view(), name="update_password_success"),
 	path("change-email/", changeEmailView.as_view(), name="email_change"),
 	path("change-password/", changePasswordView.as_view(), name="password_change"),
 	path("change-alias/", changeAliasView.as_view(), name="change_alias"),
@@ -49,7 +41,6 @@ urlpatterns = [
 	path("get-sent-friend-requests/", getSentFriendRequestsView.as_view(), name="get_sent_frequests"),
 	path("change-language/", changeLanguageView.as_view(), name="change_language"),
 	path("change-avatar/", changeAvatarView.as_view(), name="avatar_change"),
-
 	path("user-logs/", getAccessLogsView.as_view(), name="access_logs"),
 	
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
