@@ -156,20 +156,35 @@ export const translations = {
 		typeMessage: "Type your message",
 		send: "Send",
 		play: "Play",
+		//game_menu
 		solo: "Single Player",
 		multi: "Multiplayer",
-		easy: "Easy",
-		medium: "Medium",
-		hard: "Hard",
-		back: "↵ Go back",
 		local: "Local",
 		duel: "Versus",
 		tournament: "Tournament",
-		quickMatch: "Quick Match",
-		sendMessage: "Send Message",
-		requestDuel: "Send Duel Request",
-
+		//game_solo
+		easy: "Easy",
+		medium: "Medium",
+		hard: "Hard",
+		soloError: "Error starting AI game. Plase try again.",
+		//game_local
+		localError: "Error starting local game. Plase try again.",
+		//game_tournament
+		startNextGame: "Start next game",
+		createNewTournament: "Create a new Tournament",
+		playOff: "PLAY OFF",
 		tournamentIsOver: "Tournament is over, winner is ",
+		qualified: "Qualified",
+		tournamentInput: "Enter tournament name",
+		human:"Human",
+		tournamentEasy: "AI - Easy",
+		tournamentMedium: "AI - Medium",
+		tournamentHard: "AI - Hard",
+		addPlayer: "+ Add Player",
+		createTournament: "Create Tournament",
+		quickMatch: "Quick Match",
+		submittingResult: "Submitting match result...",
+
 	},
 	fr: {
 		confirm: "Confirmer",
