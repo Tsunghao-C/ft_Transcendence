@@ -472,7 +472,8 @@ async function join_room(response) {
 
 async function rejoin_room(response) {
 	hideElem("create-match");
-	hideElem("join-match");
+	hideElem("join-queue");
+	hideElem("go-back");
 	console.log('Rejoin room query received by server');
 	roomId = response.room_name;
 	const promptText = document.createElement('p');
@@ -503,6 +504,7 @@ async function rejoin_room(response) {
 			trueButton.remove();
 			falseButton.parentNode.removeChild(falseButton);
 			falseButton.remove();
+			goBackButtonEventListener("game/");
 			startGame();
 		} catch (error) {
 			console.error('Error accepting to rejoin room:', error);
@@ -518,7 +520,8 @@ async function rejoin_room(response) {
 				response: false
 			}));
 			showElem("create-match", "block");
-			showElem("join-match", "block");
+			showElem("join-queue", "block");
+			showElem("go-back", "block");
             promptText.parentNode.removeChild(promptText);
             promptText.remove();
 			trueButton.parentNode.removeChild(trueButton);
