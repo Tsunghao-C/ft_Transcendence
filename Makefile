@@ -1,7 +1,8 @@
 all: certs go check
 
 certs:
-	chmod +x pong-game/monitoring/elk/create-certs.sh
+	export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/ && \
+	chmod +x pong-game/monitoring/elk/create-certs.sh && \
 	./pong-game/monitoring/elk/create-certs.sh
 
 go: build run

@@ -20,56 +20,6 @@ from django.views import View
 from django.shortcuts import render, get_object_or_404
 from rest_framework import status
 
-## Game testing render views
-def game_test(request):
-	return render(request, 'game_service/game_test.html', {
-	})
-
-#Game Alpha view
-def get_game(request):
-	return render(request, 'game_service/game.html', {
-		})
-
-#solo mode for the game
-def get_solo_game(request):
-	return render(request, 'game_service/solo_game.html', {
-            })
-
-def game_test_ssr(request):
-	# Initial game state that will be pre-rendered
-	initial_state = {
-		'status': 'waiting',
-		'ball': {
-			'x': 400,
-			'y': 300,
-			'radius': 10
-		},
-		'paddles': {
-			'p1': {
-				'y': 250,
-				'x': 50,
-				'height': 100,
-				'width': 10
-			},
-			'p2': {
-				'y': 250,
-				'x': 740,
-				'height': 100,
-				'width': 10
-			}
-		},
-		'score': {
-			'p1': 0,
-			'p2': 0
-		}
-	}
-	context = {
-		'initial_state': initial_state,
-		'initial_state_json': mark_safe(json.dumps(initial_state)),
-		'game_id': 'test_game_ssr'
-	}
-	return render(request, 'game_service/game_test_ssr.html', context)
-
 ## Ranknig dashboard view.
 
 def recordMatch(p1, p2, matchOutcome):
