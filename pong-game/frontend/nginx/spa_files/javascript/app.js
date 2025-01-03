@@ -18,7 +18,6 @@ import { setTournamentView } from './game_tournament.js';
 import { setIsTournament } from "./game_utils.js";
 import { setSoloLobby } from './game_solo.js';
 import { setLocalLobby } from './game_local.js';
-import { setQuickMatchView } from './game_quickmatch.js';
 
 export const state = {
 	chatSocket: null,
@@ -176,9 +175,6 @@ export async function loadPage(page) {
 				case "solo":
 					setSoloLobby(innerContent);
 					break;
-				case "quickmatch":
-					setQuickMatchView(innerContent);
-					break;
 				case "duel":
 					setLocalLobby(innerContent);
 					break;
@@ -191,12 +187,6 @@ export async function loadPage(page) {
 				case "lobby":
 					setLobbyView(innerContent);
 					break;
-				// case "login":
-				// 	setLoginView(innerContent);
-				// 	break;
-				// case "register":
-				// 	setRegisterView(innerContent);
-				// 	break;
 				case "personal-data":
 					setpersonalDataView(innerContent);
 					break;
