@@ -382,7 +382,7 @@ async function register_local_room(response) {
 	if (isTournament) {
 		renderLocalUsers(TournamentPlayers.player1.alias, TournamentPlayers.player2.alias);
 	} else {
-		renderLocalUsers(response.player1_alias, response.player1_alias + " friend");
+		renderLocalUsers(response.player1_alias, "Guest");
 	}
 	await showReadyButton(roomId, playerEvent.player_1.id);
 }
