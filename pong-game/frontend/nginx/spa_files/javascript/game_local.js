@@ -26,21 +26,19 @@ export async function setLocalLobby(contentContainer, skip = false) {
     const lng = getLanguageCookie() || "en";
     contentContainer.innerHTML = `
         <div class="gamelobby-view">
-        <div id="game-lobby" class="gamelobby-view">
-            <button id="local">Start local versus</button>
-            <div id="player-info-container" style="display: flex; justify-content: space-between;">
-                <div id="user-info-left" style="text-align: left; flex: 1; padding: 10px;"></div>
-                <div id="user-info-right" style="text-align: left; flex: 1; padding: 10px;"></div>
+            <div id="game-lobby" class="gamelobby-view">
+                <div id="player-info-container" style="display: flex; justify-content: space-between;">
+                    <div id="user-info-left" style="text-align: left; flex: 1; padding: 10px;"></div>
+                    <div id="user-info-right" style="text-align: left; flex: 1; padding: 10px;"></div>
+                </div>
+                <div id="game-info">Loading...</div>
+                <canvas id="game" width="800" height="600" style="display: none;"></canvas>
+                <button id="go-back-EOG" style="display: none;">${trslt[lng].back}</button>
             </div>
-            <div id="game-info">Loading...</div>
-            <div id="player-status" class="player-status"></div>
-            <canvas id="game" width="800" height="600" style="display: none;"></canvas>
-            <button id="go-back-EOG" style="display: none;">${trslt[lng].back}</button>
         </div>
     `;
 
     if (skip == true) {
-        console.log("SKIP IS TRUE");
         document.getElementById('go-back-EOG').textContent = "";
         hideElem("go-back-EOG");
     }
@@ -48,6 +46,15 @@ export async function setLocalLobby(contentContainer, skip = false) {
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
     const gameInfo = document.getElementById('game-info');
+
+    await connectWebSocket();
+    setUpTwoPlayersControl();
+
+    try {
+        create_local_match();
+    } catch (error) {
+        console.error('Error in join-match event listener:', error);
+    }
 
     async function request_local_room() {
         try {
@@ -71,28 +78,8 @@ export async function setLocalLobby(contentContainer, skip = false) {
             gameInfo.textContent = 'Error starting Local game. Plase try again.';
         }
     }
-
-    
-    const localButton = document.getElementById('local');
-
-    localButton.addEventListener('click', async () => {
-        try {
-            hideElem("local");
-            create_local_match();
-        } catch (error) {
-            console.error('Error in join-match event listener:', error);
-        }
-    });
-    
-    await connectWebSocket();
-    setUpTwoPlayersControl();
-    if (skip) {
-        hideElem("local");
-        create_local_match();
-    }
     
     document.getElementById('go-back-EOG').addEventListener('click', async () => {
         window.location.hash = "game/local";
     });
-
 }
