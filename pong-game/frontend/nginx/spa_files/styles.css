@@ -1064,6 +1064,24 @@ table {
 .error404-view {
 	width: 80%;
 	margin: 10px;
+	padding-top: 10px;
+	padding-bottom: 10px;
+	width: 100%;
+	padding-left: 10%;
+	padding-right: 10%;
+	height: var(--inner-view-height);
+	overflow-y: auto;
+	box-sizing: border-box; 
+	display: flex;
+	align-items: center;
+}
+
+.error404-view h1 {
+	font-size: 3rem;
+	padding-left: 0 !important;
+	/* width: 100%; */
+	/* color: red !important; */
+	/* background-color: red !important; */
 }
 
 /**************************** Scrollbar ****************************/
