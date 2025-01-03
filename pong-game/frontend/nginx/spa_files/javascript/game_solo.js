@@ -34,7 +34,6 @@ export async function setSoloLobby(contentContainer, difficulty = "", skip = fal
                 <div class="user-info" id="user-info-right" style="text-align: left; flex: 1; padding: 10px; display: none;"></div>
                 </div>
                 <div id="game-info">Loading...</div>
-                <div id="player-status" class="player-status"></div>
                 <canvas id="game" width="800" height="600" style="display: none;"></canvas>
                 <button id="go-back">${trslt[lng].back}</button>
                 <button id="go-back-EOG" style="display: none;">${trslt[lng].back}</button>
