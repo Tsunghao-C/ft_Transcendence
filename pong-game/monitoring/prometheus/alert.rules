@@ -7,8 +7,7 @@ groups:
     labels:
       severity: warning
     annotations:
-      summary: "High request latency on {{ $labels.job }} ({{ $labels.instance }})"
-      description: "Request latency is {{ printf \"%.2f\" $value }} seconds, which exceeds 1 second threshold for the last 5 minutes"
+      summary: "High request latency detected over one second"
 
   - alert: HighErrorRate
     expr: rate(django_http_responses_total_by_status_total{status=~"5.*"}[5m]) > 1
@@ -17,7 +16,6 @@ groups:
       severity: critical
     annotations:
       summary: "High server side error rate detected"
-      description: "Error rate is {{ $value }} per second"
 
 - name: node_alerts
   rules:
@@ -27,8 +25,7 @@ groups:
     labels:
       severity: warning
     annotations:
-      summary: "High CPU usage on {{ $labels.instance }}"
-      description: "CPU usage is {{ $value }}%"
+      summary: "High CPU usage"
 
   - alert: HighMemoryUsage
     expr: ((node_memory_MemTotal_bytes - node_memory_MemFree_bytes) / node_memory_MemTotal_bytes) * 100 > 90
@@ -36,4 +33,4 @@ groups:
     labels:
       severity: warning
     annotations:
-      summary: "High memory usage on {{ $labels.instance }}"
+      summary: "High memory usage"
