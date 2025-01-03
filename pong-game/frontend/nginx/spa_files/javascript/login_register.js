@@ -63,6 +63,9 @@ function setupRegisterFormEventHandler() {
 				else if (data.email) {
 					showError(data.email);
 				}
+				else if (data.password) {
+					showError(data.password);
+				}
 				else {
 					showError("Register failed, please try again later.")
 				}

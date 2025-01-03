@@ -38,15 +38,15 @@ class UserSerializer(serializers.ModelSerializer):
 
 	def validate_password(self, value):
 		if len(value) < 12:
-			raise serializers.ValidationError({"password": "Too short. This password is less than 12 characters"})
+			raise serializers.ValidationError("Password must be longer than 12 characters")
 		elif not re.search("[A-Z]", value):
-			raise serializers.ValidationError({"password": "password must contain at least one uppercase letter"})
+			raise serializers.ValidationError("Password must contain at least one uppercase letter")
 		elif not re.search("[a-z]", value):
-			raise serializers.ValidationError({"password": "password must contain at least one lowercase letter"})
+			raise serializers.ValidationError("Password must contain at least one lowercase letter")
 		elif not re.search("[0-9]", value):
-			raise serializers.ValidationError({"password": "password must contain at least one number"})
+			raise serializers.ValidationError("Password must contain at least one number")
 		elif not re.search("[!@#$%^&*(),.?\":{}|<>:;\'_+-=~`]", value):
-			raise serializers.ValidationError({"password": "password must contain at least one special character"})
+			raise serializers.ValidationError("Password must contain at least one special character")
 		return value
 
 	def validate_username(self, value):
