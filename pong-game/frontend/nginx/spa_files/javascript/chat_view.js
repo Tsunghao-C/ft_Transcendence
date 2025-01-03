@@ -120,7 +120,7 @@ function setChatViewHtml(contentContainer) {
 		`
 }
 
-function handleTabs(roomType = "") {
+function handleTabs() {
 	const pmNavTab = document.getElementById("private-message-tab");
 	const chatRoomsNavTab = document.getElementById("chat-rooms-tab");
 	const tournamentNavTab = document.getElementById("tournament-tab");
@@ -128,14 +128,17 @@ function handleTabs(roomType = "") {
 	const chatRoomsTabPane = document.getElementById("chat-rooms");
 	const tournamentTabPane = document.getElementById("tournament");
 
-	if (roomType == "public") {
+	const currentHash = window.location.hash;
+	console.log("current hash is : ", currentHash);
+
+	if (currentHash.startsWith("#chat/public")) {
 		pmNavTab.className = "nav-link";
 		chatRoomsNavTab.className = "nav-link active";
 		tournamentNavTab.className = "nav-link";
 		pmTabPane.className = "tab-pane fade";
 		tournamentTabPane.className = "tab-pane fade";
 		chatRoomsTabPane.className = "tab-pane fade show active";
-	} else if (roomType == "tournament") {
+	} else if (currentHash.startsWith("#chat/tournament")) {
 		pmNavTab.className = "nav-link";
 		chatRoomsNavTab.className = "nav-link";
 		tournamentNavTab.className = "nav-link active";
