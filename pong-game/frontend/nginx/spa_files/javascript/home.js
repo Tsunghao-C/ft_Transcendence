@@ -1,6 +1,6 @@
 import { fetchWithToken } from "./fetch_request.js";
-import { getLanguageCookie } from './fetch_request.js';
 import { translations } from "./language_pack.js";
+import { state } from "./app.js";
 
 export async function setHomePage(contentContainer, userdata) {
 
@@ -18,10 +18,9 @@ export async function setHomePage(contentContainer, userdata) {
 		return;
 	}
 
-	const currentLanguage = getLanguageCookie() ||  "en";
 	contentContainer.innerHTML = `
 		<div class="home-view">
-			<h2>${translations[currentLanguage].welcome}, ${userdata.username} !</h2>
+			<h2>${translations[state.language].welcome}, ${userdata.username} !</h2>
 			<div id="profile">
 			</div>
 		</div>
@@ -37,20 +36,19 @@ export async function setHomePage(contentContainer, userdata) {
 }
 
 function displayProfile(profile) {
-		const currentLanguage = getLanguageCookie() ||  "en";
 		const profileResult = document.getElementById("profile");
-		
+
 		profileResult.innerHTML = `
 		<div class="data-container">
 			<hr>
-			<h3>${translations[currentLanguage].currentStats}</h3>
-			<h4>${translations[currentLanguage].rank}: ${profile.rank || "Unranked"}</h4>
-			<h4>${translations[currentLanguage].mmr}: ${profile.mmr}</h4>
-			<h4>${translations[currentLanguage].winRate}: ${calculateWinRate(profile.wins, profile.losses)}%</h4>
+			<h3>${translations[state.language].currentStats}</h3>
+			<h4>${translations[state.language].rank}: ${profile.rank || "Unranked"}</h4>
+			<h4>${translations[state.language].mmr}: ${profile.mmr}</h4>
+			<h4>${translations[state.language].winRate}: ${calculateWinRate(profile.wins, profile.losses)}%</h4>
 			<hr>
-			<h4>${translations[currentLanguage].matchHistory}</h4>
-			<p title="${translations[currentLanguage].wins}: ${profile.wins}, ${translations[currentLanguage].losses}: ${profile.losses}">
-				${profile.wins}${translations[currentLanguage].w} / ${profile.losses}${translations[currentLanguage].l}
+			<h4>${translations[state.language].matchHistory}</h4>
+			<p title="${translations[state.language].wins}: ${profile.wins}, ${translations[state.language].losses}: ${profile.losses}">
+				${profile.wins}${translations[state.language].w} / ${profile.losses}${translations[state.language].l}
 			</p>
 			<table class="table">
 				<hr style="color: white; background-color: white; margin: 0px;">
@@ -65,8 +63,8 @@ function displayProfile(profile) {
 							const p1Won = match.matchOutcome === "Player 1 Wins";
 							const isWin = (isP1 && p1Won) || (!isP1 && !p1Won);
 							const opponent = isP1 ? match.p2 : match.p1;
-							const outcomeText = isWin ? translations[currentLanguage].win : translations[currentLanguage].loss;
-							const matchDate = new Date(match.time).toLocaleString(currentLanguage);
+							const outcomeText = isWin ? translations[state.language].win : translations[state.language].loss;
+							const matchDate = new Date(match.time).toLocaleString(state.language);
 							return `
 								<p>
 									${matchDate} - <strong>${outcomeText}</strong> versus
@@ -74,7 +72,7 @@ function displayProfile(profile) {
 								</p>
 							`;
 							}).join('')
-						: `<p class="text-muted">${translations[currentLanguage].noMatchHistory}</p>`
+						: `<p class="text-muted">${translations[state.language].noMatchHistory}</p>`
 				}
 			</div>
 		</div>

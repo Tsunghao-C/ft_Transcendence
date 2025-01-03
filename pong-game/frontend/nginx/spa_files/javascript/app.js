@@ -23,19 +23,8 @@ import { setQuickMatchView } from './game_quickmatch.js';
 export const state = {
 	chatSocket: null,
 	gameSocket: null,
+	language: null,
 	};
-
-export function changeLanguage(language) {
-	localStorage.setItem("language", language);
-	const elements = document.querySelectorAll("[data-i18n]");
-	elements.forEach((el) => {
-		const key = el.getAttribute("data-i18n");
-		if (trsl[language] && trsl[language][key]) {
-			el.textContent = trsl[language][key];
-		}
-	});
-	attachNavigationListeners();
-	}
 
 export async function setContainerHtml(container, url) {
 	try {
@@ -50,7 +39,7 @@ export async function setContainerHtml(container, url) {
 	}
 }
 
-function setNavbarHtml(container, lng) {
+function setNavbarHtml(container) {
 	container.innerHTML = `
 		<a class="navbar-brand" href="#home">Q</a>
 		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,22 +48,22 @@ function setNavbarHtml(container, lng) {
 		<div class="collapse navbar-collapse" id="navbarNav">
 			<ul class="navbar-nav mx-auto">
 				<li class="nav-item">
-					<a class="nav-link" href="#game">${trsl[lng].game}</a>
+					<a class="nav-link" href="#game">${trsl[state.language].game}</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" href="#leaderboard">${trsl[lng].leaderboard}</a>
+					<a class="nav-link" href="#leaderboard">${trsl[state.language].leaderboard}</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" href="#profile">${trsl[lng].profile}</a>
+					<a class="nav-link" href="#profile">${trsl[state.language].profile}</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" href="#friends">${trsl[lng].friends}</a>
+					<a class="nav-link" href="#friends">${trsl[state.language].friends}</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" href="#chat">${trsl[lng].chat}</a>
+					<a class="nav-link" href="#chat">${trsl[state.language].chat}</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" href="#about">${trsl[lng].about}</a>
+					<a class="nav-link" href="#about">${trsl[state.language].about}</a>
 				</li>
 			</ul>
 			<ul class="navbar-nav">
@@ -82,8 +71,8 @@ function setNavbarHtml(container, lng) {
 					<img id="userAvatar" src="" alt="User Avatar" class="rounded-circle me-2" style="width: 30px; height: 30px; display: none;">
 					<a class="nav-link dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" role="button" tabindex="0">User</a>
 					<ul class="dropdown-menu" aria-labelledby="userDropdown" role="menu">
-						<li><a class="dropdown-item" href="#personal-data" role="menuitem" tabindex="0">${trsl[lng].personnalData}</a></li>
-						<li><a class="dropdown-item" href="#" id="logoutButton" role="menuitem" tabindex="0">${trsl[lng].logoutButton}</a></li>
+						<li><a class="dropdown-item" href="#personal-data" role="menuitem" tabindex="0">${trsl[state.language].personnalData}</a></li>
+						<li><a class="dropdown-item" href="#" id="logoutButton" role="menuitem" tabindex="0">${trsl[state.language].logout}</a></li>
 					</ul>
 				</li>
 			</ul>
@@ -109,11 +98,13 @@ export async function loadPage(page) {
 	let response;
 	const contentContainer = document.getElementById("center-box");
 	const innerContent = document.getElementById("innerContent");
-
-	let currentLanguage = getLanguageCookie();
-	if (!currentLanguage || !['pt', 'fr', 'en'].includes(currentLanguage)) {
+	if (!state.language) {
+		state.language = getLanguageCookie();
+	}
+	if (!['pt', 'fr', 'en'].includes(state.language)) {
+		console.log("invalid language");
 		setLanguageCookie("en");
-		currentLanguage = getLanguageCookie();
+		state.language = getLanguageCookie();
 	}
 
 	if (state.chatSocket) {
@@ -136,19 +127,17 @@ export async function loadPage(page) {
 	} catch (error) {
 		if (page !== "login" && page !== "register") {
 			window.location.hash = "login";
-			changeLanguage(currentLanguage);
 			return;
 		} else if (page === "login") {
 			setLoginView(innerContent);
 		} else {
 			setRegisterView(innerContent);
 		}
-		changeLanguage(currentLanguage);
 		return;
 	}
 	const navbar = document.getElementById("mainNavBar");
 	const path = window.location.pathname;
-	setNavbarHtml(navbar, currentLanguage);
+	setNavbarHtml(navbar);
 	navbar.style.display = "flex";
 	const userDropdown = document.getElementById("userDropdown");
 	userDropdown.textContent = data.alias;
@@ -243,8 +232,8 @@ export async function loadPage(page) {
 									setChatView(innerContent);
 								}
 							}
-						} 
-	
+						}
+
 					} else if (page.startsWith("friends/")) {
 							const activeTab = page.split("/")[1] || "friends";
 							if (['friends', 'friend-requests', 'sent-friend-requests', 'blocks'].includes(activeTab)) {
@@ -276,9 +265,7 @@ export async function loadPage(page) {
 		} catch (error) {
 			console.log("Error in setView:", error);
 		}
-		changeLanguage(currentLanguage);
 	}
-	// languageEventListener(page); // uncomment this and the select in index.html to facilitate language tests
 }
 
 function handleNavigation(event) {
@@ -317,8 +304,8 @@ document.addEventListener("DOMContentLoaded", function () {
 	attachNavigationListeners();
 });
 
-// for language test 
-function languageEventListener(page) { 
+// for language test
+function languageEventListener(page) {
     const languageSelect = document.getElementById("languageSelect");
     languageSelect.value = getLanguageCookie() || "en";
     languageSelect.addEventListener("change", async (event) => {

@@ -3,9 +3,9 @@ import { setLoginViewHtml } from './login_html.js';
 import { setCustomValidation } from "./login_validations.js";
 import { showError } from "./login_validations.js";
 import { showSuccess } from "./login_validations.js";
-import { getLanguageCookie } from './fetch_request.js';
-import { setLanguageCookie } from "./fetch_request.js";
+import { setLanguageCookie } from './fetch_request.js';
 import { translations as trsl } from "./language_pack.js";
+import { state } from "./app.js";
 
 
 ///////////////////// UI Helpers /////////////////////
@@ -40,7 +40,6 @@ async function verify2FAInBackend(user_id, otpCode) {
 ///////////////////// Event Handlers /////////////////////
 
 function loginFormEventHandler() {
-	const language = getLanguageCookie() || "en";
 	const loginForm = document.getElementById("loginForm");
 	setCustomValidation("usernameInput");
 	setCustomValidation("passwordInput");
@@ -53,15 +52,15 @@ function loginFormEventHandler() {
 			const data = await response.json();
 			if (!response.ok) {
 				if (data.detail === "No active account found with the given credentials") {
-					showError(trsl[language].invalidCredential);
+					showError(trsl[state.language].invalidCredential);
 				} else if (data.detail === "Invalid credentials") {
-					showError(trsl[language].invalidCredential);
+					showError(trsl[state.language].invalidCredential);
 				} else {
-					showError(trsl[language].internalError);
+					showError(trsl[state.language].internalError);
 				}
 			} else if (response.ok && data.detail === "A 2FA code has been sent") {
 				localStorage.setItem("user_id", data.user_id);
-				showSuccess(trsl[language].enter2FA);
+				showSuccess(trsl[state.language].enter2FA);
 				show2FAInput();
 			}
 		} catch (error) {
@@ -86,10 +85,10 @@ function twoFAFormEventHandler() {
 					// here we should store that JWT token in a cookie it is safer i think
 					window.location.hash = "home";
 				} else {
-					showError(trsl[language].twoFactorFailed);
+					showError(trsl[state.language].twoFactorFailed);
 				}
 			} catch (error) {
-				showError(trsl[language].internalError);
+				showError(trsl[state.language].internalError);
 			}
 		})
 	}
@@ -97,10 +96,11 @@ function twoFAFormEventHandler() {
 
 function languageEventListener() {
 	const languageSelect = document.getElementById("languageSelect");
-	languageSelect.value = getLanguageCookie() || "en";
+	languageSelect.value = state.language
 	languageSelect.addEventListener("change", async (event) => {
 		const selectedLanguage = event.target.value;
 		setLanguageCookie(selectedLanguage);
+		state.language = selectedLanguage;
 		loadPage("login");
 		show2FAInput();
 	});

@@ -1,23 +1,23 @@
 //// We may fuse this with the search bar of profile view so that we can search for someone in the leaderboard
 import { fetchWithToken, getLanguageCookie } from './fetch_request.js';
-import { loadPage } from './app.js';
 import { translations as trsl } from './language_pack.js';
+import { state } from './app.js';
 
 
 export async function setLeaderboardView(contentContainer) {
 	const cl = getLanguageCookie() ||  "en";
 	contentContainer.innerHTML = `
 		<div class="leaderboard-view">
-			<h2 data-i18n="leaderboard">Leaderboard</h2>
+			<h2>${trsl[state.language].leaderboard}</h2>
 			<div class="filter-bar">
-				<input type="text" id="leaderboardFilterInput" class="form-control" placeholder="${trsl[cl].searchByUsername}" />
+				<input type="text" id="leaderboardFilterInput" class="form-control" placeholder="${trsl[state.language].searchByUsername}" />
 			</div>
 			<table class="table">
 				<thead>
 					<tr>
 						<th>#</th>
-						<th>${trsl[cl].alias}</th>
-						<th>${trsl[cl].mmr}</th>
+						<th>${trsl[state.language].alias}</th>
+						<th>${trsl[state.language].mmr}</th>
 					</tr>
 				</thead>
 				<tbody id="leaderboardTableBody">
@@ -46,11 +46,10 @@ export async function setLeaderboardView(contentContainer) {
 	}
 
 	function populateLeaderboardTable(data) {
-		const lng = getLanguageCookie() || "en";
 		const tableBody = document.getElementById("leaderboardTableBody");
 		tableBody.innerHTML = "";
 		if (!data || data.length === 0) {
-			tableBody.innerHTML = `<tr><td colspan="3" class="text-muted">${trsl[lng].noData}</td></tr>`;
+			tableBody.innerHTML = `<tr><td colspan="3" class="text-muted">${trsl[state.language].noData}</td></tr>`;
 			return;
 		}
 		data.forEach((user) => {
