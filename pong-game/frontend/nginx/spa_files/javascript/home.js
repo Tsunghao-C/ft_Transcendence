@@ -42,7 +42,7 @@ function displayProfile(profile) {
 		<div class="data-container">
 			<hr>
 			<h3>${translations[state.language].currentStats}</h3>
-			<h4>${translations[state.language].rank}: ${profile.rank || "Unranked"}</h4>
+			<h4>${translations[state.language].rank}: ${profile.rank || translations[state.language].unranked}</h4>
 			<h4>${translations[state.language].mmr}: ${profile.mmr}</h4>
 			<h4>${translations[state.language].winRate}: ${calculateWinRate(profile.wins, profile.losses)}%</h4>
 			<hr>

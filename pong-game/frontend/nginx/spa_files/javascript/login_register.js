@@ -53,25 +53,24 @@ function setupRegisterFormEventHandler() {
 			if (response.ok) {
 				showSuccess(trsl[state.language].registerSucceeded);
 			} else {
-				//translations to be made
 				if (data.username) {
-					if (data.username === "this username contains bad language") {
+					if (data.username == "this username contains bad language") {
 						showError(`${trsl[state.language].login} ${trsl[state.language].badLanguage}`);
 					} else if (data.username == "A user with that username already exists.") {
 						showError(`${trsl[state.language].loginTaken}`);
 					}
 				}
 				else if (data.alias) {
-					if (data.alias === "this alias contains bad language") {
+					if (data.alias == "this alias contains bad language") {
 						showError(`${trsl[state.language].alias} ${trsl[state.language].badLanguage}`);
 					} else if (data.alias == "user with this alias already exists.") {
 						showError(`${trsl[state.language].aliasTaken}`);
 					}
 				}
 				else if (data.email) {
-					if (data.email === "Enter a valid email address.") {
+					if (data.email == "Enter a valid email address.") {
 						showError(`${trsl[state.language].invalidMail}`);
-					} else if (data.alias == "user with this email already exists.") {
+					} else if (data.email == "user with this email already exists.") {
 						showError(`${trsl[state.language].emailTaken}`);
 					}
 				}

@@ -6,7 +6,6 @@ import { clearInput, hideElem, showElem, hideClass, showClass } from "./utils.js
 import { sendDuelRequestFromGameRoom } from "./manage_social.js";
 import { translations as trsl } from "./language_pack.js";
 import { isAlphanumeric } from "./utils.js";
-import { state } from "./app.js";
 
 ////////////////////////////////// Utils //////////////////////////////////
 
@@ -50,13 +49,13 @@ function setChatViewHtml(contentContainer) {
 		<div class="chat-view">
 			<ul class="nav nav-tabs" id="chatBlockTabs" role="tablist">
 				<li class="nav-item">
-					<a class="nav-link active" id="private-message-tab" data-bs-toggle="tab" href="#private-message" role="tab" aria-controls="private-message" aria-selected="true">${trsl[lng].privateMessages}</a>
+					<a class="nav-link active" id="private-message-tab" data-bs-toggle="tab" href="#private-message" role="tab" aria-controls="private-message" aria-selected="true">${trsl[state.language].privateMessages}</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" id="chat-rooms-tab" data-bs-toggle="tab" href="#chat-rooms" role="tab" aria-controls="chat-rooms" aria-selected="false">${trsl[lng].chatRooms}</a>
+					<a class="nav-link" id="chat-rooms-tab" data-bs-toggle="tab" href="#chat-rooms" role="tab" aria-controls="chat-rooms" aria-selected="false">${trsl[state.language].chatRooms}</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" id="tournament-tab" data-bs-toggle="tab" href="#tournament-rooms" role="tab" aria-controls="chat-rooms" aria-selected="false">${trsl[lng].tournamentRooms}</a>
+					<a class="nav-link" id="tournament-tab" data-bs-toggle="tab" href="#tournament-rooms" role="tab" aria-controls="chat-rooms" aria-selected="false">${trsl[state.language].tournamentRooms}</a>
 				</li>
 			</ul>
 			<div class="tab-content">
@@ -73,13 +72,13 @@ function setChatViewHtml(contentContainer) {
 					<div class="chat-content" id="chat-content" style="display:none;">
 						<div id="chat-content-top">
 							<h4 id="pm-recipient"></h4>
-							<button class="go-back">↵ Go Back</button>
+							<button class="go-back">${trsl[state.language].goBackButton}</button>
 						</div>
 						<div id="messages" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;"></div>
 						<div id="chat-content-bottom">
-							<input class="message-input" type="text" placeholder="Type your message">
-							<button class="send-message"">Send</button>
-							<button id="send-private-invite">Play</button>
+							<input class="message-input" type="text" placeholder="${trsl[state.language].typeMessage}">
+							<button class="send-message"">${trsl[state.language].send}</button>
+							<button id="send-private-invite">${trsl[state.language].play}</button>
 						</div>
 					</div>
 				</div>
@@ -96,13 +95,13 @@ function setChatViewHtml(contentContainer) {
 					<div class="chat-content" id="room-chat-content" style="display:none;">
 						<div id="chat-content-top">
 							<h4 id="chat-room-title"></h4>
-							<button class="go-back">↵ Go Back</button>
+							<button class="go-back">${trsl[state.language].goBackButton}</button>
 						</div>
 						<div id="chat-room-messages" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;"></div>
 						<div id="chat-content-bottom">
-							<input class="message-input" id="message-input" type="text" placeholder="Type your message">
-							<button class="send-message" id="send-message">Send</button>
-							<button id="send-public-invite">Play</button>
+							<input class="message-input" id="message-input" type="text" placeholder="${trsl[state.language].typeMessage}">
+							<button class="send-message" id="send-message">${trsl[state.language].send}</button>
+							<button id="send-public-invite">${trsl[state.language].play}</button>
 						</div>
 					</div>
 				</div>
@@ -111,7 +110,7 @@ function setChatViewHtml(contentContainer) {
 					<div class="chat-content" id="tournament-content" style="display:none;">
 						<div id="tournament-content-top">
 							<h4 id="tournament-title"></h4>
-							<button class="go-back">↵ Go Back</button>
+							<button class="go-back">${trsl[state.language].goBackButton}</button>
 						</div>
 						<div id="tournament-messages" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;"></div>
 					</div>
@@ -121,26 +120,22 @@ function setChatViewHtml(contentContainer) {
 		`
 }
 
-function handleTabs() {
+function handleTabs(roomType = "") {
 	const pmNavTab = document.getElementById("private-message-tab");
 	const chatRoomsNavTab = document.getElementById("chat-rooms-tab");
 	const tournamentNavTab = document.getElementById("tournament-tab");
 	const pmTabPane = document.getElementById("private-message");
 	const chatRoomsTabPane = document.getElementById("chat-rooms");
-
 	const tournamentTabPane = document.getElementById("tournament");
 
-	const currentHash = window.location.hash;
-	console.log("current hash is : ", currentHash);
-
-	if (currentHash.startsWith("#chat/public")) {
+	if (roomType == "public") {
 		pmNavTab.className = "nav-link";
 		chatRoomsNavTab.className = "nav-link active";
 		tournamentNavTab.className = "nav-link";
 		pmTabPane.className = "tab-pane fade";
 		tournamentTabPane.className = "tab-pane fade";
 		chatRoomsTabPane.className = "tab-pane fade show active";
-	} else if (currentHash.startsWith("#chat/tournament")) {
+	} else if (roomType == "tournament") {
 		pmNavTab.className = "nav-link";
 		chatRoomsNavTab.className = "nav-link";
 		tournamentNavTab.className = "nav-link active";
@@ -174,7 +169,7 @@ function setPmList(roomData) {
 	pmList.innerHTML = roomData
 	.map(room => {
 		const roomType = room.is_private ? "private" : "public";
-		if (roomType === "private") {
+		if (roomType === "private" && !room.is_tournament) {
 			const aliasOrRoomName = room.other_member || "Unknown";
 			const roomDisplayName = `${aliasOrRoomName}`;
 				return `<div class="room-item"
@@ -183,6 +178,25 @@ function setPmList(roomData) {
 						style="cursor: pointer; margin: 5px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
 							<p>${roomDisplayName}</p>
 					</div>`;
+		}
+	})
+	.join("");
+}
+
+function setTournamentList(roomData) {
+	const pmList = document.getElementById("tournament-list");
+	pmList.innerHTML = roomData
+	.map(room => {
+		const roomType = room.is_tournament ? "tournament" : "no tournament";
+		if (roomType === "tournament") {
+			const aliasOrRoomName = room.name;
+			const roomDisplayName = aliasOrRoomName.split("_").slice(2);
+			return `<div class="room-item"
+					data-room-type="${roomType}"
+					data-alias-or-room-name="${aliasOrRoomName}"
+					style="cursor: pointer; margin: 5px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+						<p>${roomDisplayName}</p>
+				</div>`;
 		}
 	})
 	.join("");
@@ -447,7 +461,7 @@ function addMessage(userAlias, alias, message, time, isInvite = false, gameRoom 
 	if (roomType == "tournament") {
 		messageElement.style.textAlign = "left";
 		const teams = message.split("/");
-		const formattedMessage = teams.length === 2 ? `${teams[0]} vs ${teams[1]}` : `${trsl[lng].tournamentIsOver} ${message}`;
+		const formattedMessage = teams.length === 2 ? `${teams[0]} vs ${teams[1]}` : `${trsl[state.language].tournamentIsOver} ${message}`;
 
 		messageElement.innerHTML = `
 			<strong>
@@ -511,9 +525,7 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 
 	// Event listeners - In chat display
 	backButtonEventListener();
-	if (aliasOrRoomToJoin && !isAlphanumeric(aliasOrRoomToJoin, "Room Name and Alias")) {
-		aliasOrRoomToJoin = "";
-	}	if (!aliasOrRoomToJoin) {
+	if (!aliasOrRoomToJoin) {
 		return ;
 	}
 	if (roomType === "public") {

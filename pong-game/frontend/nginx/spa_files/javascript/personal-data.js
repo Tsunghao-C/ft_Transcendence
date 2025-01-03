@@ -59,7 +59,7 @@ export async function setpersonalDataView(contentContainer) {
 					>
 				</div>
 				<div class="ms-3">
-					<label class="form-label">${trsl[state.language].username}</label>
+					<label class="form-label">${trsl[state.language].loginInput}</label>
 					<input type="text" class="form-control" value="${personal.username}" readonly>
 				</div>
 			</div>

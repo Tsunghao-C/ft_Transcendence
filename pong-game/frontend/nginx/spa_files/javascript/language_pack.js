@@ -63,6 +63,7 @@ export const translations = {
 		confirmNewPassword: "Confirm new password",
 		close: "Close",
 		newPassword: "New password",
+		changePassword: "Change Password",
 		passwordMismatch: "Passwords do not match.",
 		passwordChanged: "Success, password has been changed.",
 		passwordRule: "Your password must blablabla update this pls", //to update
@@ -102,6 +103,7 @@ export const translations = {
 		//leaderboard
 		noData: "No data Available",
 		//home
+		welcome:"Welcome",
 		currentStats:"Your current stats: ",
 		date: "date",
 		opponent: "opponent",
@@ -126,6 +128,7 @@ export const translations = {
 		//manage_social
 		validationRemovalFirst: "Are you sure you want to remove",
 		validationRemovalSecond: "from your friend list",
+		friendRequestSent: "Friend request sent",
 		validationUnblockFirst: "Are you sure you want to unblock",
 		validationUnblockSecond: "",
 		alreadyFriend: "is already your friend",
@@ -142,16 +145,17 @@ export const translations = {
 		//404
 		error404Title: "404",
 		error404Message: "Error 404: Page not found",
-		lightMode: "Light",
-		darkMode: "Dark",
-		colorblindMode: "Colorblind",
-		fontSize: "Font Size",
-		smallFont: "Small",
-		mediumFont: "Medium",
-		largeFont: "Large",
-		language: "Language",
-		username: "Username",
-		password: "Password",
+		//chat
+		privateMessages: "Private messages",
+		createOrJoinRoom: "Create or join room",
+		chatRooms: "Chat rooms",
+		privateMessagesWith: "Private messages with",
+		enterRoomName: "Enter room name",
+		tournamentRooms: "Tournament rooms",
+		goBackButton: "↵ Go Back",
+		typeMessage: "Type your message",
+		send: "Send",
+		play: "Play",
 		solo: "Single Player",
 		multi: "Multiplayer",
 		easy: "Easy",
@@ -165,16 +169,7 @@ export const translations = {
 		sendMessage: "Send Message",
 		requestDuel: "Send Duel Request",
 
-		friendRequestSent: "Friend request sent",
-		welcome:"Welcome",
-		privateMessages: "Private messages",
-		createOrJoinRoom: "Create or join room",
-		chatRooms: "Chat rooms",
-		tournamentRooms: "Tournament rooms",
 		tournamentIsOver: "Tournament is over, winner is ",
-		enterRoomName: "Enter room name",
-		privateMessagesWith: "Private messages with",
-		changePassword: "Change Password",
 	},
 	fr: {
 		confirm: "Confirmer",

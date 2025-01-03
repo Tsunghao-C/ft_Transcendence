@@ -35,10 +35,10 @@
     <script>
     // const roomName = document.querySelector('h1').textContent.split(': ')[1];
     const roomName = "{{ room_name|safe }}";
-    
+
 
     // Log the WebSocket URL we're trying to connect to
-    const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const wsScheme = 'wss';
     const wsUrl = `${wsScheme}://${window.location.host}/ws/chat-server/${roomName}/`;
     console.log('Attempting to connect to:', wsUrl);
     // Create WebSocket connection
