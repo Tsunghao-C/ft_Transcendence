@@ -1,0 +1,39 @@
+groups:
+- name: django_alerts
+  rules:
+  - alert: HighRequestLatency
+    expr: django_http_requests_latency_including_middlewares_seconds_sum > 1
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High request latency on {{ $labels.instance }}"
+      description: "Django request latency is above 1 second"
+
+  - alert: HighErrorRate
+    expr: rate(django_http_responses_total_by_status_total{status=~"5.*"}[5m]) > 1
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "High error rate detected"
+      description: "Error rate is {{ $value }} per second"
+
+- name: node_alerts
+  rules:
+  - alert: HighCPUUsage
+    expr: 100 * avg(1 - rate(node_cpu_seconds_total{mode="idle"}[5m])) by (instance) > 80
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High CPU usage on {{ $labels.instance }}"
+      description: "CPU usage is {{ $value }}%"
+
+  - alert: HighMemoryUsage
+    expr: ((node_memory_MemTotal_bytes - node_memory_MemFree_bytes) / node_memory_MemTotal_bytes) * 100 > 90
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High memory usage on {{ $labels.instance }}"
