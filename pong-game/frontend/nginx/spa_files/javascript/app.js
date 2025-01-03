@@ -213,7 +213,7 @@ export async function loadPage(page) {
 								} else if (aliasOrRoomToJoin) {
 									setChatView(innerContent, roomType, aliasOrRoomToJoin);
 								} else {
-									setChatView(innerContent);
+									setChatView(innerContent, roomType);
 								}
 							} else {
 								if (page.split("/").length > 2) {

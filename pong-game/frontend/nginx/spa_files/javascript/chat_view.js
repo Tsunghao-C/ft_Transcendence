@@ -120,7 +120,7 @@ function setChatViewHtml(contentContainer) {
 		`
 }
 
-function handleTabs() {
+function handleTabs(roomType = "") {
 	const pmNavTab = document.getElementById("private-message-tab");
 	const chatRoomsNavTab = document.getElementById("chat-rooms-tab");
 	const tournamentNavTab = document.getElementById("tournament-tab");
@@ -128,17 +128,14 @@ function handleTabs() {
 	const chatRoomsTabPane = document.getElementById("chat-rooms");
 	const tournamentTabPane = document.getElementById("tournament");
 
-	const currentHash = window.location.hash;
-	console.log("current hash is : ", currentHash);
-
-	if (currentHash.startsWith("#chat/public")) {
+	if (roomType == "public") {
 		pmNavTab.className = "nav-link";
 		chatRoomsNavTab.className = "nav-link active";
 		tournamentNavTab.className = "nav-link";
 		pmTabPane.className = "tab-pane fade";
 		tournamentTabPane.className = "tab-pane fade";
 		chatRoomsTabPane.className = "tab-pane fade show active";
-	} else if (currentHash.startsWith("#chat/tournament")) {
+	} else if (roomType == "tournament") {
 		pmNavTab.className = "nav-link";
 		chatRoomsNavTab.className = "nav-link";
 		tournamentNavTab.className = "nav-link active";
@@ -159,7 +156,6 @@ function handleTabs() {
 	chatRoomsNavTab.addEventListener("shown.bs.tab", function () {
 		window.location.hash = "chat/public";
 	});
-
 	tournamentNavTab.addEventListener("shown.bs.tab", function () {
 		window.location.hash = "chat/tournament";
 	});
@@ -509,13 +505,12 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 
 	// Fetch Chat Rooms Data
 	const { success, roomData, userAlias } = await fetchChatRoomsData();
-	console.log("at beginning, user alias is :", userAlias);
 	if (!success)
 		return;
 
 	// Set innerHtml
 	setChatViewHtml(contentContainer);
-	handleTabs();
+	handleTabs(roomType);
 
 	// Set room lists
 	setPmList(roomData);
