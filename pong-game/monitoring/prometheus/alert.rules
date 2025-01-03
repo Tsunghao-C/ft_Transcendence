@@ -7,8 +7,8 @@ groups:
     labels:
       severity: warning
     annotations:
-      summary: "High request latency on {{ $labels.instance }}"
-      description: "Django request latency is above 1 second"
+      summary: "High request latency on {{ $labels.job }} ({{ $labels.instance }})"
+      description: "Request latency is {{ printf \"%.2f\" $value }} seconds, which exceeds 1 second threshold for the last 5 minutes"
 
   - alert: HighErrorRate
     expr: rate(django_http_responses_total_by_status_total{status=~"5.*"}[5m]) > 1
@@ -16,7 +16,7 @@ groups:
     labels:
       severity: critical
     annotations:
-      summary: "High error rate detected"
+      summary: "High server side error rate detected"
       description: "Error rate is {{ $value }} per second"
 
 - name: node_alerts
