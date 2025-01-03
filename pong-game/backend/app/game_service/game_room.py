@@ -8,6 +8,7 @@ from .ai_player import PongAI
 from .models import MatchResults
 from asgiref.sync import sync_to_async
 from user_service.models import CustomUser
+from enum import Enum
 
 from match_making.models import LiveGames
 from user_service.models import CustomUser
@@ -24,6 +25,12 @@ ABORTED = 1
 CONCEDE = 2
 
 logger = logging.getLogger(__name__)
+
+class GameType(Enum):
+	local = 1
+	ai = 2
+	quickmatch = 3
+	versus = 4
 
 class Player():
 	def __init__(self, side, canvas_width, canvas_height):
@@ -57,11 +64,14 @@ class GameRoom():
 
 		self.left_player = user_data[0]
 		self.ai_player = None
-		if self.game_type["is_local"]:
+		# if self.game_type["is_local"]:
+		if self.game_type == GameType.local:
 			self.right_player = - self.left_player
-		elif self.game_type["is_online"]:
+		# elif self.game_type["is_online"]:
+		elif self.game_type in [GameType.quickmatch, GameType.versus]:
 			self.right_player = user_data[1]
-		elif self.game_type["is_ai"]:
+		# elif self.game_type["is_ai"]:
+		elif self.game_type == GameType.ai:
 			self.right_player = - self.left_player
 			self.ai_player = PongAI(
 				difficulty = daddyficulty,
@@ -161,35 +171,12 @@ class GameRoom():
 					else:
 						self.ball.x = player.x - self.ball.radius
 
-	def _get_new_mmr(self, userMMR: int, oppMMR: int, match_outcome: int):
-		E = 1 / (1 + 10**((oppMMR - userMMR)/400))
-		return int(userMMR + 30 * (match_outcome - E))
-
 	def record_match_result_sync(self, winner):
 		try:
 			p1 = CustomUser.objects.get(id=self.left_player)
-			p2 = CustomUser.objects.get(id=self.right_player)
-			if (winner == "left"):
-				match_outcome = 1
-				p1.winCount += 1
-				p2.lossCount += 1
-			else :
-				match_outcome = 0
-				p2.winCount += 1
-				p1.lossCount += 1
-			p1MMR = p1.mmr
-			p2mmr = p2.mmr
-			p1.mmr = self._get_new_mmr(p1MMR, p2mmr, match_outcome)
-			p2.mmr = self._get_new_mmr(p2mmr, p1MMR, 1 - match_outcome)
-			match_result = MatchResults(
-				p1=p1,
-				p2=p2,
-				matchOutcome=match_outcome,
-			)
-			p1.save()
-			p2.save()
-			match_result.save()
-			print(f"Match result saved: {match_result}")
+			game = LiveGames.objects.filter(p1=p1).first()
+			game.matchEnd(outcome=winner)
+			print(f"Match result saved")
 		except CustomUser.DoesNotExist:
 			print("Error: One or both players not found.")
 
@@ -216,8 +203,9 @@ class GameRoom():
 				'type': 'game_over',
 				'payload': game_report
 				}))
-		if self.game_type["is_online"]:
-			await sync_to_async(self.record_match_result_sync)(winner)
+		# if self.game_type["is_online"]:
+		if self.game_type in [GameType.versus, GameType.quickmatch]:
+			await sync_to_async(self.record_match_result_sync)(winner==self.left_player)
 
 	def update_ball(self):
 		self.ball.x += self.ball.speedX
@@ -277,7 +265,8 @@ class GameRoom():
 				else:
 					self.dropped_side = RIGHT
 				self.missing_player += 1
-				if self.game_type["is_ai"]:
+				# if self.game_type["is_ai"]:
+				if self.game_type == GameType.ai:
 					self.missing_player = 2
 
 	async def player_rejoin(self, new_id, new_connection):

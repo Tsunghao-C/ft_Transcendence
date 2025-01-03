@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import json
 import uuid
 import asyncio
+from enum import Enum
 from channels.generic.websocket import AsyncWebsocketConsumer
 from .game_room import GameRoom
 from user_service.models import CustomUser
@@ -66,6 +67,12 @@ class GameHealthConsumer(AsyncWebsocketConsumer):
 				}))
 		except json.JSONDecodeError as e:
 			print(f"Error decoding message: {e}")
+
+class GameType(Enum):
+	local = 1
+	ai = 2
+	quickmatch = 3
+	versus = 4
 
 class GameConsumer(AsyncWebsocketConsumer):
 	def __init__(self, *args, **kwargs):
@@ -142,7 +149,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 		elif self.assigned_room != -1:
 			room = active_lobbies[self.assigned_room]
 			if room:
-				if room["game_type"]["is_local"] or len(room["players"]) == 1:
+				if room["game_type"] == GameType.local or len(room["players"]) == 1:
 					del room
 					deleted_count = await sync_to_async(Message.objects.filter(game_room=self.assigned_room).delete)()
 					logger.info(f"Deleted {deleted_count} invitation(s) for game_room {self.assigned_room}")
@@ -227,12 +234,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 		self.assigned_room = room_name
 		player_id = self.user.id
 		difficulty = data.get('difficulty', 'medium')
-		game_type = {
-			"is_online": False,
-			"is_local": False,
-			"is_ai": True,
-			"is_quick_match": False
-		}
+		game_type = GameType.ai
 		self.game_type = game_type
 		active_lobbies[room_name] = {
 			"players": [player_id],
@@ -245,10 +247,9 @@ class GameConsumer(AsyncWebsocketConsumer):
 		}
 		self.current_group = f"lobby_{room_name}"
 		await self.channel_layer.group_add(self.current_group, self.channel_name)
-		game_type = "AI Game"
 		await self.send(json.dumps({
 			"type": "ai_room_creation",
-			"message": f"Created {game_type} Lobby {room_name}",
+			"message": f"Created AI Game Lobby {room_name}",
 			"room_name": room_name,
 			"is_ai_game": True,
 			"difficulty": difficulty,
@@ -338,12 +339,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 	async def create_quick_match_lobby(self, game):
 		logger.info("Creating quickmatch lobby")
 		room_name = str(game.gameUID)
-		game_type = {
-			"is_online": True,
-			"is_local": False,
-			"is_ai": False,
-			"is_quick_match": True
-		}
+		game_type = GameType.quickmatch
 		self.game_type = game_type
 		active_lobbies[room_name] = {
 				"players": [],
@@ -361,18 +357,12 @@ class GameConsumer(AsyncWebsocketConsumer):
 			"is_ai_game": False
 		}))
 
-
 	async def create_private_lobby(self, data):
 		logger.info("Creating private lobby")
 		room_name = str(uuid.uuid4())
 		player_id = self.user.id
 
-		game_type = {
-			"is_online": True,
-			"is_local": False,
-			"is_ai": False,
-			"is_quick_match": False
-		}
+		game_type = GameType.versus
 		self.game_type = game_type
 		active_lobbies[room_name] = {
 				"players": [],
@@ -395,12 +385,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 		self.assigned_room = room_name
 		player_id = self.user.id
 		player_2 = str(uuid.uuid4())
-		game_type = {
-			"is_online": False,
-			"is_local": True,
-			"is_ai": False,
-			"is_quick_match": False
-		}
+		game_type = GameType.local
 		active_lobbies[room_name] = {
 			"players": [player_id],
 			"connection": [self],
@@ -448,8 +433,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 			"type": "set_player_1",
 			}))
 			return
-		if active_lobbies[room_name]["game_type"]["is_quick_match"]:
-			await self.delete_player_data_from_livegames()
 		self.assigned_room = room_name
 		active_lobbies[room_name]["players"].append(player_id)
 		active_lobbies[room_name]["connection"].append(self)
@@ -488,7 +471,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 		if (
 			(len(active_lobbies[room_name]["players"]) == 2)
 			or
-			(len(active_lobbies[room_name]["players"]) == 1 and not active_lobbies[room_name]["game_type"]["is_online"])
+			(len(active_lobbies[room_name]["players"]) == 1 and active_lobbies[room_name]["game_type"] not in [GameType.quickmatch, GameType.versus])
 		) and self.all_ready(room_name):
 			try:
 				await self.launch_game(room_name)
@@ -507,11 +490,20 @@ class GameConsumer(AsyncWebsocketConsumer):
 #			if  active_lobbies[room_name]["is_ai_game"] == True:
 #				game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"], active_lobbies[room_name]["local"], active_lobbies[room_name]["difficulty"])
 #			else:
-			game_room = GameRoom(room_name,
-						active_lobbies[room_name]["players"],
-						active_lobbies[room_name]["connection"],
-						active_lobbies[room_name]["game_type"],
-						active_lobbies[room_name]["difficulty"]
+			game_type = active_lobbies[room_name]["game_type"]
+			if game_type == GameType.versus:
+				try:
+					p1 = await sync_to_async(CustomUser.objects.get)(id=active_lobbies[room_name]["players"][0])
+					p2 = await sync_to_async(CustomUser.objects.get)(id=active_lobbies[room_name]["players"][1])
+					await sync_to_async(LiveGames.objects.create)(p1=p1, p2=p2, status=LiveGames.Status.in_progress)
+				except Exception as e:
+					print(f"Error: could not create live game object {e}")
+
+			game_room = GameRoom(room_id=room_name,
+						user_data=active_lobbies[room_name]["players"],
+						consumer_data=active_lobbies[room_name]["connection"],
+						game_type=active_lobbies[room_name]["game_type"],
+						daddyficulty=active_lobbies[room_name]["difficulty"]
 						)
 			logger.info("GameRoom created")
 			logger.info("Checking for local")
@@ -601,10 +593,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 			except CustomUser.DoesNotExist:
 				return None
 		return None
-
-	@database_sync_to_async
-	def delete_player_data_from_livegames(self):
-		LiveGames.objects.filter(Q(p1=self.user) | Q(p2=self.user)).delete()
 
 	@database_sync_to_async
 	def delete_player_data_from_queue(self):
