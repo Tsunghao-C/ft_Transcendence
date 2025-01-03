@@ -17,7 +17,7 @@ function showError(message, roomType) {
 		successMessage = document.getElementById("pmSuccessMessage");
 	} else if (roomType === "public") {
 		errorMessage = document.getElementById("chatRoomsErrorMessage");
-		successMessage = document.getElementById("chatRoomsSuccessMessage");		
+		successMessage = document.getElementById("chatRoomsSuccessMessage");
 	}
 	successMessage.textContent = "";
 	errorMessage.textContent = message;
@@ -128,7 +128,7 @@ function handleTabs() {
 	const pmTabPane = document.getElementById("private-message");
 	const chatRoomsTabPane = document.getElementById("chat-rooms");
 	const tournamentTabPane = document.getElementById("tournament");
-	
+
 	const currentHash = window.location.hash;
 	console.log("current hash is : ", currentHash);
 
@@ -174,14 +174,14 @@ function setPmList(roomData) {
 	.map(room => {
 		const roomType = room.is_private ? "private" : "public";
 		if (roomType === "private" && !room.is_tournament) {
-			const aliasOrRoomName = room.other_member || "Unknown";	
+			const aliasOrRoomName = room.other_member || "Unknown";
 			const roomDisplayName = `${aliasOrRoomName}`;
-				return `<div class="room-item" 
-						data-room-type="${roomType}" 
-						data-alias-or-room-name="${aliasOrRoomName}" 
+				return `<div class="room-item"
+						data-room-type="${roomType}"
+						data-alias-or-room-name="${aliasOrRoomName}"
 						style="cursor: pointer; margin: 5px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
 							<p>${roomDisplayName}</p>
-					</div>`;			
+					</div>`;
 		}
 	})
 	.join("");
@@ -195,12 +195,12 @@ function setTournamentList(roomData) {
 		if (roomType === "tournament") {
 			const aliasOrRoomName = room.name;
 			const roomDisplayName = aliasOrRoomName.split("_").slice(2);
-			return `<div class="room-item" 
-					data-room-type="${roomType}" 
-					data-alias-or-room-name="${aliasOrRoomName}" 
+			return `<div class="room-item"
+					data-room-type="${roomType}"
+					data-alias-or-room-name="${aliasOrRoomName}"
 					style="cursor: pointer; margin: 5px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
 						<p>${roomDisplayName}</p>
-				</div>`;			
+				</div>`;
 		}
 	})
 	.join("");
@@ -213,9 +213,9 @@ function setRoomsList(roomData) {
 		const roomType = room.is_private ? "private" : "public";
 		if (roomType === "public") {
 			const roomName = room.name;
-			return `<div class="room-item" 
-						data-room-type="${roomType}" 
-						data-alias-or-room-name="${roomName}" 
+			return `<div class="room-item"
+						data-room-type="${roomType}"
+						data-alias-or-room-name="${roomName}"
 						style="cursor: pointer; margin: 5px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
 							<p>${roomName}</p>
 					</div>`;
@@ -372,7 +372,7 @@ async function loadChatRoom(roomName, userAlias, roomType, roomNameDisplay = roo
 		const messageData = JSON.parse(e.data);
 		console.log("message received", messageData);
 		addMessage(userAlias, messageData.alias, messageData.message, messageData.time, messageData.is_invite, messageData.game_room, roomType);
-	};	
+	};
 
 	try {
 		const response = await fetchWithToken(`/api/chat/${roomName}/messages/`);
@@ -466,7 +466,7 @@ function addMessage(userAlias, alias, message, time, isInvite = false, gameRoom 
 		messageElement.style.textAlign = "left";
 		const teams = message.split("/");
 		const formattedMessage = teams.length === 2 ? `${teams[0]} vs ${teams[1]}` : `${trsl[lng].tournamentIsOver} ${message}`;
-		
+
 		messageElement.innerHTML = `
 			<strong>
 				<a style="text-decoration: none; color: #007bff;">
@@ -529,9 +529,7 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 
 	// Event listeners - In chat display
 	backButtonEventListener();
-	if (aliasOrRoomToJoin && !isAlphanumeric(aliasOrRoomToJoin, "Room Name and Alias")) {
-		aliasOrRoomToJoin = "";
-	}	if (!aliasOrRoomToJoin) {
+	if (!aliasOrRoomToJoin) {
 		return ;
 	}
 	if (roomType === "public") {
