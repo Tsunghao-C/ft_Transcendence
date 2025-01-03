@@ -533,6 +533,7 @@ canvas {
 	background-color: transparent !important;
 	border: none !important;
 	font-size: 1.5rem !important;
+	margin-top: 0 !important;
 }
 
 .gamelobby-view #game-info {
@@ -548,6 +549,14 @@ canvas {
 	color: rgba(100, 100, 100, 0.7);
 }
 
+.main-game-menu-title {
+	position: absolute;
+	top: 15%;
+	left: 50%;
+	transform: translateX(-50%);
+	font-size: 3.5rem;
+}
+
 .gamelobby-view h4 {
 	font-size: 0.8rem;
 }
@@ -561,6 +570,11 @@ canvas {
 	width: 50%;
 	padding: 0px 10px 0px 10px !important;
 	min-width: 120px;
+}
+
+#game-info #queue-timer {
+	margin: 0px;
+	padding: 0 5px 0 5px;
 }
 
 .player-two {
