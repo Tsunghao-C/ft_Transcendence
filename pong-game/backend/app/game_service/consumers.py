@@ -106,16 +106,23 @@ class GameConsumer(AsyncWebsocketConsumer):
 				player_ids = room_data["player_data"]["ids"]
 				index = player_ids.index(user.id)
 				if user.id in player_ids:
-					logger.info(f"{self.user.id}: Match found in active online games for user")
-					index = player_ids.index(user.id)
-					room_data["player_data"]["connection"][index] = self
-					self.assigned_room = stray_room_id
-					await self.send(json.dumps({
-								"type": "rejoin_room_query",
-								"message": "stray game room found, rejoin?",
-								"room_name": stray_room_id
-								}))
-					logger.info(f"{self.user.id}: sent rejoin notice to client")
+					if user.id is not room_data['room_data'].get_missing_player_id():
+						logger.warning(f"{self.user.id}: User found to be already connected to active gameRoom")
+						await self.send(json.dumps({
+							"type": "already_in_game",
+							"message": "User is already connected and active in a game",
+							}))
+					else:
+						logger.info(f"{self.user.id}: Match found in active online games for user")
+						index = player_ids.index(user.id)
+						room_data["player_data"]["connection"][index] = self
+						self.assigned_room = stray_room_id
+						await self.send(json.dumps({
+									"type": "rejoin_room_query",
+									"message": "stray game room found, rejoin?",
+									"room_name": stray_room_id
+									}))
+						logger.info(f"{self.user.id}: sent rejoin notice to client")
 		except Exception as e:
 			logger.error(f"WebSocket connection error: {e}")
 
@@ -208,12 +215,21 @@ class GameConsumer(AsyncWebsocketConsumer):
 	async def rejoin_room(self, data):
 		if data["response"] is True:
 			logger.info(f"{self.user.id}: rejoining gameRoom: {self.assigned_room}")
-			room = active_online_games[self.assigned_room]
-			await room["room_data"].player_rejoin(self.user.id, self)
+			if self.assigned_room in active_online_games.keys():
+				room = active_online_games[self.assigned_room]
+				await room["room_data"].player_rejoin(self.user.id, self)
+			else:
+				await self.send(json.dumps({
+					"type": "game_aborted",
+					"message": f"Game room {self.assigned_room} was aborted or cancelled and no longer exists"
+					}))
+				self.assigned_room = -1
+				self.in_game = False
 		else:
-			room = active_online_games[self.assigned_room]
-			logger.info(f"{self.user.id}: declined rejoining gameRoom: {self.assigned_room}\ngameRoom given CONCEDE order")
-			room["room_data"].set_server_order(CONCEDE)
+			if self.assigned_room in active_online_games.keys():
+				room = active_online_games[self.assigned_room]
+				logger.info(f"{self.user.id}: declined rejoining gameRoom: {self.assigned_room}\ngameRoom given CONCEDE order")
+				room["room_data"].set_server_order(CONCEDE)
 			self.assigned_room = -1
 			self.in_game = False
 
