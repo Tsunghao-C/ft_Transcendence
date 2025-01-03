@@ -1,7 +1,6 @@
 import math
 import json
 import asyncio
-import httpx
 import time
 import logging
 from .ai_player import PongAI
@@ -203,7 +202,7 @@ class GameRoom():
 				winner = self.left_player
 			logger.info(f"{self.room_id}: player conceding match, winner is {winner}")
 		else:
-			if self.players[self.left_player].score == 5: #hard coded trash
+			if self.players[self.left_player].score == 5:
 				winner = "left"
 			else:
 				winner = "right"
@@ -225,6 +224,10 @@ class GameRoom():
 		self.ball.x += self.ball.speedX
 		self.ball.y += self.ball.speedY
 		if self.ball.y - self.ball.radius < 0 or self.ball.y + self.ball.radius > CANVAS_HEIGHT:
+			if self.ball.y - self.ball.radius < 0:
+				self.ball.y = self.ball.radius
+			else:
+				self.ball.y = CANVAS_HEIGHT - self.ball.radius
 			self.ball.speedY *= -1
 		if self.ball.x - self.ball.radius < 0 or self.ball.x + self.ball.radius > CANVAS_WIDTH:
 			if self.ball.x - self.ball.radius < 0:
