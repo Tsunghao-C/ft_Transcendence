@@ -185,13 +185,17 @@ services:
 
   grafana:
     container_name: grafana
-    image: grafana/grafana:10.2.0
+    build:
+      context: ./monitoring/grafana
+      dockerfile: Dockerfile
+    # image: grafana/grafana:10.2.0
     ports:
-      - "3001:3001"
+      - "3000:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GRAFANA_ADMIN_USER=${GRAFANA_ADMIN_USER}
+      - GRAFANA_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
     volumes:
-      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/provisioning:/usr/share/grafana/provisioning
       - grafana_data:/var/lib/grafana
     networks:
       - monitoring_net
