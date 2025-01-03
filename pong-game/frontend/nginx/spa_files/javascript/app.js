@@ -100,10 +100,10 @@ export async function loadPage(page) {
 	if (!state.language) {
 		state.language = getLanguageCookie();
 	}
-	if (!['pt', 'fr', 'en'].includes(state.language)) {
+	if (!state.language || !['pt', 'fr', 'en'].includes(state.language)) {
 		console.log("invalid language");
 		setLanguageCookie("en");
-		state.language = getLanguageCookie();
+		state.language = "en";
 	}
 
 	if (state.chatSocket) {
