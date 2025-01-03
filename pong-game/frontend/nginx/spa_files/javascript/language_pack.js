@@ -170,6 +170,8 @@ export const translations = {
 		privateMessages: "Private messages",
 		createOrJoinRoom: "Create or join room",
 		chatRooms: "Chat rooms",
+		tournamentRooms: "Tournament rooms",
+		tournamentIsOver: "Tournament is over, winner is ",
 		enterRoomName: "Enter room name",
 		privateMessagesWith: "Private messages with",
 		changePassword: "Change Password",

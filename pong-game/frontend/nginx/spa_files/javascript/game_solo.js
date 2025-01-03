@@ -6,9 +6,7 @@ import { hideElem, hideClass, showElem } from "./utils.js";
 import { translations as trslt } from "./language_pack.js";
 import { setUpOnePlayerControl, connectWebSocket, playerEvent, setTypeOfGame } from "./game_utils.js";
 
-
-
-export async function setSoloLobby(contentContainer, difficulty = "") {
+export async function setSoloLobby(contentContainer, difficulty = "", skip = false) {
     let response;
     let userData;
     try {
@@ -42,6 +40,13 @@ export async function setSoloLobby(contentContainer, difficulty = "") {
                 <button id="go-back-EOG" style="display: none;">${trslt[lng].back}</button>
         </div>
     `;
+
+    if (skip == true) {
+        console.log("SKIP IS TRUE");
+        document.getElementById('go-back-EOG').textContent = "";
+        hideElem("go-back-EOG");
+    }
+
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
     const gameInfo = document.getElementById('game-info');

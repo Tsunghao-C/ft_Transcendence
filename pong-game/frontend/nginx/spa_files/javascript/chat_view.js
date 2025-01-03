@@ -50,10 +50,13 @@ function setChatViewHtml(contentContainer) {
 		<div class="chat-view">
 			<ul class="nav nav-tabs" id="chatBlockTabs" role="tablist">
 				<li class="nav-item">
-					<a class="nav-link active" id="private-message-tab" data-bs-toggle="tab" href="#private-message" role="tab" aria-controls="private-message" aria-selected="true">${trsl[state.language].privateMessages}</a>
+					<a class="nav-link active" id="private-message-tab" data-bs-toggle="tab" href="#private-message" role="tab" aria-controls="private-message" aria-selected="true">${trsl[lng].privateMessages}</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" id="chat-rooms-tab" data-bs-toggle="tab" href="#chat-rooms" role="tab" aria-controls="chat-rooms" aria-selected="false">${trsl[state.language].chatRooms}</a>
+					<a class="nav-link" id="chat-rooms-tab" data-bs-toggle="tab" href="#chat-rooms" role="tab" aria-controls="chat-rooms" aria-selected="false">${trsl[lng].chatRooms}</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" id="tournament-tab" data-bs-toggle="tab" href="#tournament-rooms" role="tab" aria-controls="chat-rooms" aria-selected="false">${trsl[lng].tournamentRooms}</a>
 				</li>
 			</ul>
 			<div class="tab-content">
@@ -103,6 +106,16 @@ function setChatViewHtml(contentContainer) {
 						</div>
 					</div>
 				</div>
+				<div class="tab-pane fade" id="tournament" role="tabpanel" aria-labelledby="tournament-tab">
+					<div class="room-list" id="tournament-list" style="margin-bottom: 20px;"></div>
+					<div class="chat-content" id="tournament-content" style="display:none;">
+						<div id="tournament-content-top">
+							<h4 id="tournament-title"></h4>
+							<button class="go-back">↵ Go Back</button>
+						</div>
+						<div id="tournament-messages" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;"></div>
+					</div>
+				</div>
 			</div>
 		</div>
 		`
@@ -111,8 +124,11 @@ function setChatViewHtml(contentContainer) {
 function handleTabs() {
 	const pmNavTab = document.getElementById("private-message-tab");
 	const chatRoomsNavTab = document.getElementById("chat-rooms-tab");
+	const tournamentNavTab = document.getElementById("tournament-tab");
 	const pmTabPane = document.getElementById("private-message");
 	const chatRoomsTabPane = document.getElementById("chat-rooms");
+
+	const tournamentTabPane = document.getElementById("tournament");
 
 	const currentHash = window.location.hash;
 	console.log("current hash is : ", currentHash);
@@ -120,20 +136,34 @@ function handleTabs() {
 	if (currentHash.startsWith("#chat/public")) {
 		pmNavTab.className = "nav-link";
 		chatRoomsNavTab.className = "nav-link active";
+		tournamentNavTab.className = "nav-link";
 		pmTabPane.className = "tab-pane fade";
+		tournamentTabPane.className = "tab-pane fade";
 		chatRoomsTabPane.className = "tab-pane fade show active";
+	} else if (currentHash.startsWith("#chat/tournament")) {
+		pmNavTab.className = "nav-link";
+		chatRoomsNavTab.className = "nav-link";
+		tournamentNavTab.className = "nav-link active";
+		pmTabPane.className = "tab-pane fade";
+		chatRoomsTabPane.className = "tab-pane fade";
+		tournamentTabPane.className = "tab-pane fade show active";
 	} else {
 		pmNavTab.className = "nav-link active";
 		chatRoomsNavTab.className = "nav-link";
+		tournamentNavTab.className = "nav-link";
 		pmTabPane.className = "tab-pane fade show active";
 		chatRoomsTabPane.className = "tab-pane fade";
+		tournamentTabPane.className = "tab-pane fade";
 	}
-
 	pmNavTab.addEventListener("shown.bs.tab", function () {
 		window.location.hash = "chat/private";
 	});
 	chatRoomsNavTab.addEventListener("shown.bs.tab", function () {
 		window.location.hash = "chat/public";
+	});
+
+	tournamentNavTab.addEventListener("shown.bs.tab", function () {
+		window.location.hash = "chat/tournament";
 	});
 }
 
@@ -200,7 +230,7 @@ function createOrJoinRoomButtonEventListener() {
 		const roomName = document.getElementById("room-name").value;
 		if (roomName) {
 			try {
-				if (!isAlphanumeric("Room Name", roomName)) {
+				if (!isAlphanumeric(roomName, "Room Name")) {
 					return;
 				}
 				const response = await fetchWithToken(
@@ -295,9 +325,12 @@ async function loadChatRoom(roomName, userAlias, roomType, roomNameDisplay = roo
 	if (roomType == "private") {
 		messagesDiv = document.getElementById("messages");
 		chatRoomTitle = document.getElementById("pm-recipient");
-	} else {
+	} else if (roomType == "public") {
 		messagesDiv = document.getElementById("chat-room-messages");
 		chatRoomTitle = document.getElementById("chat-room-title");
+	} else {
+		messagesDiv = document.getElementById("tournament-messages");
+		chatRoomTitle = document.getElementById("tournament-title");
 	}
 
 	chatRoomTitle.textContent = `${roomNameDisplay}`;
@@ -353,7 +386,7 @@ async function loadChatRoom(roomName, userAlias, roomType, roomNameDisplay = roo
 
 	if (roomType == "private") {
 		document.getElementById("send-private-invite").addEventListener("click", sendInvite);
-	} else {
+	} else if (roomType == "public") {
 		document.getElementById("send-public-invite").addEventListener("click", sendInvite);
 	}
 
@@ -396,41 +429,58 @@ async function getOrCreatePrivateChatRoom(alias, userAlias, roomType) {
 }
 
 function addMessage(userAlias, alias, message, time, isInvite = false, gameRoom = null, roomType) {
-	console.log("adding message : ", message);
-	console.log("roomtype is : ", roomType);
-	console.log("is invite is : ", isInvite);
-	console.log("alias is  : ", alias);
-	console.log("userAlias is  : ", userAlias);
-
+	// console.log("adding message : ", message);
+	// console.log("roomtype is : ", roomType);
+	// console.log("is invite is : ", isInvite);
+	// console.log("alias is  : ", alias);
+	// console.log("userAlias is  : ", userAlias);
+	const lng = getLanguageCookie() || "en";
 	let messagesDiv;
 	if (roomType === "public") {
 		messagesDiv = document.getElementById("chat-room-messages");
 	} else if (roomType === "private") {
 		messagesDiv = document.getElementById("messages");
+	} else {
+		messagesDiv = document.getElementById("tournament-messages");
 	}
 	const messageElement = document.createElement("div");
-
-	if (alias === userAlias) {
-		messageElement.style.textAlign = "right";
-		messageElement.innerHTML = `
-			<div style="display: inline-block; text-align: left; background-color: #e1f5fe; padding: 10px; border-radius: 10px; max-width: 70%;">
-				<em>${time}</em><br>
-				${isInvite && gameRoom ? `<a href="#lobby/${gameRoom}" style="text-decoration: none; color: #007bff;">You Sent an Invite</a>` : message}
-			</div>`;
-	} else {
+	if (roomType == "tournament") {
 		messageElement.style.textAlign = "left";
+		const teams = message.split("/");
+		const formattedMessage = teams.length === 2 ? `${teams[0]} vs ${teams[1]}` : `${trsl[lng].tournamentIsOver} ${message}`;
+
 		messageElement.innerHTML = `
 			<strong>
-				<a href="#profile/${alias}" style="text-decoration: none; color: #007bff;">
-					${alias}
+				<a style="text-decoration: none; color: #007bff;">
+					Tournament
 				</a>
 			</strong>
 			<em>(${time})</em>:<br>
 			<div style="display: inline-block; background-color: #f1f1f1; padding: 10px; border-radius: 10px; max-width: 70%;">
-				${isInvite && gameRoom ? `<a href="#lobby/${gameRoom}" style="text-decoration: none; color: #007bff;">${message}</a>` : message}
+				<a href="#tournament" style="text-decoration: none; color: #007bff;">${formattedMessage}</a>
 			</div>`;
+	} else {
+		if (alias === userAlias) {
+			messageElement.style.textAlign = "right";
+			messageElement.innerHTML = `
+				<div style="display: inline-block; text-align: left; background-color: #e1f5fe; padding: 10px; border-radius: 10px; max-width: 70%;">
+					<em>${time}</em><br>
+					${isInvite && gameRoom ? `<a href="#lobby/${gameRoom}" style="text-decoration: none; color: #007bff;">You Sent an Invite</a>` : message}
+				</div>`;
+		} else {
+			messageElement.style.textAlign = "left";
+			messageElement.innerHTML = `
+				<strong>
+					<a href="#profile/${alias}" style="text-decoration: none; color: #007bff;">
+						${alias}
+					</a>
+				</strong>
+				<em>(${time})</em>:<br>
+				<div style="display: inline-block; background-color: #f1f1f1; padding: 10px; border-radius: 10px; max-width: 70%;">
+					${isInvite && gameRoom ? `<a href="#lobby/${gameRoom}" style="text-decoration: none; color: #007bff;">${message}</a>` : message}
+				</div>`;
+		}
 	}
-
 	messagesDiv.appendChild(messageElement);
 	messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
@@ -453,7 +503,7 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 	// Set room lists
 	setPmList(roomData);
 	setRoomsList(roomData);
-
+	setTournamentList(roomData);
 	// Event listeners - In list display
 	startPrivateChatEventListener();
 	createOrJoinRoomButtonEventListener();
@@ -461,8 +511,15 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 
 	// Event listeners - In chat display
 	backButtonEventListener();
+	if (aliasOrRoomToJoin && !isAlphanumeric(aliasOrRoomToJoin, "Room Name and Alias")) {
+		aliasOrRoomToJoin = "";
+	}	if (!aliasOrRoomToJoin) {
+		return ;
+	}
 	if (roomType === "public") {
-			loadChatRoom(aliasOrRoomToJoin, userAlias, roomType);
+		loadChatRoom(aliasOrRoomToJoin, userAlias, roomType);
+	} else if (roomType == "tournament") {
+		loadChatRoom(aliasOrRoomToJoin, userAlias, roomType, "Tournament " + aliasOrRoomToJoin.split("_").slice(2));
 	} else if (roomType === "private"){
 		if (aliasOrRoomToJoin !== "") {
 				console.log("opening chat with", aliasOrRoomToJoin);
