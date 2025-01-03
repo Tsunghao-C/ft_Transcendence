@@ -19,6 +19,7 @@ from django.urls import path, include
 from user_service.views import *
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.contrib.auth import views as auth_views
+from django_prometheus import exports
 
 
 urlpatterns = [
@@ -27,4 +28,5 @@ urlpatterns = [
     path("api/chat/", include("chat.urls")),
     path("api/game/", include("game_service.urls")),
 	path("api/match_making/", include("match_making.urls")),
+    path('metrics/', exports.ExportToDjangoView, name='django-metrics'),
 ]

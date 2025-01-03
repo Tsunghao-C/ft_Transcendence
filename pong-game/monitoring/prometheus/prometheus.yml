@@ -17,6 +17,7 @@ scrape_configs:
     static_configs:
       - targets: ['node_exporter:9100']
 
-  # - job_name: 'backend'
-  #   static_configs:
-  #     - targets: ['game_service:8004']
+  - job_name: 'django'
+    static_configs:
+      - targets: ['django:8004']
+    metrics_path: '/metrics/'
