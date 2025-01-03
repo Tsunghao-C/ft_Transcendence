@@ -348,6 +348,8 @@ const onmessage_methods = {
 	'game_start': start_game,
 	'game_update': update_game,
 	'game_over': set_game_over,
+	'game_aborted': display_game_aborted,
+	'already_in_game': display_already_ingame,
 	'error': log_error
 }
 
@@ -536,6 +538,30 @@ async function rejoin_room(response) {
 	gameLobby.appendChild(promptText);
 	gameLobby.appendChild(trueButton);
 	gameLobby.appendChild(falseButton);
+}
+
+async function display_game_aborted() {
+	const promptText = document.createElement('p');
+	promptText.id = 'rejoin-prompt-text';
+	promptText.textContent = 'Error: Game was aborted. Please join another game.\n';
+	promptText.style.fontSize = '24px';
+    promptText.style.textAlign = 'center';
+    promptText.style.marginBottom = '20px';
+	const gameLobby = document.getElementById("game-lobby");
+	gameLobby.appendChild(promptText);
+}
+
+async function display_already_ingame() {
+	hideElem("create-match");
+	hideElem("join-queue");
+	const promptText = document.createElement('p');
+	promptText.id = 'rejoin-prompt-text';
+	promptText.textContent = 'Error: You are already connected to a game, please finish it or leave it.\n';
+	promptText.style.fontSize = '24px';
+    promptText.style.textAlign = 'center';
+    promptText.style.marginBottom = '20px';
+	const gameLobby = document.getElementById("game-lobby");
+	gameLobby.appendChild(promptText);
 }
 
 export async function connectWebSocket() {
