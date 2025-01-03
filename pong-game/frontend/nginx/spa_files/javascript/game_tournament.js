@@ -1,11 +1,11 @@
-import { fetchWithToken, getLanguageCookie } from "./fetch_request.js";
+import { fetchWithToken } from "./fetch_request.js";
 import { setLocalLobby } from "./game_local.js";
 import { setIsTournament } from "./game_utils.js";
 import { hideClass, hideElem, showElem } from "./utils.js";
 import { TournamentPlayers, goBackButtonEventListener } from "./game_utils.js";
 import { setSoloLobby } from "./game_solo.js";
 import { translations as trsl } from "./language_pack.js";
-
+import { state } from "./app.js";
 
 export async function setTournamentView(contentContainer) {
 	setIsTournament(true);
@@ -25,7 +25,6 @@ export async function setTournamentView(contentContainer) {
 }
 
 function displayTournament(tournament, container) {
-	const lng = getLanguageCookie() ||  "en";
 	if (!container) return;
 	container.innerHTML = `
 		<h3>${trsl[state.language].tournament} ${tournament.name} </h3>
@@ -230,7 +229,7 @@ function setTournamentViewForm(contentContainer) {
 					</select>
 				</div>
 			</div>
-			<button type="button" id="add-player">${trsl[state.language].addplayer}</button>
+			<button type="button" id="add-player">${trsl[state.language].addPlayer}</button>
 			<button type="submit">${trsl[state.language].createTournament}</button>
 		</form>
 		<div id="tournament-result"></div>
@@ -250,44 +249,44 @@ export async function submitMatchResult(user1Id, user2Id, winner) {
 		);
 
 		if (!response.ok) {
-			throw new Error("Failed to submit match result.");
+			alert(`${trsl[state.language].TournamentSubmissionFailed}`);
+			matchContainer.innerHTML = `<p>${trsl[state.language].TournamentSubmissionFailed}</p>`;
 		}
 
-		alert("Match result updated successfully.");
 		const tournament = await getUserTournament();
 		if (tournament) {
 			displayTournament(tournament, document.getElementById("tournament-status"));
 		}
 	} catch (error) {
 		console.log(error);
-		matchContainer.innerHTML = `<p>Error submitting match result.</p>`;
+		window.location.hash = "login";
 	}
 }
 
 function simulateMatch(difficulty1, difficulty2) {
-    const probabilities = {
-        'hard': { 'easy': 0.75, 'medium': 0.67, 'hard': 0.50 },
-        'medium': { 'easy': 0.67, 'medium': 0.50, 'hard': 0.33 },
-        'easy': { 'easy': 0.50, 'medium': 0.33, 'hard': 0.25 }
-    };
+	const probabilities = {
+		'hard': { 'easy': 0.75, 'medium': 0.67, 'hard': 0.50 },
+		'medium': { 'easy': 0.67, 'medium': 0.50, 'hard': 0.33 },
+		'easy': { 'easy': 0.50, 'medium': 0.33, 'hard': 0.25 }
+	};
 
-    const chanceToWin = probabilities[difficulty1][difficulty2];
+	const chanceToWin = probabilities[difficulty1][difficulty2];
 
-    const randomValue = Math.random();
-    const winner = randomValue <= chanceToWin ? 'left' : 'right';
+	const randomValue = Math.random();
+	const winner = randomValue <= chanceToWin ? 'left' : 'right';
 
-    return winner;
+	return winner;
 }
 
 async function showNextMatch() {
 	const matchContainer = document.getElementById("match-container");
-	matchContainer.innerHTML = `<p>Loading next match...</p>`;
+	matchContainer.innerHTML = `<p>${trsl[state.language].loadingNextMatch}</p>`;
 
 	try {
 		const response = await fetchWithToken(`/api/game/next-game/`);
 		if (!response.ok) {
 			console.log(response);
-			alert("Error: an unexpected error occured, please try again later");
+			alert(`${trsl[state.language].internalError}`);
 			return;
 		}
 
@@ -298,7 +297,7 @@ async function showNextMatch() {
 			if (player1.is_ai !== "human" && player2.is_ai != "human") {
 				const winner = simulateMatch(player1.is_ai, player2.is_ai);
 				submitMatchResult(player1.id, player2.id, winner);
-				alert("ai game happened at the speed of light");
+				alert(`${trsl[state.language].aiGameResolved}`);
 			} else {
 				if (player1.is_ai !== "human" && player2.is_ai === "human") {
 					TournamentPlayers.player2.id = player1.id;
@@ -327,11 +326,10 @@ async function showNextMatch() {
 				}
 			}
 		} else if (data.next_game.message) {
-			matchContainer.innerHTML = `<p>${data.next_game.message}</p>`;
+			matchContainer.innerHTML = `<p>${trsl[state.language].tournamentIsOver} ${data.next_game.message}</p>`;
 		}
 	} catch (error) {
-		console.log(error);
-		matchContainer.innerHTML = `<p>Error fetching next match.</p>`;
+		window.location.hash = "login";
 	}
 }
 
@@ -344,7 +342,7 @@ function setupTournamentForm(contentContainer) {
 
 	addPlayerButton.addEventListener("click", () => {
 		if (playerCount >= maxPlayers) {
-			alert("Maximum of 16 players allowed.");
+			alert(`${trsl[state.language].maxPlayer}`);
 			return;
 		}
 
@@ -352,12 +350,12 @@ function setupTournamentForm(contentContainer) {
 		const playerEntry = document.createElement("div");
 		playerEntry.classList.add("player-entry");
 		playerEntry.innerHTML = `
-			<input type="text" placeholder="Enter player ${playerCount} alias" name="player${playerCount}" required />
+			<input type="text" placeholder="${trsl[state.language].enterPlayer} ${playerCount} ${trsl[state.language].alias}" name="player${playerCount}" required />
 			<select id="added-player" name="type${playerCount}">
-				<option value="human">Human</option>
-				<option value="easy">AI - Easy</option>
-				<option value="medium">AI - Medium</option>
-				<option value="hard">AI - Hard</option>
+				<option value="human">${trsl[state.language].human}</option>
+				<option value="easy">${trsl[state.language].tournamentEasy}</option>
+				<option value="medium">${trsl[state.language].tournamentMedium}</option>
+				<option value="hard">${trsl[state.language].tournamentHard}</option>
 			</select>
 			<button type="button" class="remove-player">X</button>
 		`;
@@ -382,13 +380,13 @@ function setupTournamentForm(contentContainer) {
 			const is_ai = formData.get(`type${i}`);
 
 			if (!/^[a-zA-Z0-9]+$/.test(alias)) {
-				alert(`${alias} must only contain alphanumeric characters.`);
+				alert(`${alias} ${trsl[state.language].tournamentAlphanum}`);
 				hasError = true;
 				break;
 			}
 
 			if (aliasesSet.has(alias)) {
-				alert(`${alias} is duplicated. Please choose unique names.`);
+				alert(`${alias} ${trsl[language].tournamentDuplicates}`);
 				hasError = true;
 				break;
 			}
@@ -409,7 +407,7 @@ function setupTournamentForm(contentContainer) {
 		try {
 			const response = await fetchWithToken("/api/game/create-tournament/", JSON.stringify(tournamentData), "POST");
 			if (!response.ok) {
-				alert("Failed to create tournament. Please try again.");
+				alert(`${alias} ${trsl[language].tournamentCreationFailed}`);
 			} else {
 				const data = await response.json();
 				setTournamentView(contentContainer);
@@ -430,7 +428,6 @@ async function getUserTournament() {
 			return null;
 		}
 	} catch (error) {
-		console.log("Error fetching tournament:", error);
-		return null;
+		window.location.hash = "login";
 	}
 }

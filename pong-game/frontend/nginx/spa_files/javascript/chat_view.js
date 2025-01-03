@@ -72,7 +72,7 @@ function setChatViewHtml(contentContainer) {
 					<div class="chat-content" id="chat-content" style="display:none;">
 						<div id="chat-content-top">
 							<h4 id="pm-recipient"></h4>
-							<button class="go-back">${trsl[state.language].goBackButton}</button>
+							<button class="go-back">${trsl[state.language].backButton}</button>
 						</div>
 						<div id="messages" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;"></div>
 						<div id="chat-content-bottom">
@@ -95,7 +95,7 @@ function setChatViewHtml(contentContainer) {
 					<div class="chat-content" id="room-chat-content" style="display:none;">
 						<div id="chat-content-top">
 							<h4 id="chat-room-title"></h4>
-							<button class="go-back">${trsl[state.language].goBackButton}</button>
+							<button class="go-back">${trsl[state.language].backButton}</button>
 						</div>
 						<div id="chat-room-messages" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;"></div>
 						<div id="chat-content-bottom">
@@ -110,7 +110,7 @@ function setChatViewHtml(contentContainer) {
 					<div class="chat-content" id="tournament-content" style="display:none;">
 						<div id="tournament-content-top">
 							<h4 id="tournament-title"></h4>
-							<button class="go-back">${trsl[state.language].goBackButton}</button>
+							<button class="go-back">${trsl[state.language].backButton}</button>
 						</div>
 						<div id="tournament-messages" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;"></div>
 					</div>
