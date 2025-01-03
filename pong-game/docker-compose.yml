@@ -88,24 +88,8 @@ services:
       retries: 1
     restart: unless-stopped
 
-  # User Service
-  ## [Ben]
-
-  redis:
-    container_name: redis
-    image: redis:alpine
-    command: redis-server --appendonly yes
-    volumes:
-      - redis_data:/data
-    networks:
-      - backend_net
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 30s
-      retries: 5
-    restart: unless-stopped
-
+  # Backend Layer 
+  ## [Ben] [Jean]
   django:
     container_name: django
     build:
@@ -141,6 +125,7 @@ services:
       LDB_UPDATE_TIMER: "5"
     restart: unless-stopped
 
+  # Database Layer
   postgres:
     container_name: postgres
     image: postgres:14-alpine
@@ -162,7 +147,23 @@ services:
       retries: 5
     restart: unless-stopped
 
-  # Monitoring Stack
+  redis:
+    container_name: redis
+    image: redis:alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 30s
+      retries: 5
+    restart: unless-stopped
+
+  # Monitoring Layer
+  # Prometheus / Grafana Stack
   # prometheus:
   #   container_name: prometheus
   #   image: prom/prometheus
@@ -204,6 +205,7 @@ services:
   #     - monitoring_net
   #   restart: unless-stopped
 
+  # ELK Stack
   elasticsearch:
     container_name: elasticsearch
     image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_STACK_VERSION}
