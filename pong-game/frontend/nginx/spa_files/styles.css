@@ -642,6 +642,10 @@ canvas {
 	text-align: center;
 }
 
+#tournament-name {
+	margin-top: 20px !important;
+}
+
 .player-entry {
     display: flex;
     justify-content: space-between;
@@ -676,6 +680,10 @@ canvas {
 	margin: 0px !important;
 	padding: 0px !important;
 	background-color: transparent !important;
+}
+
+#add-player {
+	margin-top: 10px !important;
 }
 
 /** Tournament matchup display */
