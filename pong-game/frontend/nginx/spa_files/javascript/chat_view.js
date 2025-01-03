@@ -102,7 +102,6 @@ function setChatViewHtml(contentContainer) {
 						<div id="chat-content-bottom">
 							<input class="message-input" id="message-input" type="text" placeholder="Type your message">
 							<button class="send-message" id="send-message">Send</button>
-							<button id="send-public-invite">Play</button>
 						</div>
 					</div>
 				</div>
@@ -404,9 +403,10 @@ async function loadChatRoom(roomName, userAlias, roomType, roomNameDisplay = roo
 
 	if (roomType == "private") {
 		document.getElementById("send-private-invite").addEventListener("click", sendInvite);
-	} else if (roomType == "public") {
-		document.getElementById("send-public-invite").addEventListener("click", sendInvite);
-	}
+	} 
+	// else if (roomType == "public") {
+	// 	document.getElementById("send-public-invite").addEventListener("click", sendInvite);
+	// }
 
 	async function sendInvite() {
 		sendDuelRequestFromGameRoom(roomName);
