@@ -174,9 +174,11 @@ services:
       - prometheus_data:/prometheus
     networks:
       - monitoring_net
+    depends_on:
+      - node_exporter
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-q", "--tries=1", "http://localhost:9090/-/healthy"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
       interval: 10s
       timeout: 3s
       retries: 3
@@ -194,17 +196,15 @@ services:
     networks:
       - monitoring_net
     depends_on:
-      - prometheus
+      prometheus:
+        condition: service_healthy
     restart: unless-stopped
-
-  cadvisor:
-    container_name: cadvisor
-    image: gcr.io/cadvisor/cadvisor:v0.47.0
-    volumes:
-      - /:/rootfs:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
+  
+  node_exporter:
+    container_name: node_exporter
+    build:
+      context: ./monitoring/node_exporter
+      dockerfile: Dockerfile
     networks:
       - monitoring_net
     restart: unless-stopped
