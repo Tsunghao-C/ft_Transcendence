@@ -393,7 +393,8 @@ async function set_player1(response) {
 	profileResponse = await fetchWithToken(`/api/user/get-profile/?own=yes`);
 	player1Data = await profileResponse.json();
 	hideElem("create-match");
-	hideElem("join-match");
+	hideElem("join-queue");
+	hideElem("go-back");
 	renderUserInfo(player1Data.profile, null);
 	console.log("you are player1");
 	const inviteButton = document.getElementById("invite-button");
@@ -459,7 +460,8 @@ async function join_room(response) {
 		profileResponse = await fetchWithToken(`/api/user/get-profile/?uid=${response.player2}`);
 		player2Data = await profileResponse.json();
 		hideElem("create-match");
-		hideElem("join-match");
+		hideElem("join-queue");
+		hideElem("go-back");
 		renderUserInfo(player1Data.profile, player2Data.profile);
 	} catch(error) {
 		console.log(error);
