@@ -10,6 +10,8 @@ RUN curl -LO https://github.com/prometheus/prometheus/releases/download/v2.32.1/
     mv prometheus-2.32.1.linux-amd64 /prometheus && \
     rm prometheus-2.32.1.linux-amd64.tar.gz
 
+RUN mkdir -p /prometheus/data
+
 COPY ./conf/prometheus.yml /prometheus/
 COPY ./conf/web-config.yml /prometheus/
 COPY ./conf/alert.rules /prometheus/
@@ -36,4 +38,9 @@ EXPOSE 9090
 
 WORKDIR /prometheus
 
-ENTRYPOINT [ "/prometheus/prometheus", "--config.file=/prometheus/prometheus.yml", "--web.config.file=/prometheus/web-config.yml" ]
+ENTRYPOINT [ "/prometheus/prometheus", \
+    "--config.file=/prometheus/prometheus.yml", \
+    "--web.config.file=/prometheus/web-config.yml", \
+    "--storage.tsdb.path=/prometheus/data", \
+    "--storage.tsdb.retention.time=7d", \
+    "--storage.tsdb.retention.size=2GB" ]

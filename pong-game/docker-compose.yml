@@ -175,8 +175,7 @@ services:
     ports:
       - "9090:9090"   # only for development stage
     volumes:
-      # - ./monitoring/prometheus/conf:/etc/prometheus
-      - prometheus_data:/prometheus
+      - prometheus_data:/prometheus/data
     networks:
       - monitoring_net
       - backend_net
