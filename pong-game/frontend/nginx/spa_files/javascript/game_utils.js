@@ -616,8 +616,13 @@ export async function connectWebSocket() {
 
 async function startGame() {
 	try {
-		destroyReadyButton();
-//		hideElem("ready-button");
+		const readyButton = document.getElementById("ready-button");
+		console.log("about to check the ready thing");
+		if (readyButton) {
+			console.log("WE ARE IN THE REaDY BTN CONDITION");
+			destroyReadyButton();
+			hideElem("ready-button");
+		}
 		showElem("game", "block");
 		showElem("go-back-EOG", "block");
 		hideClass("hrs");
