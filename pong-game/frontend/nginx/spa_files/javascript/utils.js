@@ -1,5 +1,7 @@
 export function hideElem(elemId) {
 	const elem = document.getElementById(elemId);
+    if (!elem)
+        return;
 	elem.style.display = "none";
 }
 

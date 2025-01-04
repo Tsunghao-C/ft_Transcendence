@@ -617,7 +617,7 @@ export async function connectWebSocket() {
 async function startGame() {
 	try {
 		destroyReadyButton();
-//		hideElem("ready-button");
+		hideElem("ready-button");
 		showElem("game", "block");
 		showElem("go-back-EOG", "block");
 		hideClass("hrs");
