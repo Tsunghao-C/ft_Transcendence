@@ -212,13 +212,13 @@ LOGGING = {
             "gamerooms_file": {
                 "level": "DEBUG",
                 "class": "logging.FileHandler",
-                "filename": "logs/gamerooms.log",
+                "filename": "/root/logs/gamerooms.log",
                 "formatter": "verbose",
             }, 
             "gameconsumers_file": {
                 "level": "DEBUG",
                 "class": "logging.FileHandler",
-                "filename": "logs/gameconsumers.log",
+                "filename": "/root/logs/gameconsumers.log",
                 "formatter": "verbose",
             },
         },
@@ -250,7 +250,7 @@ EMAIL_HOST_PASSWORD = email_credentials['EMAIL_HOST_PASS'] # Env
 
 LDB_UPDATE_TIMER = os.environ.get("LDB_UPDATE_TIMER", 15)
 CRONJOBS = [
-    (f'*/{LDB_UPDATE_TIMER} * * * *', 'game_service.tasks.update_leaderboard', '>> /var/log/cron.log'),
+    (f'*/{LDB_UPDATE_TIMER} * * * *', 'game_service.tasks.update_leaderboard', '>> /var/log/cron.log 2>&1'),
 	# ('*/1 * * * *', 'match_making.tasks.monitor_players'),
 ]
 

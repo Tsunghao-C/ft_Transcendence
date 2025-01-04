@@ -8,7 +8,7 @@ mkdir -p /app/static #&& \
 chmod -R 755 /app/static
 
 # logs, update filebeat if changing this
-mkdir -p logs && chmod -R 755 logs
+mkdir -p /root/logs && chmod -R 755 /root/logs
 
 echo "SQL_PORRT: ${POSTGRES_PORT}"
 wait-for-it --service postgres:${POSTGRES_PORT} -- echo "Game Database is ready!"
