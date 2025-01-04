@@ -123,6 +123,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 		logger.info(f"{self.user.id}: Websocket connection closed")
 		self.connected = False
 		#deleting lobby data
+		await MatchMakingQueue._remove_players_from_queue(p1, p2)
 		await self.delete_player_data_from_queue()
 		if self.match_task and not self.match_task.done():
 			self.match_task.cancel()
@@ -455,8 +456,8 @@ class GameConsumer(AsyncWebsocketConsumer):
 			"type": "set_player_1",
 			}))
 			return
-		if active_lobbies[room_name]["game_type"]["is_quick_match"]:
-			await self.delete_player_data_from_livegames()
+		# if active_lobbies[room_name]["game_type"]["is_quick_match"]:
+			# await self.delete_player_data_from_livegames()
 		self.assigned_room = room_name
 		active_lobbies[room_name]["players"].append(player_id)
 		active_lobbies[room_name]["connection"].append(self)
@@ -611,11 +612,11 @@ class GameConsumer(AsyncWebsocketConsumer):
 				return None
 		return None
 
-	@database_sync_to_async
-	def delete_player_data_from_livegames(self):
-		LiveGames.objects.filter(Q(p1=self.user) | Q(p2=self.user)).delete()
+	# @database_sync_to_async
+	# def delete_player_data_from_livegames(self):
+	# 	LiveGames.objects.filter(Q(p1=self.user) | Q(p2=self.user)).delete()
 
-	@database_sync_to_async
-	def delete_player_data_from_queue(self):
-		deleted_count, _ = MatchMakingQueue.objects.filter(player=self.user).delete()
-		print(f"Deleted {deleted_count} entries for user {self.user.id} in MatchMakingQueue")
+	# @database_sync_to_async
+	# def delete_player_data_from_queue(self):
+	# 	deleted_count, _ = MatchMakingQueue.objects.filter(player=self.user).delete()
+	# 	print(f"Deleted {deleted_count} entries for user {self.user.id} in MatchMakingQueue")
