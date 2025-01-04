@@ -557,9 +557,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 					"message": "Game is starting"
 					}))
 			logger.info(f"{self.user.id}: Starting game id: {room_name}, room: {active_lobbies[room_name]}")
-#			if  active_lobbies[room_name]["is_ai_game"] == True:
-#				game_room = GameRoom(room_name, active_lobbies[room_name]["players"], active_lobbies[room_name]["connection"], active_lobbies[room_name]["local"], active_lobbies[room_name]["difficulty"])
-#			else:
 			game_room = GameRoom(room_name,
 						active_lobbies[room_name]["players"],
 						active_lobbies[room_name]["connection"],
@@ -598,7 +595,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 				"type": "error",
 				"error": f"Failed to start game: {str(e)}"
 				}))
-				# add something to delete all invitation to this game
 
 	def handle_game_task_completion(self, task, room_name):
 		try:

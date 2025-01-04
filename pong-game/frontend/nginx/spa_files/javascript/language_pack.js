@@ -209,7 +209,12 @@ export const translations = {
 		invitationSent: "Invitation sent !",
 		errorNonExistingRoom: "No game room found with room ID ",
 		errorFullRoom: "This game Room is full",
-		duplicateRoom: "You are already in Lobby somewhere else"
+		duplicateRoom: "You are already in Lobby somewhere else",
+		gameAborted: "Error: Game was aborted. Please join another game.",
+		alreadyInGame: "Error: You are already connected to a game, please finish it or leave it.",
+		onGoingGame: "Ongoing game found, do you wish to rejoin?",
+		rejoinGame: "Rejoin game",
+		concedeGame: "Concede game",
 	},
 
 	fr: {
@@ -422,7 +427,12 @@ export const translations = {
 		invitationSent: "Invitation envoyée !",
 		errorNonExistingRoom: "Aucune salle de jeux trouvée avec l'ID de salle ",
 		errorFullRoom: "Cette salle de jeu est pleine",
-		duplicateRoom: "Vous êtes déjà dans le lobby ailleurs"
+		duplicateRoom: "Vous êtes déjà dans le lobby ailleurs",
+		gameAborted: "Erreur : Le jeu a été interrompu. Veuillez rejoindre une autre partie.",
+		alreadyInGame: "Erreur : Vous êtes déjà connecté à une partie, veuillez la terminer ou la quitter.",
+		onGoingGame: "Partie en cours trouvée, souhaitez-vous la rejoindre ?",
+		rejoinGame: "Rejoindre la partie",
+		concedeGame: "Abandonner la partie",
 	},
 	pt: {
 		//Login_html
@@ -634,6 +644,11 @@ export const translations = {
 		invitationSent: "Convite enviado!",
 		errorNonExistingRoom: "Nenhuma sala de jogos encontrada com o ID da sala",
 		errorFullRoom: "Esta sala de jogos está cheia",
-		duplicateRoom: "Você já está no Lobby em outro lugar"
+		duplicateRoom: "Você já está no Lobby em outro lugar",
+		gameAborted: "Erro: O jogo foi interrompido. Por favor, entre em outro jogo.",
+		alreadyInGame: "Erro: Você já está conectado a um jogo, por favor termine ou saia dele.",
+		onGoingGame: "Jogo em andamento encontrado, deseja entrar novamente?",
+		rejoinGame: "Entrar novamente no jogo",
+		concedeGame: "Desistir do jogo",
 	},
 }

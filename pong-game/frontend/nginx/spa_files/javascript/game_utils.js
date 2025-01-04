@@ -480,16 +480,16 @@ async function rejoin_room(response) {
 	roomId = response.room_name;
 	const promptText = document.createElement('p');
 	promptText.id = 'rejoin-prompt-text';
-	promptText.textContent = 'Ongoing game found, do you wish to rejoin?\n';
+	promptText.textContent = trsl[state.language].onGoingGame;
 	promptText.style.fontSize = '24px';
     promptText.style.textAlign = 'center';
     promptText.style.marginBottom = '20px';
 	const trueButton = document.createElement('button');
 	trueButton.id = 'rejoin-true-button';
-	trueButton.textContent = 'Rejoin game';
+	trueButton.textContent = trsl[state.language].rejoinGame;
 	const falseButton = document.createElement('button');
 	falseButton.id = 'rejoin-false-button';
-	falseButton.textContent = 'Concede game';
+	falseButton.textContent = trsl[state.language].concedeGame;
 
 	trueButton.onclick = function(event) {
 		try {
@@ -543,7 +543,7 @@ async function rejoin_room(response) {
 async function display_game_aborted() {
 	const promptText = document.createElement('p');
 	promptText.id = 'rejoin-prompt-text';
-	promptText.textContent = 'Error: Game was aborted. Please join another game.\n';
+	promptText.textContent = trsl[state.language].gameAborted;
 	promptText.style.fontSize = '24px';
     promptText.style.textAlign = 'center';
     promptText.style.marginBottom = '20px';
@@ -556,7 +556,7 @@ async function display_already_ingame() {
 	hideElem("join-queue");
 	const promptText = document.createElement('p');
 	promptText.id = 'rejoin-prompt-text';
-	promptText.textContent = 'Error: You are already connected to a game, please finish it or leave it.\n';
+	promptText.textContent = trsl[state.language].alreadyInGame;
 	promptText.style.fontSize = '24px';
     promptText.style.textAlign = 'center';
     promptText.style.marginBottom = '20px';
