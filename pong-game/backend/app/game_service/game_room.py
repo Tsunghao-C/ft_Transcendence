@@ -1,7 +1,6 @@
 import math
 import json
 import asyncio
-import httpx
 import time
 import logging
 from .ai_player import PongAI
@@ -52,8 +51,9 @@ class GameRoom():
 		self.connections = consumer_data
 		self.game_type = game_type
 		self.time_since_last_receive = {}
-		self.missing_player = False
+		self.missing_player = -1
 		self.server_order = -1
+		self.dropped_side = -1
 
 		self.left_player = user_data[0]
 		self.ai_player = None
@@ -92,6 +92,9 @@ class GameRoom():
 	#Also can be used to cancel a game with ABORTED
 	def set_server_order(self, new_order):
 		self.server_order = new_order
+	
+	def get_missing_player_id(self):
+		return self.missing_player
 	
 	async def receive_player_input(self, player_id, input):
 		logger.info(f'{self.room_id}: Received player {player_id} input')
@@ -203,7 +206,7 @@ class GameRoom():
 				winner = self.left_player
 			logger.info(f"{self.room_id}: player conceding match, winner is {winner}")
 		else:
-			if self.players[self.left_player].score == 5: #hard coded trash
+			if self.players[self.left_player].score == 5:
 				winner = "left"
 			else:
 				winner = "right"
@@ -225,6 +228,10 @@ class GameRoom():
 		self.ball.x += self.ball.speedX
 		self.ball.y += self.ball.speedY
 		if self.ball.y - self.ball.radius < 0 or self.ball.y + self.ball.radius > CANVAS_HEIGHT:
+			if self.ball.y - self.ball.radius < 0:
+				self.ball.y = self.ball.radius
+			else:
+				self.ball.y = CANVAS_HEIGHT - self.ball.radius
 			self.ball.speedY *= -1
 		if self.ball.x - self.ball.radius < 0 or self.ball.x + self.ball.radius > CANVAS_WIDTH:
 			if self.ball.x - self.ball.radius < 0:
@@ -276,13 +283,15 @@ class GameRoom():
 				self.players[player_id].dropped = True
 				logger.info(f"{self.room_id}: Player {player_id} has dropped out!")
 				self.dropped_player = player_id
+				if self.missing_player != -1:
+					self.server_order = ABORTED
 				if player_id == self.left_player:
 					self.dropped_side = LEFT
 				else:
 					self.dropped_side = RIGHT
-				self.missing_player += 1
+				self.missing_player = player_id
 				if self.game_type["is_ai"]:
-					self.missing_player = 2
+					self.server_order = ABORTED
 
 	async def player_rejoin(self, new_id, new_connection):
 		if self.dropped_side == LEFT:
@@ -291,10 +300,10 @@ class GameRoom():
 		else:
 			self.right_player = new_id
 			self.connections[1] = new_connection
-		self.missing_player = False
+		self.time_since_last_receive[self.missing_player] = time.perf_counter()
 		self.players[new_id].dropped = False
-		self.time_since_last_receive[self.left_player] = time.perf_counter()
-		self.time_since_last_receive[self.right_player] = time.perf_counter()
+		self.missing_player = -1
+		self.dropped_side = -1
 		logger.info(f"gameRoom: Player has come back, new id: {new_id}")
 
 	async def run(self):
@@ -311,7 +320,7 @@ class GameRoom():
 				logger.info(f'{self.room_id}: Checking pulse of players')
 				await self.check_pulse()
 				if self.missing_player:
-					if self.missing_player == 2 or self.server_order is ABORTED:
+					if self.server_order is ABORTED:
 						logger.info(f'{self.room_id}: No players left in room, aborting...')
 						return ABORTED
 					logger.info(f'{self.room_id}: Missing player detected')

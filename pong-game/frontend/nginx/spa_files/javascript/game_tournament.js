@@ -1,11 +1,11 @@
-import { fetchWithToken, getLanguageCookie } from "./fetch_request.js";
+import { fetchWithToken } from "./fetch_request.js";
 import { setLocalLobby } from "./game_local.js";
 import { setIsTournament } from "./game_utils.js";
 import { hideClass, hideElem, showElem } from "./utils.js";
 import { TournamentPlayers, goBackButtonEventListener } from "./game_utils.js";
 import { setSoloLobby } from "./game_solo.js";
-import { translations as trslt } from "./language_pack.js";
-
+import { translations as trsl } from "./language_pack.js";
+import { state } from "./app.js";
 
 export async function setTournamentView(contentContainer) {
 	setIsTournament(true);
@@ -25,17 +25,16 @@ export async function setTournamentView(contentContainer) {
 }
 
 function displayTournament(tournament, container) {
-	const lng = getLanguageCookie() ||  "en";
 	if (!container) return;
 	container.innerHTML = `
-		<h3>The ${tournament.name} Tournament</h3>
+		<h3>${trsl[state.language].tournament} ${tournament.name} </h3>
 		<hr>
 		<div id="brackets-container"></div>
-		<button id="next-match-btn">Start next game</button>
-		<button id="create-tournament-btn">Create a new Tournament</button>
+		<button id="next-match-btn">${trsl[state.language].startNextGame}</button>
+		<button id="create-tournament-btn">${trsl[state.language].createNewTournament}</button>
 		<div id="match-container"></div>
 	`;
-	
+
 	const createTournamentButton = document.getElementById("create-tournament-btn");
 	createTournamentButton.addEventListener("click", () => {
 		const innerContent = document.getElementById("innerContent");
@@ -47,7 +46,7 @@ function displayTournament(tournament, container) {
 	});
 
 	const bracketsContainer = document.getElementById("brackets-container");
-	const numOfBrackets = tournament.brackets.length; // for debugging 7 < odd | delete once fixed 
+	const numOfBrackets = tournament.brackets.length; // for debugging 7 < odd | delete once fixed
 	console.log("num of brackets is : ", numOfBrackets); // for debugging 7 < odd | delete once fixed
 	tournament.brackets.forEach((bracket, index) => {
 		console.log("index is : ", index); // for debugging 7 < odd | delete once fixed
@@ -57,7 +56,7 @@ function displayTournament(tournament, container) {
 		const matchupHtml = getMatchupsHtml(bracket, index);
 		let roundTitle = `Round ${index + 1}`;
 		if (n % 2 != 0 && index == 0) {
-			roundTitle = "PLAYOFF";
+			roundTitle = trsl[state.language].playOff;
 		}
 		bracketDiv.innerHTML = `
 			<h4>${roundTitle}</h4>
@@ -71,7 +70,7 @@ function displayTournament(tournament, container) {
 }
 
 function isPowerOf2(n) {
-    return Number.isInteger(n) &&(n > 0) && (n & (n - 1)) === 0;
+	return Number.isInteger(n) &&(n > 0) && (n & (n - 1)) === 0;
 }
 
 function getPlayoffHtml(bracket) {
@@ -82,7 +81,7 @@ function getPlayoffHtml(bracket) {
 	while(!isPowerOf2(numOfQualified + ((n - numOfQualified)/2))) {
 		numOfQualified++;
 	}
-	let qualified = "Qualified: ";
+	let qualified = `${trsl[state.language].qualified}: `;
 	let i = 0;
 	while (i < numOfQualified) {
 		if (i > 0) {
@@ -108,7 +107,7 @@ function getPlayoffHtml(bracket) {
 						}
 					</span>
 					${players[i].is_ai === "human" ? "" : "[CPU]"} ${players[i].alias}
-				</span>	
+				</span>
 				<span class="vs">| vs |</span>
 				<span class="right-player">
 					${players[i + 1].alias} ${players[i + 1].is_ai === "human" ? "" : "[CPU]"}
@@ -117,14 +116,14 @@ function getPlayoffHtml(bracket) {
 					};">
 						${
 							players[i + 1].result === "win"
-							? " [W]"
+							? ` [${trsl[state.language].w}]`
 							: players[i + 1].result === "lose"
-							? " [L]"
+							? ` [${trsl[state.language].l}]`
 							: ""
 						}
 					</span>
 				</span>
-			</li>		
+			</li>
 		`;
 		i++;
 		i++;
@@ -142,9 +141,9 @@ function getLeftPlayerHtml(player) {
 				};">
 					${
 					player.result === "win"
-						? "[W] "
+						? `[${trsl[state.language].w}] `
 						: player.result === "lose"
-						? "[L] "
+						? `[${trsl[state.language].l}] `
 						: ""
 					}
 				</span>
@@ -164,9 +163,9 @@ function getRightPlayerHtml(player) {
 			};">
 				${
 				player.result === "win"
-					? " [W]"
+					? ` [${trsl[state.language].w}]`
 					: player.result === "lose"
-					? " [L]"
+					? ` [${trsl[state.language].l}]`
 					: ""
 				}
 			</span>
@@ -182,7 +181,7 @@ function getMatchupsHtml(bracket, index) {
 	console.log("number of player is : ", n);
 
 	// /!\ debug print, delete when pushing
-	// bracket.players.forEach((player, i) => { 
+	// bracket.players.forEach((player, i) => {
 	// 	console.log("player " + i + " is : ", player);
 	// })
 
@@ -207,41 +206,40 @@ function setTournamentViewForm(contentContainer) {
 	<div class="tournament-view" id="tournament-creation">
 		<form id="tournament-form">
 			<div>
-				<input type="text" id="tournament-name" name="tournamentName" placeholder="Enter tournament name" required />
+				<input type="text" id="tournament-name" name="tournamentName" placeholder="${trsl[state.language].tournamentInput}" required />
 			</div>
 			<hr>
 			<div id="players-container">
 				<div class="player-entry">
 					<input type="text" placeholder="Enter player 1 alias" name="player1" required />
 					<select name="type1">
-						<option value="human">Human</option>
-						<option value="easy">AI - Easy</option>
-						<option value="medium">AI - Medium</option>
-						<option value="hard">AI - Hard</option>
+						<option value="human">${trsl[state.language].human}</option>
+						<option value="easy">${trsl[state.language].tournamentEasy}</option>
+						<option value="medium">${trsl[state.language].tournamentMedium}</option>
+						<option value="hard">${trsl[state.language].tournamentHard}</option>
 					</select>
 				</div>
 				<div class="player-entry">
 					<input type="text" placeholder="Enter player 2 alias" name="player2" required />
 					<select name="type2">
-						<option value="human">Human</option>
-						<option value="easy">AI - Easy</option>
-						<option value="medium">AI - Medium</option>
-						<option value="hard">AI - Hard</option>
+						<option value="human">${trsl[state.language].human}</option>
+						<option value="easy">${trsl[state.language].tournamentEasy}</option>
+						<option value="medium">${trsl[state.language].tournamentMedium}</option>
+						<option value="hard">${trsl[state.language].tournamentHard}</option>
 					</select>
 				</div>
 			</div>
-			<button type="button" id="add-player">+ Add Player</button>
-			<button type="submit">Create Tournament</button>
+			<button type="button" id="add-player">${trsl[state.language].addPlayer}</button>
+			<button type="submit">${trsl[state.language].createTournament}</button>
 		</form>
 		<div id="tournament-result"></div>
 	</div>`;
-
 	setupTournamentForm(contentContainer);
 }
 
 export async function submitMatchResult(user1Id, user2Id, winner) {
 	const matchContainer = document.getElementById("match-container");
-	matchContainer.innerHTML = `<p>Submitting match result...</p>`;
+	matchContainer.innerHTML = `<p>${trsl[state.language].submittingResult}</p>`;
 
 	try {
 		const response = await fetchWithToken(
@@ -251,44 +249,44 @@ export async function submitMatchResult(user1Id, user2Id, winner) {
 		);
 
 		if (!response.ok) {
-			throw new Error("Failed to submit match result.");
+			alert(`${trsl[state.language].TournamentSubmissionFailed}`);
+			matchContainer.innerHTML = `<p>${trsl[state.language].TournamentSubmissionFailed}</p>`;
 		}
 
-		alert("Match result updated successfully.");
 		const tournament = await getUserTournament();
 		if (tournament) {
 			displayTournament(tournament, document.getElementById("tournament-status"));
 		}
 	} catch (error) {
 		console.log(error);
-		matchContainer.innerHTML = `<p>Error submitting match result.</p>`;
+		window.location.hash = "login";
 	}
 }
 
 function simulateMatch(difficulty1, difficulty2) {
-    const probabilities = {
-        'hard': { 'easy': 0.75, 'medium': 0.67, 'hard': 0.50 },
-        'medium': { 'easy': 0.67, 'medium': 0.50, 'hard': 0.33 },
-        'easy': { 'easy': 0.50, 'medium': 0.33, 'hard': 0.25 }
-    };
+	const probabilities = {
+		'hard': { 'easy': 0.75, 'medium': 0.67, 'hard': 0.50 },
+		'medium': { 'easy': 0.67, 'medium': 0.50, 'hard': 0.33 },
+		'easy': { 'easy': 0.50, 'medium': 0.33, 'hard': 0.25 }
+	};
 
-    const chanceToWin = probabilities[difficulty1][difficulty2];
+	const chanceToWin = probabilities[difficulty1][difficulty2];
 
-    const randomValue = Math.random();
-    const winner = randomValue <= chanceToWin ? 'left' : 'right';
+	const randomValue = Math.random();
+	const winner = randomValue <= chanceToWin ? 'left' : 'right';
 
-    return winner;
+	return winner;
 }
 
 async function showNextMatch() {
 	const matchContainer = document.getElementById("match-container");
-	matchContainer.innerHTML = `<p>Loading next match...</p>`;
+	matchContainer.innerHTML = `<p>${trsl[state.language].loadingNextMatch}</p>`;
 
 	try {
 		const response = await fetchWithToken(`/api/game/next-game/`);
 		if (!response.ok) {
 			console.log(response);
-			alert("Error: an unexpected error occured, please try again later");
+			alert(`${trsl[state.language].internalError}`);
 			return;
 		}
 
@@ -299,7 +297,7 @@ async function showNextMatch() {
 			if (player1.is_ai !== "human" && player2.is_ai != "human") {
 				const winner = simulateMatch(player1.is_ai, player2.is_ai);
 				submitMatchResult(player1.id, player2.id, winner);
-				alert("ai game happened at the speed of light");
+				alert(`${trsl[state.language].aiGameResolved}`);
 			} else {
 				if (player1.is_ai !== "human" && player2.is_ai === "human") {
 					TournamentPlayers.player2.id = player1.id;
@@ -328,11 +326,10 @@ async function showNextMatch() {
 				}
 			}
 		} else if (data.next_game.message) {
-			matchContainer.innerHTML = `<p>${data.next_game.message}</p>`;
+			matchContainer.innerHTML = `<p>${trsl[state.language].tournamentIsOver} ${data.next_game.message}</p>`;
 		}
 	} catch (error) {
-		console.log(error);
-		matchContainer.innerHTML = `<p>Error fetching next match.</p>`;
+		window.location.hash = "login";
 	}
 }
 
@@ -345,7 +342,7 @@ function setupTournamentForm(contentContainer) {
 
 	addPlayerButton.addEventListener("click", () => {
 		if (playerCount >= maxPlayers) {
-			alert("Maximum of 16 players allowed.");
+			alert(`${trsl[state.language].maxPlayer}`);
 			return;
 		}
 
@@ -353,12 +350,12 @@ function setupTournamentForm(contentContainer) {
 		const playerEntry = document.createElement("div");
 		playerEntry.classList.add("player-entry");
 		playerEntry.innerHTML = `
-			<input type="text" placeholder="Enter player ${playerCount} alias" name="player${playerCount}" required />
+			<input type="text" placeholder="${trsl[state.language].enterPlayer} ${playerCount} ${trsl[state.language].alias}" name="player${playerCount}" required />
 			<select id="added-player" name="type${playerCount}">
-				<option value="human">Human</option>
-				<option value="easy">AI - Easy</option>
-				<option value="medium">AI - Medium</option>
-				<option value="hard">AI - Hard</option>
+				<option value="human">${trsl[state.language].human}</option>
+				<option value="easy">${trsl[state.language].tournamentEasy}</option>
+				<option value="medium">${trsl[state.language].tournamentMedium}</option>
+				<option value="hard">${trsl[state.language].tournamentHard}</option>
 			</select>
 			<button type="button" class="remove-player">X</button>
 		`;
@@ -371,46 +368,46 @@ function setupTournamentForm(contentContainer) {
 	});
 
 	const form = document.getElementById("tournament-form");
-	form.addEventListener("submit", async (event) => { 
+	form.addEventListener("submit", async (event) => {
 		event.preventDefault();
 		const formData = new FormData(form);
 		const players = [];
 		const aliasesSet = new Set();
 		let hasError = false;
-	
+
 		for (let i = 1; i <= playerCount; i++) {
 			const alias = formData.get(`player${i}`).trim();
 			const is_ai = formData.get(`type${i}`);
-	
+
 			if (!/^[a-zA-Z0-9]+$/.test(alias)) {
-				alert(`${alias} must only contain alphanumeric characters.`);
+				alert(`${alias} ${trsl[state.language].tournamentAlphanum}`);
 				hasError = true;
 				break;
 			}
-	
+
 			if (aliasesSet.has(alias)) {
-				alert(`${alias} is duplicated. Please choose unique names.`);
+				alert(`${alias} ${trsl[language].tournamentDuplicates}`);
 				hasError = true;
 				break;
 			}
-	
+
 			aliasesSet.add(alias);
 			players.push({ alias, is_ai });
 		}
-	
+
 		if (hasError) {
 			return ;
-		} 
-	
+		}
+
 		const tournamentData = {
 			name: formData.get("tournamentName").trim(),
 			players,
 		};
-	
+
 		try {
 			const response = await fetchWithToken("/api/game/create-tournament/", JSON.stringify(tournamentData), "POST");
 			if (!response.ok) {
-				alert("Failed to create tournament. Please try again.");
+				alert(`${alias} ${trsl[language].tournamentCreationFailed}`);
 			} else {
 				const data = await response.json();
 				setTournamentView(contentContainer);
@@ -420,7 +417,7 @@ function setupTournamentForm(contentContainer) {
 			window.location.hash = "login";
 		}
 	});
-}	
+}
 
 async function getUserTournament() {
 	try {
@@ -431,7 +428,6 @@ async function getUserTournament() {
 			return null;
 		}
 	} catch (error) {
-		console.log("Error fetching tournament:", error);
-		return null;
+		window.location.hash = "login";
 	}
 }

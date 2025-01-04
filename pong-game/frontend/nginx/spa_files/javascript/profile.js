@@ -9,14 +9,14 @@ import { rejectFriendRequest } from "./manage_social.js";
 import { cancelFriendRequest } from "./manage_social.js";
 import { unblockUser } from "./manage_social.js";
 import { blockUser } from "./manage_social.js";
-import { getLanguageCookie } from './fetch_request.js';
 import { isAlphanumeric } from "./utils.js";
+import { state } from "./app.js";
 
-export async function setProfileView(contentContainer, usernameInHash) {
+export async function setProfileView(contentContainer, usernameInHash = "") {
 	let response;
 	let data;
 	try {
-		if (!isAlphanumeric(usernameInHash)) {
+		if (!usernameInHash || !isAlphanumeric(usernameInHash)) {
 			response = await fetchWithToken(`/api/user/get-profile/?own=yes`);
 		} else {
 			response = await fetchWithToken(`/api/user/get-profile/?alias=${usernameInHash}`);
@@ -27,13 +27,12 @@ export async function setProfileView(contentContainer, usernameInHash) {
 		window.location.hash = "login";
 		return;
 	}
-	const lng = getLanguageCookie() ||  "en";
 	contentContainer.innerHTML = `
 		<div class="profile-view">
-			<h2 data-i18n="profileTitle">${trsl[lng].profileTitle}</h2>
+			<h2>${trsl[state.language].profileTitle}</h2>
 			<div class="search-bar mb-3">
-				<input type="text" id="searchInput" class="form-control" placeholder="${trsl[lng].searchByUsername}" />
-				<button id="searchButton" class="btn btn-primary mt-2" data-i18n="searchButton">${trsl[lng].searchButton}</button>
+				<input type="text" id="searchInput" class="form-control" placeholder="${trsl[state.language].searchByUsername}" />
+				<button id="searchButton" class="btn btn-primary mt-2">${trsl[state.language].searchButton}</button>
 			</div>
 			<div id="profileResult"></div>
 		</div>
@@ -44,46 +43,58 @@ export async function setProfileView(contentContainer, usernameInHash) {
 	const profileResult = document.getElementById("profileResult");
 
 	if (!response.ok && data.detail === "No CustomUser matches the given query.") {
-		profileResult.innerHTML = `<p data-i18n="userNotFound">User not found.</p>`;
+		profileResult.innerHTML = `<p>${trsl[state.language].userNotFound}</p>`;
 	} else {
 		displayProfile(data.profile);
 	}
 
 	searchButton.addEventListener("click", () => {
 		const searchQuery = searchInput.value.trim();
-		if (!isAlphanumeric(searchQuery)) {
-			return;
-		}
-		console.log("Searching for:", searchQuery);
-		if (!searchQuery) {
+		if (!searchQuery || !isAlphanumeric(searchQuery) ) {
 			return;
 		}
 		window.location.hash = `profile/${searchQuery}`;
-		console.log("Redirecting to profile", searchQuery);
 	});
 
 	function displayProfile(profile) {
-		const lng = getLanguageCookie() ||  "en";
-		
+
+		const status = profile.onlineStatus;
 		profileResult.innerHTML = `
 		<div class="card">
 			<div class="card-body">
 				<div class="row">
-					<!-- Avatar and Alias -->
 					<div class="col-md-4">
 						<img src="${profile.avatar}" alt="${profile.alias}" class="img-thumbnail" style="max-width: 150px;">
 					</div>
 					<div class="col-md-4">
 						<h3>${profile.alias}</h3>
-						<p>${profile.onlineStatus || "offline"}</p>					
-						<h4>${trsl[lng].rank}: ${profile.rank || "Unranked"}</h4>
-						<h4>${trsl[lng].mmr}: ${profile.mmr}</h4>
-						<h4>${trsl[lng].winRate}: ${calculateWinRate(profile.wins, profile.losses)}%</h4>
+						<p style="color: ${
+							!status
+								? 'red'
+								: status == "online"
+								? 'green'
+								: status == "ingame"
+								? 'orange'
+								: 'red'
+							}">
+							${
+								!status
+								? `• ${trsl[state.language].offline}`
+								: status == "online"
+								? `• ${trsl[state.language].online}`
+								: status == "ingame"
+								? `• ${trsl[state.language].ingame}`
+								: `• ${trsl[state.language].offline}`
+							}
+						</p>
+						<h4>${trsl[state.language].rank}: ${profile.rank || trsl[state.language].unranked}</h4>
+						<h4>${trsl[state.language].mmr}: ${profile.mmr}</h4>
+						<h4>${trsl[state.language].winRate}: ${calculateWinRate(profile.wins, profile.losses)}%</h4>
 					</div>
 					<div class="col-md-4">
-						<h4 data-i18n="matchHistory">${trsl[lng].matchHistory}</h4>
-						<p title="${trsl[lng].wins}: ${profile.wins}, ${trsl[lng].losses}: ${profile.losses}">
-							${profile.wins}${trsl[lng].w} / ${profile.losses}${trsl[lng].l}
+						<h4>${trsl[state.language].matchHistory}</h4>
+						<p title="${trsl[state.language].wins}: ${profile.wins}, ${trsl[state.language].losses}: ${profile.losses}">
+							${profile.wins}${trsl[state.language].w} / ${profile.losses}${trsl[state.language].l}
 						</p>
 						<div class="match-history-scroll" style="max-height: 150px; overflow-y: auto;">
 							${
@@ -93,8 +104,8 @@ export async function setProfileView(contentContainer, usernameInHash) {
 										const p1Won = match.matchOutcome === "Player 1 Wins";
 										const isWin = (isP1 && p1Won) || (!isP1 && !p1Won);
 										const opponent = isP1 ? match.p2 : match.p1;
-										const outcomeText = isWin ? trsl[lng].win : trsl[lng].loss;
-										const matchDate = new Date(match.time).toLocaleString("fr-FR");
+										const outcomeText = isWin ? trsl[state.language].win : trsl[state.language].loss;
+										const matchDate = new Date(match.time).toLocaleString(state.language);
 										return `
 											<p>
 												${matchDate} - <strong>${outcomeText}</strong> versus
@@ -102,21 +113,21 @@ export async function setProfileView(contentContainer, usernameInHash) {
 											</p>
 										`;
 									  }).join('')
-									: `<p class="text-muted" data-i18n="noMatchHistory">${trsl[lng].noMatchHistory}</p>`
+									: `<p class="text-muted">${trsl[state.language].noMatchHistory}</p>`
 							}
 						</div>
 					</div>
 					${!profile.isCurrent ? `
 						<div class="mt-3">
-							<button class="btn btn-info btn-sm" id="sendMessageBtn">${trsl[lng].sendMessage}</button>
-							<button class="btn btn-warning btn-sm" id="sendDuelRequestBtn">${trsl[lng].requestDuel}</button>
-							<button class="btn btn-success btn-sm" id="addFriendBtn">${trsl[lng].addFriend}</button>
-							<button class="btn btn-danger btn-sm" id="removeFriendBtn">${trsl[lng].removeFriend}</button>
-							<button class="btn btn-danger btn-sm" id="acceptFriendBtn">${trsl[lng].accept}</button>
-							<button class="btn btn-danger btn-sm" id="rejectFriendBtn">${trsl[lng].cancel}</button>
-							<button class="btn btn-danger btn-sm" id="cancelFriendBtn">${trsl[lng].cancel}</button>
-							<button class="btn btn-danger btn-sm" id="blockUserBtn">${trsl[lng].block}</button>
-							<button class="btn btn-danger btn-sm" id="unblockUserBtn">${trsl[lng].unblock}</button>
+							<button class="btn btn-info btn-sm" id="sendMessageBtn">${trsl[state.language].sendMessage}</button>
+							<button class="btn btn-warning btn-sm" id="sendDuelRequestBtn">${trsl[state.language].requestDuel}</button>
+							<button class="btn btn-success btn-sm" id="addFriendBtn">${trsl[state.language].addFriend}</button>
+							<button class="btn btn-danger btn-sm" id="removeFriendBtn">${trsl[state.language].removeFriend}</button>
+							<button class="btn btn-danger btn-sm" id="acceptFriendBtn">${trsl[state.language].accept}</button>
+							<button class="btn btn-danger btn-sm" id="rejectFriendBtn">${trsl[state.language].cancel}</button>
+							<button class="btn btn-danger btn-sm" id="cancelFriendBtn">${trsl[state.language].cancel}</button>
+							<button class="btn btn-danger btn-sm" id="blockUserBtn">${trsl[state.language].block}</button>
+							<button class="btn btn-danger btn-sm" id="unblockUserBtn">${trsl[state.language].unblock}</button>
 						</div>
 					` : ""}
 				</div>
