@@ -12,18 +12,6 @@ from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 
-
-def index(request):
-    return render(request, "chat/index.html")
-
-def room(request, room_name):
-    # if not request.user.is_authenticated:
-    #     return redirect("/api/user/login/")
-    return render(request, "chat/chatroom.html", {"room_name": room_name})
-
-def chat_test(request):
-    return render(request, "chat/chat_test.html")
-
 class getChatRoomMessagesView(APIView):
 	permission_classes = [IsAuthenticated]
 
@@ -85,7 +73,6 @@ class getChatRoomsOfUserView(APIView):
 		}
 
 		return Response(response_data)
-
 
 class CreatePublicChatRoomView(APIView):
 	permission_classes = [IsAuthenticated]
