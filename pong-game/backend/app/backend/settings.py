@@ -209,8 +209,9 @@ LOGGING = {
             },
         },
         'handlers': {
-            'console': {
-                'class': 'logging.StreamHandler',
+            "console": {
+                "class": "logging.StreamHandler",
+                "level": "ERROR",
             },
             "gamerooms_file": {
                 "level": "DEBUG",
@@ -227,7 +228,7 @@ LOGGING = {
         },
         'root': {
             'handlers': ['console'],
-            'level': 'INFO',  # Set to DEBUG for detailed logs
+            'level': 'ERROR',  # Set to DEBUG for detailed logs
         },
         'loggers': {
             'gamerooms': {

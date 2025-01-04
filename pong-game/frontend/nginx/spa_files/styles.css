@@ -611,6 +611,36 @@ canvas {
 	border-color: white !important;
 }
 
+#rejoin-true-button {
+	border: 1px solid black !important;
+	width: 150px !important;
+	height: 50px !important;
+	border-radius: 25px !important;
+	padding: 0px !important;
+	margin: 0px !important;
+	margin-top: 50px !important;
+	font-size: 1rem !important;
+}
+
+#rejoin-true-button:hover {
+	border-color: white !important;
+}
+
+#rejoin-false-button {
+	border: 1px solid black !important;
+	width: 150px !important;
+	height: 50px !important;
+	border-radius: 25px !important;
+	padding: 0px !important;
+	margin: 0px !important;
+	margin-top: 50px !important;
+	font-size: 1rem !important;
+}
+
+#rejoin-false-button:hover {
+	border-color: white !important;
+}
+
 canvas {
 	margin-top: 10px !important;
 	width: 100%;
