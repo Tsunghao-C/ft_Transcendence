@@ -176,9 +176,9 @@ services:
       - "9090:9090"   # only for development stage
     volumes:
       - prometheus_data:/prometheus/data
-    environment:
-      - PROM_ADMIN_USER=${PROM_ADMIN_USER}
-      - PROM_ADMIN_PASS_HASH=${PROM_ADMIN_PASS_HASH}
+    # environment:
+    #   - PROM_ADMIN_USER=${PROM_ADMIN_USER}
+    #   - PROM_ADMIN_PASS_HASH=${PROM_ADMIN_PASS_HASH}
     networks:
       - monitoring_net
       - backend_net
