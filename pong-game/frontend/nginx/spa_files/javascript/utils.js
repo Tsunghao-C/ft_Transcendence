@@ -14,6 +14,8 @@ export function hideClass(className) {
 
 export function showElem(elemId, display) {
 	const elem = document.getElementById(elemId);
+	if (!elem)
+		return;
 	elem.style.display = display;
 }
 

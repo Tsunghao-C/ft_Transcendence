@@ -476,6 +476,9 @@ async function rejoin_room(response) {
 	hideElem("create-match");
 	hideElem("join-queue");
 	hideElem("go-back");
+    hideElem("easy");
+    hideElem("medium");
+    hideElem("hard");
 	console.log('Rejoin room query received by server');
 	roomId = response.room_name;
 	const promptText = document.createElement('p');
@@ -523,6 +526,9 @@ async function rejoin_room(response) {
 			}));
 			showElem("create-match", "block");
 			showElem("join-queue", "block");
+            showElem("easy", "block");
+            showElem("medium", "block");
+            showElem("hard", "block");
 			showElem("go-back", "block");
             promptText.parentNode.removeChild(promptText);
             promptText.remove();
@@ -554,6 +560,9 @@ async function display_game_aborted() {
 async function display_already_ingame() {
 	hideElem("create-match");
 	hideElem("join-queue");
+    hideElem("easy");
+    hideElem("medium");
+    hideElem("hard");
 	const promptText = document.createElement('p');
 	promptText.id = 'rejoin-prompt-text';
 	promptText.textContent = trsl[state.language].alreadyInGame;
