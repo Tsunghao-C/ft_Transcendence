@@ -223,6 +223,9 @@ class GameConsumer(AsyncWebsocketConsumer):
 			self.in_game = False
 
 	async def create_ai_lobby(self, data):
+		logger.info(f"{self.user.id}: check for ai creation")
+		if not await self.check_duplicates_player():
+			return
 		room_name = str(uuid.uuid4())
 		self.assigned_room = room_name
 		player_id = self.user.id
@@ -257,6 +260,9 @@ class GameConsumer(AsyncWebsocketConsumer):
 		}))
 
 	async def join_queue(self, data):
+		logger.info(f"{self.user.id}: check for join queue")
+		if not await self.check_duplicates_player():
+			return
 		logger.info(f"{self.user.id}: Joining quick match")
 		try:
 			queue_entry = await sync_to_async(MatchMakingQueue.objects.create)(player=self.user)
@@ -343,6 +349,9 @@ class GameConsumer(AsyncWebsocketConsumer):
 		print("leaving the queue")
 
 	async def create_quick_match_lobby(self, game):
+		logger.info(f"{self.user.id}: check for create quick match")
+		if not await self.check_duplicates_player():
+			return
 		logger.info(f"{self.user.id}: Creating quickmatch lobby")
 		room_name = str(game.gameUID)
 		game_type = {
@@ -370,6 +379,9 @@ class GameConsumer(AsyncWebsocketConsumer):
 
 
 	async def create_private_lobby(self, data):
+		logger.info(f"{self.user.id}: check for create private creation")
+		if not await self.check_duplicates_player():
+			return
 		logger.info(f"{self.user.id}: Creating private lobby")
 		room_name = str(uuid.uuid4())
 		player_id = self.user.id
@@ -398,6 +410,9 @@ class GameConsumer(AsyncWebsocketConsumer):
 			}))
 
 	async def create_local_match(self, data):
+		logger.info(f"{self.user.id}: check for create local creation")
+		if not await self.check_duplicates_player():
+			return
 		room_name = str(uuid.uuid4())
 		self.assigned_room = room_name
 		player_id = self.user.id
@@ -426,25 +441,27 @@ class GameConsumer(AsyncWebsocketConsumer):
 			}))
 
 	async def join_lobby(self, data):
+		logger.info(f"{self.user.id}: check for join lobby")
+		if not await self.check_duplicates_player():
+			return
 		room_name = data["room_name"]
 		player_id = self.user.id
 		if room_name not in active_lobbies:
 			await self.send(json.dumps({
-				"type": "error",
-				"message": f"lobby {room_name} does not exist"
+				"type": "join_error",
+				"reason": "non-existing",
+				"message": f"{room_name} does not exist",
+				"room_name": f"{room_name}"
 				}))
 			return
 		self.current_group = f"lobby_{room_name}"
-		if player_id in active_lobbies[room_name]["players"]:
-			await self.send(json.dumps({
-				"type": "rejoin",
-				"message": "player is already in lobby",
-#				"player1": f"{active_lobbies[room_name]['players'][0]}",
-#				"player2": f"{active_lobbies[room_name]['players'][1]}"
-				}))
-			return
 		if len(active_lobbies[room_name]["players"]) >= 2:
-			await self.send(json.dumps({"error": f"lobby {room_name} is full"}))
+			await self.send(json.dumps({
+				"type": "join_error",
+				"reason": "full",
+				"message": f"{room_name} is full",
+				"room_name": f"{room_name}"
+				}))
 			return
 		elif len(active_lobbies[room_name]["players"]) == 0:
 			self.assigned_room = room_name
@@ -477,8 +494,10 @@ class GameConsumer(AsyncWebsocketConsumer):
 		player_id = self.user.id
 		if room_name not in active_lobbies:
 			await self.send(json.dumps({
-				"type": "error",
-				"error": f"lobby {room_name} not found"
+				"type": "join_error",
+				"reason": "non-existing",
+				"message": f"{room_name} does not exist",
+				"room_name": f"{room_name}"
 				}))
 			return
 		if "ready" not in active_lobbies[room_name]:
@@ -502,6 +521,20 @@ class GameConsumer(AsyncWebsocketConsumer):
 			except:
 				logger.error(f"{self.user.id}: Exception caught when launching game room: {room_name}")
 				raise
+
+	async def check_duplicates_player(self):
+		logger.info(f"{self.user.id}: TA MERE LA PUTAIN DE TA RACE")
+		for stray_room_id, room_data in active_lobbies.items():
+			logger.info(f'{self.user.id}: {room_data["players"]}')
+			if self.user.id in room_data["players"]:
+				return True
+				await self.send(json.dumps({
+				"type": "join_error",
+				"reason": "duplicates",
+				"message": "player is already in lobby",
+				}))
+		return True
+
 
 	async def launch_game(self, room_name):
 		try:

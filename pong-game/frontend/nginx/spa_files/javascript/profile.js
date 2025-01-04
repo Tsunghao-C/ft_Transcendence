@@ -12,11 +12,11 @@ import { blockUser } from "./manage_social.js";
 import { isAlphanumeric } from "./utils.js";
 import { state } from "./app.js";
 
-export async function setProfileView(contentContainer, usernameInHash) {
+export async function setProfileView(contentContainer, usernameInHash = "") {
 	let response;
 	let data;
 	try {
-		if (!isAlphanumeric(usernameInHash)) {
+		if (!usernameInHash || !isAlphanumeric(usernameInHash)) {
 			response = await fetchWithToken(`/api/user/get-profile/?own=yes`);
 		} else {
 			response = await fetchWithToken(`/api/user/get-profile/?alias=${usernameInHash}`);
@@ -58,17 +58,35 @@ export async function setProfileView(contentContainer, usernameInHash) {
 
 	function displayProfile(profile) {
 
+		const status = profile.onlineStatus;
 		profileResult.innerHTML = `
 		<div class="card">
 			<div class="card-body">
 				<div class="row">
-					<!-- Avatar and Alias -->
 					<div class="col-md-4">
 						<img src="${profile.avatar}" alt="${profile.alias}" class="img-thumbnail" style="max-width: 150px;">
 					</div>
 					<div class="col-md-4">
 						<h3>${profile.alias}</h3>
-						<p>${profile.onlineStatus || "offline"}</p>
+						<p style="color: ${
+							!status
+								? 'red'
+								: status == "online"
+								? 'green'
+								: status == "ingame"
+								? 'orange'
+								: 'red'
+							}">
+							${
+								!status
+								? `• ${trsl[state.language].offline}`
+								: status == "online"
+								? `• ${trsl[state.language].online}`
+								: status == "ingame"
+								? `• ${trsl[state.language].ingame}`
+								: `• ${trsl[state.language].offline}`
+							}
+						</p>
 						<h4>${trsl[state.language].rank}: ${profile.rank || trsl[state.language].unranked}</h4>
 						<h4>${trsl[state.language].mmr}: ${profile.mmr}</h4>
 						<h4>${trsl[state.language].winRate}: ${calculateWinRate(profile.wins, profile.losses)}%</h4>

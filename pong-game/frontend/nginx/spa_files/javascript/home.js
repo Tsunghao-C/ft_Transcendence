@@ -2,15 +2,14 @@ import { fetchWithToken } from "./fetch_request.js";
 import { translations } from "./language_pack.js";
 import { state } from "./app.js";
 
-export async function setHomePage(contentContainer, userdata) {
+export async function setHomePage(contentContainer) {
 
 	let response;
 	let data;
 
-	const usernameInHash = userdata.alias;
 
 	try {
-		response = await fetchWithToken(`/api/user/get-profile/?alias=${usernameInHash}`);
+		response = await fetchWithToken(`/api/user/get-profile/?own=yes`);
 		data = await response.json();
 	} catch(error) {
 		console.log(error);
@@ -20,7 +19,7 @@ export async function setHomePage(contentContainer, userdata) {
 
 	contentContainer.innerHTML = `
 		<div class="home-view">
-			<h2>${translations[state.language].welcome}, ${userdata.username} !</h2>
+			<h2>${translations[state.language].welcome}, ${data.profile.alias} !</h2>
 			<div id="profile">
 			</div>
 		</div>

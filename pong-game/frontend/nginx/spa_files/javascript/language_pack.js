@@ -207,6 +207,9 @@ export const translations = {
 		guest: "Guest",
 		roomInvite: "Enter the alias of the player you want to invite:",
 		invitationSent: "Invitation sent !",
+		errorNonExistingRoom: "No game room found with room ID ",
+		errorFullRoom: "This game Room is full",
+		duplicateRoom: "You are already in Lobby somewhere else"
 	},
 
 	fr: {
@@ -417,6 +420,9 @@ export const translations = {
 		guest: "Invité",
 		roomInvite: "Entrez l'alias du joueur que vous souhaitez inviter :",
 		invitationSent: "Invitation envoyée !",
+		errorNonExistingRoom: "Aucune salle de jeux trouvée avec l'ID de salle ",
+		errorFullRoom: "Cette salle de jeu est pleine",
+		duplicateRoom: "Vous êtes déjà dans le lobby ailleurs"
 	},
 	pt: {
 		//Login_html
@@ -626,5 +632,8 @@ export const translations = {
 		guest: "Convidado",
 		roomInvite: "Digite o apelido do jogador que você deseja convidar:",
 		invitationSent: "Convite enviado!",
+		errorNonExistingRoom: "Nenhuma sala de jogos encontrada com o ID da sala",
+		errorFullRoom: "Esta sala de jogos está cheia",
+		duplicateRoom: "Você já está no Lobby em outro lugar"
 	},
 }

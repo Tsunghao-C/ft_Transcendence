@@ -326,7 +326,8 @@ const onmessage_methods = {
 	'game_start': start_game,
 	'game_update': update_game,
 	'game_over': set_game_over,
-	'error': log_error
+	'error': log_error,
+	'join_error': join_error,
 }
 
 async function log_notice(response) {
@@ -435,6 +436,17 @@ async function set_game_over(response) {
 
 async function log_error(response) {
 	console.error('Error received:', response.message);
+}
+
+async function join_error(response) {
+	if (response.reason === "non-existing") {
+		alert(`${trsl[state.language].errorNonExistingRoom} ${response.room_name}`);
+	} else if (response.reason === "full") {
+		alert(`${trsl[state.language].errorFullRoom}`);
+	} else if (response.reason === "duplicates") {
+		alert(`${trsl[state.language].duplicateRoom}`);
+	}
+	window.location.hash = "lobby";
 }
 
 async function join_room(response) {

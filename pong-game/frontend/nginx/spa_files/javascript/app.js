@@ -157,7 +157,7 @@ export async function loadPage(page) {
 			// Handle different page views
 			switch (page) {
 				case "home":
-					setHomePage(innerContent, data);
+					setHomePage(innerContent);
 					break;
 				case "game":
 					setGameMenu(innerContent);
@@ -166,8 +166,7 @@ export async function loadPage(page) {
 					setLeaderboardView(innerContent);
 					break;
 				case "profile":
-					// will not be necessary, maybe it will
-					setProfileView(innerContent, data.alias);
+					setProfileView(innerContent);
 					break;
 				case "friends":
 					setFriendsView(innerContent);
