@@ -37,12 +37,12 @@ class UserSerializer(serializers.ModelSerializer):
 
 	def validate_username(self, value):
 		if nameNotClean(value):
-			raise serializers.ValidationError({"username": "this username contains bad language"})
+			raise serializers.ValidationError("this username contains bad language")
 		return value
 
 	def validate_alias(self, value):
 		if nameNotClean(value):
-			raise serializers.ValidationError({"alias": "this alias contains bad language"})
+			raise serializers.ValidationError("this alias contains bad language")
 		return value
 
 	def create(self, validated_data):
