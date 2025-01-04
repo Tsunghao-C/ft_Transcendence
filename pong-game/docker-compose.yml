@@ -27,6 +27,7 @@ volumes:
     driver: local
   prometheus_data: {}
   grafana_data: {}
+  grafana_certs: {}
 
 services:
   # Security Layer
@@ -195,7 +196,11 @@ services:
     environment:
       - GRAFANA_ADMIN_USER=${GRAFANA_ADMIN_USER}
       - GRAFANA_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_SERVER_PROTOCOL=https
+      - GF_SERVER_CERT_FILE=/etc/grafana/certs/grafana.crt
+      - GF_SERVER_CERT_KEY=/etc/grafana/certs/grafana.key
     volumes:
+      - grafana_certs:/etc/grafana/certs
       - ./monitoring/grafana/provisioning:/usr/share/grafana/provisioning
       - grafana_data:/var/lib/grafana
     networks:
