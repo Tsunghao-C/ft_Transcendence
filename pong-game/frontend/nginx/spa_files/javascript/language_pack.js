@@ -173,7 +173,7 @@ export const translations = {
 		//game_tournament
 		startNextGame: "Start next game",
 		createNewTournament: "Create a new Tournament",
-		playOff: "PLAY OFF",
+		playOff: "PLAYOFF",
 		tournamentIsOver: "Tournament is over, winner is ",
 		qualified: "Qualified",
 		tournamentInput: "Enter tournament name",
@@ -391,7 +391,7 @@ export const translations = {
 		//game_tournament
 		startNextGame: "Démarrer le prochain jeu",
 		createNewTournament: "Créer un nouveau tournoi",
-		playOff: "PLAY OFF",
+		playOff: "PLAYOFF",
 		tournamentIsOver: "Le tournoi est terminé, le gagnant est ",
 		qualified: "Qualifié",
 		tournamentInput: "Entrez le nom du tournoi",
@@ -608,7 +608,7 @@ export const translations = {
 		//game_tournament
 		startNextGame: "Iniciar próximo jogo",
 		createNewTournament: "Criar novo torneio",
-		playOff: "PLAY OFF",
+		playOff: "PLAYOFF",
 		tournamentIsOver: "O torneio acabou, o vencedor é ",
 		qualified: "Qualificado",
 		tournamentInput: "Digite o nome do torneio",
