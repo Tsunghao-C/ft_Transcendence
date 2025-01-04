@@ -260,6 +260,8 @@ class LiveGames(models.Model):
 		else:
 			self.p1.lossCount += 1
 			self.p2.winCount += 1
+		self.p1.save()
+		self.p2.save()
 
 	def __update_mmrs(self, outcome: int):
 		p1MMR = self.p1.mmr
