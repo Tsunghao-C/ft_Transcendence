@@ -169,7 +169,7 @@ class GameRoom():
 			p1 = CustomUser.objects.get(id=self.left_player)
 			if self.game_type["is_online"] and not self.game_type["is_quick_match"]:
 				p2 = CustomUser.objects.get(id=self.right_player)
-				game = LiveGames.objects.create(p1=p1, p1=p2, status=LiveGames.Status.completed)
+				game = LiveGames.objects.create(p1=p1, p2=p2, status=LiveGames.Status.completed)
 			else:
 				game = LiveGames.objects.get(p1=p1)
 			game.matchEnd(outcome=(winner=="left"))
