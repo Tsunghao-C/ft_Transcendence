@@ -13,6 +13,11 @@ def pfpUploadPath(instance, fname):
 	full_path = os.path.join('profile_images', fname)
 	print(full_path)
 	return full_path
+	ext = fname.split('.')[-1]
+	fname = f"{uuid4().hex}.{ext}" # 1 / 1bn chance of getting a duplicate
+	full_path = os.path.join('profile_images', fname)
+	print(full_path)
+	return full_path
 
 class CustomUser(AbstractUser):
 	class Language(models.TextChoices):
@@ -112,17 +117,23 @@ class OnlineUserActivity(models.Model):
 			user_record = OnlineUserActivity.objects.get(
 				user=user
 			)
-			if user_record.last_activity >= timezone.now() - timedelta(minutes=15):
+			if user_record.last_activity >= timezone.now() - timedelta(minutes=2):
 				if "/api/game/game" in user_record.path: # can change this later after game added
-					return "in-game"
-				return "• online"
+					return "ingame"
+				return "online"
 		except:
 			return "offline"
 
 	def __str__(self):
 		return f"{self.user.alias} - Last Activity: {self.last_activity}"
+	def __str__(self):
+		return f"{self.user.alias} - Last Activity: {self.last_activity}"
 
 class TemporaryOTP(models.Model):
+	user_id = models.IntegerField()
+	otp = models.CharField(max_length=6)
+	created_at = models.DateTimeField(auto_now_add=True)
+	expires_at = models.DateTimeField()
 	user_id = models.IntegerField()
 	otp = models.CharField(max_length=6)
 	created_at = models.DateTimeField(auto_now_add=True)

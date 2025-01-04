@@ -1,8 +1,5 @@
-import { translations } from "./language_pack.js";
+import { translations as trsl } from "./language_pack.js";
 import { fetchWithToken } from "./fetch_request.js";
-import { getLanguageCookie } from './fetch_request.js';
-import { loadPage } from "./app.js";
-import { setChatView } from "./chat_view.js";
 import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
 import { isAlphanumeric } from "./utils.js";
@@ -16,7 +13,7 @@ export async function sendDuelRequestFromGameRoom(roomName) {
 		try {
 			const wsUrl = `wss://${window.location.host}/ws/game-server/${gameId}/?token=${encodeURIComponent(token)}`;
 			console.log("Connecting to WebSocket:", wsUrl);
-			
+
 			const ws = new WebSocket(wsUrl);
 			state.gameSocket = ws;
 
@@ -30,11 +27,11 @@ export async function sendDuelRequestFromGameRoom(roomName) {
 				try {
 					const response = JSON.parse(event.data);
 					console.log("Message received:", response);
-					
+
 					if (response.type === 'room_creation') {
 						console.log('Room creation notice received');
 						console.log('Room name: ' + response.room_name);
-						
+
 						try {
 							const inviteResponse = await fetchWithToken(
 								'/api/chat/create-invitation/',
@@ -73,7 +70,7 @@ export async function sendDuelRequestFromGameRoom(roomName) {
 					action: 'create_private_match',
 				}));
 			};
-			
+
 		} catch (error) {
 			console.error("Error setting up WebSocket:", error);
 			reject(error);
@@ -102,13 +99,13 @@ export async function sendDuelRequestFromAlias(alias) {
 		} else {
 			const errorData = await response.json();
 			if (errorData.detail === "You are blocking this user") {
-				alert(`You are blocking this user`);
+				alert(`${trsl[state.language].blockingUser} ${alias}`);
 			} else if (errorData.detail === "This user is blocking you") {
-				alert(`this user is blocking you`);
+				alert(`${alias} ${trsl[state.language].blockedByUser}`);
 			} else if (errorData.detail === "You cannot create a private room with yourself.") {
-				alert("You cannot create a private room with yourself.");
+				alert(`${trsl[state.language].lonelyTest}`);
 			} else if (errorData.error === "User not found.") {
-				alert(`User not found`);
+				alert(`${trsl[state.language].user} ${alias} ${trsl[state.language].notFound}.`);
 			} else {
 				alert(`Failed to create private room for some mysterious reasons`);
 			}
@@ -121,9 +118,8 @@ export async function sendDuelRequestFromAlias(alias) {
 }
 
 export function confirmRemoveFriend(friendAlias) {
-	const currentLanguage = getLanguageCookie() ||  "en";
 	const confirmation = confirm(
-		`${translations[currentLanguage].validationRemovalFirst} ${friendAlias} ${translations[currentLanguage].validationRemovalSecond} ?`
+		`${trsl[state.language].validationRemovalFirst} ${friendAlias} ${trsl[state.language].validationRemovalSecond} ?`
 	);
 	if (confirmation) {
 		removeFriend(friendAlias);
@@ -211,7 +207,6 @@ export async function unblockUser(blockedUser) {
 }
 
 export async function blockUser(newBlockUsername) {
-	const currentLanguage = getLanguageCookie() ||  "en";
 	if (!isAlphanumeric(newBlockUsername)) {
 		return ;
 	}
@@ -223,14 +218,14 @@ export async function blockUser(newBlockUsername) {
 		data = await response.json();
 		if (!response.ok) {
 			if ( data.detail === 'this user is already blocked') {
-				alert(`${newBlockUsername} ${translations[currentLanguage].alreadyBlock}.`);
+				alert(`${newBlockUsername} ${trsl[state.language].alreadyBlock}.`);
 			} else if (data.detail === 'No CustomUser matches the given query.' ) {
-				alert(`${translations[currentLanguage].user} ${newBlockUsername} ${translations[currentLanguage].notFound}.`);
+				alert(`${trsl[state.language].user} ${newBlockUsername} ${trsl[state.language].notFound}.`);
 			} else if (data.detail === 'you cannot befriend yourself' ) {
-				alert(`${translations[currentLanguage].okSasuke}`);
+				alert(`${trsl[state.language].okSasuke}`);
 			}
 		} else {
-			alert(`${translations[currentLanguage].userblocked}`);
+			alert(`${trsl[state.language].user} ${newBlockUsername} ${trsl[state.language].userblocked}`);
 		}
 	} catch(error) {
 		console.log(error);
@@ -239,7 +234,6 @@ export async function blockUser(newBlockUsername) {
 }
 
 export async function addFriend(newfriend) {
-	const currentLanguage = getLanguageCookie() ||  "en";
 	if (!isAlphanumeric(newfriend)) {
 		return ;
 	}
@@ -251,20 +245,20 @@ export async function addFriend(newfriend) {
 		data = await response.json();
 		if (!response.ok) {
 			if (data.detail === 'Friend request was already sent.') {
-				alert(`${translations[currentLanguage].alreadySent}.`);
+				alert(`${trsl[state.language].alreadySent}.`);
 			} else if (data.detail === 'you are already friends with this user' ) {
-				alert(`${newfriend} ${translations[currentLanguage].alreadyFriend}.`);
+				alert(`${newfriend} ${trsl[state.language].alreadyFriend}.`);
 			} else if (data.detail === 'No CustomUser matches the given query.' ) {
-				alert(`${translations[currentLanguage].user} ${newfriend} ${translations[currentLanguage].notFound}.`);
+				alert(`${trsl[state.language].user} ${newfriend} ${trsl[state.language].notFound}.`);
 			} else if (data.detail === 'you cannot befriend yourself' ) {
-				alert(`${translations[currentLanguage].lonelyTest}`);
+				alert(`${trsl[state.language].lonelyTest}`);
 			} else if (data.detail === 'you are blocking this user' ) {
-				alert(`${newfriend} ${translations[currentLanguage].blockedByUser}`);
+				alert(`${newfriend} ${trsl[state.language].blockedByUser}`);
 			} else if (data.detail === 'this user is blocking you' ) {
-				alert(`${translations[currentLanguage].blockingUser} ${newfriend}`);
+				alert(`${trsl[state.language].blockingUser} ${newfriend}`);
 			}
 		} else {
-			alert(`${translations[currentLanguage].friendRequestSent}`);
+			alert(`${trsl[state.language].friendRequestSent}`);
 		}
 	} catch(error) {
 		console.log(error);
