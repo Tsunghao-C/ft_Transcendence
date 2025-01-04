@@ -48,7 +48,7 @@ class LogRequestMiddleware:
             except Exception as e:
                 print(f"Error updating user activity: {e}")
         else:
-            print("User is not authenticated")
+            print(f"User {request.user} is not authenticated")
 
         response = self.get_response(request)
         return response
