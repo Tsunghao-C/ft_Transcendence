@@ -101,7 +101,7 @@ services:
       - static_volume:/app/static
       - media_data:/home/app/pong-game/media
       - vault_shared_data:/vault/shared_data:ro
-      - logs_django:/home/app/pong-game/logs
+      - logs_django:/root/logs
     expose:
       - 8004
       - 8001
