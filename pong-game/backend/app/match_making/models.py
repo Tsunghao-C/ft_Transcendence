@@ -271,11 +271,12 @@ class LiveGames(models.Model):
 		self.p2.save()
 
 	def __save_results(self, outcome: int):
-		MatchResults.objects.create(
+		result = MatchResults.objects.create(
 			p1=self.p1,
 			p2=self.p2,
 			matchOutcome=outcome
 		)
+		result.save()
 
 	def matchEnd(self, outcome: int):
 		self.__update_mmrs(outcome)
@@ -329,5 +330,4 @@ class MatchMakingQueue(models.Model):
 	@classmethod
 	def _remove_players_from_queue(cls, p1, p2):
 		MatchMakingQueue.objects.filter(id__in=[p1.id, p2.id]).delete()
-
 	
