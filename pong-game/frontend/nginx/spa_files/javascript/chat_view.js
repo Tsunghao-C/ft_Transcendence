@@ -410,7 +410,6 @@ async function loadChatRoom(roomName, userAlias, roomType, roomNameDisplay = roo
 
 async function getOrCreatePrivateChatRoom(alias, userAlias, roomType) {
 
-	console.log("ZZZZZZ roomType is :", roomType);
 	try {
 		const response = await fetchWithToken(
 			'/api/chat/create-private/',
@@ -529,7 +528,7 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 	if (roomType === "public") {
 		loadChatRoom(aliasOrRoomToJoin, userAlias, roomType);
 	} else if (roomType == "tournament") {
-		loadChatRoom(aliasOrRoomToJoin, userAlias, roomType, "Tournament " + aliasOrRoomToJoin.split("_").slice(2));
+		loadChatRoom(aliasOrRoomToJoin, userAlias, roomType, trsl[state.language].tournament + " " + aliasOrRoomToJoin.split("_").slice(2));
 	} else if (roomType === "private"){
 		if (aliasOrRoomToJoin !== "") {
 				console.log("opening chat with", aliasOrRoomToJoin);
