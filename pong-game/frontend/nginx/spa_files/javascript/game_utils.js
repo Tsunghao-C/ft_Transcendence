@@ -326,8 +326,10 @@ const onmessage_methods = {
 	'game_start': start_game,
 	'game_update': update_game,
 	'game_over': set_game_over,
-	'error': log_error,
 	'join_error': join_error,
+	'game_aborted': display_game_aborted,
+	'already_in_game': display_already_ingame,
+	'error': log_error
 }
 
 async function log_notice(response) {
@@ -471,15 +473,95 @@ async function join_room(response) {
 }
 
 async function rejoin_room(response) {
-	console.log('Paused gameRoom found');
-	console.log('Rejoining room (Hardcoded rn XD)');
+	hideElem("create-match");
+	hideElem("join-queue");
+	hideElem("go-back");
+	console.log('Rejoin room query received by server');
 	roomId = response.room_name;
-	await state.gameSocket.send(JSON.stringify({
-		action: "rejoin_room",
-		response: true //change this from true to false and vice versa to test rejoining rooms
-	}));
-	console.log("Starting gameLoop directly in rejoin_room_query branch")
-	await startGame();
+	const promptText = document.createElement('p');
+	promptText.id = 'rejoin-prompt-text';
+	promptText.textContent = 'Ongoing game found, do you wish to rejoin?\n';
+	promptText.style.fontSize = '24px';
+    promptText.style.textAlign = 'center';
+    promptText.style.marginBottom = '20px';
+	const trueButton = document.createElement('button');
+	trueButton.id = 'rejoin-true-button';
+	trueButton.textContent = 'Rejoin game';
+	const falseButton = document.createElement('button');
+	falseButton.id = 'rejoin-false-button';
+	falseButton.textContent = 'Concede game';
+
+	trueButton.onclick = function(event) {
+		try {
+			console.log("Starting gameLoop directly in rejoin_room_query branch")
+			trueButton.disabled = true;
+			falseButton.disabled = true;
+			state.gameSocket.send(JSON.stringify({
+				action: "rejoin_room",
+				response: true
+			}));
+            promptText.parentNode.removeChild(promptText);
+            promptText.remove();
+			trueButton.parentNode.removeChild(trueButton);
+			trueButton.remove();
+			falseButton.parentNode.removeChild(falseButton);
+			falseButton.remove();
+			goBackButtonEventListener("game/");
+			startGame();
+		} catch (error) {
+			console.error('Error accepting to rejoin room:', error);
+		}
+	}
+	falseButton.onclick = function (event) {
+		try {
+			console.log("Refusing to rejoin ongoing gameRoom")
+			trueButton.disabled = true;
+			falseButton.disabled = true;
+			state.gameSocket.send(JSON.stringify({
+				action: "rejoin_room",
+				response: false
+			}));
+			showElem("create-match", "block");
+			showElem("join-queue", "block");
+			showElem("go-back", "block");
+            promptText.parentNode.removeChild(promptText);
+            promptText.remove();
+			trueButton.parentNode.removeChild(trueButton);
+			trueButton.remove();
+			falseButton.parentNode.removeChild(falseButton);
+			falseButton.remove();
+		} catch (error) {
+			console.error("Error when sending refusal to rejoin ongoing gameRoom: ", error);
+		}
+	}
+	const gameLobby = document.getElementById("game-lobby");
+	gameLobby.appendChild(promptText);
+	gameLobby.appendChild(trueButton);
+	gameLobby.appendChild(falseButton);
+}
+
+async function display_game_aborted() {
+	const promptText = document.createElement('p');
+	promptText.id = 'rejoin-prompt-text';
+	promptText.textContent = 'Error: Game was aborted. Please join another game.\n';
+	promptText.style.fontSize = '24px';
+    promptText.style.textAlign = 'center';
+    promptText.style.marginBottom = '20px';
+	const gameLobby = document.getElementById("game-lobby");
+	gameLobby.appendChild(promptText);
+}
+
+async function display_already_ingame() {
+	hideElem("create-match");
+	hideElem("join-queue");
+	const promptText = document.createElement('p');
+	promptText.id = 'rejoin-prompt-text';
+	promptText.textContent = 'Error: You are already connected to a game, please finish it or leave it.\n';
+	promptText.style.fontSize = '24px';
+    promptText.style.textAlign = 'center';
+    promptText.style.marginBottom = '20px';
+	const gameLobby = document.getElementById("game-lobby");
+	gameLobby.appendChild(promptText);
 }
 
 export async function connectWebSocket() {
@@ -535,7 +617,7 @@ export async function connectWebSocket() {
 async function startGame() {
 	try {
 		destroyReadyButton();
-		hideElem("ready-button");
+//		hideElem("ready-button");
 		showElem("game", "block");
 		showElem("go-back-EOG", "block");
 		hideClass("hrs");
