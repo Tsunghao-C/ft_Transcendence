@@ -145,9 +145,10 @@ class GameConsumer(AsyncWebsocketConsumer):
 				lobby = active_lobbies[lobby_id]
 				if lobby:
 					if lobby["game_type"]["is_local"] or len(lobby["players"]) == 1:
-						del lobby
+						del active_lobbies[lobby_id]
 						deleted_count = await sync_to_async(Message.objects.filter(game_room=lobby_id).delete)()
 						logger.info(f"Deleted {deleted_count} invitation(s) for game_lobby {self.assigned_room}")
+						break
 					else:
 						if self.user.id in lobby["players"]:
 							lobby["players"].remove(self.user.id)
@@ -534,16 +535,17 @@ class GameConsumer(AsyncWebsocketConsumer):
 				raise
 
 	async def check_duplicates_player(self):
-		logger.info(f"{self.user.id}: TA MERE LA PUTAIN DE TA RACE")
+		logger.info(f"{self.user.id}: searching for duplicates player in lobbies")
 		for stray_room_id, room_data in active_lobbies.items():
 			logger.info(f'{self.user.id}: {room_data["players"]}')
+			print(f"Room_data in check_duplicates_player: {room_data}")
 			if self.user.id in room_data["players"]:
-				return True
 				await self.send(json.dumps({
 				"type": "join_error",
 				"reason": "duplicates",
 				"message": "player is already in lobby",
 				}))
+				return False
 		return True
 
 
