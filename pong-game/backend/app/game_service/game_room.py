@@ -295,7 +295,7 @@ class GameRoom():
 			for player_id in self.players:
 				self.time_since_last_receive[player_id] = time.perf_counter()
 			while self.running:
-				logger.info(f'{self.room_id}: Checking pulse of players')
+				# logger.info(f'{self.room_id}: Checking pulse of players')
 				await self.check_pulse()
 				if self.missing_player:
 					if self.missing_player == 2 or self.server_order is ABORTED:
@@ -303,11 +303,11 @@ class GameRoom():
 						return ABORTED
 					logger.info(f'{self.room_id}: Missing player detected')
 				self.update_players()
-				logger.info(f'{self.room_id}: updated players')
+				# logger.info(f'{self.room_id}: updated players')
 				self.handle_player_collisions()
-				logger.info(f'{self.room_id}: updated collisions')
+				# logger.info(f'{self.room_id}: updated collisions')
 				self.update_ball()
-				logger.info(f'{self.room_id}: updated ball')
+				# logger.info(f'{self.room_id}: updated ball')
 				# Add AI logic
 				if self.ai_player:
 					ai_move = await self.ai_player.calculate_move(
@@ -318,12 +318,12 @@ class GameRoom():
 					)
 					await self.receive_player_input(self.right_player, ai_move)
 				if self.game_over or self.server_order is CONCEDE:
-					logger.info(f'{self.room_id}: preparing gameover')
+					# logger.info(f'{self.room_id}: preparing gameover')
 					await self.declare_winner(self.winner)
-					logger.info(f'{self.room_id}: done')
+					# logger.info(f'{self.room_id}: done')
 					return
 				await self.send_update()
-				logger.info(f'{self.room_id}: sent update to clients')
+				# logger.info(f'{self.room_id}: sent update to clients')
 				await asyncio.sleep(0.016)
 
 		except Exception as e:

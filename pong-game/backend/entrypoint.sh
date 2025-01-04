@@ -48,6 +48,7 @@ python manage.py migrate chat
 
 echo "Adding django crontab..."
 touch /var/log/cron.log
+chmod 666 /var/log/cron.log
 printenv | grep -Ev 'BASHOPTS|BASH_VERSINFO|EUID|PPID|SHELLOPTS|UID|LANG|PWD|GPG_KEY|_=' >> /etc/environment
 python manage.py crontab remove
 python manage.py crontab add || { echo "failed to add crontab"; exit 1; }

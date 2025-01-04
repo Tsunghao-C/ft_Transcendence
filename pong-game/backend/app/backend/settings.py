@@ -250,7 +250,7 @@ EMAIL_HOST_PASSWORD = email_credentials['EMAIL_HOST_PASS'] # Env
 
 LDB_UPDATE_TIMER = os.environ.get("LDB_UPDATE_TIMER", 15)
 CRONJOBS = [
-    (f'*/{LDB_UPDATE_TIMER} * * * *', 'game_service.tasks.update_leaderboard'),
+    (f'*/{LDB_UPDATE_TIMER} * * * *', 'game_service.tasks.update_leaderboard', '>> /var/log/cron.log'),
 	# ('*/1 * * * *', 'match_making.tasks.monitor_players'),
 ]
 
