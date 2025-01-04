@@ -105,7 +105,7 @@ in:
 	@if [ -z "$(filter-out $@,$(MAKECMDGOALS))" ]; then \
 		echo "Usage: make in <service-name>"; \
 	else \
-		docker compose -f pong-game/docker-compose.yml exec $(filter-out $@,$(MAKECMDGOALS)) sh; \
+		docker compose -f pong-game/docker-compose.yml exec $(filter-out $@,$(MAKECMDGOALS)) bash; \
 	fi
 
 %:

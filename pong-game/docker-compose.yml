@@ -167,11 +167,15 @@ services:
 # Prometheus / Grafana Stack
   prometheus:
     container_name: prometheus
-    image: prom/prometheus:v2.45.0
+    build:
+      context: ./monitoring/prometheus
+      dockerfile: Dockerfile
+    image: prometheus
+    # image: prom/prometheus:v2.45.0
     ports:
       - "9090:9090"   # only for development stage
     volumes:
-      - ./monitoring/prometheus:/etc/prometheus
+      # - ./monitoring/prometheus/conf:/etc/prometheus
       - prometheus_data:/prometheus
     networks:
       - monitoring_net
@@ -180,7 +184,7 @@ services:
       - node_exporter
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
+      test: ["CMD", "curl", "-k", "https://localhost:9090/-/healthy"]
       interval: 10s
       timeout: 3s
       retries: 3

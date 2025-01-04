@@ -9,6 +9,11 @@ rule_files:
 scrape_configs:
   # Scrape prometheus itself
   - job_name: 'prometheus'
+    scheme: https
+    # tls_config:
+    #   cert_file: /etc/prometheus/certs/prometheus.crt
+    #   key_file: /etc/prometheus/certs/prometheus.key
+    #   insecure_skip_verify: true
     static_configs:
       - targets: ['localhost:9090']
 

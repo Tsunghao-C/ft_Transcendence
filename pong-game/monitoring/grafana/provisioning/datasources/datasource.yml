@@ -4,8 +4,10 @@ datasources:
   - name: Prometheus
     type: prometheus
     access: proxy
-    url: http://prometheus:9090
+    url: https://prometheus:9090
+    jsonData:
+      tlsAuth: false
+      tlsSkipVerify: true
+      timeInterval: "15s"
     isDefault: true
     editable: true
-    jsonData:
-      timeInterval: "15s"
