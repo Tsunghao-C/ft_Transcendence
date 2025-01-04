@@ -390,13 +390,14 @@ async function set_player1(response) {
 					roomId: roomId,
 				}), 'POST');
 				if (!response.ok) {
-					if (response.detail === "You are blocking this user") {
+					const error = await response.json();
+					if (error.detail === "You are blocking this user.") {
 						alert(`${trsl[state.language].blockingUser} ${aliasToInvite}`);
-					} else if (response.detail === "This user is blocking you") {
+					} else if (error.detail === "This user is blocking you.") {
 						alert(`${aliasToInvite} ${trsl[state.language].blockedByUser}`);
-					} else if (response.detail === "You cannot create a private room with yourself.") {
+					} else if (error.detail === "You cannot invite yourself.") {
 						alert(`${trsl[state.language].lonelyTest}`);
-					} else if (response.error === "User not found.") {
+					} else if (error.error === "User not found.") {
 						alert(`${trsl[state.language].user} ${aliasToInvite} ${trsl[state.language].notFound}.`);
 					} else {
 						alert(`Failed to create private room for some mysterious reasons`);

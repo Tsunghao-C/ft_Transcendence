@@ -124,7 +124,7 @@ export const translations = {
 		addBlock: "Add to Block List",
 		addFriendButton: "Add Friend",
 		removeFriend: "Remove Friend",
-		prompAddBlock: "Enter username to block",
+		promptAddBlock: "Enter username to block",
 		promptAddFriend: "Enter the username of the friend you want to add",
 		//manage_social
 		validationRemovalFirst: "Are you sure you want to remove",
@@ -219,7 +219,7 @@ export const translations = {
 
 	fr: {
 		//Login_html
-		loginInput: "Connexion",
+		loginInput: "Identifiant",
 		registerTitle: "S'inscrire",
 		chooseLogin: "Choisissez un identifiant",
 		alias: "Alias",
@@ -342,7 +342,7 @@ export const translations = {
 		addBlock: "Ajouter à la liste des bloqués",
 		addFriendButton: "Ajouter un ami",
 		removeFriend: "Supprimer un ami",
-		prompAddBlock: "Entrez le nom d'utilisateur à bloquer",
+		promptAddBlock: "Entrez le nom d'utilisateur à bloquer",
 		promptAddFriend: "Entrez le nom d'utilisateur de l'ami que vous souhaitez ajouter",
 		//manage_social
 		validationRemovalFirst: "Êtes-vous sûr de vouloir supprimer",
@@ -559,7 +559,7 @@ export const translations = {
 		addBlock: "Adicionar à lista de bloqueados",
 		addFriendButton: "Adicionar amigo",
 		removeFriend: "Remover amigo",
-		prompAddBlock: "Digite o nome de usuário para bloquear",
+		promptAddBlock: "Digite o nome de usuário para bloquear",
 		promptAddFriend: "Digite o nome de usuário do amigo que você deseja adicionar",
 		//manage_social
 		validationRemovalFirst: "Tem certeza de que deseja remover",

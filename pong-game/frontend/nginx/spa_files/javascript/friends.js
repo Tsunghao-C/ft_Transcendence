@@ -232,7 +232,7 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 	}
 
 	addBlockButton.addEventListener("click", async () => {
-		const newBlockUsername = prompt(`${trsl[state.language].prompAddBLock}:`);
+		const newBlockUsername = prompt(`${trsl[state.language].promptAddBlock}:`);
 		if (newBlockUsername) {
 			try {
 				await blockUser(newBlockUsername);
