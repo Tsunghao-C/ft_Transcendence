@@ -20,13 +20,13 @@ timeout=0
 max_timeout=120
 
 until [ -f "${VAULT_TOKEN_FILE}" ] && [ -s "${VAULT_TOKEN_FILE}" ] && grep -q "[a-zA-Z0-9]" "${VAULT_TOKEN_FILE}"; do
-    if [ $timeout -ge $max_timeout ]; then
-        echo "Timeout waiting for Vault token file fater ${max_timeout} seconds"
-        exit 1
-    fi
-    echo "Waiting for Vault token file to be ready..."
-    sleep 5
-    timeout=$((timeout + 5))
+	if [ $timeout -ge $max_timeout ]; then
+		echo "Timeout waiting for Vault token file fater ${max_timeout} seconds"
+		exit 1
+	fi
+	echo "Waiting for Vault token file to be ready..."
+	sleep 5
+	timeout=$((timeout + 5))
 done
 echo "Vault token file is ready, proceeding with migrations"
 
@@ -45,6 +45,22 @@ python manage.py migrate user_service
 python manage.py migrate game_service
 python manage.py migrate match_making
 python manage.py migrate chat
+
+python manage.py shell << END
+from django.contrib.auth import get_user_model
+User = get_user_model()
+if not User.objects.filter(email='benjamin.h.thomas1@gmail.com').exists():
+	User.objects.create_superuser(
+		username='admin',
+		email='benjamin.h.thomas1@gmail.com',
+		password='admin',
+		alias='admin',
+		is_admin=True
+	)
+	print('Superuser created successfully')
+else:
+	print('Superuser already exists')
+END
 
 echo "Adding django crontab..."
 touch /var/log/cron.log
