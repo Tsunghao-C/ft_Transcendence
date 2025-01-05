@@ -253,6 +253,8 @@ class sendFriendRequestView(APIView):
 	def post(self, request):
 		from_user = request.user
 		to_user = get_object_or_404(CustomUser, alias=request.data.get("toAlias"))
+		if to_user.is_admin:
+			return Response({"detail": "user not found"}, status=400)
 		if from_user == to_user:
 			return Response({"detail": "you cannot befriend yourself"}, status=400)
 		if from_user.is_friend(to_user):
@@ -322,6 +324,8 @@ class blockUserView(APIView):
 	def post(self, request):
 		user = request.user
 		otherUser = get_object_or_404(CustomUser, alias=request.data.get("alias"))
+		if otherUser.is_admin:
+			return Response({"detail": "invalid choice"}, status=400)
 		if user.has_blocked(otherUser):
 			return Response({"detail": "this user is already blocked"}, status=400)
 		if user == otherUser:
@@ -388,6 +392,8 @@ class getProfileView(APIView):
 				{"error": "Either 'id' 'alias' or 'own' must be provided."},
 				status=400
 			)
+		if not user.is_admin and profile.is_admin:
+			return Response({"error": "You cannot view this profile"}, status=400)
 		user = request.user
 		# Still to be added : match history, rank and a way to manage the button add friend, request sent, request pending but not necessary
 		profileData = {
