@@ -89,8 +89,8 @@ class SaveMatchResults(APIView):
 
 class BanPlayer(APIView):
 	def post(self, request):
-		if not request.user.is_superuser:
-			return Response({"error":"Only super users can ban players"}, status=400)
+		if not request.user.is_admin:
+			return Response({"error":"Only admins can ban players"}, status=400)
 		id = request.data.get("playerId")
 		user = get_object_or_404(CustomUser, id=id)
 		if user.is_banned:
@@ -101,8 +101,8 @@ class BanPlayer(APIView):
 
 class UnbanPlayer(APIView):
 	def post(self, request):
-		if not request.user.is_superuser:
-			return Response({"error":"Only super users can unban players"}, status=400)
+		if not request.user.is_admin:
+			return Response({"error":"Only admins can unban players"}, status=400)
 		id = request.data.get("playerId")
 		user = get_object_or_404(CustomUser, id=id)
 		if not user.is_banned:
