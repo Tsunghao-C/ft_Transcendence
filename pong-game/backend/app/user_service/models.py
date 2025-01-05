@@ -13,11 +13,6 @@ def pfpUploadPath(instance, fname):
 	full_path = os.path.join('profile_images', fname)
 	print(full_path)
 	return full_path
-	ext = fname.split('.')[-1]
-	fname = f"{uuid4().hex}.{ext}" # 1 / 1bn chance of getting a duplicate
-	full_path = os.path.join('profile_images', fname)
-	print(full_path)
-	return full_path
 
 class CustomUser(AbstractUser):
 	class Language(models.TextChoices):
