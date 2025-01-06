@@ -121,9 +121,7 @@ export async function loadPage(page) {
 	try {
 		response = await fetchWithToken('/api/user/getuser/');
 		data = await response.json();
-		console.log("User data: ", data);
 		setLanguageCookie(data.language);
-		console.log(response)
 	} catch (error) {
 		console.log(error)
 		if (page !== "login" && page !== "register") {
