@@ -74,6 +74,9 @@ function setupRegisterFormEventHandler() {
 						showError(`${trsl[state.language].emailTaken}`);
 					}
 				}
+				else if (data.password) {
+					showError(data.password);
+				}
 				else {
 					showError(trsl[state.language].registerFailed)
 				}
