@@ -58,7 +58,7 @@ class updateUsernameView(APIView):
 class BanPlayer(APIView):
 	def post(self, request):
 		if not request.user.is_admin:
-			return Response({"error":"Only admins can ban players"}, status=403)
+			return Response({"error":"Only admins can ban players"}, status=400)
 		alias = request.data.get("playerAlias")
 		user = get_object_or_404(CustomUser, alias=alias)
 		if user.is_banned:
@@ -70,7 +70,7 @@ class BanPlayer(APIView):
 class UnbanPlayer(APIView):
 	def post(self, request):
 		if not request.user.is_admin:
-			return Response({"error":"Only admins can unban players"}, status=403)
+			return Response({"error":"Only admins can unban players"}, status=400)
 		alias = request.data.get("playerAlias")
 		user = get_object_or_404(CustomUser, alias=alias)
 		if not user.is_banned:
