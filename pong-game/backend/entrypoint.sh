@@ -48,13 +48,14 @@ python manage.py migrate chat
 
 python manage.py shell << END
 from django.contrib.auth import get_user_model
+from vault_helper import vault_client
 User = get_user_model()
-email=os.environ.get('PONG_ADMIN_EMAIL', 'benjamin.h.thomas1@gmail.com')
+email=vault_client.get_database_credentials("PONG_ADMIN_EMAIL")
 if not User.objects.filter(email=email).exists():
 	User.objects.create_superuser(
-		username=os.environ.get('PONG_ADMIN_USER', 'notadminAAAAA'),
+		username=vault_client.get_database_credentials("PONG_ADMIN_USER"),
 		email=email,
-		password=os.environ.get('PONG_ADMIN_PASS', 'notadminAAAAA'),
+		password=vault_client.get_database_credentials("PONG_ADMIN_PASS"),
 		alias='admin',
 		is_admin=True
 	)
