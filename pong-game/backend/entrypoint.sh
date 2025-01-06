@@ -49,11 +49,12 @@ python manage.py migrate chat
 python manage.py shell << END
 from django.contrib.auth import get_user_model
 User = get_user_model()
-if not User.objects.filter(email='benjamin.h.thomas1@gmail.com').exists():
+email=os.environ.get('PONG_ADMIN_EMAIL', 'benjamin.h.thomas1@gmail.com')
+if not User.objects.filter(email=email).exists():
 	User.objects.create_superuser(
-		username='admin',
-		email='benjamin.h.thomas1@gmail.com',
-		password='admin',
+		username=os.environ.get('PONG_ADMIN_USER', 'notadminAAAAA'),
+		email=email,
+		password=os.environ.get('PONG_ADMIN_PASS', 'notadminAAAAA'),
 		alias='admin',
 		is_admin=True
 	)

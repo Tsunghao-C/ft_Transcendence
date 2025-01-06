@@ -123,6 +123,8 @@ services:
       DEBUG: "1"
       POSTGRES_PORT: "5434"
       LDB_UPDATE_TIMER: "1"
+    env_file:
+      - .env
     restart: unless-stopped
 
   # Database Layer
