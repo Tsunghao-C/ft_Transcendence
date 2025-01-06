@@ -290,7 +290,7 @@ body {
 .input-and-button-line button {
 	width: auto !important;
 	padding: 0;
-	font-size: 0.7rem;
+	font-size: 0.7rem !important;
 	margin: 0px !important;
 	box-sizing: border-box;
 	white-space: nowrap;
