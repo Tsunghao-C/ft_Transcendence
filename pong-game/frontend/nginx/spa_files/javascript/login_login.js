@@ -82,7 +82,6 @@ function twoFAFormEventHandler() {
 				if (data.detail === "2FA code validated") {
 					document.cookie = `accessToken=${data.access}; path=/; secure; SameSite=Strict`;
 					document.cookie = `refreshToken=${data.refresh}; path=/; secure; SameSite=Strict`;
-					// here we should store that JWT token in a cookie it is safer i think
 					window.location.hash = "home";
 				} else {
 					showError(trsl[state.language].twoFactorFailed);
