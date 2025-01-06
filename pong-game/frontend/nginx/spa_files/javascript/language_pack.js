@@ -141,7 +141,7 @@ export const translations = {
 		userblocked: "has been blocked",
 		colorMode: "Color Mode",
 		blockedByUser: "is blocking you",
-		blockingUser: "you are blocking",
+		blockingUser: "You have blocked",
 		alreadySent: "Friend request was already sent.",
 		//404
 		error404Title: "404",
