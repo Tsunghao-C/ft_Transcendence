@@ -162,6 +162,12 @@ path "secret/data/pong-game/jwt" {
     capabilities = ["read"]
 }
 EOF
+
+vault policy write django-admin-policy - <<EOF
+path "secret/data/pong-game/admin" {
+    capabilities = ["read"]
+}
+EOF
 echo "${BLUE}-------------------------------------------------------------${DFT}"
 
 # Create a token for Django with this limited policy
@@ -170,6 +176,7 @@ DJANGO_TOKEN=$(vault token create \
     -policy="django-db-policy" \
     -policy="django-email-policy" \
     -policy="django-jwt-policy" \
+    -policy="django-admin-policy" \
     -format=json | jq -r '.auth.client_token')
 echo "${BLUE}-------------------------------------------------------------${DFT}"
 
