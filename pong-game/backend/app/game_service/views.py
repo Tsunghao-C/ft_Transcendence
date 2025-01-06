@@ -48,8 +48,8 @@ class getLeaderBoardView(APIView):
 		page = int(request.query_params.get("page", 1))
 
 		leaderboard = LeaderBoard.objects.all()
-		# if search_query:
-			# leaderboard = leaderboard.filter(player__alias__icontains=search_query)
+		if search_query:
+			leaderboard = leaderboard.filter(player__alias__icontains=search_query)
 
 		if not leaderboard.exists():
 			return Response({"detail": "no leaderboard exists."}, status=200)
