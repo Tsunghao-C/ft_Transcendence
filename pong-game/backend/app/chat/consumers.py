@@ -101,6 +101,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 	async def receive(self, text_data):
 		text_data_json = json.loads(text_data)
 		message = text_data_json["message"]
+		message = ''.join([x for x in message if x not in ["<", ">"]])
 		alias = text_data_json.get("alias", "anon")
 		time = text_data_json.get("time", "unknown time")
 
