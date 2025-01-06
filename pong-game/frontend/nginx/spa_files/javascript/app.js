@@ -123,7 +123,9 @@ export async function loadPage(page) {
 		data = await response.json();
 		console.log("User data: ", data);
 		setLanguageCookie(data.language);
+		console.log(response)
 	} catch (error) {
+		console.log(error)
 		if (page !== "login" && page !== "register") {
 			window.location.hash = "login";
 			return;
