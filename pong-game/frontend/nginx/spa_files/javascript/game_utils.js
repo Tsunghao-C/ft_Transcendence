@@ -558,6 +558,7 @@ async function display_game_aborted() {
 }
 
 async function display_already_ingame() {
+	console.log("received already in game notice from server");
 	hideElem("create-match");
 	hideElem("join-queue");
     hideElem("easy");
