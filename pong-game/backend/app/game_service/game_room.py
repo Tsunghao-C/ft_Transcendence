@@ -220,7 +220,7 @@ class GameRoom():
 			if self.ball.x - self.ball.radius < 0:
 				logger.info(f'{self.room_id}: player {self.right_player} scored')
 				self.players[self.right_player].score += 1
-				if self.players[self.right_player].score == 5: #Edit this to extend the score before gameover is called
+				if self.players[self.right_player].score == 50: #Edit this to extend the score before gameover is called
 					self.winner = self.right_player
 					self.game_over = True
 				self.ball.x = CANVAS_WIDTH * 0.7
@@ -228,7 +228,7 @@ class GameRoom():
 			else:
 				logger.info(f'{self.room_id}: player {self.left_player} scored')
 				self.players[self.left_player].score += 1
-				if self.players[self.left_player].score == 5: #Same here
+				if self.players[self.left_player].score == 50: #Same here
 					self.game_over = True
 				self.ball.x = CANVAS_WIDTH * 0.3
 				self.ball.y = CANVAS_WIDTH * 0.5
