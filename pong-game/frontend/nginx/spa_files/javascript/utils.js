@@ -1,7 +1,9 @@
 export function hideElem(elemId) {
 	const elem = document.getElementById(elemId);
-    if (!elem)
+    if (!elem) {
+        console.log("ShowElem: elem is null: ", elemId);
         return;
+    }
 	elem.style.display = "none";
 }
 
@@ -14,8 +16,11 @@ export function hideClass(className) {
 
 export function showElem(elemId, display) {
 	const elem = document.getElementById(elemId);
-	if (!elem)
+	if (!elem) {
+        console.log("ShowElem: elem is null: ", elemId);
+        console.trace("Trace: ");
 		return;
+    }
 	elem.style.display = display;
 }
 

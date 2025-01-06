@@ -125,10 +125,12 @@ class GameConsumer(AsyncWebsocketConsumer):
 					index = player_ids.index(self.user.id)
 					room_data["player_data"]["connection"][index] = self
 					self.assigned_room = stray_room_id
+					player_sides = [room_data['room_data'].left_player, room_data['room_data'].right_player]
 					await self.send(json.dumps({
 								"type": "rejoin_room_query",
 								"message": "stray game room found, rejoin?",
-								"room_name": stray_room_id
+								"room_name": stray_room_id,
+                                "players": player_sides
 								}))
 					logger.info(f"{self.user.id}: sent rejoin notice to client")
 					return True
