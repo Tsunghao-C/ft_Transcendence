@@ -1,18 +1,19 @@
-all: certs go check
+all: go check
 
 certs:
 	export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/ && \
 	chmod +x pong-game/monitoring/elk/create-certs.sh && \
 	./pong-game/monitoring/elk/create-certs.sh
 
-go: build run
+go: certs build
 
 build:
 	cp .env.example .env
-	docker compose -f docker-compose.yml build
+	docker compose -f docker-compose.yml up --build -d
 
 run:
-	docker compose -f docker-compose.yml up -d
+	cp .env.example .env
+	docker compose -f docker-compose.yml up --build
 
 status:
 	docker compose -f docker-compose.yml ps
