@@ -1,0 +1,28 @@
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+
+rule_files:
+  - "alert.rules"
+
+scrape_configs:
+  # Scrape prometheus itself
+  - job_name: 'prometheus'
+    scheme: https
+    tls_config:
+      cert_file: /etc/prometheus/certs/prometheus.crt
+      key_file: /etc/prometheus/certs/prometheus.key
+      insecure_skip_verify: true
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Scrape hardware performance in docker env
+  - job_name: 'node_exporter'
+    static_configs:
+      - targets: ['node_exporter:9100']
+
+  - job_name: 'django'
+    static_configs:
+      - targets: ['django:8004']
+    metrics_path: '/metrics/'
