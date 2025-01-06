@@ -19,10 +19,16 @@ scrape_configs:
 
   # Scrape hardware performance in docker env
   - job_name: 'node_exporter'
+    scheme: http
+    tls_config:
+      insecure_skip_verify: true
     static_configs:
       - targets: ['node_exporter:9100']
 
   - job_name: 'django'
+    scheme: 'http'
+    tls_config:
+      insecure_skip_verify: true
     static_configs:
       - targets: ['django:8004']
     metrics_path: '/metrics/'

@@ -21,7 +21,7 @@ RUN mkdir -p /etc/prometheus/certs && \
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
     -keyout /etc/prometheus/certs/prometheus.key \
     -out /etc/prometheus/certs/prometheus.crt \
-    -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost"
+    -subj "/C=US/ST=State/L=City/O=Organization/CN=prometheus"
 
 RUN useradd -r -u 1000 prometheus-user && \
     chown -R prometheus-user:prometheus-user /etc/prometheus && \

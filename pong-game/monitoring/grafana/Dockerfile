@@ -22,7 +22,7 @@ RUN mkdir -p /etc/grafana/certs && \
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
     -keyout /etc/grafana/certs/grafana.key \
     -out /etc/grafana/certs/grafana.crt \
-    -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost"
+    -subj "/C=US/ST=State/L=City/O=Organization/CN=grafana"
 
 RUN useradd -r -u 1000 grafana-user && \
     chown -R grafana-user:grafana-user /etc/grafana/certs && \
