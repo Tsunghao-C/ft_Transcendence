@@ -34,7 +34,7 @@ services:
   vault:
     container_name: vault
     build:
-      context: ./security/vault
+      context: pong-game/security/vault
       dockerfile: Dockerfile
     cap_add:
       - IPC_LOCK
@@ -61,10 +61,10 @@ services:
   nginx:
     container_name: nginx
     build:
-      context: ./frontend/nginx
+      context: pong-game/frontend/nginx
       dockerfile: Dockerfile
     volumes:
-      - ./frontend/nginx/spa_files:/usr/share/nginx/html
+      - ./pong-game/frontend/nginx/spa_files:/usr/share/nginx/html
       - static_volume:/app/static:ro
       - logs_nginx:/var/log/nginx
       # - logs_modsec:/var/log/modsec
@@ -94,7 +94,7 @@ services:
   django:
     container_name: django
     build:
-      context: ./backend
+      context: pong-game/backend
       dockerfile: Dockerfile
     image: django
     pull_policy: never
@@ -168,7 +168,7 @@ services:
   prometheus:
     container_name: prometheus
     build:
-      context: ./monitoring/prometheus
+      context: pong-game/monitoring/prometheus
       dockerfile: Dockerfile
     image: prometheus
     # image: prom/prometheus:v2.45.0
@@ -194,7 +194,7 @@ services:
   grafana:
     container_name: grafana
     build:
-      context: ./monitoring/grafana
+      context: pong-game/monitoring/grafana
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
@@ -206,7 +206,7 @@ services:
       - GF_SERVER_CERT_KEY=/etc/grafana/certs/grafana.key
     volumes:
       - grafana_certs:/etc/grafana/certs
-      - ./monitoring/grafana/provisioning:/usr/share/grafana/provisioning
+      - ./pong-game/monitoring/grafana/provisioning:/usr/share/grafana/provisioning
       - grafana_data:/var/lib/grafana
     networks:
       - monitoring_net
@@ -218,7 +218,7 @@ services:
   node_exporter:
     container_name: node_exporter
     build:
-      context: ./monitoring/node_exporter
+      context: pong-game/monitoring/node_exporter
       dockerfile: Dockerfile
     networks:
       - monitoring_net
@@ -257,9 +257,9 @@ services:
       - xpack.security.http.ssl.certificate=/usr/share/elasticsearch/config/certs/elastic-http.crt
       - xpack.security.http.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca.crt
     volumes:
-      - ./monitoring/elk/certs:/usr/share/elasticsearch/config/certs:ro
+      - ./pong-game/monitoring/elk/certs:/usr/share/elasticsearch/config/certs:ro
       - es_data:/usr/share/elasticsearch/data
-      - ./monitoring/elk/elasticsearch/setup:/setup
+      - ./pong-game/monitoring/elk/elasticsearch/setup:/setup
     entrypoint: >
       sh -c '
         /usr/local/bin/docker-entrypoint.sh &
@@ -286,9 +286,9 @@ services:
     container_name: kibana
     image: docker.elastic.co/kibana/kibana:${ELASTIC_STACK_VERSION}
     volumes:
-      - ./monitoring/elk/certs:/usr/share/kibana/config/certs:ro
-      - ./monitoring/elk/kibana/dashboards:/usr/share/kibana/dashboards
-      - ./monitoring/elk/kibana/setup:/usr/share/kibana/setup
+      - ./pong-game/monitoring/elk/certs:/usr/share/kibana/config/certs:ro
+      - ./pong-game/monitoring/elk/kibana/dashboards:/usr/share/kibana/dashboards
+      - ./pong-game/monitoring/elk/kibana/setup:/usr/share/kibana/setup
     ports:
       - "5601:5601" # Only external access point for ELK
     environment:
@@ -329,10 +329,10 @@ services:
     container_name: logstash
     image: docker.elastic.co/logstash/logstash:${ELASTIC_STACK_VERSION}
     volumes:
-      - ./monitoring/elk/logstash/docker-entrypoint.sh:/entrypoint.sh:ro
-      - ./monitoring/elk/certs:/usr/share/logstash/config/certs:ro
-      - ./monitoring/elk/logstash/config/logstash.yml:/tmp/logstash.yml:ro
-      - ./monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - ./pong-game/monitoring/elk/logstash/docker-entrypoint.sh:/entrypoint.sh:ro
+      - ./pong-game/monitoring/elk/certs:/usr/share/logstash/config/certs:ro
+      - ./pong-game/monitoring/elk/logstash/config/logstash.yml:/tmp/logstash.yml:ro
+      - ./pong-game/monitoring/elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
     entrypoint: ["/bin/bash", "/entrypoint.sh"]
     environment:
       - LS_JAVA_OPTS=-Xmx256m -Xms256m
@@ -360,8 +360,8 @@ services:
     image: docker.elastic.co/beats/filebeat:${ELASTIC_STACK_VERSION}
     user: root  # Required to read logs
     volumes:
-      - ./monitoring/elk/certs:/usr/share/filebeat/certs:ro
-      - ./monitoring/elk/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - ./pong-game/monitoring/elk/certs:/usr/share/filebeat/certs:ro
+      - ./pong-game/monitoring/elk/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
       # Mount all log directories
       - logs_nginx:/var/log/nginx
       # - logs_modsec:/var/log/modsec
@@ -384,4 +384,4 @@ services:
 
 configs:
   env_file:
-    file: ./.env
+    file: .env

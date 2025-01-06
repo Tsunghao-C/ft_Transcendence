@@ -8,23 +8,23 @@ certs:
 go: build run
 
 build:
-	cp pong-game/.env.example pong-game/.env
-	docker compose -f pong-game/docker-compose.yml build
+	cp .env.example .env
+	docker compose -f docker-compose.yml build
 
 run:
-	docker compose -f pong-game/docker-compose.yml up -d
+	docker compose -f docker-compose.yml up -d
 
 status:
-	docker compose -f pong-game/docker-compose.yml ps
+	docker compose -f docker-compose.yml ps
 
 stop:
-	docker compose -f pong-game/docker-compose.yml stop
+	docker compose -f docker-compose.yml stop
 
 start:
-	docker compose -f pong-game/docker-compose.yml start
+	docker compose -f docker-compose.yml start
 
 down:
-	docker compose -f pong-game/docker-compose.yml down
+	docker compose -f docker-compose.yml down
 
 update:
 	@if [ -z "$(filter-out $@,$(MAKECMDGOALS))" ]; then \
@@ -33,18 +33,18 @@ update:
 	fi
 	@container="$(filter-out $@,$(MAKECMDGOALS))"; \
 	echo "Updating container: $$container"; \
-	docker compose -f pong-game/docker-compose.yml stop $$container; \
-	docker compose -f pong-game/docker-compose.yml rm -f $$container; \
-	docker compose -f pong-game/docker-compose.yml build $$container; \
-	docker compose -f pong-game/docker-compose.yml up -d $$container; \
+	docker compose -f docker-compose.yml stop $$container; \
+	docker compose -f docker-compose.yml rm -f $$container; \
+	docker compose -f docker-compose.yml build $$container; \
+	docker compose -f docker-compose.yml up -d $$container; \
 	echo "Update complete for $$container"
 
 check:
 	# wait 10 seconds for sevices to initialize
 	sleep 10
 	# Check if the application container is running successfully
-	@all_containers=$$(docker compose -f pong-game/docker-compose.yml ps -a --format '{{.Name}}'); \
-	running_containers=$$(docker compose -f pong-game/docker-compose.yml ps --format '{{.Name}}'); \
+	@all_containers=$$(docker compose -f docker-compose.yml ps -a --format '{{.Name}}'); \
+	running_containers=$$(docker compose -f docker-compose.yml ps --format '{{.Name}}'); \
 	for container in $$all_containers; do \
 		if ! echo "$$running_containers" | grep -q "$$container"; then \
 			echo "\033[0;31mError: $$container is not running!\033[0m"; \
@@ -84,9 +84,9 @@ clean:
 	docker builder prune --force         # clear build cache
 	docker image prune --force           # clear dangling images
 	docker system prune --force --volumes  # cleanup unused resources
-	docker compose -f pong-game/docker-compose.yml down -v --remove-orphans
+	docker compose -f docker-compose.yml down -v --remove-orphans
 	rm -rf pong-game/monitoring/elk/certs
-	rm pong-game/.env
+	rm .env
 
 re: clean all
 
@@ -105,7 +105,7 @@ in:
 	@if [ -z "$(filter-out $@,$(MAKECMDGOALS))" ]; then \
 		echo "Usage: make in <service-name>"; \
 	else \
-		docker compose -f pong-game/docker-compose.yml exec $(filter-out $@,$(MAKECMDGOALS)) bash; \
+		docker compose -f docker-compose.yml exec $(filter-out $@,$(MAKECMDGOALS)) bash; \
 	fi
 
 %:
