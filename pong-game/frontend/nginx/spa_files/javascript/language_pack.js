@@ -338,6 +338,8 @@ export const translations = {
 		block: "Bloquer",
 		removeFriend: "Supprimer de la liste d'amis",
 		unblock: "Débloquer",
+		ban: "ban",
+		unban: "unban",
 		//leaderboard
 		noData: "Aucune donnée disponible",
 		//home
@@ -566,6 +568,8 @@ export const translations = {
 		block: "Bloquear",
 		removeFriend: "Remover da lista de amigos",
 		unblock: "Desbloquear",
+		ban: "ban",
+		unban: "unban",
 		//leaderboard
 		noData: "Sem dados disponíveis",
 		//home
