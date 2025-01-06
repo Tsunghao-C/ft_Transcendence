@@ -50,12 +50,13 @@ python manage.py shell << END
 from django.contrib.auth import get_user_model
 from vault_helper import vault_client
 User = get_user_model()
-email=vault_client.get_database_credentials("PONG_ADMIN_EMAIL")
+admin_credentials = vault_client.get_database_credentials("admin")
+email=admin_credentials['PONG_ADMIN_EMAIL']
 if not User.objects.filter(email=email).exists():
 	User.objects.create_superuser(
-		username=vault_client.get_database_credentials("PONG_ADMIN_USER"),
+		username=admin_credentials['PONG_ADMIN_USER'],
 		email=email,
-		password=vault_client.get_database_credentials("PONG_ADMIN_PASS"),
+		password=admin_credentials['PONG_ADMIN_PASS'],
 		alias='admin',
 		is_admin=True
 	)
