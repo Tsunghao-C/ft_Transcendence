@@ -101,7 +101,6 @@ function setChatViewHtml(contentContainer) {
 						<div id="chat-content-bottom">
 							<input class="message-input" id="message-input" type="text" placeholder="${trsl[state.language].typeMessage}">
 							<button class="send-message" id="send-message">${trsl[state.language].send}</button>
-							<button id="send-public-invite">${trsl[state.language].play}</button>
 						</div>
 					</div>
 				</div>
@@ -236,6 +235,15 @@ function startPrivateChatEventListener() {
 			window.location.hash = "login";
 		}
 	})
+
+	const recipientUser = document.getElementById("recipientUser");
+	recipientUser.addEventListener("keydown", (event) => {
+		if (event.key === "Enter") {
+			event.preventDefault();
+			const button = document.getElementById("start-private-chat");
+			button.click();
+		}
+	});
 }
 
 function createOrJoinRoomButtonEventListener() {
@@ -268,6 +276,16 @@ function createOrJoinRoomButtonEventListener() {
 			showError("Room name is empty", "public");
 		}
 	});
+
+	const roomNameInInput = document.getElementById("room-name");
+	roomNameInInput.addEventListener("keydown", (event) => {
+		if (event.key === "Enter") {
+			console.log("JOIN PUBLIC ROOM ENTER KEY HAS BEEN PRESSED");
+			event.preventDefault();
+			const button = document.getElementById("create-public-room");
+			button.click();
+		}
+	});
 }
 
 function roomButtonsEventListener() {
@@ -293,8 +311,6 @@ function backButtonEventListener() {
 
 function sendMessageEventListener(userAlias) {
 	const sendButtons = document.querySelectorAll(".send-message");
-	const messageInputs = document.querySelectorAll(".message-input");
-
 	sendButtons.forEach((button) => {
 		button.addEventListener("click", async () => {
 			console.log("in SendMessage");
@@ -313,6 +329,7 @@ function sendMessageEventListener(userAlias) {
 		});
 	});
 
+	const messageInputs = document.querySelectorAll(".message-input");
 	messageInputs.forEach((input) => {
 		input.addEventListener("keydown", (event) => {
 			if (event.key === "Enter") {
@@ -517,6 +534,7 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 	setPmList(roomData);
 	setRoomsList(roomData);
 	setTournamentList(roomData);
+
 	// Event listeners - In list display
 	startPrivateChatEventListener();
 	createOrJoinRoomButtonEventListener();
