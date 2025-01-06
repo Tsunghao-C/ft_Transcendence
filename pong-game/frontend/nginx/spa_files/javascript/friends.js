@@ -18,8 +18,6 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 	let blockData;
 	let response;
 	try {
-		// console.log("friendRequest data: ", friendRequest);
-		// console.log("sentFriendRequest data: ", sentFriendRequest);
 
 	contentContainer.innerHTML = `
 		<div class="friends-view">
@@ -39,7 +37,10 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 			</ul>
 			<div class="tab-content">
 				<div class="tab-pane fade show active" id="friends" role="tabpanel" aria-labelledby="friends-tab">
-					<button id="addFriendButton" class="btn btn-success mb-3">${trsl[state.language].addNewFriend}</button>
+					<div class="input-and-button-line">
+						<input id="addFriendInput" placeholder="${trsl[state.language].enterUsername}">
+						<button id="addFriendButton" class="btn btn-success mb-3">${trsl[state.language].addNewFriend}</button>
+					</div>
 					<ul id="friendsList" class="list-group"></ul>
 				</div>
 				<div class="tab-pane fade" id="friend-requests" role="tabpanel" aria-labelledby="friend-requests-tab">
@@ -49,7 +50,10 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 					<ul id="sentFriendRequestList" class="list-group"></ul>
 				</div>
 				<div class="tab-pane fade" id="block" role="tabpanel" aria-labelledby="block-tab">
-					<button id="addBlockButton" class="btn btn-success mb-3">${trsl[state.language].addBlock}</button>
+					<div class="input-and-button-line">
+						<input id="addBlockInput" placeholder="${trsl[state.language].enterUsername}">
+						<button id="addBlockButton" class="btn btn-success mb-3">${trsl[state.language].addBlock}</button>
+					</div>
 					<ul id="blockList" class="list-group"></ul>
 				</div>
 			</div>
@@ -232,7 +236,7 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 	}
 
 	addBlockButton.addEventListener("click", async () => {
-		const newBlockUsername = prompt(`${trsl[state.language].prompAddBLock}:`);
+		const newBlockUsername = document.getElementById("addBlockInput").value;
 		if (newBlockUsername) {
 			try {
 				await blockUser(newBlockUsername);
@@ -248,9 +252,18 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 		renderFriends();
 	});
 
+	const addBlockInput = document.getElementById("addBlockInput");
+	addBlockInput.addEventListener("keydown", (event) => {
+		if (event.key === "Enter") {
+			console.log("RECIPIENT USER ENTER KEY HAS BEEN PRESSED");
+			event.preventDefault();
+			addBlockButton.click();
+		}
+	});
+
 	//REQUEST
 	addFriendButton.addEventListener("click", async () => {
-		const newfriend = prompt(`${trsl[state.language].promptAddFriend}:`);
+		const newfriend = document.getElementById("addFriendInput").value;
 		if (newfriend) {
 			try {
 				await addFriend(newfriend);
@@ -261,6 +274,15 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 			}
 		}
 		renderSentRequests();
+	});
+
+	const addFriendInput = document.getElementById("addFriendInput");
+	addFriendInput.addEventListener("keydown", (event) => {
+		if (event.key === "Enter") {
+			console.log("RECIPIENT USER ENTER KEY HAS BEEN PRESSED");
+			event.preventDefault();
+			addFriendButton.click();
+		}
 	});
 
 	renderFriends();
@@ -289,8 +311,6 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 			break;
 	}
 	tabs.show();
-
-
 
 	friendsTab.addEventListener("shown.bs.tab", function () {
 		window.location.hash = "friends/friends";
