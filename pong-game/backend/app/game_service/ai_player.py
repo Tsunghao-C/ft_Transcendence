@@ -18,7 +18,7 @@ class PongAI:
         self.canvas_height = canvas_height
         self.paddle_height = paddle_height
         self.paddle_x = canvas_width * 0.9 if side == 'right' else canvas_width * 0.1
-        self.paddle_y = canvas_height / 2 - paddle_height / 2
+        self.paddle_y = canvas_height / 2 - paddle_height / 2 - 10
         self.difficulties = {
             'easy': {
                 'prediction_noise': (-8, 8),
@@ -39,6 +39,7 @@ class PongAI:
         self.settings = self.difficulties[difficulty]
         self.last_decision_time = 0
         self.current_move = 'move_stop'
+        time.sleep(1)
 
     def _is_at_boundary(self) -> bool:
         return (self.paddle_y <= 0) or (self.paddle_y + self.paddle_height >= self.canvas_height)
