@@ -47,14 +47,14 @@ export async function setLobbyView(contentContainer, roomID = "") {
 
 			const gameInfo = document.getElementById('game-info');
 			gameInfo.innerHTML = `
-				<p id="queue-timer" styles="margin: 0 !important;">Waiting... 0s</p>
+				<p id="queue-timer" styles="margin: 0 !important;">${trsl[state.language].waiting} 0s</p>
 			`;
 
 			let timeInQueue = 0;
 			const timerInterval = setInterval(() => {
 				const queueTimerElement = document.getElementById('queue-timer');
 				if (queueTimerElement) {
-					queueTimerElement.textContent = `Waiting... ${timeInQueue}s`;
+					queueTimerElement.textContent = `${trsl[state.language].waiting} ${timeInQueue}s`;
 					timeInQueue += 1;
 				} else {
 					clearInterval(timerInterval);

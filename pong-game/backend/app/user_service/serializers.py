@@ -12,6 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
 		fields = [
 			"id",
 			"username",
+			"is_admin",
 			"email",
 			"password", 
 			"alias", 
@@ -25,6 +26,7 @@ class UserSerializer(serializers.ModelSerializer):
 			"avatar",
 			]
 		extra_kwargs = {
+			"is_admin": {"read_only": True},
 			"password": {"write_only": True}, # we accept the password as an input but we don't return it
 			"mmr": {"read_only": True}, # used for matchmaking / leaderboards
 			"is_banned": {"read_only": True}, # used later when banning people
