@@ -27,6 +27,7 @@ volumes:
     driver: local
   prometheus_data: {}
   grafana_data: {}
+  grafana_certs: {}
 
 services:
   # Security Layer
@@ -101,7 +102,7 @@ services:
       - static_volume:/app/static
       - media_data:/home/app/pong-game/media
       - vault_shared_data:/vault/shared_data:ro
-      - logs_django:/home/app/pong-game/logs
+      - logs_django:/root/logs
     expose:
       - 8004
       - 8001
@@ -122,7 +123,7 @@ services:
       # non-sensitive data
       DEBUG: "1"
       POSTGRES_PORT: "5434"
-      LDB_UPDATE_TIMER: "5"
+      LDB_UPDATE_TIMER: "1"
     restart: unless-stopped
 
   # Database Layer
@@ -162,50 +163,68 @@ services:
       retries: 5
     restart: unless-stopped
 
-  # Monitoring Layer
-  # Prometheus / Grafana Stack
-  # prometheus:
-  #   container_name: prometheus
-  #   image: prom/prometheus
-  #   user: "1000:1000"
-  #   ports:
-  #     - "9090:9090"   # only for development stage
-  #   volumes:
-  #     - ./monitoring/prometheus:/etc/prometheus
-  #     - prometheus_data:/prometheus
-  #   networks:
-  #     - monitoring_net
-  #   restart: unless-stopped
+# Monitoring Layer
+# Prometheus / Grafana Stack
+  prometheus:
+    container_name: prometheus
+    build:
+      context: ./monitoring/prometheus
+      dockerfile: Dockerfile
+    image: prometheus
+    # image: prom/prometheus:v2.45.0
+    ports:
+      - "9090:9090"   # only for development stage
+    volumes:
+      - prometheus_data:/prometheus/data
+    # environment:
+    #   - PROM_ADMIN_USER=${PROM_ADMIN_USER}
+    #   - PROM_ADMIN_PASS_HASH=${PROM_ADMIN_PASS_HASH}
+    networks:
+      - monitoring_net
+      - backend_net
+    depends_on:
+      - node_exporter
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-k", "https://localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
 
-  # grafana:
-  #   container_name: grafana
-  #   image: grafana/grafana
-  #   user: "1000:1000"
-  #   ports:
-  #     - "3001:3001"
-  #   environment:
-  #     - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
-  #   volumes:
-  #     - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
-  #     - grafana_data:/var/lib/grafana
-  #   networks:
-  #     - monitoring_net
-  #   restart: unless-stopped
+  grafana:
+    container_name: grafana
+    build:
+      context: ./monitoring/grafana
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - GRAFANA_ADMIN_USER=${GRAFANA_ADMIN_USER}
+      - GRAFANA_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_SERVER_PROTOCOL=https
+      - GF_SERVER_CERT_FILE=/etc/grafana/certs/grafana.crt
+      - GF_SERVER_CERT_KEY=/etc/grafana/certs/grafana.key
+    volumes:
+      - grafana_certs:/etc/grafana/certs
+      - ./monitoring/grafana/provisioning:/usr/share/grafana/provisioning
+      - grafana_data:/var/lib/grafana
+    networks:
+      - monitoring_net
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    restart: unless-stopped
+  
+  node_exporter:
+    container_name: node_exporter
+    build:
+      context: ./monitoring/node_exporter
+      dockerfile: Dockerfile
+    networks:
+      - monitoring_net
+    restart: unless-stopped
 
-  # cadvisor:
-  #   container_name: cadvisor
-  #   image: gcr.io/cadvisor/cadvisor
-  #   user: "1000:1000"
-  #   volumes:
-  #     - /:/rootfs:ro
-  #     - /var/run:/var/run:rw
-  #     - /sys:/sys:ro
-  #     - /var/lib/docker/:/var/lib/docker:ro
-  #   networks:
-  #     - monitoring_net
-  #   restart: unless-stopped
-
-  # ELK Stack
+# ELK Stack
   elasticsearch:
     container_name: elasticsearch
     image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_STACK_VERSION}

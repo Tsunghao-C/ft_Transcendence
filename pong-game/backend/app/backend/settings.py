@@ -18,7 +18,7 @@ from vault_helper import vault_client
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-MEDIA_URL = 'https://localhost:8443/media/'
+MEDIA_URL = '/media/'
 
 # Initialize and get credentials from Vault
 db_credentials = vault_client.get_database_credentials("database")
@@ -71,9 +71,11 @@ INSTALLED_APPS = [
 	"corsheaders",
 	"match_making",
     "chat",
+    "django_prometheus",
 ]
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -83,6 +85,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 	"corsheaders.middleware.CorsMiddleware",
     "user_service.middleware.LogRequestMiddleware",
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -213,13 +216,13 @@ LOGGING = {
             "gamerooms_file": {
                 "level": "DEBUG",
                 "class": "logging.FileHandler",
-                "filename": "logs/gamerooms.log",
+                "filename": "/root/logs/gamerooms.log",
                 "formatter": "verbose",
             }, 
             "gameconsumers_file": {
                 "level": "DEBUG",
                 "class": "logging.FileHandler",
-                "filename": "logs/gameconsumers.log",
+                "filename": "/root/logs/gameconsumers.log",
                 "formatter": "verbose",
             },
         },
@@ -251,7 +254,7 @@ EMAIL_HOST_PASSWORD = email_credentials['EMAIL_HOST_PASS'] # Env
 
 LDB_UPDATE_TIMER = os.environ.get("LDB_UPDATE_TIMER", 15)
 CRONJOBS = [
-    (f'*/{LDB_UPDATE_TIMER} * * * *', 'game_service.tasks.update_leaderboard'),
+    (f'*/{LDB_UPDATE_TIMER} * * * *', 'game_service.tasks.update_leaderboard', '>> /var/log/cron.log 2>&1'),
 	# ('*/1 * * * *', 'match_making.tasks.monitor_players'),
 ]
 

@@ -111,16 +111,16 @@ export async function sendDuelRequestFromAlias(alias) {
 			sendDuelRequestFromGameRoom(roomData.name);
 		} else {
 			const errorData = await response.json();
-			if (errorData.detail === "You are blocking this user") {
-				alert(`${trsl[state.language].blockingUser} ${alias}`);
-			} else if (errorData.detail === "This user is blocking you") {
+			if (errorData.detail === "You are blocking this user.") {
+				alert(`${trsl[state.language].blockingUser}`);
+			} else if (errorData.detail === "This user is blocking you.") {
 				alert(`${alias} ${trsl[state.language].blockedByUser}`);
 			} else if (errorData.detail === "You cannot create a private room with yourself.") {
 				alert(`${trsl[state.language].lonelyTest}`);
 			} else if (errorData.error === "User not found.") {
 				alert(`${trsl[state.language].user} ${alias} ${trsl[state.language].notFound}.`);
 			} else {
-				alert(`Failed to create private room for some mysterious reasons`);
+				alert(`No invite letters available at the time, please try again later`);
 			}
 		}
 	} catch (error) {

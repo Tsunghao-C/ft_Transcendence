@@ -8,7 +8,7 @@ mkdir -p /app/static #&& \
 chmod -R 755 /app/static
 
 # logs, update filebeat if changing this
-mkdir -p logs && chmod -R 755 logs
+mkdir -p /root/logs && chmod -R 755 /root/logs
 
 echo "SQL_PORRT: ${POSTGRES_PORT}"
 wait-for-it --service postgres:${POSTGRES_PORT} -- echo "Game Database is ready!"
@@ -48,6 +48,7 @@ python manage.py migrate chat
 
 echo "Adding django crontab..."
 touch /var/log/cron.log
+chmod 666 /var/log/cron.log
 printenv | grep -Ev 'BASHOPTS|BASH_VERSINFO|EUID|PPID|SHELLOPTS|UID|LANG|PWD|GPG_KEY|_=' >> /etc/environment
 python manage.py crontab remove
 python manage.py crontab add || { echo "failed to add crontab"; exit 1; }

@@ -34,6 +34,12 @@ store_env_secrets() {
             JWT_*)
                 echo "$line" >> "$temp_dir/jwt"
                 ;;
+            GRAFANA_*)
+                echo "$line" >> "$temp_dir/grafana"
+                ;;
+            PROM_*)
+                echo "$line" >> "$temp_dir/prometheus"
+                ;;
         esac
     done < "/vault/.env"
     

@@ -266,14 +266,14 @@ function createOrJoinRoomButtonEventListener() {
 					window.location.hash = `chat/public/${roomName}`;
 				} else {
 					const errorData = responseData;
-					showError(`Failed to create room: ${errorData.error}`, "public");
+					showError(`${trsl[state.language].chatRoomCreationFailed}: ${errorData.error}`, "public");
 				}
 			} catch (error) {
 				console.error("Error creating public room:", error);
-				showError(`Failed to create room: ${error}`, "public");
+				showError(`${trsl[state.language].chatRoomCreationFailed}: ${error}`, "public");
 			}
 		} else {
-			showError("Room name is empty", "public");
+			showError(`${trsl[state.language].emptyChatRoomName}`, "public");
 		}
 	});
 
@@ -409,7 +409,7 @@ async function loadChatRoom(roomName, userAlias, roomType, roomNameDisplay = roo
 		}
 	} catch (error) {
 		console.error("Error fetching messages:", error);
-		messagesDiv.innerHTML = "<p>Error loading messages.</p>";
+		messagesDiv.innerHTML = `<p>${trsl[state.language].errorLoadingMessage}</p>`;
 	}
 
 	sendMessageEventListener(userAlias);
@@ -428,7 +428,6 @@ async function loadChatRoom(roomName, userAlias, roomType, roomNameDisplay = roo
 
 async function getOrCreatePrivateChatRoom(alias, userAlias, roomType) {
 
-	console.log("ZZZZZZ roomType is :", roomType);
 	try {
 		const response = await fetchWithToken(
 			'/api/chat/create-private/',
@@ -441,13 +440,13 @@ async function getOrCreatePrivateChatRoom(alias, userAlias, roomType) {
 		} else {
 			const errorData = await response.json();
 			if (errorData.detail === "You are blocking this user") {
-				showError("You blocked this user", "private");
+				showError(trsl[state.language].blockingUser, "private");
 			} else if (errorData.detail === "This user is blocking you") {
-				showError("You have been blocked by this user", "private");
+				showError(trsl[state.language].blockedByUser, "private");
 			} else if (errorData.detail === "You cannot create a private room with yourself.") {
-				showError("You cannot create a private room with yourself.", "private");
+				showError(trsl[state.language].lonelyTest, "private");
 			} else if (errorData.error === "User not found.") {
-				showError("User not found", "private");
+				showError(`${trsl[state.language].user} ${trsl[state.language].notFound}.`, "private");
 			} else {
 				showError("An unattended error occured, please try again later", "private");
 			}
@@ -483,7 +482,7 @@ function addMessage(userAlias, alias, message, time, isInvite = false, gameRoom 
 		messageElement.innerHTML = `
 			<strong>
 				<a style="text-decoration: none; color: #007bff;">
-					Tournament
+					${trsl[state.language].tournament}
 				</a>
 			</strong>
 			<em>(${time})</em>:<br>
@@ -496,7 +495,7 @@ function addMessage(userAlias, alias, message, time, isInvite = false, gameRoom 
 			messageElement.innerHTML = `
 				<div style="display: inline-block; text-align: left; background-color: #e1f5fe; padding: 10px; border-radius: 10px; max-width: 70%;">
 					<em>${time}</em><br>
-					${isInvite && gameRoom ? `<a href="#lobby/${gameRoom}" style="text-decoration: none; color: #007bff;">You Sent an Invite</a>` : message}
+					${isInvite && gameRoom ? `<a href="#lobby/${gameRoom}" style="text-decoration: none; color: #007bff;">${trsl[state.language].youInvited}</a>` : message}
 				</div>`;
 		} else {
 			messageElement.style.textAlign = "left";
@@ -508,7 +507,7 @@ function addMessage(userAlias, alias, message, time, isInvite = false, gameRoom 
 				</strong>
 				<em>(${time})</em>:<br>
 				<div style="display: inline-block; background-color: #f1f1f1; padding: 10px; border-radius: 10px; max-width: 70%;">
-					${isInvite && gameRoom ? `<a href="#lobby/${gameRoom}" style="text-decoration: none; color: #007bff;">${message}</a>` : message}
+					${isInvite && gameRoom ? `<a href="#lobby/${gameRoom}" style="text-decoration: none; color: #007bff;">${alias} ${trsl[state.language].hasInvitedYou}</a>` : message}
 				</div>`;
 		}
 	}
@@ -548,7 +547,7 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 	if (roomType === "public") {
 		loadChatRoom(aliasOrRoomToJoin, userAlias, roomType);
 	} else if (roomType == "tournament") {
-		loadChatRoom(aliasOrRoomToJoin, userAlias, roomType, "Tournament " + aliasOrRoomToJoin.split("_").slice(2));
+		loadChatRoom(aliasOrRoomToJoin, userAlias, roomType, trsl[state.language].tournament + " " + aliasOrRoomToJoin.split("_").slice(2));
 	} else if (roomType === "private"){
 		if (aliasOrRoomToJoin !== "") {
 				console.log("opening chat with", aliasOrRoomToJoin);

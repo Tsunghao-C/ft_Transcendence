@@ -74,6 +74,30 @@ function setupRegisterFormEventHandler() {
 						showError(`${trsl[state.language].emailTaken}`);
 					}
 				}
+		// 		if len(value) < 12:
+		// 	raise serializers.ValidationError("Password must be longer than 12 characters")
+		// elif not re.search("[A-Z]", value):
+		// 	raise serializers.ValidationError("Password must contain at least one uppercase letter")
+		// elif not re.search("[a-z]", value):
+		// 	raise serializers.ValidationError("Password must contain at least one lowercase letter")
+		// elif not re.search("[0-9]", value):
+		// 	raise serializers.ValidationError("Password must contain at least one number")
+		// elif not re.search("[!@#$%^&*(),.?\":{}|<>:;\'_+-=~`]", value):
+		// 	raise serializers.ValidationError("Password must contain at least one special character")
+		// return value
+				else if (data.password) {
+					if (data.password == "Password must be longer than 12 characters") {
+						showError(`${trsl[state.language].pwWrongSize}`);
+					} else if (data.password == "Password must contain at least one uppercase letter") {
+						showError(`${trsl[state.language].pwMissingUpper}`);
+					} else if (data.password == "Password must contain at least one lowercase letter") {
+						showError(`${trsl[state.language].pwMissingLower}`);
+					} else if (data.password == "Password must contain at least one number") {
+						showError(`${trsl[state.language].pwMissingNumber}`);
+					} else if (data.password == "Password must contain at least one special character") {
+						showError(`${trsl[state.language].pwMissingSpecial}`);
+					}
+				}
 				else {
 					showError(trsl[state.language].registerFailed)
 				}
