@@ -203,6 +203,36 @@ export async function cancelFriendRequest(friendAlias) {
 	}
 }
 
+export async function banUser(id) {
+	console.log(`banning user ${id}`);
+	let data;
+	let response;
+	try {
+		const body = JSON.stringify({
+			id: id
+		});
+		response = await fetchWithToken('/api/user/banplayer/', body, 'POST');
+	} catch(error) {
+		console.log(error);
+		window.location.hash = "login";
+	}
+}
+
+export async function unbanUser(id) {
+	console.log(`unbanning user ${id}`);
+	let data;
+	let response;
+	try {
+		const body = JSON.stringify({
+			id: id
+		});
+		response = await fetchWithToken('/api/user/unbanplayer/', body, 'POST');
+	} catch(error) {
+		console.log(error);
+		window.location.hash = "login";
+	}
+}
+
 export async function unblockUser(blockedUser) {
 	console.log(`unblocking friend from ${blockedUser}`);
 	let data;

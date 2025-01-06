@@ -20,6 +20,7 @@ class CustomUser(AbstractUser):
 		EN = "en", "English"
 		PT = "pt", "Portuguese"
 
+	is_admin = models.BooleanField(default=False)
 	email = models.EmailField(max_length=100, blank=False, unique=True)
 	alias = models.CharField(max_length=20, blank=False, unique=True, db_index=True)
 	mmr = models.FloatField(default=1000)
@@ -119,8 +120,6 @@ class OnlineUserActivity(models.Model):
 		except:
 			return "offline"
 
-	def __str__(self):
-		return f"{self.user.alias} - Last Activity: {self.last_activity}"
 	def __str__(self):
 		return f"{self.user.alias} - Last Activity: {self.last_activity}"
 

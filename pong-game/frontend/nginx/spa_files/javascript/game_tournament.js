@@ -211,7 +211,7 @@ function setTournamentViewForm(contentContainer) {
 			<hr>
 			<div id="players-container">
 				<div class="player-entry">
-					<input type="text" placeholder="Enter player 1 alias" name="player1" required />
+					<input type="text" placeholder="${trsl[state.language].enterPlayer} 1" name="player1" required />
 					<select name="type1">
 						<option value="human">${trsl[state.language].human}</option>
 						<option value="easy">${trsl[state.language].tournamentEasy}</option>
@@ -220,7 +220,7 @@ function setTournamentViewForm(contentContainer) {
 					</select>
 				</div>
 				<div class="player-entry">
-					<input type="text" placeholder="Enter player 2 alias" name="player2" required />
+					<input type="text" placeholder="${trsl[state.language].enterPlayer} 2" name="player2" required />
 					<select name="type2">
 						<option value="human">${trsl[state.language].human}</option>
 						<option value="easy">${trsl[state.language].tournamentEasy}</option>
