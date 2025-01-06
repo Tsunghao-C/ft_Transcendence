@@ -1,0 +1,10 @@
+tls_server_config:
+  cert_file: /etc/prometheus/certs/prometheus.crt
+  key_file: /etc/prometheus/certs/prometheus.key
+  min_version: TLS12
+
+http_server_config:
+  http2: true
+
+# basic_auth_users:
+#   tsuchen: $2a$12$YB1oWfBTxtuq.eDsHPGG9uTPu8TflzENL.rzOxpOIXjf.yWphZAWm
