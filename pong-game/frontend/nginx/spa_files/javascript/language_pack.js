@@ -101,6 +101,8 @@ export const translations = {
 		block: "Block",
 		removeFriend: "Remove from friend list",
 		unblock: "Unblock",
+		ban: "ban",
+		unban: "unban",
 		//leaderboard
 		noData: "No data Available",
 		//home

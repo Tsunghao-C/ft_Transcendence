@@ -59,25 +59,25 @@ class BanPlayer(APIView):
 	def post(self, request):
 		if not request.user.is_admin:
 			return Response({"error":"Only admins can ban players"}, status=400)
-		alias = request.data.get("playerAlias")
-		user = get_object_or_404(CustomUser, alias=alias)
+		id = request.data.get("id")
+		user = get_object_or_404(CustomUser, id=id)
 		if user.is_banned:
 			return Response({"error": "this user is already banned"}, status=400)
 		user.is_banned = True
 		user.save()
-		return Response({"message": f"Player {alias} has been banned"})
+		return Response({"message": f"Player {id} has been banned"})
 
 class UnbanPlayer(APIView):
 	def post(self, request):
 		if not request.user.is_admin:
 			return Response({"error":"Only admins can unban players"}, status=400)
-		alias = request.data.get("playerAlias")
-		user = get_object_or_404(CustomUser, alias=alias)
+		id = request.data.get("id")
+		user = get_object_or_404(CustomUser, id=id)
 		if not user.is_banned:
 			return Response({"error": "this user is not banned"}, status=400)
 		user.is_banned = False
 		user.save()
-		return Response({"message": f"Player {alias} has been unbanned"})
+		return Response({"message": f"Player {id} has been unbanned"})
 
 ####################### Validate 2FA #######################
 
@@ -382,6 +382,8 @@ class getProfileView(APIView):
 				"rank": LeaderBoard.getPlayerRank(profile),
 				"matchHistory": MatchResults.getPlayerGames(profile),
 				"onlineStatus": OnlineUserActivity.get_user_status(profile),
+				"userIsAdmin": user.is_admin,
+				"isBanned": profile.is_banned,
 			}
 		return Response({
 			"profile": profileData
