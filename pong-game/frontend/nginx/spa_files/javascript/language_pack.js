@@ -26,6 +26,12 @@ export const translations = {
 		internalError: "An error occurred. Please try again later.",
 		invalidFormat: "Invalid file type. Only .jpg and .png are allowed.",
 		emptyField: "Please fill out this field.",
+		//login_register
+		pwWrongSize: "Password must be longer than 12 characters",
+		pwMissingUpper: "Password must contain at least one uppercase letter",
+		pwMissingLower: "Password must contain at least one lowercase letter",
+		pwMissingNumber: "Password must contain at least one number",
+		pwMissingSpecial: "Password must contain at least one special character",
 		//login_login
 		loginTitle: "Login",
 		login: "Log in",
@@ -147,6 +153,8 @@ export const translations = {
 		error404Title: "404",
 		error404Message: "Error 404: Page not found",
 		//chat
+		chatRoomCreationFailed: "Failed to create room",
+		emptyChatRoomName: "Room name is empty",
 		privateMessages: "Private messages",
 		createOrJoinRoom: "Create or join room",
 		errorLoadingMessage: "Error loading messages.",
@@ -247,6 +255,12 @@ export const translations = {
 		internalError: "Une erreur s'est produite. Veuillez réessayer plus tard.",
 		invalidFormat: "Type de fichier invalide. Seuls les fichiers .jpg et .png sont autorisés.",
 		emptyField: "Veuillez remplir ce champ.",
+		//login_register
+		pwWrongSize: "Le mot de passe doit contenir plus de 12 caractères",
+		pwMissingUpper: "Le mot de passe doit contenir au moins une lettre majuscule",
+		pwMissingLower: "Le mot de passe doit contenir au moins une lettre minuscule",
+		pwMissingNumber: "Le mot de passe doit contenir au moins un chiffre",
+		pwMissingSpecial: "Le mot de passe doit contenir au moins un caractère spécial",
 		//login_login
 		loginTitle: "Connexion",
 		login: "Se connecter",
@@ -368,6 +382,8 @@ export const translations = {
 		error404Title: "404",
 		error404Message: "Erreur 404 : Page non trouvée",
 		//chat
+		chatRoomCreationFailed: "Échec de la création de la salle",
+		emptyChatRoomName: "Le nom de la salle est vide",
 		privateMessages: "Messages privés",
 		createOrJoinRoom: "Créer ou rejoindre une salle",
 		errorLoadingMessage: "Erreur lors du chargement des messages.",
@@ -467,6 +483,12 @@ export const translations = {
 		internalError: "Ocorreu um erro. Por favor, tente novamente mais tarde.",
 		invalidFormat: "Tipo de arquivo inválido. Apenas arquivos .jpg e .png são permitidos.",
 		emptyField: "Por favor, preencha este campo.",
+		//login_register
+		pwWrongSize: "A senha deve ter mais de 12 caracteres",
+		pwMissingUpper: "A senha deve conter pelo menos uma letra maiúscula",
+		pwMissingLower: "A senha deve conter pelo menos uma letra minúscula",
+		pwMissingNumber: "A senha deve conter pelo menos um número",
+		pwMissingSpecial: "A senha deve conter pelo menos um caractere especial",
 		//login_login
 		loginTitle: "Entrar",
 		login: "Entrar",
@@ -588,6 +610,8 @@ export const translations = {
 		error404Title: "404",
 		error404Message: "Erro 404: Página não encontrada",
 		//chat
+		chatRoomCreationFailed: "Falha ao criar a sala",
+		emptyChatRoomName: "O nome da sala está vazio",
 		privateMessages: "Mensagens privadas",
 		createOrJoinRoom: "Criar ou entrar em sala",
 		errorLoadingMessage: "Erro ao carregar mensagens.",

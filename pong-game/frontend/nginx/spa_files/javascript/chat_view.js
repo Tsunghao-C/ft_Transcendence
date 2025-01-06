@@ -258,14 +258,14 @@ function createOrJoinRoomButtonEventListener() {
 					window.location.hash = `chat/public/${roomName}`;
 				} else {
 					const errorData = responseData;
-					showError(`Failed to create room: ${errorData.error}`, "public");
+					showError(`${trsl[state.language].chatRoomCreationFailed}: ${errorData.error}`, "public");
 				}
 			} catch (error) {
 				console.error("Error creating public room:", error);
-				showError(`Failed to create room: ${error}`, "public");
+				showError(`${trsl[state.language].chatRoomCreationFailed}: ${error}`, "public");
 			}
 		} else {
-			showError("Room name is empty", "public");
+			showError(`${trsl[state.language].emptyChatRoomName}`, "public");
 		}
 	});
 }
