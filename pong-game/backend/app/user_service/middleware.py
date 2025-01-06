@@ -28,6 +28,9 @@ class LogRequestMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        # Skip authentication for prometheus metrics endpoint
+        if request.path.startswith('/metrics'):
+            return self.get_response(request)
         # Decode JWT token and set request.user if not already set
         if not request.user.is_authenticated:
             auth_header = request.headers.get('Authorization')
@@ -48,7 +51,7 @@ class LogRequestMiddleware:
             except Exception as e:
                 print(f"Error updating user activity: {e}")
         else:
-            print("User is not authenticated")
+            print(f"User {request.user} is not authenticated")
 
         response = self.get_response(request)
         return response
