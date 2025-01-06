@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, logout
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from django.contrib.auth.decorators import login_required
@@ -39,6 +39,9 @@ class CurrentUserView(APIView):
 	permission_classes = [IsAuthenticated]
 	def get(self, request):
 		serializer = UserSerializer(request.user)
+		if request.user.is_banned:
+			logout(request)
+			return Response({"detail": "You have been banned"}, status=403)
 		return Response(serializer.data)
 
 class updateUsernameView(APIView):
@@ -90,7 +93,7 @@ class SaveMatchResults(APIView):
 class BanPlayer(APIView):
 	def post(self, request):
 		if not request.user.is_admin:
-			return Response({"error":"Only admins can ban players"}, status=400)
+			return Response({"error":"Only admins can ban players"}, status=403)
 		alias = request.data.get("playerAlias")
 		user = get_object_or_404(CustomUser, alias=alias)
 		if user.is_banned:
@@ -102,14 +105,14 @@ class BanPlayer(APIView):
 class UnbanPlayer(APIView):
 	def post(self, request):
 		if not request.user.is_admin:
-			return Response({"error":"Only admins can unban players"}, status=400)
-		id = request.data.get("playerId")
-		user = get_object_or_404(CustomUser, id=id)
+			return Response({"error":"Only admins can unban players"}, status=403)
+		alias = request.data.get("playerAlias")
+		user = get_object_or_404(CustomUser, alias=alias)
 		if not user.is_banned:
 			return Response({"error": "this user is not banned"}, status=400)
 		user.is_banned = False
 		user.save()
-		return Response({"message": f"Player {id} has been unbanned"})
+		return Response({"message": f"Player {alias} has been unbanned"})
 
 ####################### Validate 2FA #######################
 
@@ -148,7 +151,9 @@ class Generate2FAView(APIView):
 		username = request.data.get("username")
 		password = request.data.get("password")
 		user = authenticate(username=username, password=password)
-		if user:
+		if user and user.is_banned:
+			return Response({"detail": "you are banned"}, status=403)
+		elif user:
 			sendOTP(user.email, user.username, user.id, f"otp_{user.id}", user)
 			return Response({"detail": "A 2FA code has been sent", "user_id": str(user.id)}, status=status.HTTP_200_OK)
 		return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
