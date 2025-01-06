@@ -619,7 +619,6 @@ async function startGame() {
 		const readyButton = document.getElementById("ready-button");
 		console.log("about to check the ready thing");
 		if (readyButton) {
-			console.log("WE ARE IN THE REaDY BTN CONDITION");
 			destroyReadyButton();
 			hideElem("ready-button");
 		}
