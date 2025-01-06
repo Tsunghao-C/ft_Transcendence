@@ -493,20 +493,20 @@ function addMessage(userAlias, alias, message, time, isInvite = false, gameRoom 
 		if (alias === userAlias) {
 			messageElement.style.textAlign = "right";
 			messageElement.innerHTML = `
-				<div style="display: inline-block; text-align: left; background-color: #e1f5fe; padding: 10px; border-radius: 10px; max-width: 70%;">
-					<em>${time}</em><br>
+				<div style="display: inline-block; text-align: left; background-color: #e1f5fe; padding: 10px; border-radius: 10px; max-width: 70%; margin-top: 5px; font-size: 0.9rem">
+					<em style="font-size: 0.8rem">${time}</em><br>
 					${isInvite && gameRoom ? `<a href="#lobby/${gameRoom}" style="text-decoration: none; color: #007bff;">${trsl[state.language].youInvited}</a>` : message}
 				</div>`;
 		} else {
 			messageElement.style.textAlign = "left";
 			messageElement.innerHTML = `
 				<strong>
-					<a href="#profile/${alias}" style="text-decoration: none; color: #007bff;">
+					<a href="#profile/${alias}" style="text-decoration: none; color: #007bff; font-size: 0.9rem">
 						${alias}
 					</a>
 				</strong>
-				<em>(${time})</em>:<br>
-				<div style="display: inline-block; background-color: #f1f1f1; padding: 10px; border-radius: 10px; max-width: 70%;">
+				<em style="font-size: 0.8rem">(${time})</em>:<br>
+				<div style="display: inline-block; background-color: #f1f1f1; padding: 10px; border-radius: 10px; max-width: 70%; font-size: 0.9rem">
 					${isInvite && gameRoom ? `<a href="#lobby/${gameRoom}" style="text-decoration: none; color: #007bff;">${alias} ${trsl[state.language].hasInvitedYou}</a>` : message}
 				</div>`;
 		}
