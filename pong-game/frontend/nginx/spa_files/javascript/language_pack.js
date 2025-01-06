@@ -60,7 +60,7 @@ export const translations = {
 		//Personnal Information
 		confirm: "Confirm",
 		cancel: "Cancel",
-		language: "language",
+		language: "Language",
 		//Personnal info Alias change
 		aliasChanged: "Success, alias has been changed.",
 		IncorrectValue: "Error, please enter a correct value.",
@@ -289,7 +289,7 @@ export const translations = {
 		//Personnal Information
 		confirm: "Confirmer",
 		cancel: "Annuler",
-		language: "langue",
+		language: "Langue",
 		//Personnal info Alias change
 		aliasChanged: "Succès, l'alias a été changé.",
 		IncorrectValue: "Erreur, veuillez entrer une valeur correcte.",
@@ -517,7 +517,7 @@ export const translations = {
 		//Personnal Information
 		confirm: "Confirmar",
 		cancel: "Cancelar",
-		language: "linguagem",
+		language: "Linguagem",
 		//Personnal info Alias change
 		aliasChanged: "Sucesso, o apelido foi alterado.",
 		IncorrectValue: "Erro, por favor insira um valor correto.",
