@@ -55,7 +55,7 @@ function displayTournament(tournament, container) {
 		bracketDiv.classList.add("bracket");
 		const matchupHtml = getMatchupsHtml(bracket, index);
 		let roundTitle = `Round ${index + 1}`;
-		if (n % 2 != 0 && index == 0) {
+		if (!isPowerOf2(n) && index == 0) {
 			roundTitle = trsl[state.language].playOff;
 		}
 		bracketDiv.innerHTML = `
@@ -180,13 +180,13 @@ function getMatchupsHtml(bracket, index) {
 	const n = bracket.players.length;
 	console.log("number of player is : ", n);
 
-	// /!\ debug print, delete when pushing
+	// // /!\ debug print, delete when pushing
 	// bracket.players.forEach((player, i) => {
 	// 	console.log("player " + i + " is : ", player);
 	// })
 
 	// ODD < 7
-	if (n % 2 != 0 && index == 0) {
+	if (!isPowerOf2(n) && index == 0) {
 		return getPlayoffHtml(bracket);
 	}
 

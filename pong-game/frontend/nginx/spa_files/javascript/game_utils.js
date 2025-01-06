@@ -618,8 +618,11 @@ export async function connectWebSocket() {
 
 async function startGame() {
 	try {
-		destroyReadyButton();
-		hideElem("ready-button");
+		const readyButton = document.getElementById("ready-button");
+		if (readyButton) {
+			destroyReadyButton();
+			hideElem("ready-button");
+		}
 		showElem("game", "block");
 		showElem("go-back-EOG", "block");
 		hideClass("hrs");
