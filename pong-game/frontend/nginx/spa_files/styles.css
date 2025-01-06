@@ -615,8 +615,8 @@ canvas {
 	right: 100px;
 	width: 100%;
 	margin-bottom: 0px !important;
-	padding-bottom: 0px !important;
-	padding-right: 0 !important;
+	padding-bottom: 5px !important;
+	padding-right: 10px !important;
 	font-size: 0.8rem !important;
 	text-align: right;
 }
@@ -825,6 +825,9 @@ canvas {
 	box-sizing: border-box; 
 }
 
+.leaderboard-view h2 {
+	padding-left: 0px !important;
+}
 
 table {
 	margin: 0 0 30px 0;
