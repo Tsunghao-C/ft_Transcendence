@@ -58,7 +58,7 @@ class getLeaderBoardView(APIView):
 			current_page = paginator.page(page)
 		except Exception:
 			raise ValidationError({"detail": "Invalid page number."})
-
+		print("leaderboard is :", leaderboard)
 		leaderboardData = [
 			{
 				"rank": gamer.rank,
