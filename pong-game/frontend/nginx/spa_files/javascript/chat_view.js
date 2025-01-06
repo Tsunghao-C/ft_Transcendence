@@ -107,7 +107,7 @@ function setChatViewHtml(contentContainer) {
 				<div class="tab-pane fade" id="tournament" role="tabpanel" aria-labelledby="tournament-tab">
 					<div class="room-list" id="tournament-list" style="margin-bottom: 20px;"></div>
 					<div class="chat-content" id="tournament-content" style="display:none;">
-						<div id="tournament-content-top">
+						<div id="chat-content-top">
 							<h4 id="tournament-title"></h4>
 							<button class="go-back">${trsl[state.language].backButton}</button>
 						</div>
