@@ -41,6 +41,10 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 						<input id="addFriendInput" placeholder="${trsl[state.language].enterUsername}">
 						<button id="addFriendButton" class="btn btn-success mb-3">${trsl[state.language].addNewFriend}</button>
 					</div>
+					<div>
+						<p id="friendErrorMessage" class="errorMessage"></p>
+						<p id="friendSuccessMessage" class="successMessage"></p>
+					</div>
 					<ul id="friendsList" class="list-group"></ul>
 				</div>
 				<div class="tab-pane fade" id="friend-requests" role="tabpanel" aria-labelledby="friend-requests-tab">
@@ -53,6 +57,10 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 					<div class="input-and-button-line">
 						<input id="addBlockInput" placeholder="${trsl[state.language].enterUsername}">
 						<button id="addBlockButton" class="btn btn-success mb-3">${trsl[state.language].addBlock}</button>
+					</div>
+					<div>
+						<p id="blockErrorMessage" class="errorMessage"></p>
+						<p id="blockSuccessMessage" class="successMessage"></p>
 					</div>
 					<ul id="blockList" class="list-group"></ul>
 				</div>
