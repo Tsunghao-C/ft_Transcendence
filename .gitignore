@@ -34,3 +34,4 @@ pong-game/security/vault/volumes/shared_data/*
 
 # ELK certs
 pong-game/monitoring/elk/certs
+pong-game/monitoring/certs

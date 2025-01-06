@@ -175,6 +175,7 @@ services:
     ports:
       - "9090:9090"   # only for development stage
     volumes:
+      - ./monitoring/certs:/etc/prometheus/certs:ro
       - prometheus_data:/prometheus/data
     # environment:
     #   - PROM_ADMIN_USER=${PROM_ADMIN_USER}
@@ -205,7 +206,7 @@ services:
       - GF_SERVER_CERT_FILE=/etc/grafana/certs/grafana.crt
       - GF_SERVER_CERT_KEY=/etc/grafana/certs/grafana.key
     volumes:
-      - grafana_certs:/etc/grafana/certs
+      - ./monitoring/certs:/etc/grafana/certs:ro
       - ./monitoring/grafana/provisioning:/usr/share/grafana/provisioning
       - grafana_data:/var/lib/grafana
     networks:
