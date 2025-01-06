@@ -91,13 +91,13 @@ class BanPlayer(APIView):
 	def post(self, request):
 		if not request.user.is_admin:
 			return Response({"error":"Only admins can ban players"}, status=400)
-		id = request.data.get("playerId")
-		user = get_object_or_404(CustomUser, id=id)
+		alias = request.data.get("playerAlias")
+		user = get_object_or_404(CustomUser, alias=alias)
 		if user.is_banned:
 			return Response({"error": "this user is already banned"}, status=400)
 		user.is_banned = True
 		user.save()
-		return Response({"message": f"Player {id} has been banned"})
+		return Response({"message": f"Player {alias} has been banned"})
 
 class UnbanPlayer(APIView):
 	def post(self, request):
@@ -378,6 +378,7 @@ class getProfileView(APIView):
 	permission_classes = [IsAuthenticated]
 
 	def get(self, request):
+		user = request.user
 		alias = request.query_params.get("alias")
 		user_id = request.query_params.get("uid")
 		own_profile = request.query_params.get("own")
