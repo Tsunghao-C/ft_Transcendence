@@ -42,7 +42,7 @@ class Ball():
 		self.x = canvas_width * 0.5
 		self.y = canvas_height * 0.5
 		self.speedX = 5
-		self.speedY = 5
+		self.speedY = 0
 		self.radius = BALL_RADIUS
 
 class GameRoom():
@@ -155,7 +155,10 @@ class GameRoom():
 					else:
 						self.ball.y = player.y - self.ball.radius
 				else:
-					self.ball.speedX *= -1
+					if self.ball.speedX >= 10.00 or self.ball.speedX <= -10.00:
+						self.ball.speedX *= -1
+					else:
+						self.ball.speedX *= -1.05
 					relativeIntersection = player.y + PADDLE_HEIGHT * 0.5 - self.ball.y
 					normalizedIntersection = relativeIntersection / (PADDLE_HEIGHT * 0.5)
 					self.ball.speedY = -normalizedIntersection * 5
@@ -163,10 +166,6 @@ class GameRoom():
 						self.ball.x = player.x + PADDLE_WIDTH + self.ball.radius
 					else:
 						self.ball.x = player.x - self.ball.radius
-
-	def _get_new_mmr(self, userMMR: int, oppMMR: int, match_outcome: int):
-		E = 1 / (1 + 10**((oppMMR - userMMR)/400))
-		return int(userMMR + 30 * (match_outcome - E))
 
 	def record_match_result_sync(self, winner):
 		try:

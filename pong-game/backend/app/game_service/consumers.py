@@ -366,7 +366,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 					"is_ai_game": False
 					}))
 				break
-			await asyncio.sleep(15)
+			await asyncio.sleep(5)
 		print("leaving the queue")
 
 	async def create_quick_match_lobby(self, game):
