@@ -392,9 +392,9 @@ async function set_player1(response) {
 				if (!response.ok) {
 					const error = await response.json();
 					if (error.detail === "You are blocking this user.") {
-						alert(`${trsl[state.language].blockingUser} ${aliasToInvite}`);
+						alert(`${trsl[state.language].blockingUser}`);
 					} else if (error.detail === "This user is blocking you.") {
-						alert(`${aliasToInvite} ${trsl[state.language].blockedByUser}`);
+						alert(`${trsl[state.language].blockedByUser}`);
 					} else if (error.detail === "You cannot invite yourself.") {
 						alert(`${trsl[state.language].lonelyTest}`);
 					} else if (error.error === "User not found.") {

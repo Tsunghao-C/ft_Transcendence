@@ -140,8 +140,8 @@ export const translations = {
 		okSasuke: "... Just how much do you hate yourself ? but no we can't let you do that...",
 		userblocked: "has been blocked",
 		colorMode: "Color Mode",
-		blockedByUser: "is blocking you",
-		blockingUser: "you are blocking",
+		blockedByUser: "this user is blocking you",
+		blockingUser: "you are blocking this user",
 		alreadySent: "Friend request was already sent.",
 		//404
 		error404Title: "404",
@@ -149,6 +149,9 @@ export const translations = {
 		//chat
 		privateMessages: "Private messages",
 		createOrJoinRoom: "Create or join room",
+		errorLoadingMessage: "Error loading messages.",
+		hasInvitedYou: "has invited you to play",
+		youInvited: "You sent an invite to play",
 		chatRooms: "Chat rooms",
 		privateMessagesWith: "Private messages with",
 		enterRoomName: "Enter room name",
@@ -358,8 +361,8 @@ export const translations = {
 		okSasuke: "... À quel point vous détestez-vous ? mais non, nous ne pouvons pas vous laisser faire cela...",
 		userblocked: "a été bloqué",
 		colorMode: "Mode couleur",
-		blockedByUser: "vous bloque",
-		blockingUser: "vous bloquez",
+		blockedByUser: "cet utilisateur vous bloque",
+		blockingUser: "vous bloquez cet utilisateur",
 		alreadySent: "La demande d'ami a déjà été envoyée.",
 		//404
 		error404Title: "404",
@@ -367,6 +370,9 @@ export const translations = {
 		//chat
 		privateMessages: "Messages privés",
 		createOrJoinRoom: "Créer ou rejoindre une salle",
+		errorLoadingMessage: "Erreur lors du chargement des messages.",
+		hasInvitedYou: "vous a invité à jouer",
+		youInvited: "Vous avez envoyé une invitation pour jouer",
 		chatRooms: "Salles de discussion",
 		privateMessagesWith: "Messages privés avec",
 		enterRoomName: "Entrez le nom de la salle",
@@ -575,8 +581,8 @@ export const translations = {
 		okSasuke: "... Até que ponto você se odeia? mas não, não podemos deixar você fazer isso...",
 		userblocked: "foi bloqueado",
 		colorMode: "Modo de cor",
-		blockedByUser: "está bloqueando você",
-		blockingUser: "você está bloqueando",
+		blockedByUser: "este usuário está bloqueando você",
+		blockingUser: "você está bloqueando este usuário",
 		alreadySent: "Pedido de amizade já foi enviado.",
 		//404
 		error404Title: "404",
@@ -584,6 +590,9 @@ export const translations = {
 		//chat
 		privateMessages: "Mensagens privadas",
 		createOrJoinRoom: "Criar ou entrar em sala",
+		errorLoadingMessage: "Erro ao carregar mensagens.",
+		hasInvitedYou: "convidou você para jogar",
+		youInvited: "Você enviou um convite para jogar",
 		chatRooms: "Salas de chat",
 		privateMessagesWith: "Mensagens privadas com",
 		enterRoomName: "Digite o nome da sala",

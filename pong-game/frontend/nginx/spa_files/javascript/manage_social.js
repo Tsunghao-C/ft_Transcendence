@@ -99,7 +99,7 @@ export async function sendDuelRequestFromAlias(alias) {
 		} else {
 			const errorData = await response.json();
 			if (errorData.detail === "You are blocking this user.") {
-				alert(`${trsl[state.language].blockingUser} ${alias}`);
+				alert(`${trsl[state.language].blockingUser}`);
 			} else if (errorData.detail === "This user is blocking you.") {
 				alert(`${alias} ${trsl[state.language].blockedByUser}`);
 			} else if (errorData.detail === "You cannot create a private room with yourself.") {
@@ -255,7 +255,7 @@ export async function addFriend(newfriend) {
 			} else if (data.detail === 'you are blocking this user' ) {
 				alert(`${newfriend} ${trsl[state.language].blockedByUser}`);
 			} else if (data.detail === 'this user is blocking you' ) {
-				alert(`${trsl[state.language].blockingUser} ${newfriend}`);
+				alert(`${trsl[state.language].blockingUser}`);
 			}
 		} else {
 			alert(`${trsl[state.language].friendRequestSent}`);
