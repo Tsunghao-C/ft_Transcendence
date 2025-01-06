@@ -23,7 +23,7 @@ export const state = {
 	chatSocket: null,
 	gameSocket: null,
 	language: null,
-	};
+};
 
 export async function setContainerHtml(container, url) {
 	try {
