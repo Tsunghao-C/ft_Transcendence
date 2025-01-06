@@ -40,6 +40,9 @@ store_env_secrets() {
             PROM_*)
                 echo "$line" >> "$temp_dir/prometheus"
                 ;;
+            PONG_*)
+                echo "$line" >> "$temp_dir/admin"
+                ;;
         esac
     done < "/vault/.env"
     
