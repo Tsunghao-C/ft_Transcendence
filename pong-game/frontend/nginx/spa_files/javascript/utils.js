@@ -32,13 +32,13 @@ export function showClass(className, display) {
 }
 
 export function clearInput(inputId) {
-    const input = document.getElementById(inputId);
-    input.value = "";
+	const input = document.getElementById(inputId);
+	input.value = "";
 }
 
 export function isAlphanumeric(content, name = "Alias", displayAlert = true) {
     const isValid = /^[a-zA-Z0-9]+$/.test(content);
-	
+
 	if (!isValid && displayAlert) {
 		alert(name + " can only be made of alphanumerical characters");
 	}

@@ -40,8 +40,8 @@ export async function setLocalLobby(contentContainer, skip = false) {
 		document.getElementById('go-back-EOG').textContent = "";
 		hideElem("go-back-EOG");
 	}
-    hideElem('rejoin-alreadyingame-text');
-    hideElem('go-back');
+	hideElem('rejoin-alreadyingame-text');
+	hideElem('go-back');
 
 	const canvas = document.getElementById('game');
 	const ctx = canvas.getContext('2d');

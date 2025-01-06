@@ -555,11 +555,15 @@ async function display_already_ingame() {
 	console.log("received already in game notice from server");
 	hideElem("create-match");
 	hideElem("join-queue");
-    hideElem("easy");
-    hideElem("medium");
-    hideElem("hard");
-    showElem('rejoin-alreadyingame-text', 'block');
-    showElem('go-back-EOG', 'block');
+	hideElem("easy");
+	hideElem("medium");
+	hideElem("hard");
+	showElem('rejoin-alreadyingame-text', 'block');
+	showElem('go-back-EOG', 'block');
+	document.getElementById('go-back-EOG').addEventListener('click', async () => {
+		window.location.hash = "game/";
+	});
+	hideElem('go-back');
 }
 
 export async function connectWebSocket() {
