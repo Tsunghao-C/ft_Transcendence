@@ -26,6 +26,12 @@ export const translations = {
 		internalError: "An error occurred. Please try again later.",
 		invalidFormat: "Invalid file type. Only .jpg and .png are allowed.",
 		emptyField: "Please fill out this field.",
+		//login_register
+		pwWrongSize: "Password must be longer than 12 characters",
+		pwMissingUpper: "Password must contain at least one uppercase letter",
+		pwMissingLower: "Password must contain at least one lowercase letter",
+		pwMissingNumber: "Password must contain at least one number",
+		pwMissingSpecial: "Password must contain at least one special character",
 		//login_login
 		loginTitle: "Login",
 		login: "Log in",
@@ -124,7 +130,7 @@ export const translations = {
 		addBlock: "Add to Block List",
 		addFriendButton: "Add Friend",
 		removeFriend: "Remove Friend",
-		prompAddBlock: "Enter username to block",
+		promptAddBlock: "Enter username to block",
 		promptAddFriend: "Enter the username of the friend you want to add",
 		//manage_social
 		validationRemovalFirst: "Are you sure you want to remove",
@@ -140,15 +146,20 @@ export const translations = {
 		okSasuke: "... Just how much do you hate yourself ? but no we can't let you do that...",
 		userblocked: "has been blocked",
 		colorMode: "Color Mode",
-		blockedByUser: "is blocking you",
-		blockingUser: "you are blocking",
+		blockedByUser: "this user is blocking you",
+		blockingUser: "you are blocking this user",
 		alreadySent: "Friend request was already sent.",
 		//404
 		error404Title: "404",
 		error404Message: "Error 404: Page not found",
 		//chat
+		chatRoomCreationFailed: "Failed to create room",
+		emptyChatRoomName: "Room name is empty",
 		privateMessages: "Private messages",
 		createOrJoinRoom: "Create or join room",
+		errorLoadingMessage: "Error loading messages.",
+		hasInvitedYou: "has invited you to play",
+		youInvited: "You sent an invite to play",
 		chatRooms: "Chat rooms",
 		privateMessagesWith: "Private messages with",
 		enterRoomName: "Enter room name",
@@ -219,7 +230,7 @@ export const translations = {
 
 	fr: {
 		//Login_html
-		loginInput: "Connexion",
+		loginInput: "Identifiant",
 		registerTitle: "S'inscrire",
 		chooseLogin: "Choisissez un identifiant",
 		alias: "Alias",
@@ -244,6 +255,12 @@ export const translations = {
 		internalError: "Une erreur s'est produite. Veuillez réessayer plus tard.",
 		invalidFormat: "Type de fichier invalide. Seuls les fichiers .jpg et .png sont autorisés.",
 		emptyField: "Veuillez remplir ce champ.",
+		//login_register
+		pwWrongSize: "Le mot de passe doit contenir plus de 12 caractères",
+		pwMissingUpper: "Le mot de passe doit contenir au moins une lettre majuscule",
+		pwMissingLower: "Le mot de passe doit contenir au moins une lettre minuscule",
+		pwMissingNumber: "Le mot de passe doit contenir au moins un chiffre",
+		pwMissingSpecial: "Le mot de passe doit contenir au moins un caractère spécial",
 		//login_login
 		loginTitle: "Connexion",
 		login: "Se connecter",
@@ -342,7 +359,7 @@ export const translations = {
 		addBlock: "Ajouter à la liste des bloqués",
 		addFriendButton: "Ajouter un ami",
 		removeFriend: "Supprimer un ami",
-		prompAddBlock: "Entrez le nom d'utilisateur à bloquer",
+		promptAddBlock: "Entrez le nom d'utilisateur à bloquer",
 		promptAddFriend: "Entrez le nom d'utilisateur de l'ami que vous souhaitez ajouter",
 		//manage_social
 		validationRemovalFirst: "Êtes-vous sûr de vouloir supprimer",
@@ -358,15 +375,20 @@ export const translations = {
 		okSasuke: "... À quel point vous détestez-vous ? mais non, nous ne pouvons pas vous laisser faire cela...",
 		userblocked: "a été bloqué",
 		colorMode: "Mode couleur",
-		blockedByUser: "vous bloque",
-		blockingUser: "vous bloquez",
+		blockedByUser: "cet utilisateur vous bloque",
+		blockingUser: "vous bloquez cet utilisateur",
 		alreadySent: "La demande d'ami a déjà été envoyée.",
 		//404
 		error404Title: "404",
 		error404Message: "Erreur 404 : Page non trouvée",
 		//chat
+		chatRoomCreationFailed: "Échec de la création de la salle",
+		emptyChatRoomName: "Le nom de la salle est vide",
 		privateMessages: "Messages privés",
 		createOrJoinRoom: "Créer ou rejoindre une salle",
+		errorLoadingMessage: "Erreur lors du chargement des messages.",
+		hasInvitedYou: "vous a invité à jouer",
+		youInvited: "Vous avez envoyé une invitation pour jouer",
 		chatRooms: "Salles de discussion",
 		privateMessagesWith: "Messages privés avec",
 		enterRoomName: "Entrez le nom de la salle",
@@ -461,6 +483,12 @@ export const translations = {
 		internalError: "Ocorreu um erro. Por favor, tente novamente mais tarde.",
 		invalidFormat: "Tipo de arquivo inválido. Apenas arquivos .jpg e .png são permitidos.",
 		emptyField: "Por favor, preencha este campo.",
+		//login_register
+		pwWrongSize: "A senha deve ter mais de 12 caracteres",
+		pwMissingUpper: "A senha deve conter pelo menos uma letra maiúscula",
+		pwMissingLower: "A senha deve conter pelo menos uma letra minúscula",
+		pwMissingNumber: "A senha deve conter pelo menos um número",
+		pwMissingSpecial: "A senha deve conter pelo menos um caractere especial",
 		//login_login
 		loginTitle: "Entrar",
 		login: "Entrar",
@@ -559,7 +587,7 @@ export const translations = {
 		addBlock: "Adicionar à lista de bloqueados",
 		addFriendButton: "Adicionar amigo",
 		removeFriend: "Remover amigo",
-		prompAddBlock: "Digite o nome de usuário para bloquear",
+		promptAddBlock: "Digite o nome de usuário para bloquear",
 		promptAddFriend: "Digite o nome de usuário do amigo que você deseja adicionar",
 		//manage_social
 		validationRemovalFirst: "Tem certeza de que deseja remover",
@@ -575,15 +603,20 @@ export const translations = {
 		okSasuke: "... Até que ponto você se odeia? mas não, não podemos deixar você fazer isso...",
 		userblocked: "foi bloqueado",
 		colorMode: "Modo de cor",
-		blockedByUser: "está bloqueando você",
-		blockingUser: "você está bloqueando",
+		blockedByUser: "este usuário está bloqueando você",
+		blockingUser: "você está bloqueando este usuário",
 		alreadySent: "Pedido de amizade já foi enviado.",
 		//404
 		error404Title: "404",
 		error404Message: "Erro 404: Página não encontrada",
 		//chat
+		chatRoomCreationFailed: "Falha ao criar a sala",
+		emptyChatRoomName: "O nome da sala está vazio",
 		privateMessages: "Mensagens privadas",
 		createOrJoinRoom: "Criar ou entrar em sala",
+		errorLoadingMessage: "Erro ao carregar mensagens.",
+		hasInvitedYou: "convidou você para jogar",
+		youInvited: "Você enviou um convite para jogar",
 		chatRooms: "Salas de chat",
 		privateMessagesWith: "Mensagens privadas com",
 		enterRoomName: "Digite o nome da sala",
