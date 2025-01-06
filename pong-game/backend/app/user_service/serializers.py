@@ -54,11 +54,15 @@ class UserSerializer(serializers.ModelSerializer):
 	def validate_username(self, value):
 		if nameNotClean(value):
 			raise serializers.ValidationError("this username contains bad language")
+		elif re.search("[!@#$%^&*(),.?\":{}|<>:;\'_+-=~`]", value):
+			raise serializers.ValidationError("username can only contain alphanumerical chars")
 		return value
 
 	def validate_alias(self, value):
 		if nameNotClean(value):
 			raise serializers.ValidationError("this alias contains bad language")
+		elif re.search("[!@#$%^&*(),.?\":{}|<>:;\'_+-=~`]", value):
+			raise serializers.ValidationError("alias can only contain alphanumerical chars")
 		return value
 
 	def create(self, validated_data):
