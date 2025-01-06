@@ -234,7 +234,7 @@ class LeaderBoardManager(models.Manager):
 	def updateLeaderBoard(self):
 		if not self._hasGameOccured():
 			return
-		players = CustomUser.objects.order_by('-mmr', '-winCount') # first by mmr and then by wins
+		players = CustomUser.objects.filter(is_admin=False).order_by('-mmr', '-winCount') # first by mmr and then by wins
 
 		with transaction.atomic(): # blocks all other write operations for db & if this code block fails, rewinds to before function call
 			self.model.objects.all().delete()

@@ -17,7 +17,6 @@ urlpatterns = [
 	path("logout/", LogoutView.as_view(), name="logout-user"),
 
 	# game administration
-	path("save-match/", SaveMatchResults.as_view(), name="save-match"), # might move this to game_service
 	path("banplayer/", BanPlayer.as_view(), name="banplayer"),
 	path("unbanplayer/", UnbanPlayer.as_view(), name="unbanplayer"),
 
@@ -41,6 +40,4 @@ urlpatterns = [
 	path("get-sent-friend-requests/", getSentFriendRequestsView.as_view(), name="get_sent_frequests"),
 	path("change-language/", changeLanguageView.as_view(), name="change_language"),
 	path("change-avatar/", changeAvatarView.as_view(), name="avatar_change"),
-	path("user-logs/", getAccessLogsView.as_view(), name="access_logs"),
-	
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

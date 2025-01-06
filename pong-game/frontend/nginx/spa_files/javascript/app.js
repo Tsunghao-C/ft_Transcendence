@@ -118,13 +118,15 @@ export async function loadPage(page) {
 	if (page !== "tournament") {
 		setIsTournament(false);
 	}
+	const navbar = document.getElementById("mainNavBar");
 	try {
 		response = await fetchWithToken('/api/user/getuser/');
 		data = await response.json();
-		console.log("User data: ", data);
 		setLanguageCookie(data.language);
 	} catch (error) {
+		console.log(error)
 		if (page !== "login" && page !== "register") {
+			navbar.innerHTML = '';
 			window.location.hash = "login";
 			return;
 		} else if (page === "login") {
@@ -134,7 +136,6 @@ export async function loadPage(page) {
 		}
 		return;
 	}
-	const navbar = document.getElementById("mainNavBar");
 	const path = window.location.pathname;
 	setNavbarHtml(navbar);
 	navbar.style.display = "flex";
