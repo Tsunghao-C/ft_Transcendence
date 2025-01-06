@@ -475,7 +475,7 @@ async function join_room(response) {
 
 async function rejoin_room(response) {
     if (typeOfGame != 'online') {
-	    window.location.hash = `/lobby/`;
+	    window.location.hash = `lobby`;
     }
     hideElem("create-match");
 	hideElem("join-queue");
