@@ -391,22 +391,16 @@ body {
 }
 
 .successMessage {
-	margin-top: 10px;
+	margin: 0;
+	padding: 0 0 0 0 !important;
 	color: rgb(77, 150, 77);
-	/* color: rgb(97, 172, 97); */
 }
 
 .errorMessage {
-	margin-top: 10px;
+	margin: 0;
+	padding: 0 0 0 0 !important;
 	color: rgb(175, 52, 52);
 }
-
-/* .register-view select {
-	position: absolute;
-	margin: 10px 20px 10px 10px;
-	padding: 10px;
-	width: 5px;
-} */
 
 .form-select {
 	width: auto !important;
