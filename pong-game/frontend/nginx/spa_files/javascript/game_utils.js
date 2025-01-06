@@ -3,6 +3,7 @@ import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
 import { fetchWithToken } from "./fetch_request.js";
 import { submitMatchResult } from "./game_tournament.js";
+import { translations as trsl } from "./language_pack.js";
 
 
 // let readyButton = null;
@@ -26,16 +27,16 @@ export let TournamentPlayers = {
 	}
 }
 export let playerEvent = {
-    player_1: {
-        pending: false,
-        type: -1,
-        id: null
-    },
+	player_1: {
+		pending: false,
+		type: -1,
+		id: null
+	},
 	player_2: {
-        pending: false,
-        type: -1,
-        id: null
-    }
+		pending: false,
+		type: -1,
+		id: null
+	}
 };
 
 export function setIsTournament(isTournamentValue) {
@@ -69,11 +70,11 @@ function drawElements(ball, player_1, player_2) {
 	// Player 1
 	ctx.fillStyle = player_1.color;
 	ctx.fillRect(player_1.x, player_1.y, PADDLE_WIDTH, PADDLE_HEIGHT);
-	
+
 	// Player 2
 	ctx.fillStyle = player_2.color;
 	ctx.fillRect(player_2.x, player_2.y, PADDLE_WIDTH, PADDLE_HEIGHT);
-	
+
 	// Ball
 	ctx.fillStyle = ball.color;
 	ctx.fillRect(ball.x - ball.radius, ball.y - ball.radius, ball.radius * 2, ball.radius * 2);
@@ -91,10 +92,10 @@ function drawGameOverScreen(gameState) {
 	ctx.textBaseline = 'hanging';
 	ctx.fillStyle = 'black';
 	// Game Over
-	const gameoverText = "Game Over";
+	const gameoverText = trsl[state.language].gameOver;
 	const gameoverTextWidth = ctx.measureText(gameoverText).width;
 	ctx.fillText(gameoverText, (canvas.width - gameoverTextWidth) / 2, canvas.height * 0.50);
-	
+
 	// Score
 	const scoreText = gameState.score_left + " : " + gameState.score_right;
 	const scoreTextWidth = ctx.measureText(scoreText).width;
@@ -139,28 +140,22 @@ export async function showReadyButton(roomId, alias) {
 
 	const readyButton = document.createElement('button');
 	readyButton.id = 'ready-button';
-	readyButton.textContent = 'Start Game';
+	readyButton.textContent = trsl[state.language].readyButton;
 
 	readyButton.onclick = function(event) {
 		try {
-			console.log("***********************");
-			console.log ("roomId is : ", roomId);
 			if (readyButton.disabled == false) {
-				readyButton.textContent = 'Waiting...';
+				readyButton.textContent = trsl[state.language].waiting;
 				readyButton.disabled = true;
-
 				state.gameSocket.send(JSON.stringify({
 					action: 'player_ready',
 					room_name: roomId,
-					player_id: alias
 				}));
-				console.log('Ready signal sent.');
 			}
 		} catch (error) {
 			console.error('Error sending ready signal:', error);
 			readyButton.disabled = false;
-			readyButton.textContent = 'Ready Up';
-			alert('Failed to send ready signal. Please try again.');
+			readyButton.textContent = trsl[state.language].readyButton;
 		}
 	};
 
@@ -213,83 +208,66 @@ async function sendLocalEvents() {
 	}
 }
 
-// export function handlePlayerEvent(event) {
-// 	if (event.type === 'keydown') {
-// 		if (event.code === 'ArrowUp') {
-// 			playerEvent.player_1.pending = true;
-// 			playerEvent.player_1.type = 'move_up';
-// 		} else if (event.code === 'ArrowDown') {
-// 			playerEvent.player_1.pending = true;
-// 			playerEvent.player_1.type = 'move_down';
-// 		}
-// 	} else if (event.type === 'keyup') {
-// 		if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
-// 			playerEvent.player_1.pending = true;
-// 			playerEvent.player_1.type = 'move_stop';
-// 		}
-// 	}
-// }
-
 function handleKeyDownOnePlayer(event) {
-    if (event.code === 'ArrowUp') {
-        playerEvent.player_1.pending = true;
-        playerEvent.player_1.type = 'move_up';
-    } else if (event.code === 'ArrowDown') {
-        playerEvent.player_1.pending = true;
-        playerEvent.player_1.type = 'move_down';
-    }
+	if (event.code === 'ArrowUp') {
+		playerEvent.player_1.pending = true;
+		playerEvent.player_1.type = 'move_up';
+	} else if (event.code === 'ArrowDown') {
+		playerEvent.player_1.pending = true;
+		playerEvent.player_1.type = 'move_down';
+	}
 }
 
 function handleKeyUpOnePlayer(event) {
-    if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
-        playerEvent.player_1.pending = true;
-        playerEvent.player_1.type = 'move_stop';
-    }
+	if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
+		playerEvent.player_1.pending = true;
+		playerEvent.player_1.type = 'move_stop';
+	}
 }
 
 function handleKeyDownTwoPlayers(event) {
-    if (event.code === 'KeyW') {
-        playerEvent.player_1.pending = true;
-        playerEvent.player_1.type = 'move_up';
-    } else if (event.code === 'KeyS') {
-        playerEvent.player_1.pending = true;
-        playerEvent.player_1.type = 'move_down';
-    } else if (event.code === 'ArrowUp') {
-        playerEvent.player_2.pending = true;
-        playerEvent.player_2.type = 'move_up';
-    } else if (event.code === 'ArrowDown') {
-        playerEvent.player_2.pending = true;
-        playerEvent.player_2.type = 'move_down';
-    }
+	if (event.code === 'KeyW') {
+		playerEvent.player_1.pending = true;
+		playerEvent.player_1.type = 'move_up';
+	} else if (event.code === 'KeyS') {
+		playerEvent.player_1.pending = true;
+		playerEvent.player_1.type = 'move_down';
+	} else if (event.code === 'ArrowUp') {
+		playerEvent.player_2.pending = true;
+		playerEvent.player_2.type = 'move_up';
+	} else if (event.code === 'ArrowDown') {
+		playerEvent.player_2.pending = true;
+		playerEvent.player_2.type = 'move_down';
+	}
 }
 
 function handleKeyUpTwoPlayers(event) {
-    if (event.code === 'KeyW' || event.code === 'KeyS') {
-        playerEvent.player_1.pending = true;
-        playerEvent.player_1.type = 'move_stop';
-    } else if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
-        playerEvent.player_2.pending = true;
-        playerEvent.player_2.type = 'move_stop';
-    }
+	if (event.code === 'KeyW' || event.code === 'KeyS') {
+		playerEvent.player_1.pending = true;
+		playerEvent.player_1.type = 'move_stop';
+	} else if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
+		playerEvent.player_2.pending = true;
+		playerEvent.player_2.type = 'move_stop';
+	}
 }
 
 function removeAllEventListeners() {
-    document.removeEventListener('keydown', handleKeyDownOnePlayer);
-    document.removeEventListener('keyup', handleKeyUpOnePlayer);
-    document.removeEventListener('keydown', handleKeyDownTwoPlayers);
-    document.removeEventListener('keyup', handleKeyUpTwoPlayers);
+	document.removeEventListener('keydown', handleKeyDownOnePlayer);
+	document.removeEventListener('keyup', handleKeyUpOnePlayer);
+	document.removeEventListener('keydown', handleKeyDownTwoPlayers);
+	document.removeEventListener('keyup', handleKeyUpTwoPlayers);
 }
 
 export function setUpOnePlayerControl() {
-    removeAllEventListeners();
-    document.addEventListener('keydown', handleKeyDownOnePlayer);
-    document.addEventListener('keyup', handleKeyUpOnePlayer);
-}
+	removeAllEventListeners();
+	document.addEventListener('keydown', handleKeyDownOnePlayer);
+	document.addEventListener('keyup', handleKeyUpOnePlayer);
+	}
 
 export function setUpTwoPlayersControl() {
-    removeAllEventListeners();
-    document.addEventListener('keydown', handleKeyDownTwoPlayers);
-    document.addEventListener('keyup', handleKeyUpTwoPlayers);
+	removeAllEventListeners();
+	document.addEventListener('keydown', handleKeyDownTwoPlayers);
+	document.addEventListener('keyup', handleKeyUpTwoPlayers);
 }
 
 
@@ -297,7 +275,7 @@ export function renderUserInfo(user1, user2 = null) {
 	const userInfoLeftDiv = document.getElementById("user-info-left");
 	userInfoLeftDiv.innerHTML = `
 		<hr class="hrs">
-		<h4>Player one</h4>
+		<h4>${trsl[state.language].player1}</h4>
 		<div style="display: flex; align-items: center; margin-bottom: 10px;">
 			<img src="${user1.avatar}" alt="Avatar" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 10px;">
 			<div>
@@ -311,11 +289,11 @@ export function renderUserInfo(user1, user2 = null) {
 	if (user2) {
 		userInfoRightDiv.innerHTML = `
 			<hr class="hrs">
-			<h4 class="player-two">Player two</h4>
+			<h4 class="player-two">${trsl[state.language].player2}</h4>
 			<div style="display: flex; align-items: center; justify-content: right; margin-bottom: 10px;">
 				<div>
-					<p style="margin: 0; font-weight: bold;">${user2.alias}</p>
-					<p style="margin: 0; font-size: 0.8rem;">MMR: ${user2.mmr}</p>
+					<p style="margin: 0; font-weight: bold; text-align: right;">${user2.alias}</p>
+					<p style="margin: 0; font-size: 0.8rem; text-align: right;">MMR: ${user2.mmr}</p>
 				</div>
 				<img src="${user2.avatar}" alt="Avatar" style="width: 50px; height: 50px; border-radius: 50%; margin-left: 10px;">
 			</div>
@@ -324,10 +302,10 @@ export function renderUserInfo(user1, user2 = null) {
 	} else {
 		userInfoRightDiv.innerHTML = `
 			<hr>
-			<h4 class="player-two">Player two</h4>
+			<h4 class="player-two">${trsl[state.language].player2}</h4>
 			<div style="display: flex; align-items: center; justify-content: right; margin-bottom: 10px;">
 				<div>
-					<p style="margin: 0; font-weight: bold;">Waiting...</p>
+					<p style="margin: 0; font-weight: bold;text-align: right;">${trsl[state.language].waiting}</p>
 				</div>
 				<img src="/media/default.jpg" alt="Avatar" style="width: 50px; height: 50px; border-radius: 50%; margin-left: 10px;">
 			</div>
@@ -348,6 +326,9 @@ const onmessage_methods = {
 	'game_start': start_game,
 	'game_update': update_game,
 	'game_over': set_game_over,
+	'join_error': join_error,
+	'game_aborted': display_game_aborted,
+	'already_in_game': display_already_ingame,
 	'error': log_error
 }
 
@@ -369,7 +350,8 @@ async function register_ai_room(response) {
 	if (isTournament) {
 		renderLocalUsers(TournamentPlayers.player1.alias, TournamentPlayers.player2.alias);
 	} else {
-		renderLocalUsers(response.player1_alias, "CPU [" + response.difficulty + "]");
+		const difficulty = response.difficulty === "easy" ? trsl[state.language].easy : response.difficulty == "medium" ? trsl[state.language].medium : trsl[state.language].hard;
+		renderLocalUsers(response.player1_alias, "CPU [" + difficulty + "]");
 	}
 	await showReadyButton(roomId, playerEvent.player_1.id);
 }
@@ -382,7 +364,7 @@ async function register_local_room(response) {
 	if (isTournament) {
 		renderLocalUsers(TournamentPlayers.player1.alias, TournamentPlayers.player2.alias);
 	} else {
-		renderLocalUsers(response.player1_alias, response.player1_alias + " friend");
+		renderLocalUsers(response.player1_alias, trsl[state.language].guest);
 	}
 	await showReadyButton(roomId, playerEvent.player_1.id);
 }
@@ -393,13 +375,14 @@ async function set_player1(response) {
 	profileResponse = await fetchWithToken(`/api/user/get-profile/?own=yes`);
 	player1Data = await profileResponse.json();
 	hideElem("create-match");
-	hideElem("join-match");
+	hideElem("join-queue");
+	hideElem("go-back");
 	renderUserInfo(player1Data.profile, null);
 	console.log("you are player1");
 	const inviteButton = document.getElementById("invite-button");
 	inviteButton.style.display = "inline-block";
 	inviteButton.addEventListener("click", async function() {
-		const aliasToInvite = prompt("Enter the alias of the player you want to invite:");
+		const aliasToInvite = prompt(`${trsl[state.language].roomInvite}`);
 		if (aliasToInvite) {
 			try {
 				const response = await fetchWithToken('/api/chat/create-invitation/', JSON.stringify({
@@ -407,10 +390,19 @@ async function set_player1(response) {
 					roomId: roomId,
 				}), 'POST');
 				if (!response.ok) {
-					console.log(response);
-					alert("Error: an error occured, please try again later");
+					if (response.detail === "You are blocking this user") {
+						alert(`${trsl[state.language].blockingUser} ${aliasToInvite}`);
+					} else if (response.detail === "This user is blocking you") {
+						alert(`${aliasToInvite} ${trsl[state.language].blockedByUser}`);
+					} else if (response.detail === "You cannot create a private room with yourself.") {
+						alert(`${trsl[state.language].lonelyTest}`);
+					} else if (response.error === "User not found.") {
+						alert(`${trsl[state.language].user} ${aliasToInvite} ${trsl[state.language].notFound}.`);
+					} else {
+						alert(`Failed to create private room for some mysterious reasons`);
+					}
 				} else {
-					alert("Invitation sent !");
+					alert(trsl[state.language].invitationSent);
 				}
 			} catch(error) {
 				console.log(error);
@@ -448,6 +440,17 @@ async function log_error(response) {
 	console.error('Error received:', response.message);
 }
 
+async function join_error(response) {
+	if (response.reason === "non-existing") {
+		alert(`${trsl[state.language].errorNonExistingRoom} ${response.room_name}`);
+	} else if (response.reason === "full") {
+		alert(`${trsl[state.language].errorFullRoom}`);
+	} else if (response.reason === "duplicates") {
+		alert(`${trsl[state.language].duplicateRoom}`);
+	}
+	window.location.hash = "lobby";
+}
+
 async function join_room(response) {
 	let player1Data;
 	let player2Data;
@@ -459,7 +462,8 @@ async function join_room(response) {
 		profileResponse = await fetchWithToken(`/api/user/get-profile/?uid=${response.player2}`);
 		player2Data = await profileResponse.json();
 		hideElem("create-match");
-		hideElem("join-match");
+		hideElem("join-queue");
+		hideElem("go-back");
 		renderUserInfo(player1Data.profile, player2Data.profile);
 	} catch(error) {
 		console.log(error);
@@ -469,15 +473,95 @@ async function join_room(response) {
 }
 
 async function rejoin_room(response) {
-	console.log('Paused gameRoom found');
-	console.log('Rejoining room (Hardcoded rn XD)');
+	hideElem("create-match");
+	hideElem("join-queue");
+	hideElem("go-back");
+	console.log('Rejoin room query received by server');
 	roomId = response.room_name;
-	await state.gameSocket.send(JSON.stringify({
-		action: "rejoin_room",
-		response: true //change this from true to false and vice versa to test rejoining rooms
-	}));
-	console.log("Starting gameLoop directly in rejoin_room_query branch")
-	await startGame();
+	const promptText = document.createElement('p');
+	promptText.id = 'rejoin-prompt-text';
+	promptText.textContent = trsl[state.language].onGoingGame;
+	promptText.style.fontSize = '24px';
+    promptText.style.textAlign = 'center';
+    promptText.style.marginBottom = '20px';
+	const trueButton = document.createElement('button');
+	trueButton.id = 'rejoin-true-button';
+	trueButton.textContent = trsl[state.language].rejoinGame;
+	const falseButton = document.createElement('button');
+	falseButton.id = 'rejoin-false-button';
+	falseButton.textContent = trsl[state.language].concedeGame;
+
+	trueButton.onclick = function(event) {
+		try {
+			console.log("Starting gameLoop directly in rejoin_room_query branch")
+			trueButton.disabled = true;
+			falseButton.disabled = true;
+			state.gameSocket.send(JSON.stringify({
+				action: "rejoin_room",
+				response: true
+			}));
+            promptText.parentNode.removeChild(promptText);
+            promptText.remove();
+			trueButton.parentNode.removeChild(trueButton);
+			trueButton.remove();
+			falseButton.parentNode.removeChild(falseButton);
+			falseButton.remove();
+			goBackButtonEventListener("game/");
+			startGame();
+		} catch (error) {
+			console.error('Error accepting to rejoin room:', error);
+		}
+	}
+	falseButton.onclick = function (event) {
+		try {
+			console.log("Refusing to rejoin ongoing gameRoom")
+			trueButton.disabled = true;
+			falseButton.disabled = true;
+			state.gameSocket.send(JSON.stringify({
+				action: "rejoin_room",
+				response: false
+			}));
+			showElem("create-match", "block");
+			showElem("join-queue", "block");
+			showElem("go-back", "block");
+            promptText.parentNode.removeChild(promptText);
+            promptText.remove();
+			trueButton.parentNode.removeChild(trueButton);
+			trueButton.remove();
+			falseButton.parentNode.removeChild(falseButton);
+			falseButton.remove();
+		} catch (error) {
+			console.error("Error when sending refusal to rejoin ongoing gameRoom: ", error);
+		}
+	}
+	const gameLobby = document.getElementById("game-lobby");
+	gameLobby.appendChild(promptText);
+	gameLobby.appendChild(trueButton);
+	gameLobby.appendChild(falseButton);
+}
+
+async function display_game_aborted() {
+	const promptText = document.createElement('p');
+	promptText.id = 'rejoin-prompt-text';
+	promptText.textContent = trsl[state.language].gameAborted;
+	promptText.style.fontSize = '24px';
+    promptText.style.textAlign = 'center';
+    promptText.style.marginBottom = '20px';
+	const gameLobby = document.getElementById("game-lobby");
+	gameLobby.appendChild(promptText);
+}
+
+async function display_already_ingame() {
+	hideElem("create-match");
+	hideElem("join-queue");
+	const promptText = document.createElement('p');
+	promptText.id = 'rejoin-prompt-text';
+	promptText.textContent = trsl[state.language].alreadyInGame;
+	promptText.style.fontSize = '24px';
+    promptText.style.textAlign = 'center';
+    promptText.style.marginBottom = '20px';
+	const gameLobby = document.getElementById("game-lobby");
+	gameLobby.appendChild(promptText);
 }
 
 export async function connectWebSocket() {
@@ -533,7 +617,7 @@ export async function connectWebSocket() {
 async function startGame() {
 	try {
 		destroyReadyButton();
-		hideElem("ready-button");
+//		hideElem("ready-button");
 		showElem("game", "block");
 		showElem("go-back-EOG", "block");
 		hideClass("hrs");
@@ -543,7 +627,7 @@ async function startGame() {
 				hideElem("invite-button");
 			}
 		}
-		gameLoop(roomId);	
+		gameLoop(roomId);
 	} catch (error) {
 		console.error('Exception caught in startGame', error);
 	}
@@ -553,7 +637,7 @@ export function renderLocalUsers(user1, user2) {
 	const userInfoDiv = document.getElementById("user-info-left");
 	userInfoDiv.innerHTML = `
 		<hr class="hrs">
-		<h4>Player one</h4>
+		<h4>${trsl[state.language].player1}</h4>
 		<div style="display: flex; align-items: center; margin-bottom: 10px;">
 			<div>
 				<p style="margin: 0; padding: 0; font-weight: bold;">${user1}</p>
@@ -564,7 +648,7 @@ export function renderLocalUsers(user1, user2) {
 	const aiInfoDiv = document.getElementById("user-info-right");
 	aiInfoDiv.innerHTML = `
 		<hr class="hrs">
-		<h4 class="player-two">Player two</h4>
+		<h4 class="player-two">${trsl[state.language].player2}</h4>
 		<div style="display: flex; align-items: center; justify-content: right; margin-bottom: 10px;">
 			<div>
 				<p style="margin: 0; padding: 0; font-weight: bold; text-align: right;">${user2}</p>
@@ -578,6 +662,6 @@ export function renderLocalUsers(user1, user2) {
 
 export function goBackButtonEventListener(location) {
 	document.getElementById('go-back-EOG').addEventListener('click', async () => {
-        window.location.hash = location;
-    });
+		window.location.hash = location;
+	});
 }

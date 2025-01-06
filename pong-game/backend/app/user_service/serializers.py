@@ -1,3 +1,4 @@
+import re
 from .models import CustomUser
 from rest_framework import serializers
 from better_profanity import profanity as pf
@@ -35,14 +36,27 @@ class UserSerializer(serializers.ModelSerializer):
 			"avatar": {"required": False},
 		}
 
+	def validate_password(self, value):
+		if len(value) < 12:
+			raise serializers.ValidationError("Password must be longer than 12 characters")
+		elif not re.search("[A-Z]", value):
+			raise serializers.ValidationError("Password must contain at least one uppercase letter")
+		elif not re.search("[a-z]", value):
+			raise serializers.ValidationError("Password must contain at least one lowercase letter")
+		elif not re.search("[0-9]", value):
+			raise serializers.ValidationError("Password must contain at least one number")
+		elif not re.search("[!@#$%^&*(),.?\":{}|<>:;\'_+-=~`]", value):
+			raise serializers.ValidationError("Password must contain at least one special character")
+		return value
+
 	def validate_username(self, value):
 		if nameNotClean(value):
-			raise serializers.ValidationError({"username": "this username contains bad language"})
+			raise serializers.ValidationError("this username contains bad language")
 		return value
 
 	def validate_alias(self, value):
 		if nameNotClean(value):
-			raise serializers.ValidationError({"alias": "this alias contains bad language"})
+			raise serializers.ValidationError("this alias contains bad language")
 		return value
 
 	def create(self, validated_data):

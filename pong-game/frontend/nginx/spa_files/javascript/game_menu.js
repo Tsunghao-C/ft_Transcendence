@@ -1,5 +1,5 @@
 import { translations } from "./language_pack.js";
-import { getLanguageCookie } from './fetch_request.js';
+import { state } from "./app.js";
 
 export function closeGameWebSocket() {
 	console.log("The WebSocket should be closed");
@@ -8,27 +8,21 @@ export function closeGameWebSocket() {
 export function setGameMenu(contentContainer, menu = "main") {
 	contentContainer.innerHTML = "";
 
-	const currentLanguage = localStorage.getItem("language");
 
 	const menus = {
 		main: [
-			{ text: `${translations[currentLanguage].solo}`, hash: "solo" },
-			{ text: `${translations[currentLanguage].multi}`, hash: "game/multiplayer" },
+			{ text: `${translations[state.language].solo}`, hash: "solo" },
+			{ text: `${translations[state.language].multi}`, hash: "game/multiplayer" },
 		],
 		multiplayer: [
-			{ text: `${translations[currentLanguage].local}`, hash: "game/local" },
-			{ text: `${translations[currentLanguage].online}`, hash: "game/online" },
-			{ text: `${translations[currentLanguage].back}`, hash: "game/main" },
+			{ text: `${translations[state.language].local}`, hash: "game/local" },
+			{ text: `${translations[state.language].online}`, hash: "lobby" },
+			{ text: `${translations[state.language].backButton}`, hash: "game/main" },
 		],
 		local: [
-			{ text: `${translations[currentLanguage].duel}`, hash: "duel" },
-			{ text: `${translations[currentLanguage].tournament}`, hash: "tournament" },
-			{ text: `${translations[currentLanguage].back}`, hash: "game/multiplayer" },
-		],
-		online: [
-			{ text: `${translations[currentLanguage].quickMatch}`, hash: "quickmatch" },
-			{ text: `${translations[currentLanguage].duel}`, hash: "lobby",},
-			{ text: `${translations[currentLanguage].back}`, hash: "game/multiplayer" },
+			{ text: `${translations[state.language].duel}`, hash: "duel" },
+			{ text: `${translations[state.language].tournament}`, hash: "tournament" },
+			{ text: `${translations[state.language].backButton}`, hash: "game/multiplayer" },
 		],
 	};
 
@@ -38,7 +32,12 @@ export function setGameMenu(contentContainer, menu = "main") {
 		gameView.className = "game-view";
 		const menuContainer = document.createElement("div");
 		menuContainer.className = "menu-container";
-
+		if (menuKey === "main") {
+			const title = document.createElement("h1");
+			title.textContent = "pQnGX";
+			title.className = "main-game-menu-title";
+			gameView.appendChild(title);
+		}
 		menu.forEach((item) => {
 			const button = document.createElement("button");
 			button.textContent = item.text;

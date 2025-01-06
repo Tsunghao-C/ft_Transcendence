@@ -45,25 +45,24 @@ async function fetchChatRoomsData() {
 ////////////////////////////////// Setup Html //////////////////////////////////
 
 function setChatViewHtml(contentContainer) {
-	const lng = getLanguageCookie() || "en";
 	contentContainer.innerHTML = `
 		<div class="chat-view">
 			<ul class="nav nav-tabs" id="chatBlockTabs" role="tablist">
 				<li class="nav-item">
-					<a class="nav-link active" id="private-message-tab" data-bs-toggle="tab" href="#private-message" role="tab" aria-controls="private-message" aria-selected="true">${trsl[lng].privateMessages}</a>
+					<a class="nav-link active" id="private-message-tab" data-bs-toggle="tab" href="#private-message" role="tab" aria-controls="private-message" aria-selected="true">${trsl[state.language].privateMessages}</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" id="chat-rooms-tab" data-bs-toggle="tab" href="#chat-rooms" role="tab" aria-controls="chat-rooms" aria-selected="false">${trsl[lng].chatRooms}</a>
+					<a class="nav-link" id="chat-rooms-tab" data-bs-toggle="tab" href="#chat-rooms" role="tab" aria-controls="chat-rooms" aria-selected="false">${trsl[state.language].chatRooms}</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" id="tournament-tab" data-bs-toggle="tab" href="#tournament-rooms" role="tab" aria-controls="chat-rooms" aria-selected="false">${trsl[lng].tournamentRooms}</a>
+					<a class="nav-link" id="tournament-tab" data-bs-toggle="tab" href="#tournament-rooms" role="tab" aria-controls="chat-rooms" aria-selected="false">${trsl[state.language].tournamentRooms}</a>
 				</li>
 			</ul>
 			<div class="tab-content">
 				<div class="tab-pane fade show active" id="private-message" role="tabpanel" aria-labelledby="private-message-tab">
 					<div class="chat-views-searchbar">
-						<input type="text" id="recipientUser" placeholder="${trsl[lng].searchByUsername}">
-						<button id="start-private-chat">${trsl[lng].searchButton}</button>
+						<input type="text" id="recipientUser" placeholder="${trsl[state.language].searchByUsername}">
+						<button id="start-private-chat">${trsl[state.language].searchButton}</button>
 					</div>
 					<div>
 						<p id="pmErrorMessage" class="errorMessage"></p>
@@ -73,20 +72,20 @@ function setChatViewHtml(contentContainer) {
 					<div class="chat-content" id="chat-content" style="display:none;">
 						<div id="chat-content-top">
 							<h4 id="pm-recipient"></h4>
-							<button class="go-back">↵ Go Back</button>
+							<button class="go-back">${trsl[state.language].backButton}</button>
 						</div>
 						<div id="messages" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;"></div>
 						<div id="chat-content-bottom">
-							<input class="message-input" type="text" placeholder="Type your message">
-							<button class="send-message"">Send</button>
-							<button id="send-private-invite">Play</button>
+							<input class="message-input" type="text" placeholder="${trsl[state.language].typeMessage}">
+							<button class="send-message"">${trsl[state.language].send}</button>
+							<button id="send-private-invite">${trsl[state.language].play}</button>
 						</div>
 					</div>
 				</div>
 				<div class="tab-pane fade" id="chat-rooms" role="tabpanel" aria-labelledby="chat-rooms-tab">
 					<div class="chat-views-searchbar">
-						<input type="text" id="room-name" placeholder="${trsl[lng].enterRoomName}">
-						<button id="create-public-room">${trsl[lng].createOrJoinRoom}</button>
+						<input type="text" id="room-name" placeholder="${trsl[state.language].enterRoomName}">
+						<button id="create-public-room">${trsl[state.language].createOrJoinRoom}</button>
 					</div>
 					<div>
 						<p id="chatRoomsErrorMessage" class="errorMessage"></p>
@@ -96,13 +95,13 @@ function setChatViewHtml(contentContainer) {
 					<div class="chat-content" id="room-chat-content" style="display:none;">
 						<div id="chat-content-top">
 							<h4 id="chat-room-title"></h4>
-							<button class="go-back">↵ Go Back</button>
+							<button class="go-back">${trsl[state.language].backButton}</button>
 						</div>
 						<div id="chat-room-messages" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;"></div>
 						<div id="chat-content-bottom">
-							<input class="message-input" id="message-input" type="text" placeholder="Type your message">
-							<button class="send-message" id="send-message">Send</button>
-							<button id="send-public-invite">Play</button>
+							<input class="message-input" id="message-input" type="text" placeholder="${trsl[state.language].typeMessage}">
+							<button class="send-message" id="send-message">${trsl[state.language].send}</button>
+							<button id="send-public-invite">${trsl[state.language].play}</button>
 						</div>
 					</div>
 				</div>
@@ -111,7 +110,7 @@ function setChatViewHtml(contentContainer) {
 					<div class="chat-content" id="tournament-content" style="display:none;">
 						<div id="tournament-content-top">
 							<h4 id="tournament-title"></h4>
-							<button class="go-back">↵ Go Back</button>
+							<button class="go-back">${trsl[state.language].backButton}</button>
 						</div>
 						<div id="tournament-messages" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;"></div>
 					</div>
@@ -121,7 +120,7 @@ function setChatViewHtml(contentContainer) {
 		`
 }
 
-function handleTabs() {
+function handleTabs(roomType = "") {
 	const pmNavTab = document.getElementById("private-message-tab");
 	const chatRoomsNavTab = document.getElementById("chat-rooms-tab");
 	const tournamentNavTab = document.getElementById("tournament-tab");
@@ -139,7 +138,7 @@ function handleTabs() {
 		pmTabPane.className = "tab-pane fade";
 		tournamentTabPane.className = "tab-pane fade";
 		chatRoomsTabPane.className = "tab-pane fade show active";
-	} else if (currentHash.startsWith("#chat/tournament")) {
+	} else if (roomType == "tournament") {
 		pmNavTab.className = "nav-link";
 		chatRoomsNavTab.className = "nav-link";
 		tournamentNavTab.className = "nav-link active";
@@ -160,7 +159,6 @@ function handleTabs() {
 	chatRoomsNavTab.addEventListener("shown.bs.tab", function () {
 		window.location.hash = "chat/public";
 	});
-
 	tournamentNavTab.addEventListener("shown.bs.tab", function () {
 		window.location.hash = "chat/tournament";
 	});
@@ -510,13 +508,12 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 
 	// Fetch Chat Rooms Data
 	const { success, roomData, userAlias } = await fetchChatRoomsData();
-	console.log("at beginning, user alias is :", userAlias);
 	if (!success)
 		return;
 
 	// Set innerHtml
 	setChatViewHtml(contentContainer);
-	handleTabs();
+	handleTabs(roomType);
 
 	// Set room lists
 	setPmList(roomData);
