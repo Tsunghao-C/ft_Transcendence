@@ -33,8 +33,10 @@ export async function setProfileView(contentContainer, usernameInHash = "") {
 		<div class="profile-view">
 			<h2>${trsl[state.language].profileTitle}</h2>
 			<div class="search-bar mb-3">
-				<input type="text" id="searchInput" class="form-control" placeholder="${trsl[state.language].searchByUsername}" />
-				<button id="searchButton" class="btn btn-primary mt-2">${trsl[state.language].searchButton}</button>
+				<div class="input-and-button-line">
+					<input type="text" id="searchInput" class="form-control" placeholder="${trsl[state.language].enterUsername}" />
+					<button id="searchButton" class="btn btn-primary mt-2">${trsl[state.language].searchButton}</button>
+				</div>
 			</div>
 			<div id="profileResult"></div>
 		</div>
@@ -45,7 +47,7 @@ export async function setProfileView(contentContainer, usernameInHash = "") {
 	const profileResult = document.getElementById("profileResult");
 
 	if (!response.ok && data.detail === "No CustomUser matches the given query.") {
-		profileResult.innerHTML = `<p>${trsl[state.language].userNotFound}</p>`;
+		profileResult.innerHTML = `<p class="errorMessage">${trsl[state.language].userNotFound}</p>`;
 	} else {
 		displayProfile(data.profile);
 	}
@@ -56,6 +58,13 @@ export async function setProfileView(contentContainer, usernameInHash = "") {
 			return;
 		}
 		window.location.hash = `profile/${searchQuery}`;
+	});
+
+	searchInput.addEventListener("keydown", (event) => {
+		if (event.key === "Enter") {
+			event.preventDefault();
+			searchButton.click();
+		}
 	});
 
 	function displayProfile(profile) {
