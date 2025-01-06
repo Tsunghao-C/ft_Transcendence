@@ -473,7 +473,10 @@ async function join_room(response) {
 }
 
 async function rejoin_room(response) {
-	hideElem("create-match");
+    if (typeOfGame != "online") {
+	    window.location.hash = `lobby/`;
+    }
+    hideElem("create-match");
 	hideElem("join-queue");
 	hideElem("go-back");
     hideElem("easy");
