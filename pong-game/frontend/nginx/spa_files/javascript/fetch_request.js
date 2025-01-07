@@ -61,6 +61,9 @@ export async function fetchWithToken(url, body = null, method = 'GET', needForCo
 		console.log(options);
 
 		const response = await fetch(url, options);
+		if (response.status === 403) {
+			throw new Error("Failed to refresh token. Please log in again.");
+		}
 		if (response.status === 401 && !hasTriedRefresh) {
 			console.log("Access token expired, attempting to refresh...");
 			hasTriedRefresh = true;

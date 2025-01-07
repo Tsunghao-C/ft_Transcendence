@@ -48,8 +48,8 @@ class getLeaderBoardView(APIView):
 		page = int(request.query_params.get("page", 1))
 
 		leaderboard = LeaderBoard.objects.all()
-		# if search_query:
-			# leaderboard = leaderboard.filter(player__alias__icontains=search_query)
+		if search_query:
+			leaderboard = leaderboard.filter(player__alias__icontains=search_query)
 
 		if not leaderboard.exists():
 			return Response({"detail": "no leaderboard exists."}, status=200)
@@ -58,7 +58,7 @@ class getLeaderBoardView(APIView):
 			current_page = paginator.page(page)
 		except Exception:
 			raise ValidationError({"detail": "Invalid page number."})
-
+		print("leaderboard is :", leaderboard)
 		leaderboardData = [
 			{
 				"rank": gamer.rank,

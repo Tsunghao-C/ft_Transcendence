@@ -12,6 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
 		fields = [
 			"id",
 			"username",
+			"is_admin",
 			"email",
 			"password", 
 			"alias", 
@@ -25,6 +26,7 @@ class UserSerializer(serializers.ModelSerializer):
 			"avatar",
 			]
 		extra_kwargs = {
+			"is_admin": {"read_only": True},
 			"password": {"write_only": True}, # we accept the password as an input but we don't return it
 			"mmr": {"read_only": True}, # used for matchmaking / leaderboards
 			"is_banned": {"read_only": True}, # used later when banning people
@@ -52,11 +54,15 @@ class UserSerializer(serializers.ModelSerializer):
 	def validate_username(self, value):
 		if nameNotClean(value):
 			raise serializers.ValidationError("this username contains bad language")
+		elif re.search("[!@#$%^&*(),.?\":{}|<>:;\'_+-=~`]", value):
+			raise serializers.ValidationError("username can only contain alphanumerical chars")
 		return value
 
 	def validate_alias(self, value):
 		if nameNotClean(value):
 			raise serializers.ValidationError("this alias contains bad language")
+		elif re.search("[!@#$%^&*(),.?\":{}|<>:;\'_+-=~`]", value):
+			raise serializers.ValidationError("alias can only contain alphanumerical chars")
 		return value
 
 	def create(self, validated_data):

@@ -55,7 +55,7 @@ function displayTournament(tournament, container) {
 		bracketDiv.classList.add("bracket");
 		const matchupHtml = getMatchupsHtml(bracket, index);
 		let roundTitle = `Round ${index + 1}`;
-		if (n % 2 != 0 && index == 0) {
+		if (!isPowerOf2(n) && index == 0) {
 			roundTitle = trsl[state.language].playOff;
 		}
 		bracketDiv.innerHTML = `
@@ -180,13 +180,13 @@ function getMatchupsHtml(bracket, index) {
 	const n = bracket.players.length;
 	console.log("number of player is : ", n);
 
-	// /!\ debug print, delete when pushing
+	// // /!\ debug print, delete when pushing
 	// bracket.players.forEach((player, i) => {
 	// 	console.log("player " + i + " is : ", player);
 	// })
 
 	// ODD < 7
-	if (n % 2 != 0 && index == 0) {
+	if (!isPowerOf2(n) && index == 0) {
 		return getPlayoffHtml(bracket);
 	}
 
@@ -211,7 +211,7 @@ function setTournamentViewForm(contentContainer) {
 			<hr>
 			<div id="players-container">
 				<div class="player-entry">
-					<input type="text" placeholder="Enter player 1 alias" name="player1" required />
+					<input type="text" placeholder="${trsl[state.language].enterPlayer} 1" name="player1" required />
 					<select name="type1">
 						<option value="human">${trsl[state.language].human}</option>
 						<option value="easy">${trsl[state.language].tournamentEasy}</option>
@@ -220,7 +220,7 @@ function setTournamentViewForm(contentContainer) {
 					</select>
 				</div>
 				<div class="player-entry">
-					<input type="text" placeholder="Enter player 2 alias" name="player2" required />
+					<input type="text" placeholder="${trsl[state.language].enterPlayer} 2" name="player2" required />
 					<select name="type2">
 						<option value="human">${trsl[state.language].human}</option>
 						<option value="easy">${trsl[state.language].tournamentEasy}</option>

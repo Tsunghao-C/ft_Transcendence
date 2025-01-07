@@ -42,7 +42,7 @@ class Ball():
 		self.x = canvas_width * 0.5
 		self.y = canvas_height * 0.5
 		self.speedX = 5
-		self.speedY = 5
+		self.speedY = 0
 		self.radius = BALL_RADIUS
 
 class GameRoom():
@@ -155,7 +155,10 @@ class GameRoom():
 					else:
 						self.ball.y = player.y - self.ball.radius
 				else:
-					self.ball.speedX *= -1
+					if self.ball.speedX >= 10.00 or self.ball.speedX <= -10.00:
+						self.ball.speedX *= -1
+					else:
+						self.ball.speedX *= -1.05
 					relativeIntersection = player.y + PADDLE_HEIGHT * 0.5 - self.ball.y
 					normalizedIntersection = relativeIntersection / (PADDLE_HEIGHT * 0.5)
 					self.ball.speedY = -normalizedIntersection * 5
@@ -163,10 +166,6 @@ class GameRoom():
 						self.ball.x = player.x + PADDLE_WIDTH + self.ball.radius
 					else:
 						self.ball.x = player.x - self.ball.radius
-
-	def _get_new_mmr(self, userMMR: int, oppMMR: int, match_outcome: int):
-		E = 1 / (1 + 10**((oppMMR - userMMR)/400))
-		return int(userMMR + 30 * (match_outcome - E))
 
 	def record_match_result_sync(self, winner):
 		try:
@@ -221,7 +220,7 @@ class GameRoom():
 			if self.ball.x - self.ball.radius < 0:
 				logger.info(f'{self.room_id}: player {self.right_player} scored')
 				self.players[self.right_player].score += 1
-				if self.players[self.right_player].score == 5: #Edit this to extend the score before gameover is called
+				if self.players[self.right_player].score == 50: #Edit this to extend the score before gameover is called
 					self.winner = self.right_player
 					self.game_over = True
 				self.ball.x = CANVAS_WIDTH * 0.7
@@ -229,7 +228,7 @@ class GameRoom():
 			else:
 				logger.info(f'{self.room_id}: player {self.left_player} scored')
 				self.players[self.left_player].score += 1
-				if self.players[self.left_player].score == 5: #Same here
+				if self.players[self.left_player].score == 50: #Same here
 					self.game_over = True
 				self.ball.x = CANVAS_WIDTH * 0.3
 				self.ball.y = CANVAS_WIDTH * 0.5
