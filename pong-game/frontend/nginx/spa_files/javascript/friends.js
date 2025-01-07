@@ -10,6 +10,7 @@ import { cancelFriendRequest } from "./manage_social.js";
 import { unblockUser } from "./manage_social.js";
 import { blockUser } from "./manage_social.js";
 import { state } from "./app.js";
+import { clearInput } from "./utils.js";
 
 export async function setFriendsView(contentContainer, displayedTab = "friends") {
 	let friendRequest;
@@ -245,6 +246,7 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 
 	addBlockButton.addEventListener("click", async () => {
 		const newBlockUsername = document.getElementById("addBlockInput").value;
+		clearInput("addBlockInput");
 		if (newBlockUsername) {
 			try {
 				await blockUser(newBlockUsername);
@@ -272,6 +274,7 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 	//REQUEST
 	addFriendButton.addEventListener("click", async () => {
 		const newfriend = document.getElementById("addFriendInput").value;
+		clearInput("addFriendInput");
 		if (newfriend) {
 			try {
 				await addFriend(newfriend);
