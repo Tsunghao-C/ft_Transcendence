@@ -5,15 +5,16 @@ certs:
 	chmod +x pong-game/monitoring/elk/create-certs.sh && \
 	./pong-game/monitoring/elk/create-certs.sh
 
-go: certs build
+env:
+	- cp .env.example .env
+
+go: certs env build
 
 build:
-	cp .env.example .env
-	docker compose -f docker-compose.yml up --build -d
+	docker compose up --build -d
 
 run:
-	cp .env.example .env
-	docker compose -f docker-compose.yml up --build
+	docker compose up --build
 
 status:
 	docker compose -f docker-compose.yml ps
@@ -112,4 +113,4 @@ in:
 %:
 	@:
 
-.PHONY: all build check run clean go start stop down status re kill in update
+.PHONY: all build check run clean go start stop down status re kill in update env
