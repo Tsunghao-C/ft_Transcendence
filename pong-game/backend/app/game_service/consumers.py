@@ -110,7 +110,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 	async def check_for_existing_room(self):
 		for stray_room_id, room_data in active_online_games.items():
 			player_ids = room_data["player_data"]["ids"]
-			print(f"player_id: {player_ids}")
 			if self.user.id in player_ids:
 				index = player_ids.index(self.user.id)
 				if self.user.id is not room_data['room_data'].get_missing_player_id():
