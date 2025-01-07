@@ -243,21 +243,6 @@ body {
 	color: white;
 }
 
-/*/!\ can be deleted before push */
-.tmpLangSelect {
-	position: absolute;
-    top: 25px;
-    right: 11%;
-    width: 40px;
-	height: 30px;
-    z-index: 10;
-	background-color: rgba(255, 255, 255, 0.0);
-	color: rgba(0,0,0, 0.5);
-	font-size: 0.8rem;
-	border: 1px solid rgba(0,0,0, 0.05);
-	border-radius: 5px;
-}
-
 .vcenter {
     display: flex;
     align-items: center;
@@ -1073,6 +1058,34 @@ table {
 	height: var(--inner-view-height);
 	overflow-y: auto;
 	box-sizing: border-box; 
+}
+
+.about-view h2 {
+	padding: 10px 0 10px 0 !important;
+	font-size: 1.5rem !important;
+}
+
+.about-view p {
+	padding: 10px 0 0 0 !important;
+	font-size: 0.8rem !important;
+	margin: 0;
+}
+
+.about-view h3 {
+	padding: 20px 0 10px 0 !important;
+	font-size: 1.3rem;
+	text-decoration: underline;
+}
+
+.about-view li {
+	padding: 0 0 0 0 !important;
+	font-size: 0.8rem !important;
+	margin: 0;
+}
+
+.about-view h4 {
+	padding: 10px 0 0 0 !important;
+	font-size: 1.1rem;
 }
 
 /**************************** Personal data ****************************/
