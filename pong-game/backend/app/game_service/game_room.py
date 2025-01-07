@@ -97,7 +97,7 @@ class GameRoom():
 		return self.missing_player
 	
 	async def receive_player_input(self, player_id, input):
-		logger.info(f'{self.room_id}: Received player {player_id} input')
+#		logger.info(f'{self.room_id}: Received player {player_id} input')
 		if player_id in self.players:
 			self.time_since_last_receive[player_id] = time.perf_counter()
 			player = self.players[player_id]
@@ -198,7 +198,7 @@ class GameRoom():
 				'score_right': self.players[self.right_player].score,
 				'winner': winner
 				}
-		print(game_report)
+		logger.info(f"{self.room_id}: game report: {game_report}")
 		for connection in self.connections:
 			await connection.send(json.dumps({
 				'type': 'game_over',
@@ -306,7 +306,6 @@ class GameRoom():
 					if self.server_order is ABORTED:
 						logger.info(f'{self.room_id}: No players left in room, aborting...')
 						return ABORTED
-					logger.info(f'{self.room_id}: Missing player detected')
 				self.update_players()
 				# logger.info(f'{self.room_id}: updated players')
 				self.handle_player_collisions()
@@ -323,9 +322,9 @@ class GameRoom():
 					)
 					await self.receive_player_input(self.right_player, ai_move)
 				if self.game_over or self.server_order is CONCEDE:
-					# logger.info(f'{self.room_id}: preparing gameover')
+					logger.info(f'{self.room_id}: preparing gameover')
 					await self.declare_winner(self.winner)
-					# logger.info(f'{self.room_id}: done')
+					logger.info(f'{self.room_id}: done')
 					return
 				await self.send_update()
 				# logger.info(f'{self.room_id}: sent update to clients')
