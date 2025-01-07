@@ -49,7 +49,7 @@ make # It will do step 1 to 3 and then do unit tests in the end
 ```bash
 make go
 ```
-- To remove stop and remvoe
+- To stop and remvoe services and credentials
 ```bash
 make clean # It will delete the .env
 ```
