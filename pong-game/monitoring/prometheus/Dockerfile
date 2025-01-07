@@ -17,12 +17,6 @@ COPY ./conf/web-config.yml /prometheus/
 COPY ./conf/alert.rules /prometheus/
 
 RUN mkdir -p /etc/prometheus/certs
-# Generate ssl certificates
-# RUN mkdir -p /etc/prometheus/certs && \
-#     openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-#     -keyout /etc/prometheus/certs/prometheus.key \
-#     -out /etc/prometheus/certs/prometheus.crt \
-#     -subj "/C=US/ST=State/L=City/O=Organization/CN=prometheus"
 
 RUN useradd -r -u 1000 prometheus-user && \
     chown -R prometheus-user:prometheus-user /etc/prometheus && \
@@ -30,8 +24,6 @@ RUN useradd -r -u 1000 prometheus-user && \
     chown -R prometheus-user:prometheus-user /var/log && \
     chown -R prometheus-user:prometheus-user /var/cache && \
     chown -R prometheus-user:prometheus-user /usr/share
-    # chmod 600 /etc/prometheus/certs/prometheus.key && \
-    # chmod 644 /etc/prometheus/certs/prometheus.crt
 
 USER prometheus-user
 

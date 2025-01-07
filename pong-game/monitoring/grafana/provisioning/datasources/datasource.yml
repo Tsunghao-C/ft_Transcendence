@@ -1,12 +1,12 @@
 apiVersion: 1
-
 datasources:
   - name: Prometheus
     type: prometheus
     access: proxy
     url: https://prometheus:9090
     jsonData:
-      tlsAuth: false
+      tlsAuth: true
+      tlsAuthWithCACert: true
       tlsSkipVerify: true
       timeInterval: "15s"
     isDefault: true
