@@ -16,8 +16,8 @@ openssl req -new -key $CERT_DIR/prometheus.key \
     -subj "/CN=prometheus/O=PromGrafana/C=US"
 openssl x509 -req -days 365 -in $CERT_DIR/prometheus.csr \
     -CA $CERT_DIR/ca.crt -CAkey $CERT_DIR/ca.key -CAcreateserial \
-    -out $CERT_DIR/prometheus.crt
-    # -extfile <(printf "subjectAltName=DNS:prometheus,DNS:localhost")
+    -out $CERT_DIR/prometheus.crt \
+    -extfile <(printf "subjectAltName=DNS:prometheus,DNS:localhost")
 
 # Create certificates for Grafana
 openssl genrsa -out $CERT_DIR/grafana.key 2048
@@ -26,8 +26,8 @@ openssl req -new -key $CERT_DIR/grafana.key \
     -subj "/CN=grafana/O=PromGrafana/C=US"
 openssl x509 -req -days 365 -in $CERT_DIR/grafana.csr \
     -CA $CERT_DIR/ca.crt -CAkey $CERT_DIR/ca.key -CAcreateserial \
-    -out $CERT_DIR/grafana.crt
-    # -extfile <(printf "subjectAltName=DNS:grafana,DNA:localhost")
+    -out $CERT_DIR/grafana.crt \
+    -extfile <(printf "subjectAltName=DNS:grafana,DNS:localhost")
 
 rm $CERT_DIR/*.csr
 
