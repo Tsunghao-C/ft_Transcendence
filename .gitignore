@@ -27,3 +27,4 @@ pong-game/tests/lib/
 
 # ELK certs
 pong-game/monitoring/elk/certs
+pong-game/monitoring/certs

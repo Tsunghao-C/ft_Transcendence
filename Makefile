@@ -3,7 +3,9 @@ all: go check
 certs:
 	export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/ && \
 	chmod +x pong-game/monitoring/elk/create-certs.sh && \
-	./pong-game/monitoring/elk/create-certs.sh
+	chmod +x pong-game/monitoring/create-monitoring-certs.sh && \
+	./pong-game/monitoring/elk/create-certs.sh && \
+	./pong-game/monitoring/create-monitoring-certs.sh
 
 env:
 	- cp .env.example .env
@@ -88,6 +90,7 @@ clean:
 	docker system prune --force --volumes  # cleanup unused resources
 	docker compose -f docker-compose.yml down -v --remove-orphans
 	rm -rf pong-game/monitoring/elk/certs
+	rm -rf pong-game/monitoring/certs
 	rm .env
 
 re: clean all
