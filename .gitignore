@@ -7,7 +7,6 @@
 *.pem
 
 # local env files
-# srcs/.env
 pong-game/.env
 .env
 .env.local
@@ -25,12 +24,6 @@ pong-game/tests/lib/
 # C extensions
 *.so
 *.o
-
-# Vault volume files
-pong-game/security/vault/volumes/file/core
-pong-game/security/vault/volumes/file/logical
-pong-game/security/vault/volumes/file/sys
-pong-game/security/vault/volumes/shared_data/*
 
 # ELK certs
 pong-game/monitoring/elk/certs

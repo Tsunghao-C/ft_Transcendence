@@ -17,22 +17,39 @@ Developing a web game Pong from scratch including the following features:
 
 ## Quick Start 
 
-### By Makefile
-1. Clone the repo as above
+1. Clone the repo to your local machine
 ```bash
 git clone <repository-url>
 cd ft_Transcendence
 ```
-2. Use makefile
-- To build run and check
+2. Setup necessary credentials and launch
+
+- 1) generate CA and certificates for ELK stack
 ```bash
-make # It will create a copy of .env automatically, and do all the checks
+make certs 
+# It will generate CA and SSL signed by CA in pong-game/monitoring/elk/certs
 ```
+- 2) generate .env credentials
+```bash
+make env 
+# It will create .env file based on .env.example file, or you can manually create yourself
+```
+- 3) docker command to launch all services
+```bash 
+docker compose up --build # Added -d flag if you want to have all logs in the background
+```
+
+**You can also simply use makefile cmd to build run and check automatically**
+```bash
+make # It will do step 1 to 3 and then do unit tests in the end
+```
+
+3. Other usefull make commands
 - To build and run the program without checking
 ```bash
 make go
 ```
-- To remove stop and remvoe
+- To stop and remvoe services and credentials
 ```bash
 make clean # It will delete the .env
 ```
@@ -40,7 +57,6 @@ make clean # It will delete the .env
 ```bash
 make re
 ```
-3. Other usefull make commands
 - To go inside a specific container using bash
 ```bash
 make in ${service_name} # equals to do "docker exec -it ${service_name} bash"
@@ -59,10 +75,12 @@ make kill # It will kill every cached images even in ~/.docker/buildx
 #### External
 - Frontend (Nginx + WFA + SPA): https://localhost:8443
 ![Alt text](image/login/Pong-game_login_page.png)
-- ELK Stack (Kibana UI): https://localhost:5601
-![Alt text](image/login/ELK_login_page.png)
 - Security (Vault UI): https://localhost:8200
 ![Alt text](image/login/Vault_login_page.png)
+- ELK Stack (Kibana UI): https://localhost:5601
+![Alt text](image/login/ELK_login_page.png)
+- Prometheus: https://localhost:9090
+- Grafana: https://localhost:3000
 #### Internal access port
 - Backend (django and its services): 8004 (api), 8001 (ws)
 - Postgres DB: 5434
@@ -71,6 +89,7 @@ make kill # It will kill every cached images even in ~/.docker/buildx
 - Logstash: 5044
 - Prometheus: 9090
 - Grafana: 3001
+- node-exporter: 9100
 
 ## Team Development Guidelines
 
@@ -97,6 +116,5 @@ make kill # It will kill every cached images even in ~/.docker/buildx
 ### Notes
 
 1. To clear everything in docker ```docker stop $(docker ps -qa); docker rm $(docker ps -qa); docker rmi -f $(docker images -qa); docker volume rm $(docker volume ls -q); docker network rm $(docker network ls -q) 2>/dev/null```
-
 
 2. To test XXS and see WAF audit log, do ```curl -k "https://localhost:8443/test-waf?input=<script>alert(1)</script>"```
