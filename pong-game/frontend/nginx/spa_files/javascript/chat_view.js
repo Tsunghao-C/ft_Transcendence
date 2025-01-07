@@ -2,7 +2,7 @@ import { fetchWithToken } from "./fetch_request.js";
 import { getLanguageCookie } from "./fetch_request.js";
 import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
-import { clearInput, hideElem, showElem, hideClass, showClass } from "./utils.js";
+import { hideClass, showClass } from "./utils.js";
 import { sendDuelRequestFromGameRoom } from "./manage_social.js";
 import { translations as trsl } from "./language_pack.js";
 import { isAlphanumeric } from "./utils.js";

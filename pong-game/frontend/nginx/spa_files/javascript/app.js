@@ -91,8 +91,6 @@ function setNavbarHtml(container) {
 }
 
 export async function loadPage(page) {
-	//add a checker to check there is no more than one /
-	//if invalid token, the server explodes
 	let data;
 	let response;
 	const contentContainer = document.getElementById("center-box");
@@ -293,16 +291,3 @@ document.addEventListener("DOMContentLoaded", function () {
 
 	attachNavigationListeners();
 });
-
-// for language test
-function languageEventListener(page) {
-    const languageSelect = document.getElementById("languageSelect");
-    languageSelect.value = getLanguageCookie() || "en";
-    languageSelect.addEventListener("change", async (event) => {
-        const selectedLanguage = event.target.value;
-        console.log("selected language is : " + selectedLanguage)
-        await fetchWithToken('/api/user/change-language/', JSON.stringify({ newLang: selectedLanguage }), 'POST');
-        setLanguageCookie(selectedLanguage);
-        loadPage(page);
-    });
-}

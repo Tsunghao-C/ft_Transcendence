@@ -46,10 +46,8 @@ function displayTournament(tournament, container) {
 	});
 
 	const bracketsContainer = document.getElementById("brackets-container");
-	const numOfBrackets = tournament.brackets.length; // for debugging 7 < odd | delete once fixed
-	console.log("num of brackets is : ", numOfBrackets); // for debugging 7 < odd | delete once fixed
+	const numOfBrackets = tournament.brackets.length;
 	tournament.brackets.forEach((bracket, index) => {
-		console.log("index is : ", index); // for debugging 7 < odd | delete once fixed
 		const n = bracket.players.length;
 		const bracketDiv = document.createElement("div");
 		bracketDiv.classList.add("bracket");
@@ -178,19 +176,11 @@ function getRightPlayerHtml(player) {
 function getMatchupsHtml(bracket, index) {
 	let html = "";
 	const n = bracket.players.length;
-	console.log("number of player is : ", n);
-
-	// // /!\ debug print, delete when pushing
-	// bracket.players.forEach((player, i) => {
-	// 	console.log("player " + i + " is : ", player);
-	// })
-
-	// ODD < 7
+	// !POWEROF2
 	if (!isPowerOf2(n) && index == 0) {
 		return getPlayoffHtml(bracket);
 	}
-
-	// EVEN
+	// POWEROF2
 	bracket.players.forEach((player, i) => {
 		if (i % 2 == 0) {
 			html += getLeftPlayerHtml(player);
