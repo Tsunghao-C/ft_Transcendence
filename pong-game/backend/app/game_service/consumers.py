@@ -200,9 +200,9 @@ class GameConsumer(AsyncWebsocketConsumer):
 		if local_game is False:
 			if roomID in active_online_games:
 				game_room = active_online_games[roomID]["room_data"]
-				logger.info(f"{self.user.id}: Received player input")
+                #logger.info(f"{self.user.id}: Received player input")
 				await game_room.receive_player_input(player_id, data['input'])
-				logger.info(f"{self.user.id}: Forwarded player input")
+                #logger.info(f"{self.user.id}: Forwarded player input")
 			else:
 				await self.send(json.dumps({
 					"type": "error",
@@ -212,9 +212,9 @@ class GameConsumer(AsyncWebsocketConsumer):
 			if roomID in active_local_games.keys():
 				game_room = active_local_games[roomID]["room_data"]
 				player_id = data['player_id']
-				logger.info(f"{self.user.id}: Received player input")
+				#logger.info(f"{self.user.id}: Received player input")
 				await game_room.receive_player_input(player_id, data['input'])
-				logger.info(f"{self.user.id}: Forwarded player input")
+				#logger.info(f"{self.user.id}: Forwarded player input")
 			else:
 				await self.send(json.dumps({
 					"type": "error",
@@ -301,7 +301,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 
 	async def get_matched(self, queue_entry):
 		logger.info(f"{self.user.id}: Starting get_matched")
-		print(f"Starting get_matched for user {self.user.id}")
 		while self.connected:
 			is_matched = await sync_to_async(queue_entry.match_players)()
 			existing_game = await sync_to_async(
@@ -312,23 +311,16 @@ class GameConsumer(AsyncWebsocketConsumer):
 			)()
 			matched = is_matched or existing_game
 			logger.info(f"{self.user.id}: {matched} for user")
-			print(f"Matched result: {matched} for user {self.user.id} ")  # Debug 1
-
 			if matched:
 				game = await sync_to_async(
 					LiveGames.objects.filter(
 						Q(p1=self.user) | Q(p2=self.user)
 					).first
 				)()
-				print(f"Game found: {game}")  # Debug 2
 				logger.info(f"{self.user.id}: Game found: {game}")
-
 				if not game:
 					continue
-
-				print(f"Game status: {game.status}")  # Debug 3
 				logger.info(f"{self.user.id}: Game status: {game.status}")
-
 				if game.status != LiveGames.Status.not_started:
 					await self.send(json.dumps({
 						"type":"error",
@@ -337,10 +329,8 @@ class GameConsumer(AsyncWebsocketConsumer):
 					break
 
 				is_p1 = await sync_to_async(lambda: game.p1 == self.user)()
-				print(f"Is P1: {is_p1}")  # Debug 4
 				logger.info(f"{self.user.id}: Is P1: {is_p1}")
 				if is_p1:
-					print("user one is creating the game ")
 					logger.info(f"{self.user.id}: user one is creating the game ")
 					await self.create_quick_match_lobby(game)
 					return
@@ -348,7 +338,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 				elapsed = 0
 				room_name = str(game.gameUID)
 				while room_name not in active_lobbies:
-					print("room not created yet")
 					if elapsed >= timeout:
 						await self.send(json.dumps({
 							"type": "error",
@@ -357,7 +346,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 						return
 					await asyncio.sleep(1)
 					elapsed += 1
-				print("user two is joining the game")
 				logger.info(f"{self.user.id}: user two is joining the game")
 				await self.send(json.dumps({
 					"type": "room_creation",
@@ -367,7 +355,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 					}))
 				break
 			await asyncio.sleep(5)
-		print("leaving the queue")
+		logger.info(f"{self.user.id}: leaving the queue")
 
 	async def create_quick_match_lobby(self, game):
 		logger.info(f"{self.user.id}: check for create quick match")
@@ -405,8 +393,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 			return
 		logger.info(f"{self.user.id}: Creating private lobby")
 		room_name = str(uuid.uuid4())
-		player_id = self.user.id
-
 		game_type = {
 			"is_online": True,
 			"is_local": False,
@@ -439,7 +425,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 		room_name = str(uuid.uuid4())
 		self.assigned_room = room_name
 		player_id = self.user.id
-		player_2 = str(uuid.uuid4())
 		game_type = {
 			"is_online": False,
 			"is_local": True,
@@ -510,12 +495,10 @@ class GameConsumer(AsyncWebsocketConsumer):
 				}))
 
 	async def update_ready_status(self, data):
-		print("************************")
-		print(data)
-		print("************************")
 		room_name = data["room_name"]
 		player_id = self.user.id
 		if room_name not in active_lobbies:
+			logger.warning(f"{self.user.id}: {room_name} does not exist when trying to update ready status")
 			await self.send(json.dumps({
 				"type": "join_error",
 				"reason": "non-existing",
@@ -546,10 +529,8 @@ class GameConsumer(AsyncWebsocketConsumer):
 				raise
 
 	async def check_duplicates_player(self):
-		logger.info(f"{self.user.id}: searching for duplicates player in lobbies")
 		for stray_room_id, room_data in active_lobbies.items():
-			logger.info(f'{self.user.id}: {room_data["players"]}')
-			print(f"Room_data in check_duplicates_player: {room_data}")
+			logger.warning(f"{self.user.id}: found player already in room: {room_data}")
 			if self.user.id in room_data["players"]:
 				await self.send(json.dumps({
 				"type": "join_error",
@@ -609,9 +590,9 @@ class GameConsumer(AsyncWebsocketConsumer):
 		try:
 			logger.info(f"{self.user.id}: Game Room complete")
 		except asyncio.CancelledError:
-			print("Game task was cancelled")
+			logger.error(f"{self.user.id}: Game task was cancelled")
 		except Exception as e:
-			print(f"Game task encountered error: {e}")
+			logger.error(f"{self.user.id}: Game task encountered error: {e}")
 			raise
 		finally:
 			result = task.result()
@@ -645,11 +626,9 @@ class GameConsumer(AsyncWebsocketConsumer):
 			return user
 		except jwt.ExpiredSignatureError:
 			logger.warning(f"{self.user.id}: JWT token has expired")
-			print("JWT token has expired.")
 			return None
 		except jwt.InvalidTokenError:
 			logger.warning(f"{self.user.id}: Invalid JWT token")
-			print("Invalid JWT token.")
 			return None
 
 	@database_sync_to_async
@@ -669,4 +648,4 @@ class GameConsumer(AsyncWebsocketConsumer):
 	@database_sync_to_async
 	def delete_player_data_from_queue(self):
 		deleted_count, _ = MatchMakingQueue.objects.filter(player=self.user).delete()
-		print(f"Deleted {deleted_count} entries for user {self.user.id} in MatchMakingQueue")
+		logger.info(f"{self.user.id}: Deleted {deleted_count} entries for user {self.user.id} in MatchMakingQueue")
