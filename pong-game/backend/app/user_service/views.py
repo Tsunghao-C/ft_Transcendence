@@ -104,7 +104,6 @@ def sendOTP(email:str, username:str, userID, cacheName:str, user):
 		[email],
 		fail_silently=False,
 	)
-	# /!\ delete below later (or not ?)
 	print("**********************************")
 	print("user.id is : " + str(user.id))
 	print("otp_code is : " + str(otp_code))
