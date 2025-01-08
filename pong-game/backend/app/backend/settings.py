@@ -32,7 +32,7 @@ email_credentials = vault_client.get_database_credentials("email")
 SECRET_KEY = jwt_credentials['JWT_SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(os.environ.get("DEBUG", default=0))
+DEBUG = 0
 # DEBUG = 1
 
 #ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
