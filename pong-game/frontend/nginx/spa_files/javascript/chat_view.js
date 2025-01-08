@@ -127,10 +127,7 @@ function handleTabs(roomType = "") {
 	const chatRoomsTabPane = document.getElementById("chat-rooms");
 	const tournamentTabPane = document.getElementById("tournament");
 
-	const currentHash = window.location.hash;
-	console.log("current hash is : ", currentHash);
-
-	if (currentHash.startsWith("#chat/public")) {
+	if (roomType == "public") {
 		pmNavTab.className = "nav-link";
 		chatRoomsNavTab.className = "nav-link active";
 		tournamentNavTab.className = "nav-link";
@@ -419,7 +416,7 @@ async function loadChatRoom(roomName, userAlias, roomType, roomNameDisplay = roo
 
 	if (roomType == "private") {
 		document.getElementById("send-private-invite").addEventListener("click", sendInvite);
-	} 
+	}
 	// else if (roomType == "public") {
 	// 	document.getElementById("send-public-invite").addEventListener("click", sendInvite);
 	// }
@@ -480,7 +477,7 @@ function addMessage(userAlias, alias, message, time, isInvite = false, gameRoom 
 	if (roomType == "tournament") {
 		messageElement.style.textAlign = "left";
 		const teams = message.split("/");
-		const formattedMessage = teams.length === 2 ? `${teams[0]} vs ${teams[1]}` : `${trsl[lng].tournamentIsOver} ${message}`;
+		const formattedMessage = teams.length === 2 ? `${teams[0]} vs ${teams[1]}` : `${trsl[state.language].tournamentIsOver} ${message}`;
 
 		messageElement.innerHTML = `
 			<strong>
