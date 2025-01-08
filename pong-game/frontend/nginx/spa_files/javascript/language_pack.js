@@ -60,7 +60,7 @@ export const translations = {
 		//Personnal Information
 		confirm: "Confirm",
 		cancel: "Cancel",
-		language: "language",
+		language: "Language",
 		//Personnal info Alias change
 		aliasChanged: "Success, alias has been changed.",
 		IncorrectValue: "Error, please enter a correct value.",
@@ -107,6 +107,8 @@ export const translations = {
 		block: "Block",
 		removeFriend: "Remove from friend list",
 		unblock: "Unblock",
+		ban: "ban",
+		unban: "unban",
 		//leaderboard
 		noData: "No data Available",
 		//home
@@ -123,11 +125,11 @@ export const translations = {
 		blockList: "Blocked List",
 		blockUser: "Block User",
 		addBlock: "Block a new user",
-		addNewFriend: "Add a new friend",
+		addNewFriend: "Add friend",
 		enterUsername: "Enter username",
 		friendRequests: "Friend Requests",
 		sentRequests: "Sent Requests",
-		addBlock: "Add to Block List",
+		addBlock: "Block user",
 		addFriendButton: "Add Friend",
 		removeFriend: "Remove Friend",
 		promptAddBlock: "Enter username to block",
@@ -146,8 +148,8 @@ export const translations = {
 		okSasuke: "... Just how much do you hate yourself ? but no we can't let you do that...",
 		userblocked: "has been blocked",
 		colorMode: "Color Mode",
-		blockedByUser: "this user is blocking you",
-		blockingUser: "you are blocking this user",
+		blockedByUser: "is blocking you",
+		blockingUser: "You have blocked",
 		alreadySent: "Friend request was already sent.",
 		//404
 		error404Title: "404",
@@ -184,7 +186,7 @@ export const translations = {
 		//game_tournament
 		startNextGame: "Start next game",
 		createNewTournament: "Create a new Tournament",
-		playOff: "PLAY OFF",
+		playOff: "PLAYOFF",
 		tournamentIsOver: "Tournament is over, winner is ",
 		qualified: "Qualified",
 		tournamentInput: "Enter tournament name",
@@ -289,7 +291,7 @@ export const translations = {
 		//Personnal Information
 		confirm: "Confirmer",
 		cancel: "Annuler",
-		language: "langue",
+		language: "Langue",
 		//Personnal info Alias change
 		aliasChanged: "Succès, l'alias a été changé.",
 		IncorrectValue: "Erreur, veuillez entrer une valeur correcte.",
@@ -336,6 +338,8 @@ export const translations = {
 		block: "Bloquer",
 		removeFriend: "Supprimer de la liste d'amis",
 		unblock: "Débloquer",
+		ban: "ban",
+		unban: "unban",
 		//leaderboard
 		noData: "Aucune donnée disponible",
 		//home
@@ -413,7 +417,7 @@ export const translations = {
 		//game_tournament
 		startNextGame: "Démarrer le prochain jeu",
 		createNewTournament: "Créer un nouveau tournoi",
-		playOff: "PLAY OFF",
+		playOff: "PLAYOFF",
 		tournamentIsOver: "Le tournoi est terminé, le gagnant est ",
 		qualified: "Qualifié",
 		tournamentInput: "Entrez le nom du tournoi",
@@ -517,7 +521,7 @@ export const translations = {
 		//Personnal Information
 		confirm: "Confirmar",
 		cancel: "Cancelar",
-		language: "linguagem",
+		language: "Linguagem",
 		//Personnal info Alias change
 		aliasChanged: "Sucesso, o apelido foi alterado.",
 		IncorrectValue: "Erro, por favor insira um valor correto.",
@@ -564,6 +568,8 @@ export const translations = {
 		block: "Bloquear",
 		removeFriend: "Remover da lista de amigos",
 		unblock: "Desbloquear",
+		ban: "ban",
+		unban: "unban",
 		//leaderboard
 		noData: "Sem dados disponíveis",
 		//home
@@ -641,7 +647,7 @@ export const translations = {
 		//game_tournament
 		startNextGame: "Iniciar próximo jogo",
 		createNewTournament: "Criar novo torneio",
-		playOff: "PLAY OFF",
+		playOff: "PLAYOFF",
 		tournamentIsOver: "O torneio acabou, o vencedor é ",
 		qualified: "Qualificado",
 		tournamentInput: "Digite o nome do torneio",

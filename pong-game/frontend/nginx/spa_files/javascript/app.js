@@ -23,7 +23,7 @@ export const state = {
 	chatSocket: null,
 	gameSocket: null,
 	language: null,
-	};
+};
 
 export async function setContainerHtml(container, url) {
 	try {
@@ -91,8 +91,6 @@ function setNavbarHtml(container) {
 }
 
 export async function loadPage(page) {
-	//add a checker to check there is no more than one /
-	//if invalid token, the server explodes
 	let data;
 	let response;
 	const contentContainer = document.getElementById("center-box");
@@ -118,13 +116,15 @@ export async function loadPage(page) {
 	if (page !== "tournament") {
 		setIsTournament(false);
 	}
+	const navbar = document.getElementById("mainNavBar");
 	try {
 		response = await fetchWithToken('/api/user/getuser/');
 		data = await response.json();
-		console.log("User data: ", data);
 		setLanguageCookie(data.language);
 	} catch (error) {
+		console.log(error)
 		if (page !== "login" && page !== "register") {
+			navbar.innerHTML = '';
 			window.location.hash = "login";
 			return;
 		} else if (page === "login") {
@@ -134,7 +134,6 @@ export async function loadPage(page) {
 		}
 		return;
 	}
-	const navbar = document.getElementById("mainNavBar");
 	const path = window.location.pathname;
 	setNavbarHtml(navbar);
 	navbar.style.display = "flex";
@@ -292,16 +291,3 @@ document.addEventListener("DOMContentLoaded", function () {
 
 	attachNavigationListeners();
 });
-
-// for language test
-function languageEventListener(page) {
-    const languageSelect = document.getElementById("languageSelect");
-    languageSelect.value = getLanguageCookie() || "en";
-    languageSelect.addEventListener("change", async (event) => {
-        const selectedLanguage = event.target.value;
-        console.log("selected language is : " + selectedLanguage)
-        await fetchWithToken('/api/user/change-language/', JSON.stringify({ newLang: selectedLanguage }), 'POST');
-        setLanguageCookie(selectedLanguage);
-        loadPage(page);
-    });
-}

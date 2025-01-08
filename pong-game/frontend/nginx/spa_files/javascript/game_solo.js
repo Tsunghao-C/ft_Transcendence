@@ -32,6 +32,7 @@ export async function setSoloLobby(contentContainer, difficulty = "", skip = fal
 				</div>
 				<div id="game-info">Loading...</div>
 				<canvas id="game" width="800" height="600" style="display: none;"></canvas>
+                <p id="rejoin-alreadyingame-text">${trsl[state.language].alreadyInGame}</p>
 				<button id="go-back">${trsl[state.language].backButton}</button>
 				<button id="go-back-EOG" style="display: none;">${trsl[state.language].backButton}</button>
 		</div>
@@ -42,6 +43,7 @@ export async function setSoloLobby(contentContainer, difficulty = "", skip = fal
 		document.getElementById('go-back-EOG').textContent = "";
 		hideElem("go-back-EOG");
 	}
+    hideElem('rejoin-alreadyingame-text');
 
 	const canvas = document.getElementById('game');
 	const ctx = canvas.getContext('2d');

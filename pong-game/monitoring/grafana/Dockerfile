@@ -10,23 +10,15 @@ RUN apt-get update && \
 
 COPY grafana.ini /grafana.ini
 
-RUN cp -r /usr/share/grafana/conf/provisioning /provisioning
+COPY prepare-datasource.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/prepare-datasource.sh
 
-COPY provisioning /provisioning
+COPY provisioning /usr/share/grafana/provisioning
 
-RUN cp -r /provisioning/datasources/* /etc/grafana/provisioning/datasources && \
-    cp -r /provisioning/dashboards/* /etc/grafana/provisioning/dashboards
-
-# Generate ssl certificate (kept from main)
-RUN mkdir -p /etc/grafana/certs && \
-    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-    -keyout /etc/grafana/certs/grafana.key \
-    -out /etc/grafana/certs/grafana.crt \
-    -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost"
+RUN mkdir -p /etc/grafana/certs
 
 RUN useradd -r -u 1000 grafana-user && \
     chown -R grafana-user:grafana-user /etc/grafana/certs && \
-    chown -R grafana-user:grafana-user /etc/grafana/provisioning && \
     chown -R grafana-user:grafana-user /etc/grafana && \
     chown -R grafana-user:grafana-user /var/lib && \
     chown -R grafana-user:grafana-user /var/log && \
@@ -37,4 +29,4 @@ USER grafana-user
 
 EXPOSE 3000
 
-ENTRYPOINT [ "grafana-server", "--homepath=/usr/share/grafana", "--config=/grafana.ini" ]
+ENTRYPOINT [ "/bin/bash", "-c", "/usr/local/bin/prepare-datasource.sh && grafana-server --homepath=/usr/share/grafana --config=/grafana.ini" ]

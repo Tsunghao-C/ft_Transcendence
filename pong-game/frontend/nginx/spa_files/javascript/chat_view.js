@@ -2,7 +2,7 @@ import { fetchWithToken } from "./fetch_request.js";
 import { getLanguageCookie } from "./fetch_request.js";
 import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
-import { clearInput, hideElem, showElem, hideClass, showClass } from "./utils.js";
+import { hideClass, showClass } from "./utils.js";
 import { sendDuelRequestFromGameRoom } from "./manage_social.js";
 import { translations as trsl } from "./language_pack.js";
 import { isAlphanumeric } from "./utils.js";
@@ -101,14 +101,13 @@ function setChatViewHtml(contentContainer) {
 						<div id="chat-content-bottom">
 							<input class="message-input" id="message-input" type="text" placeholder="${trsl[state.language].typeMessage}">
 							<button class="send-message" id="send-message">${trsl[state.language].send}</button>
-							<button id="send-public-invite">${trsl[state.language].play}</button>
 						</div>
 					</div>
 				</div>
 				<div class="tab-pane fade" id="tournament" role="tabpanel" aria-labelledby="tournament-tab">
 					<div class="room-list" id="tournament-list" style="margin-bottom: 20px;"></div>
 					<div class="chat-content" id="tournament-content" style="display:none;">
-						<div id="tournament-content-top">
+						<div id="chat-content-top">
 							<h4 id="tournament-title"></h4>
 							<button class="go-back">${trsl[state.language].backButton}</button>
 						</div>
@@ -239,6 +238,15 @@ function startPrivateChatEventListener() {
 			window.location.hash = "login";
 		}
 	})
+
+	const recipientUser = document.getElementById("recipientUser");
+	recipientUser.addEventListener("keydown", (event) => {
+		if (event.key === "Enter") {
+			event.preventDefault();
+			const button = document.getElementById("start-private-chat");
+			button.click();
+		}
+	});
 }
 
 function createOrJoinRoomButtonEventListener() {
@@ -271,6 +279,16 @@ function createOrJoinRoomButtonEventListener() {
 			showError(`${trsl[state.language].emptyChatRoomName}`, "public");
 		}
 	});
+
+	const roomNameInInput = document.getElementById("room-name");
+	roomNameInInput.addEventListener("keydown", (event) => {
+		if (event.key === "Enter") {
+			console.log("JOIN PUBLIC ROOM ENTER KEY HAS BEEN PRESSED");
+			event.preventDefault();
+			const button = document.getElementById("create-public-room");
+			button.click();
+		}
+	});
 }
 
 function roomButtonsEventListener() {
@@ -296,8 +314,6 @@ function backButtonEventListener() {
 
 function sendMessageEventListener(userAlias) {
 	const sendButtons = document.querySelectorAll(".send-message");
-	const messageInputs = document.querySelectorAll(".message-input");
-
 	sendButtons.forEach((button) => {
 		button.addEventListener("click", async () => {
 			console.log("in SendMessage");
@@ -316,6 +332,7 @@ function sendMessageEventListener(userAlias) {
 		});
 	});
 
+	const messageInputs = document.querySelectorAll(".message-input");
 	messageInputs.forEach((input) => {
 		input.addEventListener("keydown", (event) => {
 			if (event.key === "Enter") {
@@ -402,9 +419,10 @@ async function loadChatRoom(roomName, userAlias, roomType, roomNameDisplay = roo
 
 	if (roomType == "private") {
 		document.getElementById("send-private-invite").addEventListener("click", sendInvite);
-	} else if (roomType == "public") {
-		document.getElementById("send-public-invite").addEventListener("click", sendInvite);
-	}
+	} 
+	// else if (roomType == "public") {
+	// 	document.getElementById("send-public-invite").addEventListener("click", sendInvite);
+	// }
 
 	async function sendInvite() {
 		sendDuelRequestFromGameRoom(roomName);
@@ -478,20 +496,20 @@ function addMessage(userAlias, alias, message, time, isInvite = false, gameRoom 
 		if (alias === userAlias) {
 			messageElement.style.textAlign = "right";
 			messageElement.innerHTML = `
-				<div style="display: inline-block; text-align: left; background-color: #e1f5fe; padding: 10px; border-radius: 10px; max-width: 70%;">
-					<em>${time}</em><br>
+				<div style="display: inline-block; text-align: left; background-color: #e1f5fe; padding: 10px; border-radius: 10px; max-width: 70%; margin-top: 5px; font-size: 0.9rem">
+					<em style="font-size: 0.8rem">${time}</em><br>
 					${isInvite && gameRoom ? `<a href="#lobby/${gameRoom}" style="text-decoration: none; color: #007bff;">${trsl[state.language].youInvited}</a>` : message}
 				</div>`;
 		} else {
 			messageElement.style.textAlign = "left";
 			messageElement.innerHTML = `
 				<strong>
-					<a href="#profile/${alias}" style="text-decoration: none; color: #007bff;">
+					<a href="#profile/${alias}" style="text-decoration: none; color: #007bff; font-size: 0.9rem">
 						${alias}
 					</a>
 				</strong>
-				<em>(${time})</em>:<br>
-				<div style="display: inline-block; background-color: #f1f1f1; padding: 10px; border-radius: 10px; max-width: 70%;">
+				<em style="font-size: 0.8rem">(${time})</em>:<br>
+				<div style="display: inline-block; background-color: #f1f1f1; padding: 10px; border-radius: 10px; max-width: 70%; font-size: 0.9rem">
 					${isInvite && gameRoom ? `<a href="#lobby/${gameRoom}" style="text-decoration: none; color: #007bff;">${alias} ${trsl[state.language].hasInvitedYou}</a>` : message}
 				</div>`;
 		}
@@ -518,6 +536,7 @@ export async function setChatView(contentContainer, roomType = "", aliasOrRoomTo
 	setPmList(roomData);
 	setRoomsList(roomData);
 	setTournamentList(roomData);
+
 	// Event listeners - In list display
 	startPrivateChatEventListener();
 	createOrJoinRoomButtonEventListener();

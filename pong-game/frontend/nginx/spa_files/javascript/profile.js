@@ -9,6 +9,8 @@ import { rejectFriendRequest } from "./manage_social.js";
 import { cancelFriendRequest } from "./manage_social.js";
 import { unblockUser } from "./manage_social.js";
 import { blockUser } from "./manage_social.js";
+import { banUser } from "./manage_social.js";
+import { unbanUser } from "./manage_social.js";
 import { isAlphanumeric } from "./utils.js";
 import { state } from "./app.js";
 
@@ -31,8 +33,10 @@ export async function setProfileView(contentContainer, usernameInHash = "") {
 		<div class="profile-view">
 			<h2>${trsl[state.language].profileTitle}</h2>
 			<div class="search-bar mb-3">
-				<input type="text" id="searchInput" class="form-control" placeholder="${trsl[state.language].searchByUsername}" />
-				<button id="searchButton" class="btn btn-primary mt-2">${trsl[state.language].searchButton}</button>
+				<div class="input-and-button-line">
+					<input type="text" id="searchInput" class="form-control" placeholder="${trsl[state.language].enterUsername}" />
+					<button id="searchButton" class="btn btn-primary mt-2">${trsl[state.language].searchButton}</button>
+				</div>
 			</div>
 			<div id="profileResult"></div>
 		</div>
@@ -43,7 +47,7 @@ export async function setProfileView(contentContainer, usernameInHash = "") {
 	const profileResult = document.getElementById("profileResult");
 
 	if (!response.ok && data.detail === "No CustomUser matches the given query.") {
-		profileResult.innerHTML = `<p>${trsl[state.language].userNotFound}</p>`;
+		profileResult.innerHTML = `<p class="errorMessage">${trsl[state.language].userNotFound}</p>`;
 	} else {
 		displayProfile(data.profile);
 	}
@@ -54,6 +58,13 @@ export async function setProfileView(contentContainer, usernameInHash = "") {
 			return;
 		}
 		window.location.hash = `profile/${searchQuery}`;
+	});
+
+	searchInput.addEventListener("keydown", (event) => {
+		if (event.key === "Enter") {
+			event.preventDefault();
+			searchButton.click();
+		}
 	});
 
 	function displayProfile(profile) {
@@ -128,6 +139,8 @@ export async function setProfileView(contentContainer, usernameInHash = "") {
 							<button class="btn btn-danger btn-sm" id="cancelFriendBtn">${trsl[state.language].cancel}</button>
 							<button class="btn btn-danger btn-sm" id="blockUserBtn">${trsl[state.language].block}</button>
 							<button class="btn btn-danger btn-sm" id="unblockUserBtn">${trsl[state.language].unblock}</button>
+							<button class="btn btn-danger btn-sm" id="banPlayerBtn">${trsl[state.language].ban}</button>
+							<button class="btn btn-danger btn-sm" id="unbanPlayerBtn">${trsl[state.language].unban}</button>
 						</div>
 					` : ""}
 				</div>
@@ -145,6 +158,8 @@ export async function setProfileView(contentContainer, usernameInHash = "") {
 			const cancelFriendButton = document.getElementById("cancelFriendBtn");
 			const blockUserButton = document.getElementById("blockUserBtn");
 			const unblockUserButton = document.getElementById("unblockUserBtn");
+			const banPlayerBtn = document.getElementById("banPlayerBtn");
+			const unbanPlayerBtn = document.getElementById("unbanPlayerBtn");
 
 			sendMessageButton.addEventListener("click", () => {
 				sendMessage(profile.alias, contentContainer);
@@ -182,6 +197,14 @@ export async function setProfileView(contentContainer, usernameInHash = "") {
 				unblockUser(profile.alias);
 				setProfileView(contentContainer, profile.alias);
 			});
+			banPlayerBtn.addEventListener('click', () => {
+				banUser(profile.id);
+				setProfileView(contentContainer, profile.alias);
+			})
+			unbanPlayerBtn.addEventListener('click', () => {
+				unbanUser(profile.id);
+				setProfileView(contentContainer, profile.alias);
+			})
 			updateButtonsVisibility(profile);
 		}
 	}
@@ -196,6 +219,8 @@ export async function setProfileView(contentContainer, usernameInHash = "") {
 		const cancelFriendButton = document.getElementById("cancelFriendBtn");
 		const blockUserButton = document.getElementById("blockUserBtn");
 		const unblockUserButton = document.getElementById("unblockUserBtn");
+		const banPlayerButton = document.getElementById("banPlayerBtn");
+		const unbanPlayerButton = document.getElementById("unbanPlayerBtn");
 
 		// Reset visibility for all buttons
 		const buttons = [
@@ -207,7 +232,9 @@ export async function setProfileView(contentContainer, usernameInHash = "") {
 			rejectFriendButton,
 			cancelFriendButton,
 			blockUserButton,
-			unblockUserButton
+			unblockUserButton,
+			banPlayerButton,
+			unbanPlayerButton
 		];
 		buttons.forEach(button => {
 			if (button) button.style.display = "none";
@@ -234,6 +261,14 @@ export async function setProfileView(contentContainer, usernameInHash = "") {
 
 		if (profile.isSent) {
 			cancelFriendButton.style.display = "inline-block";
+		}
+
+		if (profile.userIsAdmin) {
+			if (profile.isBanned) {
+				unbanPlayerButton.style.display = "inline-block";
+			} else {
+				banPlayerButton.style.display = "inline-block";
+			}
 		}
 	}
 

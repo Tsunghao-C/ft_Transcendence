@@ -4,6 +4,19 @@ import { getCookie } from "./fetch_request.js";
 import { state } from "./app.js";
 import { isAlphanumeric } from "./utils.js";
 
+export function showFriendError(message) {
+	const successMessage = document.getElementById('friendSuccessMessage');
+	successMessage.textContent = "";
+	const errorMessage = document.getElementById('friendErrorMessage');
+	errorMessage.textContent = message;
+}
+
+export function showBlockError(message) {
+	const successMessage = document.getElementById('blockSuccessMessage');
+	successMessage.textContent = "";
+	const errorMessage = document.getElementById('blockErrorMessage');
+	errorMessage.textContent = message;
+}
 
 export async function sendDuelRequestFromGameRoom(roomName) {
 	const token = getCookie("accessToken");
@@ -190,6 +203,36 @@ export async function cancelFriendRequest(friendAlias) {
 	}
 }
 
+export async function banUser(id) {
+	console.log(`banning user ${id}`);
+	let data;
+	let response;
+	try {
+		const body = JSON.stringify({
+			id: id
+		});
+		response = await fetchWithToken('/api/user/banplayer/', body, 'POST');
+	} catch(error) {
+		console.log(error);
+		window.location.hash = "login";
+	}
+}
+
+export async function unbanUser(id) {
+	console.log(`unbanning user ${id}`);
+	let data;
+	let response;
+	try {
+		const body = JSON.stringify({
+			id: id
+		});
+		response = await fetchWithToken('/api/user/unbanplayer/', body, 'POST');
+	} catch(error) {
+		console.log(error);
+		window.location.hash = "login";
+	}
+}
+
 export async function unblockUser(blockedUser) {
 	console.log(`unblocking friend from ${blockedUser}`);
 	let data;
@@ -218,11 +261,11 @@ export async function blockUser(newBlockUsername) {
 		data = await response.json();
 		if (!response.ok) {
 			if ( data.detail === 'this user is already blocked') {
-				alert(`${newBlockUsername} ${trsl[state.language].alreadyBlock}.`);
+				showBlockError(`${newBlockUsername} ${trsl[state.language].alreadyBlock}.`);
 			} else if (data.detail === 'No CustomUser matches the given query.' ) {
-				alert(`${trsl[state.language].user} ${newBlockUsername} ${trsl[state.language].notFound}.`);
+				showBlockError(`${trsl[state.language].user} ${newBlockUsername} ${trsl[state.language].notFound}.`);
 			} else if (data.detail === 'you cannot block yourself' ) {
-				alert(`${trsl[state.language].okSasuke}`);
+				showBlockError(`${trsl[state.language].okSasuke}`);
 			}
 		} else {
 			alert(`${trsl[state.language].user} ${newBlockUsername} ${trsl[state.language].userblocked}`);
@@ -245,17 +288,17 @@ export async function addFriend(newfriend) {
 		data = await response.json();
 		if (!response.ok) {
 			if (data.detail === 'Friend request was already sent.') {
-				alert(`${trsl[state.language].alreadySent}.`);
+				showFriendError(`${trsl[state.language].alreadySent}`)
 			} else if (data.detail === 'you are already friends with this user' ) {
-				alert(`${newfriend} ${trsl[state.language].alreadyFriend}.`);
+				showFriendError(`${newfriend} ${trsl[state.language].alreadyFriend}`)
 			} else if (data.detail === 'No CustomUser matches the given query.' ) {
-				alert(`${trsl[state.language].user} ${newfriend} ${trsl[state.language].notFound}.`);
+				showFriendError(`${trsl[state.language].user} ${newfriend} ${trsl[state.language].notFound}.`);
 			} else if (data.detail === 'you cannot befriend yourself' ) {
-				alert(`${trsl[state.language].lonelyTest}`);
+				showFriendError(`${trsl[state.language].lonelyTest}`);
 			} else if (data.detail === 'you are blocking this user' ) {
-				alert(`${newfriend} ${trsl[state.language].blockedByUser}`);
+				showFriendError(`${trsl[state.language].blockingUser} ${newfriend}`);
 			} else if (data.detail === 'this user is blocking you' ) {
-				alert(`${trsl[state.language].blockingUser}`);
+				showFriendError(`${newfriend} ${trsl[state.language].blockedByUser}`);
 			}
 		} else {
 			alert(`${trsl[state.language].friendRequestSent}`);

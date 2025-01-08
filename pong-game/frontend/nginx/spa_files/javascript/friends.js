@@ -10,6 +10,7 @@ import { cancelFriendRequest } from "./manage_social.js";
 import { unblockUser } from "./manage_social.js";
 import { blockUser } from "./manage_social.js";
 import { state } from "./app.js";
+import { clearInput } from "./utils.js";
 
 export async function setFriendsView(contentContainer, displayedTab = "friends") {
 	let friendRequest;
@@ -18,8 +19,6 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 	let blockData;
 	let response;
 	try {
-		// console.log("friendRequest data: ", friendRequest);
-		// console.log("sentFriendRequest data: ", sentFriendRequest);
 
 	contentContainer.innerHTML = `
 		<div class="friends-view">
@@ -39,7 +38,14 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 			</ul>
 			<div class="tab-content">
 				<div class="tab-pane fade show active" id="friends" role="tabpanel" aria-labelledby="friends-tab">
-					<button id="addFriendButton" class="btn btn-success mb-3">${trsl[state.language].addNewFriend}</button>
+					<div class="input-and-button-line">
+						<input id="addFriendInput" placeholder="${trsl[state.language].enterUsername}">
+						<button id="addFriendButton" class="btn btn-success mb-3">${trsl[state.language].addNewFriend}</button>
+					</div>
+					<div>
+						<p id="friendErrorMessage" class="errorMessage"></p>
+						<p id="friendSuccessMessage" class="successMessage"></p>
+					</div>
 					<ul id="friendsList" class="list-group"></ul>
 				</div>
 				<div class="tab-pane fade" id="friend-requests" role="tabpanel" aria-labelledby="friend-requests-tab">
@@ -49,7 +55,14 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 					<ul id="sentFriendRequestList" class="list-group"></ul>
 				</div>
 				<div class="tab-pane fade" id="block" role="tabpanel" aria-labelledby="block-tab">
-					<button id="addBlockButton" class="btn btn-success mb-3">${trsl[state.language].addBlock}</button>
+					<div class="input-and-button-line">
+						<input id="addBlockInput" placeholder="${trsl[state.language].enterUsername}">
+						<button id="addBlockButton" class="btn btn-success mb-3">${trsl[state.language].addBlock}</button>
+					</div>
+					<div>
+						<p id="blockErrorMessage" class="errorMessage"></p>
+						<p id="blockSuccessMessage" class="successMessage"></p>
+					</div>
 					<ul id="blockList" class="list-group"></ul>
 				</div>
 			</div>
@@ -232,7 +245,8 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 	}
 
 	addBlockButton.addEventListener("click", async () => {
-		const newBlockUsername = prompt(`${trsl[state.language].promptAddBlock}:`);
+		const newBlockUsername = document.getElementById("addBlockInput").value;
+		clearInput("addBlockInput");
 		if (newBlockUsername) {
 			try {
 				await blockUser(newBlockUsername);
@@ -248,9 +262,19 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 		renderFriends();
 	});
 
+	const addBlockInput = document.getElementById("addBlockInput");
+	addBlockInput.addEventListener("keydown", (event) => {
+		if (event.key === "Enter") {
+			console.log("RECIPIENT USER ENTER KEY HAS BEEN PRESSED");
+			event.preventDefault();
+			addBlockButton.click();
+		}
+	});
+
 	//REQUEST
 	addFriendButton.addEventListener("click", async () => {
-		const newfriend = prompt(`${trsl[state.language].promptAddFriend}:`);
+		const newfriend = document.getElementById("addFriendInput").value;
+		clearInput("addFriendInput");
 		if (newfriend) {
 			try {
 				await addFriend(newfriend);
@@ -261,6 +285,15 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 			}
 		}
 		renderSentRequests();
+	});
+
+	const addFriendInput = document.getElementById("addFriendInput");
+	addFriendInput.addEventListener("keydown", (event) => {
+		if (event.key === "Enter") {
+			console.log("RECIPIENT USER ENTER KEY HAS BEEN PRESSED");
+			event.preventDefault();
+			addFriendButton.click();
+		}
 	});
 
 	renderFriends();
@@ -289,8 +322,6 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 			break;
 	}
 	tabs.show();
-
-
 
 	friendsTab.addEventListener("shown.bs.tab", function () {
 		window.location.hash = "friends/friends";

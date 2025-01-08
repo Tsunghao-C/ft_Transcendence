@@ -243,21 +243,6 @@ body {
 	color: white;
 }
 
-/*/!\ can be deleted before push */
-.tmpLangSelect {
-	position: absolute;
-    top: 25px;
-    right: 11%;
-    width: 40px;
-	height: 30px;
-    z-index: 10;
-	background-color: rgba(255, 255, 255, 0.0);
-	color: rgba(0,0,0, 0.5);
-	font-size: 0.8rem;
-	border: 1px solid rgba(0,0,0, 0.05);
-	border-radius: 5px;
-}
-
 .vcenter {
     display: flex;
     align-items: center;
@@ -271,6 +256,30 @@ body {
 .hright {
 	display: flex;
 	justify-content: right;
+}
+
+.input-and-button-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+	gap: 5px;
+	padding: 10px 0 5px 0;
+	/* background-color: red !important; */
+}
+
+.input-and-button-line input {
+	margin: 0px !important;
+	box-sizing: border-box;
+}
+
+.input-and-button-line button {
+	width: auto !important;
+	padding: 0;
+	font-size: 0.7rem !important;
+	margin: 0px !important;
+	box-sizing: border-box;
+	white-space: nowrap;
+	/* margin-left: 10px; */
 }
 
 /**************************** Navbar ****************************/
@@ -367,22 +376,16 @@ body {
 }
 
 .successMessage {
-	margin-top: 10px;
+	margin: 0;
+	padding: 0 0 0 0 !important;
 	color: rgb(77, 150, 77);
-	/* color: rgb(97, 172, 97); */
 }
 
 .errorMessage {
-	margin-top: 10px;
+	margin: 0;
+	padding: 0 0 0 0 !important;
 	color: rgb(175, 52, 52);
 }
-
-/* .register-view select {
-	position: absolute;
-	margin: 10px 20px 10px 10px;
-	padding: 10px;
-	width: 5px;
-} */
 
 .form-select {
 	width: auto !important;
@@ -402,6 +405,11 @@ body {
 	font-size: 0.8rem;
 	border: 1px solid rgba(0,0,0, 0.05);
 	border-radius: 5px;
+}
+
+#chatRoomsErrorMessage,
+#chatRoomsSuccessMessage {
+	margin: 0;
 }
 
 /**************************** Login ****************************/
@@ -586,8 +594,8 @@ canvas {
 	right: 100px;
 	width: 100%;
 	margin-bottom: 0px !important;
-	padding-bottom: 0px !important;
-	padding-right: 0 !important;
+	padding-bottom: 5px !important;
+	padding-right: 10px !important;
 	font-size: 0.8rem !important;
 	text-align: right;
 }
@@ -796,6 +804,9 @@ canvas {
 	box-sizing: border-box; 
 }
 
+.leaderboard-view h2 {
+	padding-left: 0px !important;
+}
 
 table {
 	margin: 0 0 30px 0;
@@ -836,6 +847,11 @@ table {
 	background-color: transparent;
 	background-color: rgba(255, 255, 255, 0.7);
 	border: none;
+}
+
+.profile-view h2 {
+	/* padding-top: 0 !important; */
+	padding-left: 0 !important;
 }
 
 .profile-view .card-body {
@@ -950,7 +966,7 @@ table {
 
 .chat-view .nav-item {
 	font-size: 0.7rem;
-	width: 50%;
+	width: 33.33%;
 }
 
 .chat-view .tab-content {
@@ -1044,6 +1060,34 @@ table {
 	box-sizing: border-box; 
 }
 
+.about-view h2 {
+	padding: 10px 0 10px 0 !important;
+	font-size: 1.5rem !important;
+}
+
+.about-view p {
+	padding: 10px 0 0 0 !important;
+	font-size: 0.8rem !important;
+	margin: 0;
+}
+
+.about-view h3 {
+	padding: 20px 0 10px 0 !important;
+	font-size: 1.3rem;
+	text-decoration: underline;
+}
+
+.about-view li {
+	padding: 0 0 0 0 !important;
+	font-size: 0.8rem !important;
+	margin: 0;
+}
+
+.about-view h4 {
+	padding: 10px 0 0 0 !important;
+	font-size: 1.1rem;
+}
+
 /**************************** Personal data ****************************/
 
 .personal-data-view {
@@ -1094,6 +1138,24 @@ table {
 .error404-view {
 	width: 80%;
 	margin: 10px;
+	padding-top: 10px;
+	padding-bottom: 10px;
+	width: 100%;
+	padding-left: 10%;
+	padding-right: 10%;
+	height: var(--inner-view-height);
+	overflow-y: auto;
+	box-sizing: border-box; 
+	display: flex;
+	align-items: center;
+}
+
+.error404-view h1 {
+	font-size: 3rem;
+	padding-left: 0 !important;
+	/* width: 100%; */
+	/* color: red !important; */
+	/* background-color: red !important; */
 }
 
 /**************************** Scrollbar ****************************/

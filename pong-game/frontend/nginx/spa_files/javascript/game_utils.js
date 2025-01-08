@@ -474,24 +474,33 @@ async function join_room(response) {
 }
 
 async function rejoin_room(response) {
-	hideElem("create-match");
+    if (typeOfGame != 'online') {
+	    window.location.hash = `lobby`;
+    }
+    hideElem("create-match");
 	hideElem("join-queue");
 	hideElem("go-back");
+    hideElem("easy");
+    hideElem("medium");
+    hideElem("hard");
 	console.log('Rejoin room query received by server');
 	roomId = response.room_name;
-	const promptText = document.createElement('p');
-	promptText.id = 'rejoin-prompt-text';
-	promptText.textContent = trsl[state.language].onGoingGame;
-	promptText.style.fontSize = '24px';
-    promptText.style.textAlign = 'center';
-    promptText.style.marginBottom = '20px';
-	const trueButton = document.createElement('button');
-	trueButton.id = 'rejoin-true-button';
-	trueButton.textContent = trsl[state.language].rejoinGame;
-	const falseButton = document.createElement('button');
-	falseButton.id = 'rejoin-false-button';
-	falseButton.textContent = trsl[state.language].concedeGame;
-
+	let player1Data;
+	let player2Data;
+	let profileResponse;
+	try {
+		profileResponse = await fetchWithToken(`/api/user/get-profile/?uid=${response.players[0]}`);
+		player1Data = await profileResponse.json();
+		profileResponse = await fetchWithToken(`/api/user/get-profile/?uid=${response.players[1]}`);
+		player2Data = await profileResponse.json();
+		renderUserInfo(player1Data.profile, player2Data.profile);
+	} catch(error) {
+		console.log(error);
+		window.location.hash = "login";
+		return;
+	}
+    const trueButton = document.getElementById('rejoin-true-button');
+    const falseButton = document.getElementById('rejoin-false-button');
 	trueButton.onclick = function(event) {
 		try {
 			console.log("Starting gameLoop directly in rejoin_room_query branch")
@@ -501,13 +510,10 @@ async function rejoin_room(response) {
 				action: "rejoin_room",
 				response: true
 			}));
-            promptText.parentNode.removeChild(promptText);
-            promptText.remove();
-			trueButton.parentNode.removeChild(trueButton);
-			trueButton.remove();
-			falseButton.parentNode.removeChild(falseButton);
-			falseButton.remove();
 			goBackButtonEventListener("game/");
+            hideElem('rejoin-prompt-text');
+            hideElem(trueButton.id);
+            hideElem(falseButton.id);
 			startGame();
 		} catch (error) {
 			console.error('Error accepting to rejoin room:', error);
@@ -524,45 +530,40 @@ async function rejoin_room(response) {
 			}));
 			showElem("create-match", "block");
 			showElem("join-queue", "block");
+            showElem("easy", "block");
+            showElem("medium", "block");
+            showElem("hard", "block");
 			showElem("go-back", "block");
-            promptText.parentNode.removeChild(promptText);
-            promptText.remove();
-			trueButton.parentNode.removeChild(trueButton);
-			trueButton.remove();
-			falseButton.parentNode.removeChild(falseButton);
-			falseButton.remove();
+            hideElem('rejoin-prompt-text');
+            hideElem(trueButton.id);
+            hideElem(falseButton.id);
+            hideElem('player-info-container')
 		} catch (error) {
 			console.error("Error when sending refusal to rejoin ongoing gameRoom: ", error);
 		}
 	}
-	const gameLobby = document.getElementById("game-lobby");
-	gameLobby.appendChild(promptText);
-	gameLobby.appendChild(trueButton);
-	gameLobby.appendChild(falseButton);
+    showElem('rejoin-prompt-text', 'block');
+    showElem(trueButton.id, 'block');
+    showElem(falseButton.id, 'block');
 }
 
 async function display_game_aborted() {
-	const promptText = document.createElement('p');
-	promptText.id = 'rejoin-prompt-text';
-	promptText.textContent = trsl[state.language].gameAborted;
-	promptText.style.fontSize = '24px';
-    promptText.style.textAlign = 'center';
-    promptText.style.marginBottom = '20px';
-	const gameLobby = document.getElementById("game-lobby");
-	gameLobby.appendChild(promptText);
+    showElem('rejoin-abort-text', 'block');
 }
 
 async function display_already_ingame() {
+	console.log("received already in game notice from server");
 	hideElem("create-match");
 	hideElem("join-queue");
-	const promptText = document.createElement('p');
-	promptText.id = 'rejoin-prompt-text';
-	promptText.textContent = trsl[state.language].alreadyInGame;
-	promptText.style.fontSize = '24px';
-    promptText.style.textAlign = 'center';
-    promptText.style.marginBottom = '20px';
-	const gameLobby = document.getElementById("game-lobby");
-	gameLobby.appendChild(promptText);
+	hideElem("easy");
+	hideElem("medium");
+	hideElem("hard");
+	showElem('rejoin-alreadyingame-text', 'block');
+	showElem('go-back-EOG', 'block');
+	document.getElementById('go-back-EOG').addEventListener('click', async () => {
+		window.location.hash = "game/";
+	});
+	hideElem('go-back');
 }
 
 export async function connectWebSocket() {
@@ -617,8 +618,11 @@ export async function connectWebSocket() {
 
 async function startGame() {
 	try {
-		destroyReadyButton();
-//		hideElem("ready-button");
+		const readyButton = document.getElementById("ready-button");
+		if (readyButton) {
+			destroyReadyButton();
+			hideElem("ready-button");
+		}
 		showElem("game", "block");
 		showElem("go-back-EOG", "block");
 		hideClass("hrs");

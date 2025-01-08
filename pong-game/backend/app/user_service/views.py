@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, logout
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from django.contrib.auth.decorators import login_required
@@ -39,6 +39,9 @@ class CurrentUserView(APIView):
 	permission_classes = [IsAuthenticated]
 	def get(self, request):
 		serializer = UserSerializer(request.user)
+		if request.user.is_banned:
+			logout(request)
+			return Response({"detail": "You have been banned"}, status=403)
 		return Response(serializer.data)
 
 class updateUsernameView(APIView):
@@ -52,46 +55,11 @@ class updateUsernameView(APIView):
 			return Response(serializer.data, status=201)
 		return Response(serializer.errors, status=400)
 
-# I'll need to add in some sort of match authentication later
-class SaveMatchResults(APIView):
-	def _get_new_mmr(self, userMMR: int, oppMMR: int, matchOutcome: int):
-		# Calculate the 'expected score'
-		E = 1 / (1 + 10**((oppMMR - userMMR)/400))
-		return int(userMMR + 30 * (matchOutcome - E))
-
-	def __updateCounters(self, user, matchOutcome):
-		if matchOutcome:
-			user.winCount += 1
-		else:
-			user.lossCount += 1
-
-	def post(self, request):
-		p1ID = request.data.get("p1ID")
-		p2ID = request.data.get("p2ID")
-		p1 = get_object_or_404(CustomUser, id=p1ID)
-		p2 = get_object_or_404(CustomUser, id=p2ID)
-		p1MMR = p1.mmr
-		p2mmr = p2.mmr
-		# Match outcome, 1 or 0 based on p1
-		outcome = request.data.get("matchOutcome")
-		if outcome not in [1, 0]:
-			return Response({"error": "Invalid match input"}, status=400)
-		recordMatch(p1, p2, outcome)
-		p1.mmr = self._get_new_mmr(p1MMR, p2mmr, outcome)
-		self.__updateCounters(p1, outcome);
-		# inverse outcome for p2
-		outcome = 1 - outcome
-		p2.mmr = self._get_new_mmr(p2mmr, p1MMR, outcome)
-		self.__updateCounters(p2, outcome)
-		p1.save()
-		p2.save()
-		return Response({"message": f"Player 1 new mmr: {p1.mmr}\nPlayer 2 new mmr: {p2.mmr}"})
-
 class BanPlayer(APIView):
 	def post(self, request):
-		if not request.user.is_superuser:
-			return Response({"error":"Only super users can ban players"}, status=400)
-		id = request.data.get("playerId")
+		if not request.user.is_admin:
+			return Response({"error":"Only admins can ban players"}, status=400)
+		id = request.data.get("id")
 		user = get_object_or_404(CustomUser, id=id)
 		if user.is_banned:
 			return Response({"error": "this user is already banned"}, status=400)
@@ -101,9 +69,9 @@ class BanPlayer(APIView):
 
 class UnbanPlayer(APIView):
 	def post(self, request):
-		if not request.user.is_superuser:
-			return Response({"error":"Only super users can unban players"}, status=400)
-		id = request.data.get("playerId")
+		if not request.user.is_admin:
+			return Response({"error":"Only admins can unban players"}, status=400)
+		id = request.data.get("id")
 		user = get_object_or_404(CustomUser, id=id)
 		if not user.is_banned:
 			return Response({"error": "this user is not banned"}, status=400)
@@ -136,7 +104,6 @@ def sendOTP(email:str, username:str, userID, cacheName:str, user):
 		[email],
 		fail_silently=False,
 	)
-	# /!\ delete below later (or not ?)
 	print("**********************************")
 	print("user.id is : " + str(user.id))
 	print("otp_code is : " + str(otp_code))
@@ -148,7 +115,9 @@ class Generate2FAView(APIView):
 		username = request.data.get("username")
 		password = request.data.get("password")
 		user = authenticate(username=username, password=password)
-		if user:
+		if user and user.is_banned:
+			return Response({"detail": "you are banned"}, status=403)
+		elif user:
 			sendOTP(user.email, user.username, user.id, f"otp_{user.id}", user)
 			return Response({"detail": "A 2FA code has been sent", "user_id": str(user.id)}, status=status.HTTP_200_OK)
 		return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -253,6 +222,8 @@ class sendFriendRequestView(APIView):
 	def post(self, request):
 		from_user = request.user
 		to_user = get_object_or_404(CustomUser, alias=request.data.get("toAlias"))
+		if to_user.is_admin:
+			return Response({"detail": "user not found"}, status=400)
 		if from_user == to_user:
 			return Response({"detail": "you cannot befriend yourself"}, status=400)
 		if from_user.is_friend(to_user):
@@ -322,6 +293,8 @@ class blockUserView(APIView):
 	def post(self, request):
 		user = request.user
 		otherUser = get_object_or_404(CustomUser, alias=request.data.get("alias"))
+		if otherUser.is_admin:
+			return Response({"detail": "invalid choice"}, status=400)
 		if user.has_blocked(otherUser):
 			return Response({"detail": "this user is already blocked"}, status=400)
 		if user == otherUser:
@@ -374,6 +347,7 @@ class getProfileView(APIView):
 	permission_classes = [IsAuthenticated]
 
 	def get(self, request):
+		user = request.user
 		alias = request.query_params.get("alias")
 		user_id = request.query_params.get("uid")
 		own_profile = request.query_params.get("own")
@@ -388,6 +362,8 @@ class getProfileView(APIView):
 				{"error": "Either 'id' 'alias' or 'own' must be provided."},
 				status=400
 			)
+		if not user.is_admin and profile.is_admin:
+			return Response({"error": "You cannot view this profile"}, status=400)
 		user = request.user
 		# Still to be added : match history, rank and a way to manage the button add friend, request sent, request pending but not necessary
 		profileData = {
@@ -405,6 +381,8 @@ class getProfileView(APIView):
 				"rank": LeaderBoard.getPlayerRank(profile),
 				"matchHistory": MatchResults.getPlayerGames(profile),
 				"onlineStatus": OnlineUserActivity.get_user_status(profile),
+				"userIsAdmin": user.is_admin,
+				"isBanned": profile.is_banned,
 			}
 		return Response({
 			"profile": profileData
@@ -509,15 +487,3 @@ def deleteOldAvatar(sender, instance, **kwargs):
 	if oldAvatar and oldAvatar != instance.avatar:
 		if os.path.isfile(oldAvatar.path) and oldAvatar.name != 'default.jpg':
 			os.remove(oldAvatar.path)
-
-# temporary for dev
-class getAccessLogsView(APIView):
-	def get(self, request):
-		accessLogs = OnlineUserActivity.objects.all()
-		logs = [
-			{
-				"alias": log.user.alias,
-				"time": log.last_activity
-			} for log in accessLogs
-		]
-		return Response(logs, status=200)
