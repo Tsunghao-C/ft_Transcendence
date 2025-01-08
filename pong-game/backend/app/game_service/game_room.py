@@ -21,6 +21,7 @@ LEFT = 0
 RIGHT = 1
 ABORTED = 1
 CONCEDE = 2
+SCORE_LIMIT = 7 #Edit this to extend the score before gameover is called
 
 logger = logging.getLogger('gamerooms')
 
@@ -189,7 +190,7 @@ class GameRoom():
 				winner = self.left_player
 			logger.info(f"{self.room_id}: player conceding match, winner is {winner}")
 		else:
-			if self.players[self.left_player].score == 5:
+			if self.players[self.left_player].score == SCORE_LIMIT:
 				winner = "left"
 			else:
 				winner = "right"
@@ -220,7 +221,7 @@ class GameRoom():
 			if self.ball.x - self.ball.radius < 0:
 				logger.info(f'{self.room_id}: player {self.right_player} scored')
 				self.players[self.right_player].score += 1
-				if self.players[self.right_player].score == 7: #Edit this to extend the score before gameover is called
+				if self.players[self.right_player].score == SCORE_LIMIT: 
 					self.winner = self.right_player
 					self.game_over = True
 				self.ball.x = CANVAS_WIDTH * 0.7
@@ -228,7 +229,7 @@ class GameRoom():
 			else:
 				logger.info(f'{self.room_id}: player {self.left_player} scored')
 				self.players[self.left_player].score += 1
-				if self.players[self.left_player].score == 7: #Same here
+				if self.players[self.left_player].score == SCORE_LIMIT:
 					self.game_over = True
 				self.ball.x = CANVAS_WIDTH * 0.3
 				self.ball.y = CANVAS_WIDTH * 0.5
