@@ -32,6 +32,7 @@ export const translations = {
 		pwMissingLower: "Password must contain at least one lowercase letter",
 		pwMissingNumber: "Password must contain at least one number",
 		pwMissingSpecial: "Password must contain at least one special character",
+		tooLong: "alias length cannot exceed 10 characters",
 		//login_login
 		loginTitle: "Login",
 		login: "Log in",
@@ -263,6 +264,7 @@ export const translations = {
 		pwMissingLower: "Le mot de passe doit contenir au moins une lettre minuscule",
 		pwMissingNumber: "Le mot de passe doit contenir au moins un chiffre",
 		pwMissingSpecial: "Le mot de passe doit contenir au moins un caractère spécial",
+		tooLong: "La longueur de l'alias ne peut pas dépasser 10 caractères",
 		//login_login
 		loginTitle: "Connexion",
 		login: "Se connecter",
@@ -493,6 +495,7 @@ export const translations = {
 		pwMissingLower: "A senha deve conter pelo menos uma letra minúscula",
 		pwMissingNumber: "A senha deve conter pelo menos um número",
 		pwMissingSpecial: "A senha deve conter pelo menos um caractere especial",
+		tooLong: "O comprimento do alias não pode exceder 10 caracteres",
 		//login_login
 		loginTitle: "Entrar",
 		login: "Entrar",

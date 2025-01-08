@@ -66,7 +66,7 @@ function setupRegisterFormEventHandler() {
 					} else if (data.alias == "user with this alias already exists.") {
 						showError(`${trsl[state.language].aliasTaken}`);
 					} else if (data.alias == "alias length cannot exceed 10 characters") {
-						showError(`${trsl[state.language].alias} ${trsl[state.language].badLanguage}`);
+						showError(`${trsl[state.language].alias} ${trsl[state.language].tooLong}`);
 					}
 				}
 				else if (data.email) {
