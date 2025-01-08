@@ -251,7 +251,7 @@ function createOrJoinRoomButtonEventListener() {
 		const roomName = document.getElementById("room-name").value;
 		if (roomName) {
 			try {
-				if (!isAlphanumeric(roomName, "Room Name")) {
+				if (!isAlphanumeric(roomName, trsl[state.language].roomName)) {
 					return;
 				}
 				const response = await fetchWithToken(
