@@ -416,7 +416,7 @@ async function loadChatRoom(roomName, userAlias, roomType, roomNameDisplay = roo
 
 	if (roomType == "private") {
 		document.getElementById("send-private-invite").addEventListener("click", sendInvite);
-	} 
+	}
 	// else if (roomType == "public") {
 	// 	document.getElementById("send-public-invite").addEventListener("click", sendInvite);
 	// }
