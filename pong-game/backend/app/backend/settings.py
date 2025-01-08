@@ -32,13 +32,13 @@ email_credentials = vault_client.get_database_credentials("email")
 SECRET_KEY = jwt_credentials['JWT_SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(os.environ.get("DEBUG", default=0))
+DEBUG = False
 # DEBUG = 1
 
-#ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
+EVAL_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(",")
 ALLOWED_HOSTS = [
-	 "*"
-]
+	 "localhost",
+] + EVAL_HOSTS
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -47,6 +47,12 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+    "DEFAULT_RENDERER_CLASSES": (
+        "rest_framework.renderers.JSONRenderer",
+    ) if not DEBUG else (
+        "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    ),
 }
 
 SIMPLE_JWT = {

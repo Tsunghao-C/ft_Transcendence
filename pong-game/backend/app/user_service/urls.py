@@ -12,7 +12,6 @@ urlpatterns = [
 	# login
 	path("2FA/generate/", Generate2FAView.as_view(), name="generate_2fa"),
 	path("2FA/validate/", Validate2FAView.as_view(), name="validate_2fa"),
-	path("token/getToken", TokenObtainPairView.as_view(), name="get_token"), # can delete this later
 	path("token/refresh/", TokenRefreshView.as_view(), name="refresh"),
 	path("logout/", LogoutView.as_view(), name="logout-user"),
 

@@ -63,6 +63,8 @@ class UserSerializer(serializers.ModelSerializer):
 			raise serializers.ValidationError("this alias contains bad language")
 		elif re.search("[!@#$%^&*(),.?\":{}|<>:;\'_+-=~`]", value):
 			raise serializers.ValidationError("alias can only contain alphanumerical chars")
+		elif len(value) > 10:
+			raise serializers.ValidationError("alias length cannot exceed 10 characters")
 		return value
 
 	def create(self, validated_data):
