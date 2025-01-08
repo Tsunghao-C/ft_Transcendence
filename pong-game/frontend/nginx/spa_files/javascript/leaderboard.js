@@ -10,7 +10,7 @@ export async function setLeaderboardView(contentContainer) {
 		<div class="leaderboard-view">
 			<h2>${trsl[state.language].leaderboard}</h2>
 			<div class="filter-bar">
-				<input type="text" id="leaderboardFilterInput" class="form-control" placeholder="${trsl[state.language].searchByUsername}" />
+				<input type="text" id="leaderboardFilterInput" class="form-control" placeholder="${trsl[state.language].searchByUsername} " maxlength="20" />
 			</div>
 			<table class="table">
 				<thead>

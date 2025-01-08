@@ -196,12 +196,12 @@ function setTournamentViewForm(contentContainer) {
 	<div class="tournament-view" id="tournament-creation">
 		<form id="tournament-form">
 			<div>
-				<input type="text" id="tournament-name" name="tournamentName" placeholder="${trsl[state.language].tournamentInput}" required />
+				<input type="text" id="tournament-name" name="tournamentName" placeholder="${trsl[state.language].tournamentInput}" maxlength="20" required />
 			</div>
 			<hr>
 			<div id="players-container">
 				<div class="player-entry">
-					<input type="text" placeholder="${trsl[state.language].enterPlayer} 1" name="player1" required />
+					<input type="text" placeholder="${trsl[state.language].enterPlayer} 1" name="player1" maxlength="20" required />
 					<select name="type1">
 						<option value="human">${trsl[state.language].human}</option>
 						<option value="easy">${trsl[state.language].tournamentEasy}</option>
@@ -210,7 +210,7 @@ function setTournamentViewForm(contentContainer) {
 					</select>
 				</div>
 				<div class="player-entry">
-					<input type="text" placeholder="${trsl[state.language].enterPlayer} 2" name="player2" required />
+					<input type="text" placeholder="${trsl[state.language].enterPlayer} 2" name="player2" maxlength="20" required />
 					<select name="type2">
 						<option value="human">${trsl[state.language].human}</option>
 						<option value="easy">${trsl[state.language].tournamentEasy}</option>
@@ -340,7 +340,7 @@ function setupTournamentForm(contentContainer) {
 		const playerEntry = document.createElement("div");
 		playerEntry.classList.add("player-entry");
 		playerEntry.innerHTML = `
-			<input type="text" placeholder="${trsl[state.language].enterPlayer} ${playerCount} ${trsl[state.language].alias}" name="player${playerCount}" required />
+			<input type="text" placeholder="${trsl[state.language].enterPlayer} ${playerCount} ${trsl[state.language].alias}" name="player${playerCount}" maxlength="20" required />
 			<select id="added-player" name="type${playerCount}">
 				<option value="human">${trsl[state.language].human}</option>
 				<option value="easy">${trsl[state.language].tournamentEasy}</option>

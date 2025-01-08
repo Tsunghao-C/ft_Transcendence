@@ -61,7 +61,7 @@ function setChatViewHtml(contentContainer) {
 			<div class="tab-content">
 				<div class="tab-pane fade show active" id="private-message" role="tabpanel" aria-labelledby="private-message-tab">
 					<div class="chat-views-searchbar">
-						<input type="text" id="recipientUser" placeholder="${trsl[state.language].searchByUsername}">
+						<input type="text" id="recipientUser" placeholder="${trsl[state.language].searchByUsername}" maxlength="20">
 						<button id="start-private-chat">${trsl[state.language].searchButton}</button>
 					</div>
 					<div>
@@ -76,7 +76,7 @@ function setChatViewHtml(contentContainer) {
 						</div>
 						<div id="messages" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;"></div>
 						<div id="chat-content-bottom">
-							<input class="message-input" type="text" placeholder="${trsl[state.language].typeMessage}">
+							<input class="message-input" type="text" placeholder="${trsl[state.language].typeMessage}" maxlength="100">
 							<button class="send-message"">${trsl[state.language].send}</button>
 							<button id="send-private-invite">${trsl[state.language].play}</button>
 						</div>
@@ -84,7 +84,7 @@ function setChatViewHtml(contentContainer) {
 				</div>
 				<div class="tab-pane fade" id="chat-rooms" role="tabpanel" aria-labelledby="chat-rooms-tab">
 					<div class="chat-views-searchbar">
-						<input type="text" id="room-name" placeholder="${trsl[state.language].enterRoomName}">
+						<input type="text" id="room-name" placeholder="${trsl[state.language].enterRoomName} " maxlength="20">
 						<button id="create-public-room">${trsl[state.language].createOrJoinRoom}</button>
 					</div>
 					<div>
@@ -99,7 +99,7 @@ function setChatViewHtml(contentContainer) {
 						</div>
 						<div id="chat-room-messages" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;"></div>
 						<div id="chat-content-bottom">
-							<input class="message-input" id="message-input" type="text" placeholder="${trsl[state.language].typeMessage}">
+							<input class="message-input" id="message-input" type="text" placeholder="${trsl[state.language].typeMessage}" maxlength="100">
 							<button class="send-message" id="send-message">${trsl[state.language].send}</button>
 						</div>
 					</div>
@@ -251,7 +251,7 @@ function createOrJoinRoomButtonEventListener() {
 		const roomName = document.getElementById("room-name").value;
 		if (roomName) {
 			try {
-				if (!isAlphanumeric(roomName, "Room Name")) {
+				if (!isAlphanumeric(roomName, trsl[state.language].roomName)) {
 					return;
 				}
 				const response = await fetchWithToken(
@@ -481,19 +481,19 @@ function addMessage(userAlias, alias, message, time, isInvite = false, gameRoom 
 
 		messageElement.innerHTML = `
 			<strong>
-				<a style="text-decoration: none; color: #007bff;">
+				<a style="text-decoration: none; color: #007bff; word-wrap: break-word; overflow-wrap: break-word">
 					${trsl[state.language].tournament}
 				</a>
 			</strong>
 			<em>(${time})</em>:<br>
-			<div style="display: inline-block; background-color: #f1f1f1; padding: 10px; border-radius: 10px; max-width: 70%;">
+			<div style="display: inline-block; background-color: #f1f1f1; padding: 10px; border-radius: 10px; max-width: 70%; word-wrap: break-word; overflow-wrap: break-word">
 				<a href="#tournament" style="text-decoration: none; color: #007bff;">${formattedMessage}</a>
 			</div>`;
 	} else {
 		if (alias === userAlias) {
 			messageElement.style.textAlign = "right";
 			messageElement.innerHTML = `
-				<div style="display: inline-block; text-align: left; background-color: #e1f5fe; padding: 10px; border-radius: 10px; max-width: 70%; margin-top: 5px; font-size: 0.9rem">
+				<div style="display: inline-block; text-align: left; background-color: #e1f5fe; padding: 10px; border-radius: 10px; max-width: 70%; margin-top: 5px; font-size: 0.9rem; word-wrap: break-word; overflow-wrap: break-word">
 					<em style="font-size: 0.8rem">${time}</em><br>
 					${isInvite && gameRoom ? `<a href="#lobby/${gameRoom}" style="text-decoration: none; color: #007bff;">${trsl[state.language].youInvited}</a>` : message}
 				</div>`;
@@ -501,12 +501,12 @@ function addMessage(userAlias, alias, message, time, isInvite = false, gameRoom 
 			messageElement.style.textAlign = "left";
 			messageElement.innerHTML = `
 				<strong>
-					<a href="#profile/${alias}" style="text-decoration: none; color: #007bff; font-size: 0.9rem">
+					<a href="#profile/${alias}" style="text-decoration: none; color: #007bff; font-size: 0.9rem; word-wrap: break-word; overflow-wrap: break-word">
 						${alias}
 					</a>
 				</strong>
 				<em style="font-size: 0.8rem">(${time})</em>:<br>
-				<div style="display: inline-block; background-color: #f1f1f1; padding: 10px; border-radius: 10px; max-width: 70%; font-size: 0.9rem">
+				<div style="display: inline-block; background-color: #f1f1f1; padding: 10px; border-radius: 10px; max-width: 70%; font-size: 0.9rem; word-wrap: break-word; overflow-wrap: break-word">
 					${isInvite && gameRoom ? `<a href="#lobby/${gameRoom}" style="text-decoration: none; color: #007bff;">${alias} ${trsl[state.language].hasInvitedYou}</a>` : message}
 				</div>`;
 		}

@@ -228,6 +228,9 @@ export const translations = {
 		onGoingGame: "Ongoing game found, do you wish to rejoin?",
 		rejoinGame: "Rejoin game",
 		concedeGame: "Concede game",
+		//Utils
+		alphanumError: " can only be made of alphanumerical characters",
+		roomName: "Room Name",
 	},
 
 	fr: {
@@ -459,6 +462,9 @@ export const translations = {
 		onGoingGame: "Partie en cours trouvée, souhaitez-vous la rejoindre ?",
 		rejoinGame: "Rejoindre la partie",
 		concedeGame: "Abandonner la partie",
+		//utils
+		alphanumError: " ne peut être composé que de caractères alphanumériques",
+		roomName: "Le nom de la salle",
 	},
 	pt: {
 		//Login_html
@@ -689,5 +695,8 @@ export const translations = {
 		onGoingGame: "Jogo em andamento encontrado, deseja entrar novamente?",
 		rejoinGame: "Entrar novamente no jogo",
 		concedeGame: "Desistir do jogo",
+		//utils
+		alphanumError: " só pode ser composto por caracteres alfanuméricos",
+		roomName: "Lo nome da sala",
 	},
 }
