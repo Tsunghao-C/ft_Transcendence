@@ -28,7 +28,6 @@ volumes:
   prometheus_data: {}
   grafana_data: {}
   grafana_certs: {}
-  html_volume: {}
 
 services:
   # Security Layer
@@ -67,7 +66,6 @@ services:
     volumes:
       - static_volume:/app/static:ro
       - logs_nginx:/var/log/nginx
-      - html_volume:/usr/share/nginx/html
       # - logs_modsec:/var/log/modsec
       - media_data:/app/media
     ports:
