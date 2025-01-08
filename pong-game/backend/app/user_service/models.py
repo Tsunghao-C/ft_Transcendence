@@ -22,7 +22,7 @@ class CustomUser(AbstractUser):
 
 	is_admin = models.BooleanField(default=False)
 	email = models.EmailField(max_length=100, blank=False, unique=True)
-	alias = models.CharField(max_length=20, blank=False, unique=True, db_index=True)
+	alias = models.CharField(max_length=10, blank=False, unique=True, db_index=True)
 	mmr = models.FloatField(default=1000)
 	is_banned = models.BooleanField(default=False)
 	avatar = models.ImageField(default='default.jpg', upload_to=pfpUploadPath)
