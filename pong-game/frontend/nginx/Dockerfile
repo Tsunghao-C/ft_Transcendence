@@ -43,6 +43,7 @@ RUN git clone --depth 1 https://github.com/coreruleset/coreruleset.git /etc/ngin
 # Copy custom modsecurity configuration files
 COPY modsecurity.conf /etc/nginx/modsecurity/modsecurity.conf
 COPY crs-setup.conf /etc/nginx/modsecurity-crs/crs-setup.conf
+COPY ./spa_files /usr/share/nginx/html
 
 # Create ModSecurity log file
 RUN mkdir -p /var/log/modsec && \

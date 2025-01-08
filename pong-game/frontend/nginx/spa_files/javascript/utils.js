@@ -1,9 +1,12 @@
+import { translations as trsl } from "./language_pack.js";
+import { state } from "./app.js";
+
 export function hideElem(elemId) {
 	const elem = document.getElementById(elemId);
-    if (!elem) {
-        console.log("ShowElem: elem is null: ", elemId);
-        return;
-    }
+	if (!elem) {
+		console.log("ShowElem: elem is null: ", elemId);
+		return;
+	}
 	elem.style.display = "none";
 }
 
@@ -17,10 +20,10 @@ export function hideClass(className) {
 export function showElem(elemId, display) {
 	const elem = document.getElementById(elemId);
 	if (!elem) {
-        console.log("ShowElem: elem is null: ", elemId);
-        console.trace("Trace: ");
+		console.log("ShowElem: elem is null: ", elemId);
+		console.trace("Trace: ");
 		return;
-    }
+	}
 	elem.style.display = display;
 }
 
@@ -36,11 +39,11 @@ export function clearInput(inputId) {
 	input.value = "";
 }
 
-export function isAlphanumeric(content, name = "Alias", displayAlert = true) {
-    const isValid = /^[a-zA-Z0-9]+$/.test(content);
+export function isAlphanumeric(content, name = trsl[state.language].alias, displayAlert = true) {
+	const isValid = /^[a-zA-Z0-9]+$/.test(content);
 
 	if (!isValid && displayAlert) {
-		alert(name + " can only be made of alphanumerical characters");
+		alert(name + trsl[state.language].alphanumError);
 	}
-    return isValid;
+	return isValid;
 }

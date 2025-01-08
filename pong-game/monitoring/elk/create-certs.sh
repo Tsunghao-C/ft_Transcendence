@@ -23,7 +23,7 @@ openssl x509 -req -days 365 -in $CERT_DIR/kibana.csr \
     -CA $CERT_DIR/ca.crt -CAkey $CERT_DIR/ca.key -CAcreateserial \
     -out $CERT_DIR/kibana.crt
 
-echo "Kibana SSL certificates generated successfully"
+# echo "Kibana SSL certificates generated successfully"
 
 ## Generate ELK internal certificates
 # Create transport certificates for Elasticsearch

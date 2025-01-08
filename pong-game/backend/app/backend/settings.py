@@ -160,7 +160,7 @@ AUTH_USER_MODEL = 'user_service.CustomUser'
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Paris'
 
 USE_I18N = True
 
@@ -224,7 +224,7 @@ LOGGING = {
                 "class": "logging.FileHandler",
                 "filename": "/root/logs/gamerooms.log",
                 "formatter": "verbose",
-            }, 
+            },
             "gameconsumers_file": {
                 "level": "DEBUG",
                 "class": "logging.FileHandler",

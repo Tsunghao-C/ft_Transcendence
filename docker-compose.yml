@@ -28,6 +28,7 @@ volumes:
   prometheus_data: {}
   grafana_data: {}
   grafana_certs: {}
+  html_volume: {}
 
 services:
   # Security Layer
@@ -64,9 +65,9 @@ services:
       context: pong-game/frontend/nginx
       dockerfile: Dockerfile
     volumes:
-      - ./pong-game/frontend/nginx/spa_files:/usr/share/nginx/html
       - static_volume:/app/static:ro
       - logs_nginx:/var/log/nginx
+      - html_volume:/usr/share/nginx/html
       # - logs_modsec:/var/log/modsec
       - media_data:/app/media
     ports:
@@ -89,7 +90,7 @@ services:
       retries: 1
     restart: unless-stopped
 
-  # Backend Layer 
+  # Backend Layer
   ## [Ben] [Jean]
   django:
     container_name: django
@@ -214,7 +215,7 @@ services:
       prometheus:
         condition: service_healthy
     restart: unless-stopped
-  
+
   node_exporter:
     container_name: node_exporter
     build:

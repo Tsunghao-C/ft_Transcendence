@@ -1,11 +1,11 @@
 all: go check
 
 certs:
-	export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/ && \
+	@export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/ && \
 	chmod +x pong-game/monitoring/elk/create-certs.sh && \
 	chmod +x pong-game/monitoring/create-monitoring-certs.sh && \
-	./pong-game/monitoring/elk/create-certs.sh && \
-	./pong-game/monitoring/create-monitoring-certs.sh
+	./pong-game/monitoring/elk/create-certs.sh > /dev/null 2>&1 && \
+	./pong-game/monitoring/create-monitoring-certs.sh > /dev/null 2>&1
 
 env:
 	- cp .env.example .env
