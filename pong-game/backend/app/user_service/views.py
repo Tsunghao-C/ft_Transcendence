@@ -63,6 +63,8 @@ class BanPlayer(APIView):
 		user = get_object_or_404(CustomUser, id=id)
 		if user.is_banned:
 			return Response({"error": "this user is already banned"}, status=400)
+		if user.is_admin:
+			return Response({"error": "you cannot ban an admin"}, status=400)
 		user.is_banned = True
 		user.save()
 		return Response({"message": f"Player {id} has been banned"})
@@ -104,10 +106,11 @@ def sendOTP(email:str, username:str, userID, cacheName:str, user):
 		[email],
 		fail_silently=False,
 	)
-	print("**********************************")
-	print("user.id is : " + str(user.id))
-	print("otp_code is : " + str(otp_code))
-	print("**********************************")
+	print(f"sent otp to {email}")
+	# print("**********************************")
+	# print("user.id is : " + str(user.id))
+	# print("otp_code is : " + str(otp_code))
+	# print("**********************************")
 
 class Generate2FAView(APIView):
 	permission_classes = [AllowAny]  # Anyone can access this view
