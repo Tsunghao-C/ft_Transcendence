@@ -34,7 +34,7 @@ export async function setProfileView(contentContainer, usernameInHash = "") {
 			<h2>${trsl[state.language].profileTitle}</h2>
 			<div class="search-bar mb-3">
 				<div class="input-and-button-line">
-					<input type="text" id="searchInput" class="form-control" placeholder="${trsl[state.language].enterUsername}" />
+					<input type="text" id="searchInput" class="form-control" placeholder="${trsl[state.language].enterUsername} " maxlength="20" />
 					<button id="searchButton" class="btn btn-primary mt-2">${trsl[state.language].searchButton}</button>
 				</div>
 			</div>

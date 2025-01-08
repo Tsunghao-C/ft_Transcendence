@@ -68,7 +68,7 @@ export async function setpersonalDataView(contentContainer) {
 				<div class="mb-3">
 					<label for="aliasInput" class="form-label">${trsl[state.language].alias}</label>
 					<div class="input-group">
-						<input type="text" class="form-control" id="aliasInput" value="${personal.alias}" required>
+						<input type="text" class="form-control" id="aliasInput" value="${personal.alias}" maxlength="20" required>
 						<div>
 							<p id="aliasError" class="errorMessage"></p>
 							<p id="aliasSuccess" class="successMessage"></p>
@@ -80,7 +80,7 @@ export async function setpersonalDataView(contentContainer) {
 				<div class="mb-3">
 					<label for="mailInput" class="form-label">${trsl[state.language].mail}</label>
 					<div class="input-group">
-						<input type="email" class="form-control" id="mailInput" value="${personal.email}" required>
+						<input type="email" class="form-control" id="mailInput" value="${personal.email}" maxlength="40" required>
 						<div>
 							<p id="emailError" class="errorMessage"></p>
 							<p id="emailSuccess" class="successMessage"></p>
@@ -97,15 +97,15 @@ export async function setpersonalDataView(contentContainer) {
 				<div id="passwordChangeFields" style="display: none;">
 					<div class="mb-3">
 						<label for="oldPasswordInput" class="form-label">${trsl[state.language].oldPassword}</label>
-						<input type="password" class="form-control" id="oldPasswordInput" required>
+						<input type="password" class="form-control" id="oldPasswordInput" maxlength="20" required>
 					</div>
 					<div class="mb-3">
 						<label for="newPasswordInput" class="form-label">${trsl[state.language].newPassword}</label>
-						<input type="password" class="form-control" id="newPasswordInput" required>
+						<input type="password" class="form-control" id="newPasswordInput" maxlength="20" required>
 					</div>
 					<div class="mb-3">
 						<label for="confirmPasswordInput" class="form-label">${trsl[state.language].confirmNewPassword}</label>
-						<input type="password" class="form-control" id="confirmPasswordInput" required>
+						<input type="password" class="form-control" id="confirmPasswordInput" maxlength="20" required>
 					</div>
 					<div>
 						<p id="passwordError" class="errorMessage"></p>

@@ -39,7 +39,7 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 			<div class="tab-content">
 				<div class="tab-pane fade show active" id="friends" role="tabpanel" aria-labelledby="friends-tab">
 					<div class="input-and-button-line">
-						<input id="addFriendInput" placeholder="${trsl[state.language].enterUsername}">
+						<input id="addFriendInput" placeholder="${trsl[state.language].enterUsername}" maxlength="20">
 						<button id="addFriendButton" class="btn btn-success mb-3">${trsl[state.language].addNewFriend}</button>
 					</div>
 					<div>
@@ -56,7 +56,7 @@ export async function setFriendsView(contentContainer, displayedTab = "friends")
 				</div>
 				<div class="tab-pane fade" id="block" role="tabpanel" aria-labelledby="block-tab">
 					<div class="input-and-button-line">
-						<input id="addBlockInput" placeholder="${trsl[state.language].enterUsername}">
+						<input id="addBlockInput" placeholder="${trsl[state.language].enterUsername}" maxlength="20">
 						<button id="addBlockButton" class="btn btn-success mb-3">${trsl[state.language].addBlock}</button>
 					</div>
 					<div>
