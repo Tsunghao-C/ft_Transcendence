@@ -122,7 +122,7 @@ services:
       # non-sensitive data
       POSTGRES_PORT: "5434"
       LDB_UPDATE_TIMER: "1"
-      DJANGO_ALLOWED_HOSTS: "bess-f2r4s14,bess-f2r4s15,bess-f2r4s16,bess-f2r4s17,bess-f2r4s18"
+      DJANGO_ALLOWED_HOSTS: "django,bess-f2r4s14,bess-f2r4s15,bess-f2r4s16,bess-f2r4s17,bess-f2r4s18"
     restart: unless-stopped
 
   # Database Layer
@@ -170,7 +170,6 @@ services:
       context: pong-game/monitoring/prometheus
       dockerfile: Dockerfile
     image: prometheus
-    # image: prom/prometheus:v2.45.0
     ports:
       - "9090:9090" #consider close in production
     volumes:
